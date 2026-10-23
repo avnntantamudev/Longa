@@ -17,6 +17,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\Contracts\HasAbilities;
 use Laravel\Sanctum\HasApiTokens;
+use NotificationChannels\WebPush\HasPushSubscriptions;
 use Spatie\Permission\Traits\HasRoles;
 
 /**
@@ -39,7 +40,7 @@ class User extends Authenticatable
     use HasApiTokens;
 
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasRoles, Notifiable, SoftDeletes;
+    use HasFactory, HasPushSubscriptions, HasRoles, Notifiable, SoftDeletes;
 
     protected string $guard_name = 'web';
 

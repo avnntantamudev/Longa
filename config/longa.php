@@ -40,6 +40,41 @@ return [
         'location' => env('LONGA_LOCATION_CONSENT_VERSION', '2026-10'),
     ],
 
+    // Pedidos de aula e matching TRIM TRIM (Fase 2). Valores [AJUSTAR] com o cliente.
+    'requests' => [
+        'commission_percent' => (int) env('LONGA_COMMISSION_PERCENT', 15),
+        'min_amount' => (int) env('LONGA_REQUEST_MIN_AMOUNT', 2000),
+        'max_amount' => (int) env('LONGA_REQUEST_MAX_AMOUNT', 5000000),
+        'max_active_per_student' => (int) env('LONGA_REQUEST_MAX_ACTIVE', 2),
+        // Tempo total de procura do pedido e prazo de cada oferta (segundos)
+        'ttl' => (int) env('LONGA_REQUEST_TTL', 300),
+        'offer_ttl' => (int) env('LONGA_OFFER_TTL', 60),
+        // Antecedência mínima da aula (minutos)
+        'min_lead_minutes' => (int) env('LONGA_REQUEST_MIN_LEAD_MINUTES', 30),
+        // Mesmo aluno, mesma área e hora próxima com um pedido ativo = duplicado
+        'duplicate_window_minutes' => (int) env('LONGA_REQUEST_DUPLICATE_WINDOW', 120),
+        'create_per_hour' => (int) env('LONGA_REQUEST_CREATE_PER_HOUR', 5),
+    ],
+
+    'matching' => [
+        'radius_m' => (int) env('LONGA_MATCHING_RADIUS_M', 5000),
+        'first_wave_size' => (int) env('LONGA_MATCHING_FIRST_WAVE', 10),
+        'next_wave_size' => (int) env('LONGA_MATCHING_NEXT_WAVE', 15),
+        // Pesos da ordenação: score do formador vs proximidade (somam 1)
+        'weight_score' => (float) env('LONGA_MATCHING_WEIGHT_SCORE', 0.6),
+        'weight_distance' => (float) env('LONGA_MATCHING_WEIGHT_DISTANCE', 0.4),
+        // Janela (minutos) à volta da hora pedida em que uma aula marcada conta como conflito
+        'conflict_window_minutes' => (int) env('LONGA_MATCHING_CONFLICT_WINDOW', 120),
+        'accept_per_minute' => (int) env('LONGA_OFFER_ACCEPT_PER_MINUTE', 30),
+        // SMS de oferta quando o formador não tem push ativo (custa dinheiro)
+        'sms_fallback_per_trainer_per_hour' => (int) env('LONGA_OFFER_SMS_PER_HOUR', 5),
+    ],
+
+    'chat' => [
+        'max_attachment_kb' => (int) env('LONGA_CHAT_MAX_ATTACHMENT_KB', 10240),
+        'attachment_link_minutes' => (int) env('LONGA_CHAT_ATTACHMENT_LINK_MINUTES', 10),
+    ],
+
     'sms' => [
         'driver' => env('SMS_DRIVER', 'log'),
         'sender_id' => env('SMS_SENDER_ID', 'LONGA'),

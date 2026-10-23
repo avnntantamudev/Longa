@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import AppIcon from '@/Components/AppIcon.vue';
+import AppIcon from '@/components/AppIcon.vue';
 import { useInstallPrompt } from '@/composables/useInstallPrompt';
 
 const { visible, canPrompt, showIosHint, install, dismiss } = useInstallPrompt();

@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import AppIcon from '@/Components/AppIcon.vue';
-import InstallPrompt from '@/Components/InstallPrompt.vue';
-import NetworkStatus from '@/Components/NetworkStatus.vue';
-import UpdatePrompt from '@/Components/UpdatePrompt.vue';
+import AppIcon from '@/components/AppIcon.vue';
+import InstallPrompt from '@/components/InstallPrompt.vue';
+import NetworkStatus from '@/components/NetworkStatus.vue';
+import UpdatePrompt from '@/components/UpdatePrompt.vue';
 import { mainNavigation, type NavItem } from '@/lib/navigation';
 import { Link, usePage } from '@inertiajs/vue3';
 

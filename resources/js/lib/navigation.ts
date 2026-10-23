@@ -1,4 +1,4 @@
-import type { IconName } from '@/Components/AppIcon.vue';
+import type { IconName } from '@/components/AppIcon.vue';
 
 export interface NavItem {
     label: string;

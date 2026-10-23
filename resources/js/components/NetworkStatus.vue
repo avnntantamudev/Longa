@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import AppIcon from '@/Components/AppIcon.vue';
+import AppIcon from '@/components/AppIcon.vue';
 import { useNetworkState } from '@/composables/useNetworkState';
 
 const { online, isSending, hasFailed, failureMessage, retry, dismiss } = useNetworkState();

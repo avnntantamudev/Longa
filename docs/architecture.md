@@ -32,4 +32,4 @@ O `App\Providers\ModuleServiceProvider` descobre os módulos e regista rotas e p
 - **Nenhuma regra de negócio em componentes Vue**: o frontend apresenta e envia, o backend decide.
 - A API (`/api/v1`) é a fonte de verdade e serve tanto a PWA como a futura app Flutter.
 - Valores monetários em **Kz inteiros** (sem casas decimais), guardados como `unsignedBigInteger`.
-- Datas guardadas em UTC; apresentadas em `Africa/Luanda`.
+- Fuso horário da aplicação: `Africa/Luanda` (UTC+1, sem horário de verão).

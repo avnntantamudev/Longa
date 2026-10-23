@@ -36,6 +36,8 @@ class RepublishTrainingRequest
             'description' => $original->description,
             'amount' => $amount ?? $original->amount,
             'scheduled_at' => $scheduledAt ?? $original->scheduled_at->toIso8601String(),
+            'duration_minutes' => $original->duration_minutes,
+            'payment_method' => $original->payment_method,
             'modality' => $original->modality,
             'municipality' => $original->municipality,
             'neighborhood' => $original->neighborhood,

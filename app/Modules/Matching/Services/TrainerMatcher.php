@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\DB;
  *  - conta ativa e não apagada; perfil verificado, com onboarding concluído e "Disponível";
  *  - ensina a área do pedido e aceita a modalidade (presencial/online);
  *  - presencial: a ≤ raio do matching (5 km) do local do pedido E o pedido dentro do raio de atuação do formador;
- *  - sem aula marcada numa janela à volta da hora pedida (conflito de horário);
+ *  - sem aula ativa que se sobreponha ao horário pedido (com folga configurável);
  *  - não é o próprio aluno e ainda não recebeu oferta deste pedido.
  *
  * Ordenação: peso_score × score/100 + peso_distância × (1 − distância/raio), desempate pela distância.
@@ -36,7 +36,9 @@ class TrainerMatcher
         $radius = (int) $config['radius_m'];
         $weightScore = (float) $config['weight_score'];
         $weightDistance = (float) $config['weight_distance'];
-        $window = (int) $config['conflict_window_minutes'];
+        $buffer = (int) $config['conflict_buffer_minutes'];
+        $start = $request->scheduled_at->copy()->subMinutes($buffer);
+        $end = $request->scheduled_at->copy()->addMinutes($request->duration_minutes + $buffer);
         $online = $request->modality === 'online';
 
         // POINT(longitude, latitude) com SRID 4326 (ordem verificada, ver docs/database.md)
@@ -59,15 +61,14 @@ class TrainerMatcher
             ->whereNotNull('tp.latitude')
             ->whereRaw('JSON_CONTAINS(tp.modalities, ?)', [json_encode($online ? 'online' : 'in_person')])
             ->when($excludeTrainerIds !== [], fn ($q) => $q->whereNotIn('tp.id', $excludeTrainerIds))
-            ->whereNotExists(function ($q) use ($request, $window) {
+            // Conflito: aula ativa do formador que se sobrepõe ao horário pedido (com folga)
+            ->whereNotExists(function ($q) use ($start, $end) {
                 $q->selectRaw('1')
                     ->from('training_sessions as s')
                     ->whereColumn('s.trainer_profile_id', 'tp.id')
-                    ->where('s.state', SessionState::Scheduled->value)
-                    ->whereBetween('s.scheduled_at', [
-                        $request->scheduled_at->copy()->subMinutes($window),
-                        $request->scheduled_at->copy()->addMinutes($window),
-                    ]);
+                    ->whereIn('s.state', array_map(fn (SessionState $st) => $st->value, SessionState::occupying()))
+                    ->where('s.scheduled_at', '<', $end)
+                    ->where('s.ends_at', '>', $start);
             });
 
         if ($online) {

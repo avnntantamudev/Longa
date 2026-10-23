@@ -64,10 +64,42 @@ stateDiagram-v2
 
 ```mermaid
 stateDiagram-v2
-    [*] --> scheduled : criada na aceitação
+    [*] --> pending_payment : formador aceita (pagamento eletrónico)
+    [*] --> scheduled : formador aceita (pagamento em dinheiro)
+    pending_payment --> scheduled : pagamento confirmado → escrow
+    pending_payment --> payment_failed : falhou ou 10 min sem pagar (R3)
+    scheduled --> in_progress : formador inicia
+    scheduled --> cancelled_by_student
+    scheduled --> cancelled_by_trainer
+    scheduled --> no_show_trainer : aluno reporta (≥ 15 min após o início)
+    scheduled --> no_show_student : formador reporta (≥ 30 min após o início)
+    scheduled --> awaiting_confirmation : R1 (nunca iniciada)
+    in_progress --> awaiting_confirmation : "Terminar aula e mostrar QR" ou R2
+    awaiting_confirmation --> completed : aluno lê o QR / código / confirma
+    awaiting_confirmation --> disputed : aluno disputa
+    awaiting_confirmation --> refunded : R1 sem resposta do aluno
+    no_show_trainer --> disputed : formador contesta (24 h)
+    no_show_student --> disputed : aluno contesta (24 h)
+    disputed --> completed : admin liberta
+    disputed --> refunded : admin reembolsa tudo
+    disputed --> partially_refunded : admin reembolsa parte
 ```
 
-Nesta fase só existe `scheduled`. A Fase 3 acrescenta a confirmação por QR, a conclusão, o cancelamento e a falta.
+- Todas as transições passam por `SessionLifecycle::transition()`, que grava um `session_event` (de, para,
+  ator, metadados) na mesma transação. Ninguém (API, job ou admin) consegue uma transição fora do diagrama.
+- Estados finais: `payment_failed`, `completed`, `cancelled_by_student`, `cancelled_by_trainer`, `refunded`,
+  `partially_refunded`. As faltas ficam em aberto 24 h para contestação; sem contestação são liquidadas pelo job.
+- O fim previsto (`ends_at`) = início + `duration_minutes` (por defeito 60). Conflitos de horário no matching:
+  aulas em `pending_payment`, `scheduled` ou `in_progress` que se sobreponham, com 30 min de folga.
+
+### Regras automáticas (config `longa.session_rules`)
+
+| Regra | Quando | Efeito | Risco aluno / formador |
+|---|---|---|---|
+| R1 | Aula ainda `scheduled` 2 h após o fim previsto | → `awaiting_confirmation` (não iniciada); 48 h para o aluno confirmar ou disputar; sem resposta → `refunded` (100%) | baixo / perde se esquecer de iniciar e o aluno não confirmar |
+| R2 | Aula `in_progress` 2 h após o fim previsto (sem QR) | → `awaiting_confirmation`; 48 h para o aluno confirmar ou disputar; sem resposta → `completed` e libertação | perde se esquecer de responder (lembretes às 24 h e 47 h) / baixo |
+| R3 | `pending_payment` há 10 min | → `payment_failed`; formador libertado | — / perde a oferta |
+| R4 | Falta reportada | a outra parte tem 24 h para contestar (→ `disputed`); sem contestação, liquidação conforme a política | falsas acusações → disputa |
 
 ## Ondas do matching
 

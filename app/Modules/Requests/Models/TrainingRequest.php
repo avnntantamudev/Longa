@@ -32,6 +32,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property int $commission
  * @property int $trainer_net
  * @property \Illuminate\Support\Carbon $scheduled_at
+ * @property int $duration_minutes
+ * @property string $payment_method
  * @property string $modality
  * @property string $municipality
  * @property string $neighborhood
@@ -53,7 +55,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property-read TrainingSession|null $session
  */
 #[Fillable([
-    'student_id', 'skill_id', 'title', 'description', 'amount', 'commission', 'trainer_net', 'scheduled_at', 'modality',
+    'student_id', 'skill_id', 'title', 'description', 'amount', 'commission', 'trainer_net', 'scheduled_at', 'duration_minutes',
+    'payment_method', 'modality',
     'municipality', 'neighborhood', 'latitude', 'longitude', 'republished_from_id',
 ])]
 #[Hidden(['location'])]
@@ -63,7 +66,7 @@ class TrainingRequest extends Model
     /** @use HasFactory<TrainingRequestFactory> */
     use HasFactory, HasStateMachine;
 
-    protected $attributes = ['state' => 'draft', 'wave' => 0];
+    protected $attributes = ['state' => 'draft', 'wave' => 0, 'duration_minutes' => 60, 'payment_method' => 'electronic'];
 
     protected function casts(): array
     {

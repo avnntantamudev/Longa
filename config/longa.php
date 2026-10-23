@@ -63,8 +63,8 @@ return [
         // Pesos da ordenação: score do formador vs proximidade (somam 1)
         'weight_score' => (float) env('LONGA_MATCHING_WEIGHT_SCORE', 0.6),
         'weight_distance' => (float) env('LONGA_MATCHING_WEIGHT_DISTANCE', 0.4),
-        // Janela (minutos) à volta da hora pedida em que uma aula marcada conta como conflito
-        'conflict_window_minutes' => (int) env('LONGA_MATCHING_CONFLICT_WINDOW', 120),
+        // Folga (minutos) antes e depois de uma aula marcada em que o formador não recebe outra
+        'conflict_buffer_minutes' => (int) env('LONGA_MATCHING_CONFLICT_BUFFER', 30),
         'accept_per_minute' => (int) env('LONGA_OFFER_ACCEPT_PER_MINUTE', 30),
         // SMS de oferta quando o formador não tem push ativo (custa dinheiro)
         'sms_fallback_per_trainer_per_hour' => (int) env('LONGA_OFFER_SMS_PER_HOUR', 5),

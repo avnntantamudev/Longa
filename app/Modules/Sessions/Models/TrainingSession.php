@@ -13,10 +13,11 @@ use App\Support\StateMachine\HasStateMachine;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
- * Aula criada quando um formador aceita um pedido. Nesta fase só o esqueleto (estado "scheduled").
+ * Aula criada quando um formador aceita um pedido. Estados e regras em docs/state-machines.md.
  *
  * @property int $id
  * @property int $training_request_id
@@ -28,6 +29,16 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property int $commission
  * @property int $trainer_net
  * @property \Illuminate\Support\Carbon $scheduled_at
+ * @property int $duration_minutes
+ * @property \Illuminate\Support\Carbon|null $ends_at
+ * @property string $payment_method
+ * @property \Illuminate\Support\Carbon|null $payment_due_at
+ * @property \Illuminate\Support\Carbon|null $started_at
+ * @property \Illuminate\Support\Carbon|null $ended_at
+ * @property \Illuminate\Support\Carbon|null $confirmed_at
+ * @property \Illuminate\Support\Carbon|null $awaiting_since
+ * @property \Illuminate\Support\Carbon|null $no_show_contest_until
+ * @property \Illuminate\Support\Carbon|null $cash_confirmed_at
  * @property string $modality
  * @property string $municipality
  * @property string $neighborhood
@@ -43,19 +54,38 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  */
 #[Fillable([
     'training_request_id', 'student_id', 'trainer_profile_id', 'skill_id', 'title', 'amount', 'commission', 'trainer_net',
-    'scheduled_at', 'modality', 'municipality', 'neighborhood', 'latitude', 'longitude', 'escrow_reference',
+    'scheduled_at', 'duration_minutes', 'ends_at', 'payment_method', 'payment_due_at', 'modality', 'municipality',
+    'neighborhood', 'latitude', 'longitude', 'escrow_reference',
 ])]
 class TrainingSession extends Model
 {
     use HasStateMachine;
 
-    protected $attributes = ['state' => 'scheduled'];
+    protected $attributes = ['state' => 'scheduled', 'duration_minutes' => 60, 'payment_method' => 'electronic'];
+
+    protected static function booted(): void
+    {
+        // Fim previsto derivado do início e da duração (usado em conflitos de horário e nas regras automáticas)
+        static::saving(function (self $session) {
+            if ($session->ends_at === null || $session->isDirty(['scheduled_at', 'duration_minutes'])) {
+                $session->ends_at = $session->scheduled_at->copy()->addMinutes($session->duration_minutes);
+            }
+        });
+    }
 
     protected function casts(): array
     {
         return [
             'state' => SessionState::class,
             'scheduled_at' => 'datetime',
+            'ends_at' => 'datetime',
+            'payment_due_at' => 'datetime',
+            'started_at' => 'datetime',
+            'ended_at' => 'datetime',
+            'confirmed_at' => 'datetime',
+            'awaiting_since' => 'datetime',
+            'no_show_contest_until' => 'datetime',
+            'cash_confirmed_at' => 'datetime',
             'latitude' => 'float',
             'longitude' => 'float',
         ];
@@ -99,6 +129,19 @@ class TrainingSession extends Model
     public function conversation(): HasOne
     {
         return $this->hasOne(Conversation::class);
+    }
+
+    /**
+     * @return HasMany<SessionEvent, $this>
+     */
+    public function events(): HasMany
+    {
+        return $this->hasMany(SessionEvent::class)->orderBy('id');
+    }
+
+    public function isCash(): bool
+    {
+        return $this->payment_method === 'cash';
     }
 
     public function involves(User $user): bool

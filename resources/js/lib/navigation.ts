@@ -15,5 +15,5 @@ export const mainNavigation: NavItem[] = [
     { label: 'Explorar', href: '/explorar', icon: 'search', available: false },
     { label: 'Aulas', href: '/aulas', icon: 'calendar', available: false },
     { label: 'Mensagens', href: '/mensagens', icon: 'chat', available: false },
-    { label: 'Perfil', href: '/perfil', icon: 'user', available: false },
+    { label: 'Perfil', href: '/perfil', icon: 'user', available: true },
 ];

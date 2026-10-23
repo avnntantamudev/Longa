@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AppIcon, { type IconName } from '@/components/AppIcon.vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 
 defineProps<{
     profiles: Array<{ key: string; title: string; description: string; icon: IconName }>;
@@ -17,19 +17,9 @@ defineProps<{
         <p class="mt-3 text-navy-100">De Longi para Longi: formadores verificados perto de si, pagamento seguro e certificado no fim.</p>
 
         <div class="mt-6 grid grid-cols-2 gap-3 sm:max-w-md">
-            <!-- Ficam ativos quando o registo (Fase 1) existir -->
-            <button type="button" class="btn-primary rounded-full px-3 whitespace-nowrap disabled:cursor-default disabled:opacity-100" disabled>
-                Sou Aluno
-            </button>
-            <button
-                type="button"
-                class="btn-navy rounded-full bg-navy-800 px-3 whitespace-nowrap ring-1 ring-white/25 disabled:cursor-default disabled:opacity-100"
-                disabled
-            >
-                Sou Formador
-            </button>
+            <Link href="/entrar" class="btn-primary rounded-full px-3 whitespace-nowrap">Sou Aluno</Link>
+            <Link href="/entrar" class="btn-navy rounded-full bg-navy-800 px-3 whitespace-nowrap ring-1 ring-white/25">Sou Formador</Link>
         </div>
-        <p class="mt-3 text-caption text-navy-200">O registo abre em breve.</p>
     </section>
 
     <h2 class="mt-8 text-title">Porquê a LONGA?</h2>

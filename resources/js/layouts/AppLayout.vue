@@ -6,8 +6,10 @@ import NetworkStatus from '@/components/NetworkStatus.vue';
 import UpdatePrompt from '@/components/UpdatePrompt.vue';
 import { mainNavigation, type NavItem } from '@/lib/navigation';
 import { Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 const page = usePage();
+const user = computed(() => page.props.auth.user);
 
 function isActive(item: NavItem): boolean {
     const path = page.url.split('?')[0] ?? '/';
@@ -46,13 +48,18 @@ function isActive(item: NavItem): boolean {
                     </span>
                 </template>
             </nav>
+            <div class="mt-auto p-6">
+                <Link v-if="!user" href="/entrar" class="btn-primary w-full">Entrar</Link>
+                <p v-else class="truncate text-caption text-navy-200">{{ user.name ?? user.phone }}</p>
+            </div>
         </aside>
 
         <div class="flex min-h-dvh flex-1 flex-col">
             <!-- Cabeçalho (telemóvel) -->
             <header class="pt-safe sticky top-0 z-20 bg-navy-900 text-white md:hidden">
-                <div class="flex h-14 items-center px-4">
+                <div class="flex h-14 items-center justify-between px-4">
                     <BrandLogo :size="30" />
+                    <Link v-if="!user" href="/entrar" class="rounded-full bg-orange-500 px-4 py-1.5 text-caption font-semibold text-white">Entrar</Link>
                 </div>
             </header>
 

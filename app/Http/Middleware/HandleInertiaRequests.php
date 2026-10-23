@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Modules\Users\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -29,7 +30,13 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'appName' => config('app.name'),
             'auth' => [
-                'user' => $user ? ['id' => $user->id, 'name' => $user->name] : null,
+                'user' => $user instanceof User ? [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'phone' => $user->phone,
+                    'roles' => $user->getRoleNames()->all(),
+                    'needs_onboarding' => $user->onboarded_at === null,
+                ] : null,
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),

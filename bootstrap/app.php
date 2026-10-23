@@ -6,6 +6,7 @@ use App\Http\Middleware\AssignRequestId;
 use App\Http\Middleware\AuditAction;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Modules\Auth\Http\Middleware\EnsureAuthSessionIsActive;
+use App\Modules\Users\Http\Middleware\EnsureOnboarded;
 use App\Support\Api\ApiExceptionRenderer;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -35,6 +36,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'audit' => AuditAction::class,
             'auth.session' => EnsureAuthSessionIsActive::class,
             'role' => RoleMiddleware::class,
+            'onboarded' => EnsureOnboarded::class,
         ]);
 
         $middleware->redirectGuestsTo('/entrar');

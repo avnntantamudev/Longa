@@ -6,6 +6,7 @@ namespace App\Modules\Users\Http\Resources;
 
 use App\Modules\Users\Enums\Role;
 use App\Modules\Users\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -40,5 +41,13 @@ class UserResource extends JsonResource
             'needs_onboarding' => $this->onboarded_at === null,
             'created_at' => $this->created_at?->toIso8601String(),
         ];
+    }
+
+    /**
+     * Sempre 200: o JsonResource responderia 201 para um utilizador criado no mesmo pedido (registo por OTP).
+     */
+    public function withResponse(Request $request, JsonResponse $response): void
+    {
+        $response->setStatusCode(200);
     }
 }

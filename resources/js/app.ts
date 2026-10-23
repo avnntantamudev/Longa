@@ -1,6 +1,7 @@
 import '../css/app.css';
 
 import AppLayout from '@/layouts/AppLayout.vue';
+import AuthLayout from '@/layouts/AuthLayout.vue';
 import { createInertiaApp } from '@inertiajs/vue3';
 import type { DefineComponent } from 'vue';
 import { createApp, h } from 'vue';
@@ -17,8 +18,8 @@ createInertiaApp({
         }
         return page();
     },
-    // Todas as páginas usam o AppLayout, exceto as que definem o seu próprio layout
-    layout: () => AppLayout,
+    // Login e registo usam o AuthLayout (sem navegação); as restantes páginas usam o AppLayout
+    layout: (name) => (name.startsWith('Auth/') || name.startsWith('Onboarding/') ? AuthLayout : AppLayout),
     setup({ el, App, props, plugin }) {
         createApp({ render: () => h(App, props) })
             .use(plugin)

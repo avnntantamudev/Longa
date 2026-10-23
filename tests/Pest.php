@@ -25,3 +25,15 @@ function apiLogin(App\Modules\Users\Models\User $user): App\Modules\Users\Models
 
     return $user;
 }
+
+/**
+ * Inicia uma sessão web (PWA) com AuthSession, como faria o login por OTP.
+ */
+function loginWeb(App\Modules\Users\Models\User $user): App\Modules\Users\Models\User
+{
+    test()->actingAs($user);
+    $session = App\Modules\Auth\Models\AuthSession::query()->create(['user_id' => $user->id, 'type' => 'web', 'last_active_at' => now()]);
+    test()->withSession([App\Modules\Auth\Services\AuthSessionService::SESSION_KEY => $session->id]);
+
+    return $user;
+}

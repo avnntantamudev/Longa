@@ -19,6 +19,8 @@ return new class extends Migration
         });
 
         Schema::table('training_sessions', function (Blueprint $table) {
+            // Estados novos são mais longos (ex.: awaiting_confirmation)
+            $table->string('state', 30)->default('scheduled')->change();
             $table->unsignedSmallInteger('duration_minutes')->default(60)->after('scheduled_at');
             $table->dateTime('ends_at')->nullable()->after('duration_minutes');
             $table->string('payment_method', 20)->default('electronic')->after('trainer_net');

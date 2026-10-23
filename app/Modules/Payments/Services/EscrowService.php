@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Payments\Services;
 
 use App\Modules\Payments\Contracts\PaymentProvider;
+use App\Modules\Payments\Jobs\ExecuteRefund;
 use App\Modules\Payments\Models\EscrowHold;
 use App\Modules\Payments\Models\PaymentCharge;
 use App\Modules\Requests\Services\Commission;
@@ -13,6 +14,7 @@ use App\Modules\Users\Models\User;
 use App\Modules\Wallet\Ledger\Accounts;
 use App\Modules\Wallet\Ledger\LedgerException;
 use App\Modules\Wallet\Ledger\LedgerService;
+use App\Modules\Wallet\Models\LedgerTransaction;
 use App\Support\Audit\AuditLogger;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -131,8 +133,9 @@ class EscrowService
             return $hold;
         });
 
-        if ($hold->refunded_amount > 0) {
-            $this->payRefund($hold);
+        // Reembolso no gateway: depois do commit e fora de transações (chamada de rede), via fila
+        if ($hold->refunded_amount > 0 && $hold->wasChanged('state')) {
+            ExecuteRefund::dispatch($hold->id);
         }
 
         return $hold;
@@ -150,6 +153,10 @@ class EscrowService
     public function payRefund(EscrowHold $hold): void
     {
         $key = "refund:paid:hold:{$hold->id}";
+
+        if (LedgerTransaction::query()->where('idempotency_key', $key)->exists()) {
+            return;
+        }
 
         $charge = PaymentCharge::query()->where('training_session_id', $hold->training_session_id)->where('kind', 'charge')->where('status', 'succeeded')->first();
         if ($charge === null) {

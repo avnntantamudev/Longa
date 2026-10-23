@@ -2,11 +2,30 @@
 
 declare(strict_types=1);
 
+use App\Modules\Requests\Models\TrainingRequest;
+use App\Modules\Sessions\Models\TrainingSession;
+use App\Modules\Users\Models\User;
 use Illuminate\Support\Facades\Broadcast;
 
-// Canal privado de cada utilizador (notificações em tempo real)
-Broadcast::channel('user.{id}', function ($user, $id) {
-    return (int) $user->id === (int) $id;
+/*
+| Canais privados (autorização em POST /api/v1/broadcasting/auth, com cookie da PWA ou Bearer token).
+| Regra: só o próprio utilizador / os participantes. Nada de canais por papel ou públicos com dados.
+*/
+
+// Utilizador: ofertas TRIM TRIM (formador), avisos de pedido aceite/perdido/cancelado
+Broadcast::channel('user.{id}', fn (User $user, int $id) => $user->id === $id);
+
+// Pedido: estado da procura, só para o aluno que o publicou
+Broadcast::channel('request.{requestId}', function (User $user, int $requestId) {
+    return TrainingRequest::query()->whereKey($requestId)->where('student_id', $user->id)->exists();
+});
+
+// Aula: chat entre o aluno e o formador da aula
+Broadcast::channel('session.{sessionId}', function (User $user, int $sessionId) {
+    return TrainingSession::query()
+        ->whereKey($sessionId)
+        ->where(fn ($q) => $q->where('student_id', $user->id)->orWhereHas('trainer', fn ($t) => $t->where('user_id', $user->id)))
+        ->exists();
 });
 
 // O canal público "longa.ping" serve apenas para testar a ligação ao Reverb (ver App\Events\PingBroadcast).

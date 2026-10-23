@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\AuditLog;
-use App\Models\User;
+use App\Modules\Users\Models\User;
 use App\Support\Audit\AuditLogger;
 use Illuminate\Support\Facades\Route;
 

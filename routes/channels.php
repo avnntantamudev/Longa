@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Broadcast;
 
 // Canal privado de cada utilizador (notificações em tempo real)
-Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
+Broadcast::channel('user.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 });
 

@@ -8,25 +8,24 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
+        // Autenticação só por OTP: não há palavra-passe nem tabela de reposição de palavra-passe
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
+            $table->string('phone', 16)->unique()->comment('E.164, ex.: +244923456789');
+            $table->timestamp('phone_verified_at')->nullable();
+            $table->string('name')->nullable()->comment('Preenchido no onboarding');
+            $table->string('email')->nullable()->unique();
             $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
+            $table->string('status', 20)->default('active')->index()->comment('active | suspended');
+            $table->string('suspension_reason')->nullable();
+            $table->string('locale', 5)->default('pt');
+            $table->timestamp('last_login_at')->nullable();
+            $table->timestamp('onboarded_at')->nullable();
             $table->rememberToken();
             $table->timestamps();
-        });
-
-        Schema::create('password_reset_tokens', function (Blueprint $table) {
-            $table->string('email')->primary();
-            $table->string('token');
-            $table->timestamp('created_at')->nullable();
+            $table->softDeletes();
         });
 
         Schema::create('sessions', function (Blueprint $table) {
@@ -39,13 +38,9 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('users');
-        Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
     }
 };

@@ -63,3 +63,7 @@ O hook de pre-commit (`.githooks/pre-commit`) corre Pint, Larastan e vue-tsc. O 
 - [Testar a PWA com HTTPS](docs/pwa-https.md)
 - [Formato de erros da API](docs/api-errors.md)
 - [Design system e telas do kit](docs/design-system.md)
+- [Autenticação (OTP, sessões, tokens)](docs/auth.md)
+- [Base de dados (DER)](docs/database.md)
+- [Registo de decisões](docs/decisions.md)
+- Contrato da API: [docs/openapi.json](docs/openapi.json) (gerado com `composer openapi`; interativo em `/docs/api` em ambiente local)

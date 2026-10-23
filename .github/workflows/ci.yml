@@ -65,6 +65,12 @@ jobs:
       - name: Larastan
         run: composer analyse
 
+      # O contrato OpenAPI versionado em docs/openapi.json tem de corresponder ao código
+      - name: OpenAPI atualizado
+        run: |
+          php artisan scramble:export --path=/tmp/openapi.json
+          diff -q docs/openapi.json /tmp/openapi.json || (echo '::error::docs/openapi.json desatualizado: corra composer openapi' && exit 1)
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22

@@ -89,7 +89,8 @@
         "hooks": "@php scripts/install-hooks.php",
         "post-install-cmd": [
             "@php scripts/install-hooks.php"
-        ]
+        ],
+        "openapi": "@php artisan scramble:export --path=docs/openapi.json"
     },
     "extra": {
         "laravel": {

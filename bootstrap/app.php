@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Middleware\AssignRequestId;
 use App\Http\Middleware\AuditAction;
+use App\Http\Middleware\EnsureIdempotency;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Modules\Auth\Http\Middleware\EnsureAuthSessionIsActive;
 use App\Modules\Users\Http\Middleware\EnsureOnboarded;
@@ -41,6 +42,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'auth.session' => EnsureAuthSessionIsActive::class,
             'role' => RoleMiddleware::class,
             'onboarded' => EnsureOnboarded::class,
+            'idempotent' => EnsureIdempotency::class,
         ]);
 
         $middleware->redirectGuestsTo('/entrar');

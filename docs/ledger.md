@@ -37,7 +37,7 @@ O **pendente** do formador (retido em aulas ainda não confirmadas) é a soma do
 | `escrow_release` | escrow −25.000 · trainer_available +21.250 · platform_revenue +3.750 |
 | `refund` (total) | escrow −25.000 · refunds_payable +25.000 |
 | `refund_paid` (gateway confirma) | refunds_payable −25.000 · funds_in +25.000 |
-| `refund_partial` (formador fica com 25%) | escrow −25.000 · refunds_payable +18.750 · trainer_available +5.313 · platform_revenue +937 |
+| `refund_partial` (formador fica com 25% = 6.250) | escrow −25.000 · refunds_payable +18.750 · trainer_available +5.312 · platform_revenue +938 (937,5 arredonda para cima) |
 | `cash_commission_due` | platform_revenue +3.750 · trainer_commission_due −3.750 |
 | `cash_commission_received` | cash_settlement −3.750 · trainer_commission_due +3.750 |
 | `commission_offset` | trainer_available −x · trainer_commission_due +x |

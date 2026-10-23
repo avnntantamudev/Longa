@@ -1,0 +1,53 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Modules\Sessions\Actions;
+
+use App\Modules\Sessions\Enums\SessionState;
+use App\Modules\Sessions\Models\TrainingSession;
+use App\Modules\Sessions\Services\SessionLifecycle;
+use App\Modules\Users\Models\User;
+use App\Support\Api\ApiException;
+use Illuminate\Support\Facades\DB;
+
+/**
+ * Reportar falta: o aluno reporta o formador (≥ 15 min após o início) ou o formador reporta o aluno
+ * (≥ 30 min). O dinheiro fica retido durante o prazo de contestação (24 h); sem contestação, a regra R4
+ * liquida conforme a política; com contestação, a aula vai para disputa.
+ */
+class ReportNoShow
+{
+    public function __construct(private readonly SessionLifecycle $lifecycle) {}
+
+    public function handle(TrainingSession $session, User $reporter, ?string $note): TrainingSession
+    {
+        return DB::transaction(function () use ($session, $reporter, $note) {
+            /** @var TrainingSession $locked */
+            $locked = TrainingSession::query()->lockForUpdate()->findOrFail($session->id);
+            $byStudent = $locked->student_id === $reporter->id;
+            $target = $byStudent ? SessionState::NoShowTrainer : SessionState::NoShowStudent;
+
+            if ($locked->state === $target) {
+                return $locked;
+            }
+
+            if ($locked->state !== SessionState::Scheduled) {
+                throw new ApiException('no_show_not_allowed', 'Só pode reportar falta numa aula que ainda não começou.', 409);
+            }
+
+            $minutes = (int) config($byStudent ? 'longa.session_rules.no_show_trainer_after_minutes' : 'longa.session_rules.no_show_student_after_minutes');
+            $from = $locked->scheduled_at->copy()->addMinutes($minutes);
+            if (now()->lt($from)) {
+                throw new ApiException('no_show_too_early', 'Só pode reportar a falta a partir das '.$from->format('H:i').'.', 409);
+            }
+
+            $contestUntil = now()->addHours((int) config('longa.session_rules.no_show_contest_hours'));
+            $this->lifecycle->transition($locked, $target, 'no_show_reported', $reporter, [
+                'note' => $note, 'contest_until' => $contestUntil->toIso8601String(),
+            ], ['no_show_contest_until' => $contestUntil]);
+
+            return $locked;
+        });
+    }
+}

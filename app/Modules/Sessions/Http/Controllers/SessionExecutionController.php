@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace App\Modules\Sessions\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Sessions\Actions\CancelSession;
 use App\Modules\Sessions\Actions\ConfirmSession;
+use App\Modules\Sessions\Actions\ConfirmWithoutQr;
 use App\Modules\Sessions\Actions\FinishSession;
+use App\Modules\Sessions\Actions\ReportNoShow;
 use App\Modules\Sessions\Actions\StartSession;
 use App\Modules\Sessions\Http\Requests\ConfirmSessionRequest;
 use App\Modules\Sessions\Http\Resources\SessionResource;
@@ -81,6 +84,46 @@ class SessionExecutionController extends Controller
                 ? 'Aula confirmada. Confirme que pagou ao formador em mão.'
                 : 'Aula confirmada, Kz '.number_format($confirmed->amount, 0, ',', '.').' libertados para o formador.',
         ]);
+    }
+
+    /**
+     * Confirmar sem QR (aluno), com a aula à espera de confirmação.
+     *
+     * Requer `Idempotency-Key`. Liberta o valor retido para o formador.
+     */
+    public function confirmWithoutQr(Request $request, TrainingSession $session, ConfirmWithoutQr $action): SessionResource
+    {
+        Gate::authorize('actAsStudent', $session);
+
+        return $this->resource($action->handle($session, $this->user($request)));
+    }
+
+    /**
+     * Cancelar aula agendada (aluno ou formador).
+     *
+     * Requer `Idempotency-Key`. Reembolso conforme a política: aluno ≥ 6 h antes → total; depois → o formador
+     * fica com 25%; formador cancela → total.
+     */
+    public function cancel(Request $request, TrainingSession $session, CancelSession $action): SessionResource
+    {
+        Gate::authorize('view', $session);
+        $data = $request->validate(['reason' => ['nullable', 'string', 'max:255']]);
+
+        return $this->resource($action->handle($session, $this->user($request), $data['reason'] ?? null));
+    }
+
+    /**
+     * Reportar falta da outra parte (aluno ou formador).
+     *
+     * Requer `Idempotency-Key`. A outra parte tem 24 h para contestar (abre disputa); sem contestação,
+     * a liquidação segue a política.
+     */
+    public function noShow(Request $request, TrainingSession $session, ReportNoShow $action): SessionResource
+    {
+        Gate::authorize('view', $session);
+        $data = $request->validate(['note' => ['nullable', 'string', 'max:500']]);
+
+        return $this->resource($action->handle($session, $this->user($request), $data['note'] ?? null));
     }
 
     /**

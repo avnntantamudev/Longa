@@ -21,4 +21,7 @@ Route::middleware(['auth:sanctum', 'auth.session', 'onboarded'])->group(function
     Route::post('sessions/{session}/confirm', [SessionExecutionController::class, 'confirm'])
         ->middleware(['idempotent', 'throttle:qr-confirm'])
         ->name('api.sessions.confirm');
+    Route::post('sessions/{session}/confirm-without-qr', [SessionExecutionController::class, 'confirmWithoutQr'])->middleware('idempotent')->name('api.sessions.confirm-without-qr');
+    Route::post('sessions/{session}/cancel', [SessionExecutionController::class, 'cancel'])->middleware(['idempotent', 'throttle:10,1'])->name('api.sessions.cancel');
+    Route::post('sessions/{session}/no-show', [SessionExecutionController::class, 'noShow'])->middleware(['idempotent', 'throttle:10,1'])->name('api.sessions.no-show');
 });

@@ -103,6 +103,14 @@ return [
             'formatter' => JsonFormatter::class,
         ],
 
+        // Driver de SMS "log" (desenvolvimento): mensagens enviadas, incluindo códigos OTP
+        'sms' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/sms.log'),
+            'level' => 'info',
+            'max_files' => 7,
+        ],
+
         'slack' => [
             'driver' => 'slack',
             'url' => env('LOG_SLACK_WEBHOOK_URL'),

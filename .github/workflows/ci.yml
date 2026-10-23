@@ -74,7 +74,19 @@ jobs:
       - run: npm ci && npm run build
 
       - name: Pest (com cobertura)
-        run: composer test:coverage
+        run: |
+          set -o pipefail
+          composer test:coverage 2>&1 | tee pest-output.txt
+        # Publica o fim do relatório no resumo do job e, em caso de falha, como anotação
+      - name: Resumo dos testes
+        if: always()
+        run: |
+          [ -f pest-output.txt ] || exit 0
+          { echo '```'; tail -n 60 pest-output.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          if grep -qE 'FAIL|Tests:.*failed|below|Code coverage below' pest-output.txt; then
+            msg=$(grep -E 'FAIL|failed|Total|below|Failed asserting|Exception' pest-output.txt | tail -n 25 | sed ':a;N;$!ba;s/%/%25/g;s/\n/%0A/g')
+            echo "::error title=Pest::${msg}"
+          fi
 
   frontend:
     name: Tipos e build (TypeScript/Vue)

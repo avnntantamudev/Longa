@@ -48,7 +48,9 @@ final class ApiExceptionRenderer
                 $e->errors(),
             ),
             $e instanceof AuthenticationException => ApiError::response('unauthenticated', 'É necessário iniciar sessão.', 401),
-            $e instanceof AuthorizationException, $e instanceof AccessDeniedHttpException => ApiError::response(
+            $e instanceof AuthorizationException,
+            $e instanceof AccessDeniedHttpException,
+            $e instanceof HttpExceptionInterface && $e->getStatusCode() === 403 => ApiError::response(
                 'forbidden',
                 'Não tem permissão para realizar esta ação.',
                 403,

@@ -33,6 +33,13 @@ return [
         'max_sends_per_ip_per_hour' => (int) env('OTP_MAX_SENDS_PER_IP_PER_HOUR', 20),
     ],
 
+    // Versões em vigor dos documentos que o utilizador aceita (muda a versão para pedir nova aceitação)
+    'consents' => [
+        'terms' => env('LONGA_TERMS_VERSION', '2026-10'),
+        'privacy' => env('LONGA_PRIVACY_VERSION', '2026-10'),
+        'location' => env('LONGA_LOCATION_CONSENT_VERSION', '2026-10'),
+    ],
+
     'sms' => [
         'driver' => env('SMS_DRIVER', 'log'),
         'sender_id' => env('SMS_SENDER_ID', 'LONGA'),

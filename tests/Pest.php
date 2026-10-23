@@ -13,3 +13,15 @@ use Tests\TestCase;
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
     ->in('Feature');
+
+/**
+ * Inicia uma sessão API completa (token de acesso + AuthSession) para o utilizador.
+ */
+function apiLogin(App\Modules\Users\Models\User $user): App\Modules\Users\Models\User
+{
+    app('auth')->forgetGuards();
+    $tokens = app(App\Modules\Auth\Services\AuthSessionService::class)->startApi(request(), $user, 'Teste');
+    test()->withToken($tokens->accessToken);
+
+    return $user;
+}

@@ -26,10 +26,13 @@ class WebLoginController extends Controller
 {
     private const PHONE_SESSION_KEY = 'otp_phone';
 
+    private const CHANNEL_SESSION_KEY = 'otp_channel';
+
     public function show(Request $request): Response
     {
         return Inertia::render('Auth/Login', [
             'phone' => $request->session()->get(self::PHONE_SESSION_KEY),
+            'channel' => $request->session()->get(self::CHANNEL_SESSION_KEY, 'sms'),
             'codeLength' => (int) config('longa.otp.length'),
             'resendIn' => (int) config('longa.otp.resend_cooldown'),
         ]);
@@ -37,11 +40,13 @@ class WebLoginController extends Controller
 
     public function sendCode(RequestOtpRequest $request, RequestOtp $action): RedirectResponse
     {
-        $phone = $this->asFormError('phone', fn () => $action->handle($request->string('phone')->toString(), $request->ip()));
+        $channel = $request->channel();
+        $phone = $this->asFormError('phone', fn () => $action->handle($request->string('phone')->toString(), $request->ip(), $channel));
 
         $request->session()->put(self::PHONE_SESSION_KEY, $phone->e164);
+        $request->session()->put(self::CHANNEL_SESSION_KEY, $channel->value);
 
-        return back()->with('success', 'Enviámos um código para '.$phone->masked().'.');
+        return back()->with('success', "Enviámos um código por {$channel->label()} para {$phone->masked()}.");
     }
 
     public function verify(VerifyOtpRequest $request, AuthenticateWithOtp $action, AuthSessionService $sessions): RedirectResponse
@@ -52,7 +57,7 @@ class WebLoginController extends Controller
         ));
 
         $sessions->startWeb($request, $user);
-        $request->session()->forget(self::PHONE_SESSION_KEY);
+        $request->session()->forget([self::PHONE_SESSION_KEY, self::CHANNEL_SESSION_KEY]);
 
         return redirect()->intended($user->onboarded_at === null ? route('onboarding.show') : route('home'));
     }

@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace App\Modules\Auth\Services;
 
+use App\Modules\Auth\Enums\OtpChannel;
+use App\Modules\Auth\Jobs\SendOtpCode;
 use App\Modules\Auth\Models\OtpCode;
-use App\Modules\Notifications\Jobs\SendSms;
 use App\Support\Api\ApiException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -26,13 +27,14 @@ class OtpService
 {
     public const PURPOSE_LOGIN = 'login';
 
-    public function issue(string $phone, ?string $ip): void
+    public function issue(string $phone, ?string $ip, OtpChannel $channel = OtpChannel::Sms): void
     {
         $this->ensureNotLocked($phone);
 
         $config = config('longa.otp');
 
-        $this->hit("otp:cooldown:{$phone}", 1, (int) $config['resend_cooldown'], 'otp_resend_too_soon', 'Aguarde um pouco antes de pedir um novo código.');
+        // Intervalo por canal: pode pedir logo por WhatsApp se o SMS não chegar (o limite por hora é comum)
+        $this->hit("otp:cooldown:{$phone}:{$channel->value}", 1, (int) $config['resend_cooldown'], 'otp_resend_too_soon', 'Aguarde um pouco antes de pedir um novo código.');
         $this->hit("otp:phone:{$phone}", (int) $config['max_sends_per_phone_per_hour'], 3600, 'otp_too_many_requests', 'Pediu demasiados códigos. Tente novamente mais tarde.');
         if ($ip !== null) {
             $this->hit("otp:ip:{$ip}", (int) $config['max_sends_per_ip_per_hour'], 3600, 'otp_too_many_requests', 'Pediu demasiados códigos. Tente novamente mais tarde.');
@@ -54,7 +56,7 @@ class OtpService
         });
 
         $minutes = intdiv((int) $config['ttl'], 60);
-        SendSms::dispatch($phone, "LONGA: o seu código é {$code}. Válido durante {$minutes} minutos. Não o partilhe com ninguém.");
+        SendOtpCode::dispatch($phone, $code, $minutes, $channel);
     }
 
     /**

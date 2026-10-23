@@ -24,15 +24,18 @@ class OtpController extends Controller
      * Pedir código OTP.
      *
      * Responde sempre 202 com a mesma mensagem, exista ou não conta para o telefone.
+     * O utilizador escolhe o canal: SMS ou WhatsApp (se o WhatsApp falhar, o código segue por SMS).
      *
      * @unauthenticated
      */
     public function request(RequestOtpRequest $request, RequestOtp $action): JsonResponse
     {
-        $action->handle($request->string('phone')->toString(), $request->ip());
+        $channel = $request->channel();
+        $action->handle($request->string('phone')->toString(), $request->ip(), $channel);
 
         return response()->json([
-            'message' => 'Se o número estiver correto, vai receber um código por SMS dentro de instantes.',
+            'message' => "Se o número estiver correto, vai receber um código por {$channel->label()} dentro de instantes.",
+            'channel' => $channel->value,
             'expires_in' => (int) config('longa.otp.ttl'),
             'resend_in' => (int) config('longa.otp.resend_cooldown'),
         ], 202);

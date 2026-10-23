@@ -4,6 +4,7 @@ Decisões de produto e de arquitetura, com a data e o motivo. As mais recentes f
 
 | Data | Decisão | Motivo | Quem |
 |---|---|---|---|
+| 2026-10-23 | **Código de acesso por SMS ou WhatsApp, à escolha do utilizador** (também no ecrã "Introduza o código"); WhatsApp via Cloud API da Meta, com SMS automático se o WhatsApp falhar. | Pedido do cliente. Nota: o WhatsApp Business cobra as mensagens iniciadas pela empresa. | Cliente |
 | 2026-10-23 | **Pagamento em dinheiro**: o formador marca a aula como terminada, o aluno confirma que pagou em mão; o sistema regista automaticamente a comissão LONGA como valor a receber do formador; o admin marca como recebido quando receber. | Decisão de negócio (Fase 3). | Cliente |
 | 2026-10-23 | **Libertação do pagamento eletrónico 24 h depois da confirmação por QR.** | Resposta "sim" à proposta do kit ("retido 24h até confirmação QR"). | Cliente |
 | 2026-10-23 | **Recibos com numeração sequencial própria, sem certificação AGT por agora.** | Decisão do cliente; a certificação fica para mais tarde. | Cliente |

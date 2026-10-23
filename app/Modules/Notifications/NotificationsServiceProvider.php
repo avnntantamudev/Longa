@@ -10,6 +10,10 @@ use App\Modules\Notifications\Push\PushReportHandler;
 use App\Modules\Notifications\Sms\ArraySmsProvider;
 use App\Modules\Notifications\Sms\LogSmsProvider;
 use App\Modules\Notifications\Sms\SmsProvider;
+use App\Modules\Notifications\WhatsApp\ArrayWhatsAppProvider;
+use App\Modules\Notifications\WhatsApp\CloudApiWhatsAppProvider;
+use App\Modules\Notifications\WhatsApp\LogWhatsAppProvider;
+use App\Modules\Notifications\WhatsApp\WhatsAppProvider;
 use App\Modules\Requests\Events\OfferSent;
 use App\Modules\Requests\Events\RequestExpired;
 use App\Modules\Requests\Events\RequestMatched;
@@ -31,6 +35,23 @@ class NotificationsServiceProvider extends ServiceProvider
                 'array' => new ArraySmsProvider,
                 // O provedor real será integrado depois de o cliente o escolher
                 default => throw new InvalidArgumentException("Driver de SMS não suportado: {$driver}"),
+            };
+        });
+
+        $this->app->singleton(WhatsAppProvider::class, function (): WhatsAppProvider {
+            $config = config('longa.whatsapp');
+
+            return match ($config['driver']) {
+                'log' => new LogWhatsAppProvider,
+                'array' => new ArrayWhatsAppProvider,
+                'cloud' => new CloudApiWhatsAppProvider(
+                    (string) $config['token'],
+                    (string) $config['phone_number_id'],
+                    (string) $config['api_version'],
+                    (string) $config['otp_template'],
+                    (string) $config['language'],
+                ),
+                default => throw new InvalidArgumentException("Driver de WhatsApp não suportado: {$config['driver']}"),
             };
         });
     }

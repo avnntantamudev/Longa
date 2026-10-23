@@ -77,6 +77,16 @@ return [
         'mask_contacts' => (bool) env('LONGA_CHAT_MASK_CONTACTS', true),
     ],
 
+    // WhatsApp (o utilizador pode escolher receber o código por WhatsApp)
+    'whatsapp' => [
+        'driver' => env('WHATSAPP_DRIVER', 'log'),
+        'token' => env('WHATSAPP_TOKEN'),
+        'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
+        'api_version' => env('WHATSAPP_API_VERSION', 'v23.0'),
+        'otp_template' => env('WHATSAPP_OTP_TEMPLATE', 'longa_codigo_acesso'),
+        'language' => env('WHATSAPP_TEMPLATE_LANGUAGE', 'pt_PT'),
+    ],
+
     'sms' => [
         'driver' => env('SMS_DRIVER', 'log'),
         'sender_id' => env('SMS_SENDER_ID', 'LONGA'),

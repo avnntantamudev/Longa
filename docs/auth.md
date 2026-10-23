@@ -1,6 +1,6 @@
 # Autenticação
 
-Login e registo são o mesmo fluxo: o utilizador indica o telemóvel, recebe um código por SMS e,
+Login e registo são o mesmo fluxo: o utilizador indica o telemóvel, **escolhe receber o código por SMS ou\nWhatsApp** (e no ecrã do código pode pedir de novo pelo outro canal) e,
 se o número ainda não tiver conta, a conta é criada ao validar o código. O perfil (aluno, formador,
 empresa) é escolhido a seguir, em `POST /onboarding`.
 
@@ -17,6 +17,13 @@ empresa) é escolhido a seguir, em `POST /onboarding`.
 | Envios por IP / hora | 20 | `OTP_MAX_SENDS_PER_IP_PER_HOUR` |
 
 - O código é guardado só com hash (bcrypt); cada novo envio anula os anteriores.
+- Canal: `channel` = `sms` (por defeito) ou `whatsapp`. O intervalo de 60 s conta **por canal** (pode pedir logo
+  por WhatsApp se o SMS não chegar); o limite por hora é comum aos dois.
+- Se o WhatsApp falhar (ex.: número sem WhatsApp), o código segue automaticamente por SMS.
+- O job de envio vai cifrado na fila (contém o código).
+- WhatsApp Cloud API (Meta): `WHATSAPP_DRIVER=cloud` com `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID` e um modelo
+  **Authentication** aprovado (`WHATSAPP_OTP_TEMPLATE`, botão "copiar código"). Mensagens iniciadas pela empresa
+  são pagas por mensagem entregue (ver página de preços da Meta para Angola).
 - `POST /auth/otp/request` responde sempre **202 com a mesma mensagem**, tenha ou não o número conta.
 - Os erros de validação são neutros: `otp_invalid` "Código inválido ou expirado." (não diz porquê).
 - Todas as tentativas ficam no audit log (`auth.otp_requested`, `auth.login_succeeded`, `auth.registered`, `auth.login_failed`, `auth.login_blocked`).

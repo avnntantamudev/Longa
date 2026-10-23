@@ -1,23 +1,35 @@
 <script setup lang="ts">
 import FormField from '@/components/FormField.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue';
 
-const props = defineProps<{ phone: string | null; codeLength: number; resendIn: number }>();
+type Channel = 'sms' | 'whatsapp';
 
-const phoneForm = useForm({ phone: '' });
+const props = defineProps<{ phone: string | null; channel: Channel; codeLength: number; resendIn: number }>();
+
+const channels: Array<{ value: Channel; label: string }> = [
+    { value: 'sms', label: 'SMS' },
+    { value: 'whatsapp', label: 'WhatsApp' },
+];
+const channelLabel = (c: Channel) => (c === 'whatsapp' ? 'WhatsApp' : 'SMS');
+
+const phoneForm = useForm({ phone: '', channel: 'sms' as Channel });
 const codeForm = useForm({ phone: props.phone ?? '', code: '' });
+const resendError = ref<string | null>(null);
 
 const step = computed(() => (props.phone ? 'code' : 'phone'));
-const countdown = ref(0);
+
+// Contagem por canal: depois de um SMS pode pedir logo por WhatsApp (e vice-versa)
+const countdown = reactive<Record<Channel, number>>({ sms: 0, whatsapp: 0 });
 let timer: ReturnType<typeof setInterval> | undefined;
 
-function startCountdown(): void {
-    countdown.value = props.resendIn;
+function startCountdown(channel: Channel): void {
+    countdown[channel] = props.resendIn;
     clearInterval(timer);
     timer = setInterval(() => {
-        countdown.value = Math.max(0, countdown.value - 1);
-        if (countdown.value === 0) {
+        countdown.sms = Math.max(0, countdown.sms - 1);
+        countdown.whatsapp = Math.max(0, countdown.whatsapp - 1);
+        if (countdown.sms === 0 && countdown.whatsapp === 0) {
             clearInterval(timer);
         }
     }, 1000);
@@ -29,7 +41,7 @@ watch(
         codeForm.phone = phone ?? '';
         codeForm.code = '';
         if (phone) {
-            startCountdown();
+            startCountdown(props.channel);
         }
     },
     { immediate: true },
@@ -41,8 +53,17 @@ function sendCode(): void {
     phoneForm.post('/entrar/codigo', { preserveScroll: true });
 }
 
-function resend(): void {
-    router.post('/entrar/codigo', { phone: props.phone }, { preserveScroll: true, onSuccess: startCountdown });
+function resend(channel: Channel): void {
+    resendError.value = null;
+    router.post(
+        '/entrar/codigo',
+        { phone: props.phone, channel },
+        {
+            preserveScroll: true,
+            onSuccess: () => startCountdown(channel),
+            onError: (errors) => (resendError.value = errors.phone ?? null),
+        },
+    );
 }
 
 function verify(): void {
@@ -69,7 +90,7 @@ const maskedPhone = computed(() => (props.phone ? `${props.phone.slice(0, 4)} ${
     <section class="card p-6">
         <template v-if="step === 'phone'">
             <h1 class="text-title">Entrar ou criar conta</h1>
-            <p class="mt-1 text-caption text-ink-muted">Enviamos um código por SMS. Não precisa de palavra-passe.</p>
+            <p class="mt-1 text-caption text-ink-muted">Enviamos um código de acesso. Não precisa de palavra-passe.</p>
 
             <form class="mt-6 grid gap-4" novalidate @submit.prevent="sendCode">
                 <FormField label="Número de telemóvel" for="phone" :error="phoneForm.errors.phone">
@@ -88,15 +109,36 @@ const maskedPhone = computed(() => (props.phone ? `${props.phone.slice(0, 4)} ${
                         />
                     </div>
                 </FormField>
+
+                <fieldset class="grid gap-2">
+                    <legend class="mb-1.5 text-caption font-semibold">Receber o código por</legend>
+                    <div class="grid grid-cols-2 gap-2" role="radiogroup">
+                        <button
+                            v-for="option in channels"
+                            :key="option.value"
+                            type="button"
+                            role="radio"
+                            :aria-checked="phoneForm.channel === option.value"
+                            class="chip min-h-12 justify-center"
+                            :class="{ 'chip-active': phoneForm.channel === option.value }"
+                            @click="phoneForm.channel = option.value"
+                        >
+                            {{ option.label }}
+                        </button>
+                    </div>
+                </fieldset>
+
                 <button type="submit" class="btn-primary w-full" :disabled="phoneForm.processing || phoneForm.phone.length < 9">
-                    {{ phoneForm.processing ? 'A enviar…' : 'Receber código' }}
+                    {{ phoneForm.processing ? 'A enviar…' : `Receber código por ${channelLabel(phoneForm.channel)}` }}
                 </button>
             </form>
         </template>
 
         <template v-else>
             <h1 class="text-title">Introduza o código</h1>
-            <p class="mt-1 text-caption text-ink-muted">Enviámos um código de {{ codeLength }} dígitos para {{ maskedPhone }}.</p>
+            <p class="mt-1 text-caption text-ink-muted">
+                Enviámos um código de {{ codeLength }} dígitos por {{ channelLabel(channel) }} para {{ maskedPhone }}.
+            </p>
 
             <form class="mt-6 grid gap-4" novalidate @submit.prevent="verify">
                 <FormField label="Código" for="code" :error="codeForm.errors.code">
@@ -118,10 +160,19 @@ const maskedPhone = computed(() => (props.phone ? `${props.phone.slice(0, 4)} ${
                 </button>
             </form>
 
-            <div class="mt-4 flex items-center justify-between text-caption">
-                <button type="button" class="font-semibold text-navy-700 underline" @click="router.post('/entrar/alterar-numero')">Alterar número</button>
-                <button type="button" class="font-semibold text-orange-600 disabled:text-ink-subtle" :disabled="countdown > 0" @click="resend">
-                    {{ countdown > 0 ? `Reenviar em ${countdown}s` : 'Reenviar código' }}
+            <div class="mt-5 grid gap-2">
+                <p class="text-caption font-semibold text-ink-muted">Não recebeu? Escolha como quer receber:</p>
+                <div class="grid grid-cols-2 gap-2">
+                    <button type="button" class="btn-secondary min-h-11 text-caption" :disabled="countdown.sms > 0" @click="resend('sms')">
+                        {{ countdown.sms > 0 ? `SMS · ${countdown.sms}s` : 'Por SMS' }}
+                    </button>
+                    <button type="button" class="btn-outline min-h-11 text-caption" :disabled="countdown.whatsapp > 0" @click="resend('whatsapp')">
+                        {{ countdown.whatsapp > 0 ? `WhatsApp · ${countdown.whatsapp}s` : 'Por WhatsApp' }}
+                    </button>
+                </div>
+                <p v-if="resendError" class="text-caption text-danger" role="alert">{{ resendError }}</p>
+                <button type="button" class="mt-1 justify-self-start text-caption font-semibold text-navy-700 underline" @click="router.post('/entrar/alterar-numero')">
+                    Alterar número
                 </button>
             </div>
         </template>

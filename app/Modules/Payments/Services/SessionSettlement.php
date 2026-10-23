@@ -16,7 +16,7 @@ use App\Support\Api\ApiException;
  */
 class SessionSettlement
 {
-    public function __construct(private readonly EscrowService $escrow) {}
+    public function __construct(private readonly EscrowService $escrow, private readonly CommissionDebts $debts) {}
 
     /**
      * Aula concluída: liberta o escrow para o formador (pagamento eletrónico).
@@ -30,6 +30,8 @@ class SessionSettlement
 
         $this->requireHold($session);
         $this->escrow->settle($session, $session->amount, EscrowHold::RELEASED, $reason, $actor);
+        // Comissões em dívida (aulas pagas em dinheiro) descontadas do novo saldo
+        $this->debts->offset($session->trainer_profile_id, "release:session:{$session->id}");
         WalletUpdated::dispatch($session->trainer->user_id, 'session_completed', $session->id);
     }
 
@@ -52,6 +54,7 @@ class SessionSettlement
         $this->escrow->settle($session, $trainerGross, $outcome, $reason, $actor);
 
         if ($trainerGross > 0) {
+            $this->debts->offset($session->trainer_profile_id, "release:session:{$session->id}");
             WalletUpdated::dispatch($session->trainer->user_id, $reason, $session->id);
         }
     }

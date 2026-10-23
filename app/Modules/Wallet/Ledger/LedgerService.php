@@ -110,6 +110,25 @@ class LedgerService
     }
 
     /**
+     * Executa $callback com as contas bloqueadas (mesma ordem determinística do post()), para decisões
+     * que dependem dos saldos atuais (ex.: compensações) sem corridas entre processos.
+     *
+     * @template T
+     *
+     * @param  list<string>  $codes
+     * @param  callable(): T  $callback
+     * @return T
+     */
+    public function withLockedAccounts(array $codes, callable $callback): mixed
+    {
+        return DB::transaction(function () use ($codes, $callback) {
+            $this->lockAccounts($codes);
+
+            return $callback();
+        });
+    }
+
+    /**
      * Saldo atual (cache) de uma conta; 0 se a conta ainda não existe.
      */
     public function balance(string $code): int

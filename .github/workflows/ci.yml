@@ -67,7 +67,9 @@ jobs:
 
       # O contrato OpenAPI versionado em docs/openapi.json tem de corresponder ao código
       - name: OpenAPI atualizado
+        # O Scramble infere os tipos dos modelos a partir das colunas: precisa das tabelas criadas
         run: |
+          php artisan migrate --force
           php artisan scramble:export --path=/tmp/openapi.json
           diff -q docs/openapi.json /tmp/openapi.json || (echo '::error::docs/openapi.json desatualizado: corra composer openapi' && exit 1)
 

@@ -45,6 +45,37 @@ php artisan serve
 No Windows o Horizon não corre (precisa de `pcntl`); use `php artisan queue:work --queue=payments,notifications,default`.
 Reverb: `php artisan reverb:start`. Teste do canal: `php artisan longa:ping`.
 
+Os testes correm em **MySQL** (base `longa_testing`): `CREATE DATABASE longa_testing;` antes de `composer test`.
+
+## TRIM TRIM localmente (Fase 2)
+
+Processos necessários (no Docker já correm em `worker`, `scheduler` e `reverb`):
+
+```bash
+php artisan serve
+php artisan queue:work --queue=payments,notifications,default   # notificações e avanço das ondas
+php artisan schedule:work                                        # varredura do matching a cada 10 s
+php artisan reverb:start --port=8081                             # tempo real
+```
+
+Simular vários formadores (verificados, disponíveis, perto de Talatona):
+
+```bash
+php artisan longa:simulate-trainers 8                    # cria/atualiza +244 910 000 001…008 (entram por OTP)
+php artisan longa:simulate-trainers 8 --auto-accept      # e aceitam ofertas com atraso aleatório (2–15 s)
+php artisan longa:simulate-trainers 8 --zone=Kilamba --skill=matematica --auto-accept --duration=300
+```
+
+Fluxo em dois telemóveis/janelas: entre como formador simulado (`910 000 001`) e abra **TRIM TRIM**;
+noutra janela registe um aluno e use **Pedir aula**. O código OTP aparece em `storage/logs/sms-*.log`.
+Para testar em telemóveis reais é preciso HTTPS (ver [docs/pwa-https.md](docs/pwa-https.md)).
+
+Chaves VAPID (Web Push): `php artisan webpush:vapid` em Linux/Docker. No Windows/Laragon:
+
+```bash
+node -e "const c=require('crypto');const k=c.generateKeyPairSync('ec',{namedCurve:'prime256v1'});const p=k.publicKey.export({format:'jwk'}),s=k.privateKey.export({format:'jwk'});const b=x=>Buffer.from(x,'base64url');console.log('VAPID_PUBLIC_KEY='+Buffer.concat([Buffer.from([4]),b(p.x),b(p.y)]).toString('base64url'));console.log('VAPID_PRIVATE_KEY='+s.d)"
+```
+
 ## Qualidade
 
 ```bash
@@ -66,4 +97,6 @@ O hook de pre-commit (`.githooks/pre-commit`) corre Pint, Larastan e vue-tsc. O 
 - [Autenticação (OTP, sessões, tokens)](docs/auth.md)
 - [Base de dados (DER)](docs/database.md)
 - [Registo de decisões](docs/decisions.md)
+- [Máquinas de estados (pedido, oferta, aula)](docs/state-machines.md)
+- [Tempo real e notificações (Reverb, Web Push, SMS, iOS)](docs/notifications.md)
 - Contrato da API: [docs/openapi.json](docs/openapi.json) (gerado com `composer openapi`; interativo em `/docs/api` em ambiente local)

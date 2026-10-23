@@ -16,6 +16,403 @@
         }
     ],
     "paths": {
+        "/sessions": {
+            "get": {
+                "operationId": "sessions.index",
+                "summary": "As minhas aulas (como aluno ou formador)",
+                "tags": [
+                    "Aulas e chat",
+                    "Session"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated set of `SessionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/SessionResource"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "from",
+                                                "last_page",
+                                                "links",
+                                                "path",
+                                                "per_page",
+                                                "to",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/sessions/{session}": {
+            "get": {
+                "operationId": "sessions.show",
+                "summary": "Ver aula",
+                "tags": [
+                    "Aulas e chat",
+                    "Session"
+                ],
+                "parameters": [
+                    {
+                        "name": "session",
+                        "in": "path",
+                        "required": true,
+                        "description": "The session ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`SessionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/SessionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/sessions/{session}/messages": {
+            "get": {
+                "operationId": "sessions.messages",
+                "description": "Pagina\u00e7\u00e3o por cursor: `before` (mensagens mais antigas) ou `after` (novas desde a \u00faltima recebida).",
+                "summary": "Mensagens do chat",
+                "tags": [
+                    "Aulas e chat",
+                    "Session"
+                ],
+                "parameters": [
+                    {
+                        "name": "session",
+                        "in": "path",
+                        "required": true,
+                        "description": "The session ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "after",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "before",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `MessageResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/MessageResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "sessions.messages.send",
+                "summary": "Enviar mensagem (texto e/ou PDF)",
+                "tags": [
+                    "Aulas e chat",
+                    "Session"
+                ],
+                "parameters": [
+                    {
+                        "name": "session",
+                        "in": "path",
+                        "required": true,
+                        "description": "The session ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SendMessageRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`MessageResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/MessageResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/messages/{message}/attachment": {
+            "get": {
+                "operationId": "messages.attachment",
+                "description": "Devolve um URL assinado v\u00e1lido por alguns minutos (config longa.chat.attachment_link_minutes).",
+                "summary": "Link tempor\u00e1rio para descarregar o PDF de uma mensagem",
+                "tags": [
+                    "Aulas e chat",
+                    "Session"
+                ],
+                "parameters": [
+                    {
+                        "name": "message",
+                        "in": "path",
+                        "required": true,
+                        "description": "The message ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "url": {
+                                                    "type": "string"
+                                                },
+                                                "expires_in": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "url",
+                                                "expires_in"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/auth/otp/request": {
             "post": {
                 "operationId": "auth.otp.request",
@@ -287,6 +684,30 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/broadcasting/auth": {
+            "get": {
+                "operationId": "broadcast.authenticate",
+                "summary": "Authenticate the request for channel access",
+                "tags": [
+                    "Broadcast"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -974,6 +1395,600 @@
                 }
             }
         },
+        "/push-subscriptions": {
+            "post": {
+                "operationId": "push.subscribe",
+                "description": "Envie o objeto devolvido por `pushManager.subscribe()` (endpoint + keys). Repetir atualiza a subscri\u00e7\u00e3o.",
+                "summary": "Registar subscri\u00e7\u00e3o Web Push deste dispositivo",
+                "tags": [
+                    "Notifica\u00e7\u00f5es",
+                    "Notification"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PushSubscriptionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "push.unsubscribe",
+                "summary": "Remover subscri\u00e7\u00e3o Web Push (ex.: o utilizador desativou as notifica\u00e7\u00f5es)",
+                "tags": [
+                    "Notifica\u00e7\u00f5es",
+                    "Notification"
+                ],
+                "parameters": [
+                    {
+                        "name": "endpoint",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 2048
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/notifications": {
+            "get": {
+                "operationId": "notifications.index",
+                "summary": "Notifica\u00e7\u00f5es na app (mais recentes primeiro)",
+                "tags": [
+                    "Notifica\u00e7\u00f5es",
+                    "Notification"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string"
+                                                    },
+                                                    "read_at": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "created_at": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "read_at",
+                                                    "created_at"
+                                                ],
+                                                "additionalProperties": {}
+                                            }
+                                        },
+                                        "unread": {
+                                            "type": "integer",
+                                            "minimum": 0
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer"
+                                                },
+                                                "last_page": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "last_page"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "unread",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/notifications/read-all": {
+            "post": {
+                "operationId": "notifications.read-all",
+                "summary": "Marcar todas como lidas",
+                "tags": [
+                    "Notifica\u00e7\u00f5es",
+                    "Notification"
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/notifications/{id}/read": {
+            "post": {
+                "operationId": "notifications.read",
+                "summary": "Marcar notifica\u00e7\u00e3o como lida",
+                "tags": [
+                    "Notifica\u00e7\u00f5es",
+                    "Notification"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/training-requests": {
+            "get": {
+                "operationId": "training-requests.index",
+                "summary": "Os meus pedidos",
+                "tags": [
+                    "Pedidos de aula",
+                    "TrainingRequest"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated set of `StudentRequestResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/StudentRequestResource"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "from",
+                                                "last_page",
+                                                "links",
+                                                "path",
+                                                "per_page",
+                                                "to",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "training-requests.store",
+                "description": "Passa logo a `searching` (5 min) e envia a 1.\u00aa onda TRIM TRIM. Se n\u00e3o houver formadores eleg\u00edveis,\no pedido volta j\u00e1 como `expired`.",
+                "summary": "Publicar pedido",
+                "tags": [
+                    "Pedidos de aula",
+                    "TrainingRequest"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreTrainingRequestRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`StudentRequestResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/StudentRequestResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/training-requests/{trainingRequest}": {
+            "get": {
+                "operationId": "training-requests.show",
+                "summary": "Ver pedido",
+                "tags": [
+                    "Pedidos de aula",
+                    "TrainingRequest"
+                ],
+                "parameters": [
+                    {
+                        "name": "trainingRequest",
+                        "in": "path",
+                        "required": true,
+                        "description": "The training request ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`StudentRequestResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/StudentRequestResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/training-requests/{trainingRequest}/cancel": {
+            "post": {
+                "operationId": "training-requests.cancel",
+                "summary": "Cancelar pedido (enquanto procura formador)",
+                "tags": [
+                    "Pedidos de aula",
+                    "TrainingRequest"
+                ],
+                "parameters": [
+                    {
+                        "name": "trainingRequest",
+                        "in": "path",
+                        "required": true,
+                        "description": "The training request ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reason": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 255
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`StudentRequestResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/StudentRequestResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/training-requests/{trainingRequest}/republish": {
+            "post": {
+                "operationId": "training-requests.republish",
+                "description": "Cria um pedido novo, ligado ao original. Pode indicar nova data e novo valor.",
+                "summary": "Republicar pedido expirado ou cancelado",
+                "tags": [
+                    "Pedidos de aula",
+                    "TrainingRequest"
+                ],
+                "parameters": [
+                    {
+                        "name": "trainingRequest",
+                        "in": "path",
+                        "required": true,
+                        "description": "The training request ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RepublishTrainingRequestRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`StudentRequestResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/StudentRequestResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/me": {
             "patch": {
                 "operationId": "me.update",
@@ -1374,6 +2389,467 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/me/trainer-profile/availability": {
+            "put": {
+                "operationId": "me.trainer.availability",
+                "description": "S\u00f3 formadores verificados e com o perfil completo podem ficar dispon\u00edveis.",
+                "summary": "Formador: Dispon\u00edvel / Indispon\u00edvel para receber pedidos TRIM TRIM",
+                "tags": [
+                    "Perfis",
+                    "Availability"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "is_available": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "required": [
+                                    "is_available"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is_available": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "is_available"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/me/score-events": {
+            "get": {
+                "operationId": "score-events.mine",
+                "summary": "Os meus eventos de score (formador)",
+                "tags": [
+                    "Score",
+                    "ScoreEvent"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "type": {
+                                                        "type": "string"
+                                                    },
+                                                    "points": {
+                                                        "type": "integer"
+                                                    },
+                                                    "metadata": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "additionalProperties": {}
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "type",
+                                                    "points",
+                                                    "metadata",
+                                                    "created_at"
+                                                ]
+                                            }
+                                        },
+                                        "summary_30_days": {
+                                            "type": "array",
+                                            "items": {}
+                                        },
+                                        "score": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "summary_30_days",
+                                        "score"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/trainers/{trainer}/score-events": {
+            "get": {
+                "operationId": "admin.score-events",
+                "summary": "Admin: eventos de score de um formador",
+                "tags": [
+                    "Score",
+                    "ScoreEvent"
+                ],
+                "parameters": [
+                    {
+                        "name": "trainer",
+                        "in": "path",
+                        "required": true,
+                        "description": "The trainer ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "type": {
+                                                        "type": "string"
+                                                    },
+                                                    "points": {
+                                                        "type": "integer"
+                                                    },
+                                                    "metadata": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "additionalProperties": {}
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "type",
+                                                    "points",
+                                                    "metadata",
+                                                    "created_at"
+                                                ]
+                                            }
+                                        },
+                                        "summary_30_days": {
+                                            "type": "array",
+                                            "items": {}
+                                        },
+                                        "score": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "summary_30_days",
+                                        "score"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/offers": {
+            "get": {
+                "operationId": "offers.index",
+                "description": "S\u00f3 as que ainda est\u00e3o dentro do prazo, mais recentes primeiro.",
+                "summary": "Ofertas em aberto",
+                "tags": [
+                    "TRIM TRIM (formador)",
+                    "Offer"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `TrainerOfferResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/TrainerOfferResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/offers/{offer}": {
+            "get": {
+                "operationId": "offers.show",
+                "summary": "Ver oferta",
+                "tags": [
+                    "TRIM TRIM (formador)",
+                    "Offer"
+                ],
+                "parameters": [
+                    {
+                        "name": "offer",
+                        "in": "path",
+                        "required": true,
+                        "description": "The offer ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`TrainerOfferResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/TrainerOfferResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/offers/{offer}/view": {
+            "post": {
+                "operationId": "offers.view",
+                "summary": "Marcar oferta como vista",
+                "tags": [
+                    "TRIM TRIM (formador)",
+                    "Offer"
+                ],
+                "parameters": [
+                    {
+                        "name": "offer",
+                        "in": "path",
+                        "required": true,
+                        "description": "The offer ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`TrainerOfferResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/TrainerOfferResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/offers/{offer}/accept": {
+            "post": {
+                "operationId": "offers.accept",
+                "description": "At\u00f3mico: s\u00f3 um formador fica com a aula. Repetir o pedido depois de ganhar devolve a mesma aula.\nErros: `request_already_matched` (409, outro formador aceitou primeiro), `offer_expired` (410),\n`request_cancelled` (410), `request_closed` (410).",
+                "summary": "Aceitar oferta",
+                "tags": [
+                    "TRIM TRIM (formador)",
+                    "Offer"
+                ],
+                "parameters": [
+                    {
+                        "name": "offer",
+                        "in": "path",
+                        "required": true,
+                        "description": "The offer ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`SessionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/SessionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/offers/{offer}/decline": {
+            "post": {
+                "operationId": "offers.decline",
+                "summary": "Recusar oferta",
+                "tags": [
+                    "TRIM TRIM (formador)",
+                    "Offer"
+                ],
+                "parameters": [
+                    {
+                        "name": "offer",
+                        "in": "path",
+                        "required": true,
+                        "description": "The offer ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`TrainerOfferResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/TrainerOfferResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
@@ -2053,6 +3529,81 @@
                 ],
                 "title": "EmployeeResource"
             },
+            "MessageResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "client_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "sender": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "name": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "name"
+                        ]
+                    },
+                    "body": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "attachment": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "description": "O ficheiro em si s\u00f3 por link assinado tempor\u00e1rio (GET /messages/{id}/attachment)",
+                        "properties": {
+                            "name": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "size": {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "name",
+                            "size"
+                        ]
+                    },
+                    "created_at": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "client_id",
+                    "sender",
+                    "body",
+                    "attachment",
+                    "created_at"
+                ],
+                "title": "MessageResource"
+            },
             "OnboardingRequest": {
                 "type": "object",
                 "properties": {
@@ -2199,6 +3750,57 @@
                 ],
                 "title": "PublicTrainerResource"
             },
+            "PushSubscriptionRequest": {
+                "type": "object",
+                "properties": {
+                    "endpoint": {
+                        "type": "string",
+                        "format": "uri",
+                        "maxLength": 2048
+                    },
+                    "keys": {
+                        "type": "object",
+                        "properties": {
+                            "p256dh": {
+                                "type": "string",
+                                "maxLength": 255
+                            },
+                            "auth": {
+                                "type": "string",
+                                "maxLength": 255
+                            }
+                        },
+                        "required": [
+                            "p256dh",
+                            "auth"
+                        ]
+                    },
+                    "content_encoding": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "enum": [
+                            "aesgcm",
+                            "aes128gcm",
+                            null
+                        ]
+                    },
+                    "device": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Nome do dispositivo para o utilizador reconhecer a subscri\u00e7\u00e3o. @example Chrome \u00b7 Android",
+                        "maxLength": 120
+                    }
+                },
+                "required": [
+                    "endpoint",
+                    "keys"
+                ],
+                "title": "PushSubscriptionRequest"
+            },
             "RefreshTokenRequest": {
                 "type": "object",
                 "properties": {
@@ -2211,6 +3813,29 @@
                     "refresh_token"
                 ],
                 "title": "RefreshTokenRequest"
+            },
+            "RepublishTrainingRequestRequest": {
+                "type": "object",
+                "properties": {
+                    "scheduled_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time",
+                        "description": "Nova data (opcional)."
+                    },
+                    "amount": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "Novo valor em Kz (opcional).",
+                        "minimum": 2000,
+                        "maximum": 5000000
+                    }
+                },
+                "title": "RepublishTrainingRequestRequest"
             },
             "RequestOtpRequest": {
                 "type": "object",
@@ -2225,6 +3850,178 @@
                     "phone"
                 ],
                 "title": "RequestOtpRequest"
+            },
+            "SendMessageRequest": {
+                "type": "object",
+                "properties": {
+                    "body": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 2000
+                    },
+                    "attachment": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "binary",
+                        "contentMediaType": "application/octet-stream",
+                        "description": "PDF at\u00e9 10 MB; o tipo \u00e9 verificado pelo conte\u00fado do ficheiro."
+                    },
+                    "client_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Id gerado no cliente para reenvios sem duplicar. @example 3f1c9a2e-...",
+                        "maxLength": 64
+                    }
+                },
+                "title": "SendMessageRequest"
+            },
+            "SessionResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "state": {
+                        "type": "string"
+                    },
+                    "request_id": {
+                        "type": "integer"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "skill": {
+                        "type": "string"
+                    },
+                    "scheduled_at": {
+                        "type": "string"
+                    },
+                    "modality": {
+                        "type": "string"
+                    },
+                    "municipality": {
+                        "type": "string"
+                    },
+                    "neighborhood": {
+                        "type": "string"
+                    },
+                    "latitude": {
+                        "type": "number"
+                    },
+                    "longitude": {
+                        "type": "number"
+                    },
+                    "amount": {
+                        "type": "integer"
+                    },
+                    "commission": {
+                        "type": "integer"
+                    },
+                    "trainer_net": {
+                        "type": "integer"
+                    },
+                    "role": {
+                        "type": "string",
+                        "enum": [
+                            "trainer",
+                            "student"
+                        ]
+                    },
+                    "conversation_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "student": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "name"
+                        ]
+                    },
+                    "trainer": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "name": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "bio": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "years_experience": {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ]
+                            },
+                            "neighborhood": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "verified": {
+                                "type": "boolean"
+                            },
+                            "score": {
+                                "type": "integer"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "name",
+                            "bio",
+                            "years_experience",
+                            "neighborhood",
+                            "verified",
+                            "score"
+                        ]
+                    },
+                    "created_at": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "state",
+                    "request_id",
+                    "title",
+                    "skill",
+                    "scheduled_at",
+                    "modality",
+                    "municipality",
+                    "neighborhood",
+                    "latitude",
+                    "longitude",
+                    "amount",
+                    "role",
+                    "conversation_id",
+                    "created_at"
+                ],
+                "title": "SessionResource"
             },
             "SkillResource": {
                 "type": "object",
@@ -2249,6 +4046,71 @@
                     "category"
                 ],
                 "title": "SkillResource"
+            },
+            "StoreTrainingRequestRequest": {
+                "type": "object",
+                "properties": {
+                    "skill_id": {
+                        "type": "integer"
+                    },
+                    "title": {
+                        "type": "string",
+                        "description": "Tema da aula. @example Aula de SGME",
+                        "minLength": 3,
+                        "maxLength": 120
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 1000
+                    },
+                    "amount": {
+                        "type": "integer",
+                        "description": "Valor oferecido em Kz inteiros. @example 25000",
+                        "minimum": 2000,
+                        "maximum": 5000000
+                    },
+                    "scheduled_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Data e hora pretendidas (ISO 8601). @example 2026-10-24T14:00:00+01:00"
+                    },
+                    "modality": {
+                        "type": "string",
+                        "enum": [
+                            "in_person",
+                            "online"
+                        ]
+                    },
+                    "municipality": {
+                        "type": "string",
+                        "maxLength": 80
+                    },
+                    "neighborhood": {
+                        "type": "string",
+                        "maxLength": 80
+                    },
+                    "latitude": {
+                        "type": "number"
+                    },
+                    "longitude": {
+                        "type": "number"
+                    }
+                },
+                "required": [
+                    "skill_id",
+                    "title",
+                    "amount",
+                    "scheduled_at",
+                    "modality",
+                    "municipality",
+                    "neighborhood",
+                    "latitude",
+                    "longitude"
+                ],
+                "title": "StoreTrainingRequestRequest"
             },
             "StudentProfileRequest": {
                 "type": "object",
@@ -2276,6 +4138,121 @@
                     }
                 },
                 "title": "StudentProfileRequest"
+            },
+            "StudentRequestResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "state": {
+                        "type": "string"
+                    },
+                    "skill": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "name": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "name"
+                        ]
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "amount": {
+                        "type": "integer"
+                    },
+                    "scheduled_at": {
+                        "type": "string"
+                    },
+                    "modality": {
+                        "type": "string"
+                    },
+                    "municipality": {
+                        "type": "string"
+                    },
+                    "neighborhood": {
+                        "type": "string"
+                    },
+                    "latitude": {
+                        "type": "number"
+                    },
+                    "longitude": {
+                        "type": "number"
+                    },
+                    "expires_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "seconds_left": {},
+                    "wave": {
+                        "type": "integer"
+                    },
+                    "open_offers": {
+                        "type": "integer",
+                        "description": "Quantos formadores est\u00e3o a ver a oferta agora (sem dizer quem)",
+                        "minimum": 0
+                    },
+                    "session_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "cancel_reason": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "republished_from_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "state",
+                    "skill",
+                    "title",
+                    "description",
+                    "amount",
+                    "scheduled_at",
+                    "modality",
+                    "municipality",
+                    "neighborhood",
+                    "latitude",
+                    "longitude",
+                    "expires_at",
+                    "seconds_left",
+                    "wave",
+                    "open_offers",
+                    "session_id",
+                    "cancel_reason",
+                    "republished_from_id",
+                    "created_at"
+                ],
+                "title": "StudentRequestResource"
             },
             "SubmitVerificationRequest": {
                 "type": "object",
@@ -2404,6 +4381,92 @@
                     "service_radius_m"
                 ],
                 "title": "TrainerLocationRequest"
+            },
+            "TrainerOfferResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "state": {
+                        "type": "string"
+                    },
+                    "request_id": {
+                        "type": "integer"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "skill": {
+                        "type": "string"
+                    },
+                    "amount": {
+                        "type": "integer"
+                    },
+                    "commission": {
+                        "type": "integer"
+                    },
+                    "trainer_net": {
+                        "type": "integer"
+                    },
+                    "scheduled_at": {
+                        "type": "string"
+                    },
+                    "modality": {
+                        "type": "string"
+                    },
+                    "municipality": {
+                        "type": "string"
+                    },
+                    "neighborhood": {
+                        "type": "string"
+                    },
+                    "distance_m": {
+                        "type": "integer",
+                        "description": "Arredondada aos 100 m para n\u00e3o permitir triangular a morada"
+                    },
+                    "sent_at": {
+                        "type": "string"
+                    },
+                    "expires_at": {
+                        "type": "string"
+                    },
+                    "seconds_left": {
+                        "type": "integer"
+                    },
+                    "session_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "state",
+                    "request_id",
+                    "title",
+                    "description",
+                    "skill",
+                    "amount",
+                    "commission",
+                    "trainer_net",
+                    "scheduled_at",
+                    "modality",
+                    "municipality",
+                    "neighborhood",
+                    "distance_m",
+                    "sent_at",
+                    "expires_at",
+                    "seconds_left"
+                ],
+                "title": "TrainerOfferResource"
             },
             "TrainerProfileResource": {
                 "type": "object",

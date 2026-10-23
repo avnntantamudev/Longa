@@ -66,13 +66,13 @@ erDiagram
 
 | Tabela | | Colunas principais | Índices / notas |
 |---|---|---|---|
-| `training_requests` | 🟡 | student_id, skill_id, title, description, amount, commission, trainer_net, scheduled_at, modality, municipality, neighborhood, latitude, longitude, location (gerada), state, wave, expires_at, assigned_trainer_id, cancelled_by/reason, republished_from_id | SPATIAL, (state, expires_at) |
-| `request_offers` | 🟡 | request_id, trainer_profile_id, wave, distance_m, score_snapshot, state, sent_at, expires_at, responded_at | (request_id, trainer_profile_id) único, (state, expires_at) |
-| `training_sessions` | 🟡 | request_id, student_id, trainer_id, amount, commission, trainer_net, scheduled_at, state | request_id **único** (impede duas aulas por pedido) |
-| `conversations` / `messages` | 🟡 | session_id; sender_id, body, attachment_path/name/size | mensagens por conversa e data |
-| `push_subscriptions` | 🟡 | user_id, endpoint, public_key, auth_token, content_encoding, device, last_used_at | endpoint único |
-| `notifications` | 🟡 | padrão do Laravel (uuid, type, notifiable, data, read_at) | notificações na app |
-| `score_events` | 🟡 | trainer_profile_id, type, points, reference (morph), metadata | (trainer_profile_id, type) |
+| `training_requests` | ✅ | student_id, skill_id, title, description, amount, commission, trainer_net, scheduled_at, modality, municipality, neighborhood, latitude, longitude, **location (gerada)**, state, wave, expires_at, next_wave_at, matched_at, assigned_trainer_profile_id, cancelled_by/reason/at, republished_from_id | SPATIAL(location), (state, expires_at), (state, next_wave_at), (student_id, state) |
+| `request_offers` | ✅ | training_request_id, trainer_profile_id, wave, rank, distance_m, score_snapshot, state, sent_at, viewed_at, expires_at, responded_at, **accepted_request_id (gerada)** | (request, trainer) único; **accepted_request_id único** (no máximo uma oferta aceite por pedido); (state, expires_at); (trainer_profile_id, state) |
+| `training_sessions` | ✅ | training_request_id, student_id, trainer_profile_id, skill_id, title, amount, commission, trainer_net, scheduled_at, modality, local exato, state, escrow_reference | training_request_id **único**; (trainer_profile_id, state, scheduled_at) para conflitos de horário |
+| `conversations` / `messages` | ✅ | training_session_id (único); conversation_id, sender_id, body, attachment_path/name/size, client_id | (conversation_id, id); (conversation, sender, client_id) único para reenvios idempotentes |
+| `push_subscriptions` | ✅ | subscribable (morph), endpoint, public_key, auth_token, content_encoding, device, last_used_at | endpoint único |
+| `notifications` | ✅ | padrão do Laravel (uuid, type, notifiable, data, read_at) | notificações na app |
+| `score_events` | ✅ | trainer_profile_id, type, points (0 nesta fase), subject (morph), metadata | (trainer_profile_id, type, created_at) |
 
 ### Fases seguintes (provisório)
 

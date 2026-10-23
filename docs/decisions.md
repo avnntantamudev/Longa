@@ -4,6 +4,12 @@ Decisões de produto e de arquitetura, com a data e o motivo. As mais recentes f
 
 | Data | Decisão | Motivo | Quem |
 |---|---|---|---|
+| 2026-10-23 | **Chat sem contactos**: telefones e e-mails escritos no chat são substituídos por "[contacto escondido]" (configurável, `LONGA_CHAT_MASK_CONTACTS`). | Interpretação de "sem partilha de contactos nesta fase além do chat"; mantém a relação dentro da LONGA. **A confirmar com o cliente.** | Equipa |
+| 2026-10-23 | **Pedidos online** ignoram a distância (ordenam só pelo score) e exigem formadores com a modalidade online; os presenciais exigem modalidade presencial. | Um raio de 5 km não faz sentido numa aula online. | Equipa |
+| 2026-10-23 | **Conflito de horário**: formador com aula marcada a ±2 h da hora pedida não recebe a oferta (`LONGA_MATCHING_CONFLICT_WINDOW`). | Evitar aceitar duas aulas sobrepostas; a duração da aula ainda não existe no modelo. | Equipa |
+| 2026-10-23 | **Prazo da oferta** = 60 s, mas nunca para lá do fim do pedido (5 min); o servidor valida sempre `now() < expires_at` ao aceitar. | Timer imposto pelo servidor, mesmo que os jobs se atrasem. | Equipa |
+| 2026-10-23 | **Fallback por SMS** só quando o formador não tem push, com limite de 5 SMS por formador por hora. | Custo de SMS com ondas de 10–15 formadores. | Equipa |
+| 2026-10-23 | **Mapa**: Leaflet + tiles OpenStreetMap só em desenvolvimento; antes de produção escolher um fornecedor de tiles. O formador vê só um círculo da zona antes de aceitar. | Política de uso dos tiles OSM; privacidade do aluno. | Equipa |
 | 2026-10-23 | **Republicar** um pedido expirado cria um **pedido novo** ligado ao original (`republished_from_id`). | Auditoria simples: cada pedido tem um único ciclo de vida. | Cliente |
 | 2026-10-23 | **Comissão LONGA (15%) descontada ao formador.** O aluno paga o valor oferecido; o formador recebe valor − comissão. Valores em Kz inteiros, comissão arredondada ao Kz (meio para cima). | Decisão de negócio. | Cliente |
 | 2026-10-23 | **TRIM TRIM em ondas**: top 10 (score + proximidade), depois mais 15 por onda, até ao fim do tempo do pedido (5 min). | Menos frustração ("perdeu para outro"), mérito para os melhores, menos custo de envio. | Cliente |
@@ -20,4 +26,5 @@ Decisões de produto e de arquitetura, com a data e o motivo. As mais recentes f
 
 - **Provedor de SMS** (OTP e fallback das ofertas): só existe o driver `log`. Integrar depois da escolha do cliente.
 - **Tiles do mapa** para produção (OpenStreetMap só serve para desenvolvimento).
+- **Mascarar contactos no chat**: confirmar se é o comportamento pretendido.
 - **Nome "Modo Yango"** no kit: marca de terceiros; sugerido "Modo Rápido".

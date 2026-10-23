@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Sessions\Http\Controllers\DisputeController;
 use App\Modules\Sessions\Http\Controllers\SessionController;
 use App\Modules\Sessions\Http\Controllers\SessionExecutionController;
 use Illuminate\Support\Facades\Route;
@@ -23,5 +24,11 @@ Route::middleware(['auth:sanctum', 'auth.session', 'onboarded'])->group(function
         ->name('api.sessions.confirm');
     Route::post('sessions/{session}/confirm-without-qr', [SessionExecutionController::class, 'confirmWithoutQr'])->middleware('idempotent')->name('api.sessions.confirm-without-qr');
     Route::post('sessions/{session}/cancel', [SessionExecutionController::class, 'cancel'])->middleware(['idempotent', 'throttle:10,1'])->name('api.sessions.cancel');
+    Route::get('sessions/{session}/disputes', [DisputeController::class, 'index'])->name('api.sessions.disputes.index');
+    Route::post('sessions/{session}/disputes', [DisputeController::class, 'store'])->middleware(['idempotent', 'throttle:5,1'])->name('api.sessions.disputes.store');
+    Route::get('dispute-attachments/{attachment}', [DisputeController::class, 'attachmentLink'])->name('api.disputes.attachment');
+    Route::post('admin/disputes/{dispute}/resolve', [DisputeController::class, 'resolve'])
+        ->middleware(['role:admin', 'idempotent', 'audit:admin.dispute_resolve'])
+        ->name('api.admin.disputes.resolve');
     Route::post('sessions/{session}/no-show', [SessionExecutionController::class, 'noShow'])->middleware(['idempotent', 'throttle:10,1'])->name('api.sessions.no-show');
 });

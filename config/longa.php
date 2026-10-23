@@ -112,6 +112,13 @@ return [
         'mask_contacts' => (bool) env('LONGA_CHAT_MASK_CONTACTS', true),
     ],
 
+    // Disputas: evidências (imagem ou PDF) no disco privado
+    'disputes' => [
+        'max_attachments' => (int) env('LONGA_DISPUTE_MAX_ATTACHMENTS', 5),
+        'max_attachment_kb' => (int) env('LONGA_DISPUTE_MAX_ATTACHMENT_KB', 5120),
+        'attachment_link_minutes' => (int) env('LONGA_DISPUTE_ATTACHMENT_LINK_MINUTES', 10),
+    ],
+
     // WhatsApp (o utilizador pode escolher receber o código por WhatsApp)
     'whatsapp' => [
         'driver' => env('WHATSAPP_DRIVER', 'log'),

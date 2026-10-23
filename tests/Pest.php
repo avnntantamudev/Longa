@@ -82,3 +82,29 @@ function paidSession(array $overrides = []): App\Modules\Sessions\Models\Trainin
 
     return $session->fresh() ?? $session;
 }
+
+/**
+ * Saldos do ledger relevantes para uma aula (cache e fonte de verdade têm de coincidir).
+ *
+ * @return array{escrow: int, trainer: int, revenue: int, refunds: int, funds_in: int}
+ */
+function balances(App\Modules\Sessions\Models\TrainingSession $session): array
+{
+    $ledger = app(App\Modules\Wallet\Ledger\LedgerService::class);
+    $codes = [
+        'escrow' => App\Modules\Wallet\Ledger\Accounts::ESCROW,
+        'trainer' => App\Modules\Wallet\Ledger\Accounts::trainerAvailable($session->trainer_profile_id),
+        'revenue' => App\Modules\Wallet\Ledger\Accounts::PLATFORM_REVENUE,
+        'refunds' => App\Modules\Wallet\Ledger\Accounts::REFUNDS_PAYABLE,
+        'funds_in' => App\Modules\Wallet\Ledger\Accounts::FUNDS_IN,
+    ];
+
+    $result = [];
+    foreach ($codes as $name => $code) {
+        expect($ledger->balance($code))->toBe($ledger->balanceFromEntries($code));
+        $result[$name] = $ledger->balance($code);
+    }
+    expect((int) App\Modules\Wallet\Models\LedgerEntry::query()->sum('amount'))->toBe(0);
+
+    return $result;
+}

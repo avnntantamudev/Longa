@@ -121,3 +121,18 @@ sequenceDiagram
     Note over S: repete até não haver mais formadores ou acabar o tempo do pedido (5 min)
     S-->>A: RequestExpired (opção de republicar)
 ```
+
+## Disputas
+
+| Quem abre | Quando | Efeito |
+|---|---|---|
+| Aluno | aula em `awaiting_confirmation` | aula → `disputed`, retenção → `disputed` |
+| Parte acusada de faltar | `no_show_*` e dentro de `no_show_contest_until` (24 h) | idem |
+
+- Uma só disputa aberta por aula (repetir devolve a mesma). As regras automáticas (R1–R5) ignoram aulas `disputed`.
+- Evidências: até 5 ficheiros JPG/PNG/WebP/PDF de 5 MB cada (tipo verificado pelo conteúdo), no disco privado;
+  acesso por link assinado de 10 minutos, só participantes e admin.
+- Decisão só pelo admin (`POST /api/v1/admin/disputes/{id}/resolve`, nota obrigatória, auditada):
+  `released` → `completed`, `refunded` → `refunded`, `partially_refunded` (parte do formador entre 1 Kz e valor − 1) →
+  `partially_refunded`. Disputa e aula são bloqueadas (`FOR UPDATE`); uma segunda decisão diferente recebe 409
+  `dispute_already_resolved` e não move dinheiro. A liquidação usa a chave de ledger `escrow:settle:session:{id}`.

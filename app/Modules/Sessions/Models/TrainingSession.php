@@ -139,6 +139,14 @@ class TrainingSession extends Model
         return $this->hasMany(SessionEvent::class)->orderBy('id');
     }
 
+    /**
+     * @return HasMany<Dispute, $this>
+     */
+    public function disputes(): HasMany
+    {
+        return $this->hasMany(Dispute::class);
+    }
+
     public function isCash(): bool
     {
         return $this->payment_method === 'cash';

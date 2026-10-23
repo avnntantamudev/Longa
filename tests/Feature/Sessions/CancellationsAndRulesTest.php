@@ -10,36 +10,9 @@ use App\Modules\Sessions\Models\SessionEvent;
 use App\Modules\Sessions\Models\TrainingSession;
 use App\Modules\Wallet\Ledger\Accounts;
 use App\Modules\Wallet\Ledger\LedgerService;
-use App\Modules\Wallet\Models\LedgerEntry;
 use Illuminate\Support\Facades\Cache;
 
 beforeEach(fn () => Cache::flush());
-
-/**
- * Saldos do ledger relevantes para uma aula (cache e fonte de verdade têm de coincidir).
- *
- * @return array{escrow: int, trainer: int, revenue: int, refunds: int, funds_in: int}
- */
-function balances(TrainingSession $session): array
-{
-    $ledger = app(LedgerService::class);
-    $codes = [
-        'escrow' => Accounts::ESCROW,
-        'trainer' => Accounts::trainerAvailable($session->trainer_profile_id),
-        'revenue' => Accounts::PLATFORM_REVENUE,
-        'refunds' => Accounts::REFUNDS_PAYABLE,
-        'funds_in' => Accounts::FUNDS_IN,
-    ];
-
-    $result = [];
-    foreach ($codes as $name => $code) {
-        expect($ledger->balance($code))->toBe($ledger->balanceFromEntries($code));
-        $result[$name] = $ledger->balance($code);
-    }
-    expect((int) LedgerEntry::query()->sum('amount'))->toBe(0);
-
-    return $result;
-}
 
 function act(TrainingSession $session, string $as, string $action, array $body = []): Illuminate\Testing\TestResponse
 {

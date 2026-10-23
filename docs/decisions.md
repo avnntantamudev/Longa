@@ -4,6 +4,10 @@ Decisões de produto e de arquitetura, com a data e o motivo. As mais recentes f
 
 | Data | Decisão | Motivo | Quem |
 |---|---|---|---|
+| 2026-10-23 | **Pagamento em dinheiro**: o formador marca a aula como terminada, o aluno confirma que pagou em mão; o sistema regista automaticamente a comissão LONGA como valor a receber do formador; o admin marca como recebido quando receber. | Decisão de negócio (Fase 3). | Cliente |
+| 2026-10-23 | **Libertação do pagamento eletrónico 24 h depois da confirmação por QR.** | Resposta "sim" à proposta do kit ("retido 24h até confirmação QR"). | Cliente |
+| 2026-10-23 | **Recibos com numeração sequencial própria, sem certificação AGT por agora.** | Decisão do cliente; a certificação fica para mais tarde. | Cliente |
+| 2026-10-23 | **QR, SMS e WhatsApp**: o cliente pediu a melhor solução técnica; propostas no plano da Fase 3. | — | Cliente |
 | 2026-10-23 | **Chat sem contactos**: telefones e e-mails escritos no chat são substituídos por "[contacto escondido]" (configurável, `LONGA_CHAT_MASK_CONTACTS`). | Interpretação de "sem partilha de contactos nesta fase além do chat"; mantém a relação dentro da LONGA. **A confirmar com o cliente.** | Equipa |
 | 2026-10-23 | **Pedidos online** ignoram a distância (ordenam só pelo score) e exigem formadores com a modalidade online; os presenciais exigem modalidade presencial. | Um raio de 5 km não faz sentido numa aula online. | Equipa |
 | 2026-10-23 | **Conflito de horário**: formador com aula marcada a ±2 h da hora pedida não recebe a oferta (`LONGA_MATCHING_CONFLICT_WINDOW`). | Evitar aceitar duas aulas sobrepostas; a duração da aula ainda não existe no modelo. | Equipa |

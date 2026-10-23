@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import AppIcon, { type IconName } from '@/components/AppIcon.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
+
+const page = usePage();
+const user = computed(() => page.props.auth.user);
 
 defineProps<{
     profiles: Array<{ key: string; title: string; description: string; icon: IconName }>;
@@ -17,8 +21,15 @@ defineProps<{
         <p class="mt-3 text-navy-100">De Longi para Longi: formadores verificados perto de si, pagamento seguro e certificado no fim.</p>
 
         <div class="mt-6 grid grid-cols-2 gap-3 sm:max-w-md">
-            <Link href="/entrar" class="btn-primary rounded-full px-3 whitespace-nowrap">Sou Aluno</Link>
-            <Link href="/entrar" class="btn-navy rounded-full bg-navy-800 px-3 whitespace-nowrap ring-1 ring-white/25">Sou Formador</Link>
+            <template v-if="!user">
+                <Link href="/entrar" class="btn-primary rounded-full px-3 whitespace-nowrap">Sou Aluno</Link>
+                <Link href="/entrar" class="btn-navy rounded-full bg-navy-800 px-3 whitespace-nowrap ring-1 ring-white/25">Sou Formador</Link>
+            </template>
+            <template v-else>
+                <Link v-if="user.roles.includes('student')" href="/pedidos/novo" class="btn-primary rounded-full px-3 whitespace-nowrap">Pedir aula</Link>
+                <Link v-if="user.roles.includes('trainer')" href="/formador/ofertas" class="btn-navy rounded-full bg-navy-800 px-3 whitespace-nowrap ring-1 ring-white/25">TRIM TRIM</Link>
+                <Link v-if="user.roles.length === 0" href="/onboarding" class="btn-primary rounded-full px-3 whitespace-nowrap">Concluir registo</Link>
+            </template>
         </div>
     </section>
 

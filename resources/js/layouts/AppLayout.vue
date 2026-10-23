@@ -4,12 +4,13 @@ import BrandLogo from '@/components/BrandLogo.vue';
 import InstallPrompt from '@/components/InstallPrompt.vue';
 import NetworkStatus from '@/components/NetworkStatus.vue';
 import UpdatePrompt from '@/components/UpdatePrompt.vue';
-import { mainNavigation, type NavItem } from '@/lib/navigation';
+import { navigationFor, type NavItem } from '@/lib/navigation';
 import { Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
+const navigation = computed(() => navigationFor(user.value?.roles));
 
 function isActive(item: NavItem): boolean {
     const path = page.url.split('?')[0] ?? '/';
@@ -26,7 +27,7 @@ function isActive(item: NavItem): boolean {
                 <p class="mt-1 text-caption text-navy-200">Kulonga = Ensinar</p>
             </div>
             <nav aria-label="Navegação principal" class="flex flex-col gap-1 px-3">
-                <template v-for="item in mainNavigation" :key="item.href">
+                <template v-for="item in navigation" :key="item.href">
                     <Link
                         v-if="item.available"
                         :href="item.href"
@@ -74,8 +75,8 @@ function isActive(item: NavItem): boolean {
             aria-label="Navegação principal"
             class="pb-safe fixed inset-x-0 bottom-0 z-20 border-t border-border bg-surface shadow-nav md:hidden"
         >
-            <ul class="grid grid-cols-5">
-                <li v-for="item in mainNavigation" :key="item.href">
+            <ul class="grid" :style="{ gridTemplateColumns: `repeat(${navigation.length}, minmax(0, 1fr))` }">
+                <li v-for="item in navigation" :key="item.href">
                     <Link
                         v-if="item.available"
                         :href="item.href"

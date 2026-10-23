@@ -2,7 +2,7 @@
 /**
  * Ícones de traço (24x24) usados na navegação e estados. Herdam a cor do texto (currentColor).
  */
-export type IconName = 'home' | 'search' | 'calendar' | 'wallet' | 'user' | 'wifi-off' | 'refresh' | 'download' | 'close' | 'share' | 'chat' | 'bell' | 'check-badge' | 'map-pin';
+export type IconName = 'home' | 'search' | 'calendar' | 'wallet' | 'user' | 'wifi-off' | 'refresh' | 'download' | 'close' | 'share' | 'chat' | 'bell' | 'check-badge' | 'map-pin' | 'send' | 'paperclip';
 
 defineProps<{ name: IconName; size?: number }>();
 
@@ -20,6 +20,8 @@ const paths: Record<IconName, string[]> = {
     bell: ['M6 16V11a6 6 0 1 1 12 0v5l2 2H4l2-2Z', 'M10 21h4'],
     'check-badge': ['M12 3l2.5 1.8 3 .2.9 2.9 2.1 2.1-.9 2.9.9 2.9-2.1 2.1-.9 2.9-3 .2L12 21l-2.5-1.8-3-.2-.9-2.9L3.5 14l.9-2.9-.9-2.9 2.1-2.1.9-2.9 3-.2L12 3Z', 'm8.5 12 2.5 2.5 4.5-5'],
     'map-pin': ['M12 21s-7-6.2-7-11.5a7 7 0 1 1 14 0C19 14.8 12 21 12 21Z', 'M12 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z'],
+    send: ['M4 12 20 4l-6 16-3-7-7-1Z', 'M11 13l9-9'],
+    paperclip: ['M20 11.5 12 19.5a5 5 0 0 1-7-7l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7L9.7 17.2a1.7 1.7 0 0 1-2.4-2.4L15 7'],
     share: ['M12 3v12', 'm8 7 4-4 4 4', 'M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7'],
 };
 </script>

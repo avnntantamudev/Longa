@@ -30,6 +30,8 @@ export default defineConfig({
             // O manifest é estático (public/manifest.webmanifest) para ficar na raiz do site
             manifest: false,
             workbox: {
+                // Tratamento de Web Push (eventos push e notificationclick)
+                importScripts: ['/sw-push.js'],
                 globDirectory: 'public',
                 globPatterns: ['build/assets/*.{js,css,woff2}', 'icons/*.png', 'offline.html', 'favicon.ico', 'manifest.webmanifest'],
                 // A fonte só é descarregada para os caracteres usados (unicode-range); não pré-carregar alfabetos que não usamos

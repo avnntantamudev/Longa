@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Sessions\Http\Controllers\PageController;
 use App\Modules\Sessions\Http\Controllers\SessionController;
 use Illuminate\Support\Facades\Route;
 
@@ -9,3 +10,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/chat/anexos/{message}', [SessionController::class, 'downloadAttachment'])
     ->middleware('signed:relative')
     ->name('chat.attachment');
+
+Route::middleware(['auth', 'auth.session', 'onboarded'])->group(function () {
+    Route::get('/aulas', [PageController::class, 'index'])->name('sessions.index');
+    Route::get('/aulas/{session}', [PageController::class, 'show'])->name('sessions.show');
+});

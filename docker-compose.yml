@@ -87,6 +87,8 @@ services:
 
   mysql:
     image: mysql:8.4
+    # Necessário para utilizadores não-root criarem os triggers de imutabilidade do ledger com o log binário ativo
+    command: ["--log-bin-trust-function-creators=1"]
     environment:
       MYSQL_DATABASE: ${DB_DATABASE:-longa}
       MYSQL_USER: ${DB_USERNAME:-longa}

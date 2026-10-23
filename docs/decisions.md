@@ -4,6 +4,7 @@ Decisões de produto e de arquitetura, com a data e o motivo. As mais recentes f
 
 | Data | Decisão | Motivo | Quem |
 |---|---|---|---|
+| 2026-10-23 | **Fase 3 aprovada com as propostas do plano**: unidade mínima 1 Kz; retenção na aceitação com janela de pagamento de 10 min (`pending_payment`); regras automáticas R1–R4; reembolsos (≥ 6 h: 100%; < 6 h: 75% e 25% ao formador; falta do formador: 100%; falta do aluno: 50/50); QR rotativo de 30 s em lotes de 5 min, aceite até 4 h depois do fim; pagamento em dinheiro com comissão em dívida e compensação automática com o saldo disponível; gateway mock. | "ok" do cliente ao plano da Fase 3. | Cliente |
 | 2026-10-23 | **Código de acesso por SMS ou WhatsApp, à escolha do utilizador** (também no ecrã "Introduza o código"); WhatsApp via Cloud API da Meta, com SMS automático se o WhatsApp falhar. | Pedido do cliente. Nota: o WhatsApp Business cobra as mensagens iniciadas pela empresa. | Cliente |
 | 2026-10-23 | **Pagamento em dinheiro**: o formador marca a aula como terminada, o aluno confirma que pagou em mão; o sistema regista automaticamente a comissão LONGA como valor a receber do formador; o admin marca como recebido quando receber. | Decisão de negócio (Fase 3). | Cliente |
 | 2026-10-23 | **Libertação do pagamento eletrónico 24 h depois da confirmação por QR.** | Resposta "sim" à proposta do kit ("retido 24h até confirmação QR"). | Cliente |

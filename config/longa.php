@@ -70,6 +70,41 @@ return [
         'sms_fallback_per_trainer_per_hour' => (int) env('LONGA_OFFER_SMS_PER_HOUR', 5),
     ],
 
+    // Execução da aula, QR e escrow (Fase 3). Todas as regras de tempo num só sítio [AJUSTAR]
+    'session_rules' => [
+        'payment_window_minutes' => (int) env('LONGA_PAYMENT_WINDOW_MINUTES', 10),
+        // O formador pode iniciar a aula a partir de N minutos antes da hora marcada
+        'start_early_minutes' => (int) env('LONGA_SESSION_START_EARLY_MINUTES', 15),
+        // QR: cada token vale 30 s; o lote cobre 10 janelas (5 min) para aguentar falhas de rede
+        'qr_rotation_seconds' => (int) env('LONGA_QR_ROTATION_SECONDS', 30),
+        'qr_batch_size' => (int) env('LONGA_QR_BATCH_SIZE', 10),
+        // Leitura aceite desde o início previsto até N horas depois do fim previsto
+        'qr_window_hours_after_end' => (int) env('LONGA_QR_WINDOW_HOURS', 4),
+        'qr_max_failed_attempts' => (int) env('LONGA_QR_MAX_FAILED_ATTEMPTS', 5),
+        'qr_attempt_window_minutes' => (int) env('LONGA_QR_ATTEMPT_WINDOW_MINUTES', 10),
+        // Sinal de risco (nunca bloqueio): aluno a mais de N metros do local da aula ao ler o QR
+        'presence_risk_meters' => (int) env('LONGA_PRESENCE_RISK_METERS', 500),
+        // R1/R2: N horas após o fim previsto sem confirmação → awaiting_confirmation; janela de 48 h
+        'auto_awaiting_after_end_hours' => (int) env('LONGA_AUTO_AWAITING_HOURS', 2),
+        'confirmation_window_hours' => (int) env('LONGA_CONFIRMATION_WINDOW_HOURS', 48),
+        // R4: faltas
+        'no_show_trainer_after_minutes' => (int) env('LONGA_NO_SHOW_TRAINER_MINUTES', 15),
+        'no_show_student_after_minutes' => (int) env('LONGA_NO_SHOW_STUDENT_MINUTES', 30),
+        'no_show_contest_hours' => (int) env('LONGA_NO_SHOW_CONTEST_HOURS', 24),
+        // Política de reembolso (percentagens da parte que fica para o formador, antes da comissão)
+        'late_cancel_hours' => (int) env('LONGA_LATE_CANCEL_HOURS', 6),
+        'late_cancel_trainer_share_percent' => (int) env('LONGA_LATE_CANCEL_TRAINER_SHARE', 25),
+        'no_show_student_trainer_share_percent' => (int) env('LONGA_NO_SHOW_STUDENT_TRAINER_SHARE', 50),
+        // Reconciliação: uma retenção sem destino N dias após o fim previsto gera alerta
+        'hold_max_days' => (int) env('LONGA_HOLD_MAX_DAYS', 7),
+    ],
+
+    'payments' => [
+        // Gateway: só 'mock' nesta fase (o real será integrado depois de o cliente o escolher)
+        'provider' => env('PAYMENT_PROVIDER', 'mock'),
+        'mock_outcome' => env('PAYMENT_MOCK_OUTCOME', 'succeeded'),
+    ],
+
     'chat' => [
         'max_attachment_kb' => (int) env('LONGA_CHAT_MAX_ATTACHMENT_KB', 10240),
         'attachment_link_minutes' => (int) env('LONGA_CHAT_ATTACHMENT_LINK_MINUTES', 10),

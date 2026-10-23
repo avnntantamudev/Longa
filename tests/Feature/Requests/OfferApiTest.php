@@ -54,13 +54,13 @@ it('aceita: cria a aula, as outras ofertas perdem e o pedido fica matched', func
 
     $response = $this->postJson("/api/v1/offers/{$offer->id}/accept")->assertOk();
 
-    $response->assertJsonPath('data.state', 'scheduled')
+    $response->assertJsonPath('data.state', 'pending_payment')
         ->assertJsonPath('data.role', 'trainer')
         ->assertJsonPath('data.trainer_net', 21250)
         ->assertJsonPath('data.latitude', TrainerProfileFactory::TALATONA[0]);
 
     $session = TrainingSession::query()->sole();
-    expect($session->escrow_reference)->toStartWith('MOCK-')
+    expect($session->payment_due_at)->not->toBeNull()
         ->and($session->conversation)->not->toBeNull()
         ->and($this->request->fresh()?->state)->toBe(RequestState::Matched)
         ->and($this->request->fresh()?->assigned_trainer_profile_id)->toBe($this->trainers[1]->id)

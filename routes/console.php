@@ -20,7 +20,10 @@ Artisan::command('longa:matching-tick', function (MatchingCoordinator $coordinat
 // Rede de segurança do matching (o job AdvanceMatching de cada onda é o caminho normal)
 Schedule::command('longa:matching-tick')->everyTenSeconds()->withoutOverlapping(1);
 
-// / Respostas idempotentes guardadas expiram ao fim de 24 h
+// // Regras automáticas das aulas (R1–R4)
+Schedule::command('longa:sessions:tick')->everyMinute()->withoutOverlapping(5);
+
+// Respostas idempotentes guardadas expiram ao fim de 24 h
 Schedule::call(fn () => DB::table('idempotency_keys')->where('expires_at', '<=', now())->delete())->daily()->name('prune-idempotency-keys');
 
 // Métricas do Horizon (gráficos de throughput e tempos de espera)

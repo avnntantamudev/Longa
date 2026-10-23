@@ -44,3 +44,41 @@ function loginWeb(App\Modules\Users\Models\User $user): App\Modules\Users\Models
 pest()->extend(TestCase::class)
     ->use(Illuminate\Foundation\Testing\DatabaseTruncation::class)
     ->in('Concurrency');
+
+/**
+ * Aula acabada de aceitar (como faria o TRIM TRIM): eletrónica em pending_payment, dinheiro em scheduled.
+ *
+ * @param  array<string, mixed>  $overrides
+ */
+function acceptedSession(string $paymentMethod = 'electronic', array $overrides = []): App\Modules\Sessions\Models\TrainingSession
+{
+    $request = App\Modules\Requests\Models\TrainingRequest::factory()->create(['payment_method' => $paymentMethod]);
+    $trainer = App\Modules\Users\Models\TrainerProfile::factory()->verified()->create();
+    $electronic = $paymentMethod === 'electronic';
+
+    $session = App\Modules\Sessions\Models\TrainingSession::query()->create([
+        'training_request_id' => $request->id, 'student_id' => $request->student_id, 'trainer_profile_id' => $trainer->id,
+        'skill_id' => $request->skill_id, 'title' => 'Aula de SGME', 'amount' => 25000, 'commission' => 3750, 'trainer_net' => 21250,
+        'scheduled_at' => now()->addDay()->setTime(14, 0), 'duration_minutes' => 60, 'payment_method' => $paymentMethod,
+        'payment_due_at' => $electronic ? now()->addMinutes(10) : null,
+        'modality' => 'in_person', 'municipality' => 'Talatona', 'neighborhood' => 'Talatona', 'latitude' => -8.9167, 'longitude' => 13.1833,
+        ...$overrides,
+    ]);
+    $session->forceFill(['state' => $electronic ? 'pending_payment' : 'scheduled'])->save();
+    App\Modules\Sessions\Models\Conversation::query()->create(['training_session_id' => $session->id]);
+
+    return $session->fresh() ?? $session;
+}
+
+/**
+ * Aula eletrónica já paga (dinheiro em escrow) e agendada.
+ *
+ * @param  array<string, mixed>  $overrides
+ */
+function paidSession(array $overrides = []): App\Modules\Sessions\Models\TrainingSession
+{
+    $session = acceptedSession('electronic', $overrides);
+    app(App\Modules\Payments\Actions\PayForSession::class)->handle($session, $session->student, 'multicaixa_express');
+
+    return $session->fresh() ?? $session;
+}

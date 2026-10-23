@@ -1,0 +1,24 @@
+#!/bin/sh
+# Hook de pre-commit do LONGA: formata os ficheiros PHP em staging com Pint
+# e corre a análise estática. Ativar com: composer hooks (ou git config core.hooksPath .githooks)
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACMR -- '*.php')
+
+if [ -n "$STAGED" ]; then
+    echo "[pre-commit] Pint..."
+    # shellcheck disable=SC2086
+    php vendor/bin/pint $STAGED || exit 1
+    # shellcheck disable=SC2086
+    git add $STAGED
+
+    echo "[pre-commit] Larastan..."
+    php vendor/bin/phpstan analyse --no-progress --memory-limit=1G || {
+        echo "[pre-commit] A análise estática falhou. Corrija os erros ou use --no-verify em último caso."
+        exit 1
+    }
+fi
+
+if git diff --cached --name-only --diff-filter=ACMR | grep -qE '\.(ts|vue)$'; then
+    echo "[pre-commit] Verificação de tipos (vue-tsc)..."
+    npm run --silent typecheck || exit 1
+fi

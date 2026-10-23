@@ -59,7 +59,9 @@ final class ApiExceptionRenderer
                 404,
             ),
             $e instanceof MethodNotAllowedHttpException => ApiError::response('method_not_allowed', 'Método não permitido.', 405),
-            $e instanceof TokenMismatchException => ApiError::response('session_expired', 'A sessão expirou. Atualize a página e tente novamente.', 419),
+            // O Laravel converte TokenMismatchException em HttpException(419) antes de chegar aqui
+            $e instanceof TokenMismatchException,
+            $e instanceof HttpExceptionInterface && $e->getStatusCode() === 419 => ApiError::response('session_expired', 'A sessão expirou. Atualize a página e tente novamente.', 419),
             $e instanceof ThrottleRequestsException => ApiError::response(
                 'too_many_requests',
                 'Demasiados pedidos. Aguarde um pouco e tente novamente.',

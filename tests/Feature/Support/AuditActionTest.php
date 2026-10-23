@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\AuditLog;
 use App\Models\User;
+use App\Support\Audit\AuditLogger;
 use Illuminate\Support\Facades\Route;
 
 beforeEach(function () {
@@ -24,4 +25,14 @@ it('regista ações sensíveis no audit log sem guardar o corpo do pedido', func
         ->and($log->request_id)->not->toBeNull()
         ->and($log->metadata)->toMatchArray(['status' => 200, 'success' => true])
         ->and(json_encode($log->metadata))->not->toContain('123456');
+});
+
+it('associa o registo ao utilizador e ao objeto afetado', function () {
+    $user = User::factory()->create();
+
+    $log = app(AuditLogger::class)->record('user.updated', $user, ['field' => 'name'], $user->id);
+
+    expect($log->user?->is($user))->toBeTrue()
+        ->and($log->subject?->is($user))->toBeTrue()
+        ->and($log->metadata)->toBe(['field' => 'name']);
 });

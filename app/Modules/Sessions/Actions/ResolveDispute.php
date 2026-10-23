@@ -6,6 +6,7 @@ namespace App\Modules\Sessions\Actions;
 
 use App\Modules\Payments\Services\SessionSettlement;
 use App\Modules\Sessions\Enums\SessionState;
+use App\Modules\Sessions\Events\DisputeResolved;
 use App\Modules\Sessions\Models\Dispute;
 use App\Modules\Sessions\Models\TrainingSession;
 use App\Modules\Sessions\Services\SessionLifecycle;
@@ -83,6 +84,7 @@ class ResolveDispute
                 'resolved_at' => now(),
             ])->save();
 
+            DisputeResolved::dispatch($session, $locked);
             $this->audit->record('disputes.resolved', $locked, ['decision' => $decision, 'trainer_share' => $gross, 'session_id' => $session->id], $admin->id);
 
             return $locked;

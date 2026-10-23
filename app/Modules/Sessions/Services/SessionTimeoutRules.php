@@ -11,6 +11,7 @@ use App\Modules\Payments\Services\SessionSettlement;
 use App\Modules\Score\Models\ScoreEvent;
 use App\Modules\Score\Services\ScoreRecorder;
 use App\Modules\Sessions\Enums\SessionState;
+use App\Modules\Sessions\Events\SessionConfirmed;
 use App\Modules\Sessions\Models\SessionEvent;
 use App\Modules\Sessions\Models\TrainingSession;
 use App\Support\StateMachine\InvalidTransition;
@@ -125,6 +126,7 @@ class SessionTimeoutRules
                 } else {
                     $this->lifecycle->transition($s, SessionState::Completed, 'auto_completed', null, ['rule' => 'R2', 'reason' => 'no_dispute_in_window'], ['confirmed_at' => now()]);
                     $this->settlement->complete($s, null, 'auto_no_dispute');
+                    SessionConfirmed::dispatch($s);
                 }
             },
             fn (TrainingSession $s) => $s->state === SessionState::AwaitingConfirmation,

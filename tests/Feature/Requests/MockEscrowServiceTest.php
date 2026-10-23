@@ -12,4 +12,4 @@ it('devolve uma referência mock sem mover dinheiro', function () {
     $reference = (new MockEscrowService)->hold($session);
 
     expect($reference)->toStartWith('MOCK-')->toHaveLength(17);
-})->skip(fn () => ! function_exists('app') || ! app()->bound('log'), 'precisa do contentor');
+});

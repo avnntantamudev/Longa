@@ -97,16 +97,69 @@
 }
 
 @layer components {
+    /* Botões (kit: laranja = ação principal, marinho = ação alternativa, contorno = secundária) */
     .btn-primary {
         @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-control bg-orange-500 px-5 font-semibold text-white transition-colors hover:bg-orange-600 active:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-60;
+    }
+
+    .btn-navy {
+        @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-control bg-navy-900 px-5 font-semibold text-white transition-colors hover:bg-navy-800 active:bg-navy-950 disabled:cursor-not-allowed disabled:opacity-60;
     }
 
     .btn-secondary {
         @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-control border border-border bg-surface px-5 font-semibold text-navy-900 transition-colors hover:bg-navy-50 disabled:cursor-not-allowed disabled:opacity-60;
     }
 
+    .btn-outline {
+        @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-control border-2 border-orange-500 bg-transparent px-5 font-semibold text-orange-600 transition-colors hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-60;
+    }
+
     .card {
         @apply rounded-card bg-surface p-4 shadow-card;
+    }
+
+    /* Campos de formulário */
+    .input {
+        @apply min-h-12 w-full rounded-control border border-border bg-surface-muted px-4 text-body text-ink placeholder:text-ink-subtle focus:border-orange-500 focus:bg-surface focus:outline-none;
+    }
+
+    .search-pill {
+        @apply flex min-h-11 w-full items-center gap-3 rounded-full bg-surface px-4 text-ink-muted shadow-card;
+    }
+
+    /* Filtros (kit: ativo laranja, inativo cinza com contorno) */
+    .chip {
+        @apply inline-flex min-h-10 items-center gap-2 rounded-control border border-navy-200 bg-navy-50 px-3 text-caption font-semibold text-navy-900;
+    }
+
+    .chip-active {
+        @apply border-orange-500 bg-orange-500 text-white;
+    }
+
+    /* Selos de estado */
+    .badge {
+        @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-caption font-semibold;
+    }
+
+    .badge-success {
+        @apply bg-success-soft text-success;
+    }
+
+    .badge-warning {
+        @apply bg-orange-50 text-orange-600;
+    }
+
+    .badge-neutral {
+        @apply bg-navy-50 text-ink-muted;
+    }
+
+    .badge-brand {
+        @apply bg-orange-500 text-white;
+    }
+
+    /* Avatar com iniciais (kit: círculo laranja ou marinho) */
+    .avatar-initials {
+        @apply inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-orange-500 text-caption font-bold text-white;
     }
 }
 

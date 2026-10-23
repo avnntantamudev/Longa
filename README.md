@@ -62,3 +62,4 @@ O hook de pre-commit (`.githooks/pre-commit`) corre Pint, Larastan e vue-tsc. O 
 - [Arquitetura e convenções](docs/architecture.md)
 - [Testar a PWA com HTTPS](docs/pwa-https.md)
 - [Formato de erros da API](docs/api-errors.md)
+- [Design system e telas do kit](docs/design-system.md)

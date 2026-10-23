@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppIcon from '@/components/AppIcon.vue';
+import BrandLogo from '@/components/BrandLogo.vue';
 import InstallPrompt from '@/components/InstallPrompt.vue';
 import NetworkStatus from '@/components/NetworkStatus.vue';
 import UpdatePrompt from '@/components/UpdatePrompt.vue';
@@ -18,9 +19,9 @@ function isActive(item: NavItem): boolean {
     <div class="min-h-dvh md:flex">
         <!-- Barra lateral (desktop) -->
         <aside class="hidden w-64 shrink-0 flex-col bg-navy-900 text-white md:flex">
-            <div class="flex items-center gap-3 px-6 py-6">
-                <img src="/icons/icon-192.png" alt="" class="size-9 rounded-control" />
-                <span class="text-title tracking-wide">LONGA</span>
+            <div class="px-6 py-6">
+                <BrandLogo :size="36" />
+                <p class="mt-1 text-caption text-navy-200">Kulonga = Ensinar</p>
             </div>
             <nav aria-label="Navegação principal" class="flex flex-col gap-1 px-3">
                 <template v-for="item in mainNavigation" :key="item.href">
@@ -50,9 +51,8 @@ function isActive(item: NavItem): boolean {
         <div class="flex min-h-dvh flex-1 flex-col">
             <!-- Cabeçalho (telemóvel) -->
             <header class="pt-safe sticky top-0 z-20 bg-navy-900 text-white md:hidden">
-                <div class="flex h-14 items-center gap-2 px-4">
-                    <img src="/icons/icon-192.png" alt="" class="size-8 rounded-[0.5rem]" />
-                    <span class="text-title tracking-wide">LONGA</span>
+                <div class="flex h-14 items-center px-4">
+                    <BrandLogo :size="30" />
                 </div>
             </header>
 

@@ -8,11 +8,12 @@ export interface NavItem {
     available: boolean;
 }
 
-// Navegação principal: barra inferior no telemóvel, barra lateral no desktop
+// Navegação principal (kit, perfil aluno): barra inferior no telemóvel, barra lateral no desktop.
+// Formador e RH terão navegação própria (Pedidos, Carteira, Formações) quando os perfis existirem.
 export const mainNavigation: NavItem[] = [
     { label: 'Início', href: '/', icon: 'home', available: true },
     { label: 'Explorar', href: '/explorar', icon: 'search', available: false },
     { label: 'Aulas', href: '/aulas', icon: 'calendar', available: false },
-    { label: 'Carteira', href: '/carteira', icon: 'wallet', available: false },
+    { label: 'Mensagens', href: '/mensagens', icon: 'chat', available: false },
     { label: 'Perfil', href: '/perfil', icon: 'user', available: false },
 ];

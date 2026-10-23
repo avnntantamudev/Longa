@@ -12,7 +12,8 @@ it('mostra a página inicial com os três perfis', function () {
             ->where('appName', 'LONGA')
             ->where('auth.user', null)
             ->has('profiles', 3)
-            ->where('profiles.0.key', 'student'));
+            ->where('profiles.0.key', 'student')
+            ->has('highlights', 3));
 });
 
 it('inclui o manifest da PWA e as meta tags mobile', function () {

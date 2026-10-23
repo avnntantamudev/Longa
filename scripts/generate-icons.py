@@ -1,6 +1,9 @@
-"""Gera os ícones PNG da PWA (192, 512 e maskable) sem dependências externas.
+"""Gera os ícones PNG da PWA (192, 512, maskable, apple-touch) e o favicon, sem dependências externas.
 
-Desenho: fundo azul marinho (#0B1F3A) com um "L" laranja (#FF7A00).
+Desenho (alinhado com o kit de telas): livro aberto laranja (#FF7A00) com um ponto por cima da
+lombada, sobre fundo azul marinho (#0B1F3A). O mesmo desenho existe em SVG em
+resources/js/components/BrandLogo.vue.
+
 Uso: python scripts/generate-icons.py
 """
 import os
@@ -11,6 +14,13 @@ NAVY = (0x0B, 0x1F, 0x3A, 255)
 ORANGE = (0xFF, 0x7A, 0x00, 255)
 CLEAR = (0, 0, 0, 0)
 OUT = os.path.join(os.path.dirname(__file__), "..", "public", "icons")
+
+# Geometria num quadrado unitário (0..1), igual à do SVG (viewBox 0 0 100 100)
+LEFT_PAGE = [(0.14, 0.36), (0.47, 0.44), (0.47, 0.84), (0.14, 0.76)]
+RIGHT_PAGE = [(0.53, 0.44), (0.86, 0.36), (0.86, 0.76), (0.53, 0.84)]
+DOT = (0.5, 0.25, 0.085)  # centro x, centro y, raio
+
+SUPERSAMPLE = 4  # antialiasing
 
 
 def write_png(path, size, pixel):
@@ -39,27 +49,52 @@ def write_ico(path, png_path, size):
         fh.write(header + entry + data)
 
 
-def in_rounded_rect(x, y, size, radius):
-    r = radius
-    cx = min(max(x, r), size - 1 - r)
-    cy = min(max(y, r), size - 1 - r)
-    return (x - cx) ** 2 + (y - cy) ** 2 <= r * r
+def in_polygon(u, v, poly):
+    inside = False
+    j = len(poly) - 1
+    for i, (xi, yi) in enumerate(poly):
+        xj, yj = poly[j]
+        if (yi > v) != (yj > v) and u < (xj - xi) * (v - yi) / (yj - yi) + xi:
+            inside = not inside
+        j = i
+    return inside
 
 
-def in_letter(x, y, size, scale):
-    # "L" desenhado numa grelha relativa, centrado; scale < 1 encolhe para a zona segura
-    u = (x / size - 0.5) / scale + 0.5
-    v = (y / size - 0.5) / scale + 0.5
-    stem = 0.30 <= u <= 0.44 and 0.22 <= v <= 0.78
-    foot = 0.30 <= u <= 0.72 and 0.64 <= v <= 0.78
-    return stem or foot
+def in_mark(u, v):
+    cx, cy, r = DOT
+    return in_polygon(u, v, LEFT_PAGE) or in_polygon(u, v, RIGHT_PAGE) or (u - cx) ** 2 + (v - cy) ** 2 <= r * r
+
+
+def in_rounded_rect(u, v, radius):
+    cx = min(max(u, radius), 1 - radius)
+    cy = min(max(v, radius), 1 - radius)
+    return (u - cx) ** 2 + (v - cy) ** 2 <= radius * radius
 
 
 def icon(size, maskable):
-    def pixel(x, y):
-        if not maskable and not in_rounded_rect(x, y, size, int(size * 0.22)):
+    # maskable: o desenho ocupa a zona segura central (80%) e o fundo cobre tudo
+    scale = 0.72 if maskable else 0.92
+
+    def sample(u, v):
+        if not maskable and not in_rounded_rect(u, v, 0.22):
             return CLEAR
-        return ORANGE if in_letter(x, y, size, 0.8 if maskable else 1.0) else NAVY
+        mu = (u - 0.5) / scale + 0.5
+        mv = (v - 0.5) / scale + 0.5
+        return ORANGE if in_mark(mu, mv) else NAVY
+
+    def pixel(x, y):
+        acc = [0, 0, 0, 0]
+        for sy in range(SUPERSAMPLE):
+            for sx in range(SUPERSAMPLE):
+                c = sample((x + (sx + 0.5) / SUPERSAMPLE) / size, (y + (sy + 0.5) / SUPERSAMPLE) / size)
+                for k in range(4):
+                    acc[k] += c[k]
+        n = SUPERSAMPLE * SUPERSAMPLE
+        alpha = acc[3] / n
+        if alpha == 0:
+            return CLEAR
+        # cor média ponderada pela opacidade
+        return tuple(int(acc[k] / n * 255 / alpha) if k < 3 else int(alpha) for k in range(4))
 
     return pixel
 

@@ -17,6 +17,12 @@ return [
         'country_code' => env('LONGA_PHONE_COUNTRY_CODE', '244'),
     ],
 
+    'auth' => [
+        // Token de acesso da API (minutos) e token de refresh (minutos; 30 dias)
+        'access_token_ttl' => (int) env('SANCTUM_TOKEN_EXPIRATION', 60),
+        'refresh_token_ttl' => (int) env('SANCTUM_REFRESH_EXPIRATION', 43200),
+    ],
+
     'otp' => [
         'length' => (int) env('OTP_LENGTH', 6),
         'ttl' => (int) env('OTP_TTL', 300),

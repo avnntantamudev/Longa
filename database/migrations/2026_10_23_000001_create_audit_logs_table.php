@@ -14,7 +14,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
             $table->string('action', 100)->index();
-            $table->nullableMorphs('subject');
+            // subject_id em texto: aceita chaves numéricas e UUID (ex.: auth_sessions)
+            $table->string('subject_type')->nullable();
+            $table->string('subject_id', 36)->nullable();
+            $table->index(['subject_type', 'subject_id']);
             $table->string('ip', 45)->nullable()->index();
             $table->string('user_agent', 500)->nullable();
             $table->uuid('request_id')->nullable()->index();

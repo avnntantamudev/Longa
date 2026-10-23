@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Middleware\AssignRequestId;
 use App\Http\Middleware\AuditAction;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Modules\Auth\Http\Middleware\EnsureAuthSessionIsActive;
 use App\Support\Api\ApiExceptionRenderer;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -26,9 +27,16 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
         ]);
 
+        // A PWA chama /api/v1 com o cookie de sessão (Sanctum SPA); a app Flutter usa Bearer tokens
+        $middleware->statefulApi();
+
         $middleware->alias([
             'audit' => AuditAction::class,
+            'auth.session' => EnsureAuthSessionIsActive::class,
         ]);
+
+        $middleware->redirectGuestsTo('/entrar');
+        $middleware->redirectUsersTo('/');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(new ApiExceptionRenderer);

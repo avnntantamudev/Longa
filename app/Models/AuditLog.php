@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property int|null $user_id
  * @property string $action
  * @property string|null $subject_type
- * @property int|null $subject_id
+ * @property string|null $subject_id
  * @property string|null $ip
  * @property string|null $user_agent
  * @property string|null $request_id

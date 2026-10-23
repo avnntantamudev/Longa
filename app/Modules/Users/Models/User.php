@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\Contracts\HasAbilities;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -34,10 +35,18 @@ use Spatie\Permission\Traits\HasRoles;
 #[UseFactory(UserFactory::class)]
 class User extends Authenticatable
 {
+    /** @use HasApiTokens<HasAbilities> Token pessoal (API) ou TransientToken (sessão da PWA) */
+    use HasApiTokens;
+
     /** @use HasFactory<UserFactory> */
-    use HasApiTokens, HasFactory, HasRoles, Notifiable, SoftDeletes;
+    use HasFactory, HasRoles, Notifiable, SoftDeletes;
 
     protected string $guard_name = 'web';
+
+    protected $attributes = [
+        'status' => 'active',
+        'locale' => 'pt',
+    ];
 
     protected function casts(): array
     {

@@ -49,3 +49,23 @@ O **pendente** do formador (retido em aulas ainda não confirmadas) é a soma do
 `líquido do formador = valor − comissão`. A soma é sempre exatamente o valor; nenhum Kz é criado nem perdido.
 Em reembolsos parciais a comissão aplica-se só à parte que o formador recebe. Testado com 1, 3, 7, 999, 2.010,
 3.333, 25.000, 450.000 e 1.999.999 Kz (`tests/Feature/Wallet/LedgerServiceTest.php`).
+
+## Reconciliação
+
+`php artisan longa:ledger:reconcile` corre de hora a hora (scheduler) e grava o resultado em `ledger_reconciliations`.
+Não corrige nada; verifica:
+
+| Verificação | Gravidade |
+|---|---|
+| Cada transação soma 0 e bate com `total_debit`/`total_credit` | crítica |
+| Soma global de todos os lançamentos = 0 | crítica |
+| Saldo de `escrow` = soma das retenções `held`/`disputed` | crítica |
+| Cache de saldos = soma dos lançamentos de cada conta | crítica |
+| Nenhum `trainer_available:*` negativo | crítica |
+| Retenções sem destino depois de `hold_max_days` | aviso |
+| Reembolsos decididos há mais de 1 h e não executados no gateway | aviso |
+
+Com diferenças críticas: `Log::critical('ledger.reconciliation_failed')`, notificação aos administradores
+(base de dados + push) e código de saída 1. Se a diferença for só na cache de saldos,
+`php artisan longa:ledger:rebuild` reconstrói-a a partir dos lançamentos. Qualquer outra diferença exige
+investigação e, se for caso disso, uma transação de estorno — nunca uma alteração direta.

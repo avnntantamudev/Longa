@@ -27,6 +27,7 @@ Decisões de produto e de arquitetura, com a data e o motivo. As mais recentes f
 | 2026-10-23 | **Nº do BI cifrado** (cast `encrypted`) + `document_hash` HMAC para detetar duplicados; nunca devolvido pela API (só mascarado). | Requisito 1.1 e kit do admin (que mostrava o BI completo). | Equipa |
 | 2026-10-23 | **Laravel 13** em vez de 11. | O 11 deixou de ter correções de segurança e tem vulnerabilidades abertas. | Cliente |
 | 2026-10-23 | **Português europeu/angolano** na interface ("si", "Pesquisar", "Saltar"), apesar de o kit ter termos pt-BR. | Norma usada em Angola. | Equipa |
+| 2026-10-23 | **Backoffice Filament 5 em `/backoffice`**, sem login próprio: o admin entra pela PWA com OTP e a sessão web é partilhada (`canAccessPanel` exige papel admin e conta ativa). Decisões de disputa pedem fundamentação e a palavra CONFIRMAR; ledger e reconciliações só de leitura. | Um único método de autenticação; nenhuma palavra-passe de admin para roubar. | Equipa |
 
 ## Em aberto
 

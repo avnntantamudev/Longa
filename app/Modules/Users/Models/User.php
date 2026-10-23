@@ -7,6 +7,9 @@ namespace App\Modules\Users\Models;
 use App\Modules\Users\Enums\Role;
 use App\Modules\Users\Enums\UserStatus;
 use Database\Factories\UserFactory;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasName;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
@@ -34,7 +37,7 @@ use Spatie\Permission\Traits\HasRoles;
 #[Fillable(['phone', 'name', 'email', 'locale', 'phone_verified_at', 'last_login_at', 'onboarded_at'])]
 #[Hidden(['remember_token'])]
 #[UseFactory(UserFactory::class)]
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser, HasName
 {
     /** @use HasApiTokens<HasAbilities> Token pessoal (API) ou TransientToken (sessão da PWA) */
     use HasApiTokens;
@@ -92,5 +95,18 @@ class User extends Authenticatable
     public function routeNotificationForSms(): string
     {
         return $this->phone;
+    }
+
+    /**
+     * Backoffice (Filament): só administradores ativos.
+     */
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->status === UserStatus::Active && $this->hasRole(Role::Admin->value);
+    }
+
+    public function getFilamentName(): string
+    {
+        return $this->name ?? $this->phone;
     }
 }

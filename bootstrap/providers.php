@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 return [
     App\Providers\AppServiceProvider::class,
+    App\Providers\Filament\BackofficePanelProvider::class,
     App\Providers\HorizonServiceProvider::class,
     App\Providers\ModuleServiceProvider::class,
 ];

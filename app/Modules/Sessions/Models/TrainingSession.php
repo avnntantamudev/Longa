@@ -4,17 +4,20 @@ declare(strict_types=1);
 
 namespace App\Modules\Sessions\Models;
 
+use App\Modules\Payments\Models\EscrowHold;
 use App\Modules\Requests\Models\TrainingRequest;
 use App\Modules\Sessions\Enums\SessionState;
 use App\Modules\Users\Models\Skill;
 use App\Modules\Users\Models\TrainerProfile;
 use App\Modules\Users\Models\User;
+use App\Modules\Wallet\Models\LedgerTransaction;
 use App\Support\StateMachine\HasStateMachine;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 /**
  * Aula criada quando um formador aceita um pedido. Estados e regras em docs/state-machines.md.
@@ -145,6 +148,22 @@ class TrainingSession extends Model
     public function disputes(): HasMany
     {
         return $this->hasMany(Dispute::class);
+    }
+
+    /**
+     * @return HasOne<EscrowHold, $this>
+     */
+    public function escrowHold(): HasOne
+    {
+        return $this->hasOne(EscrowHold::class);
+    }
+
+    /**
+     * @return MorphMany<LedgerTransaction, $this>
+     */
+    public function ledgerTransactions(): MorphMany
+    {
+        return $this->morphMany(LedgerTransaction::class, 'reference');
     }
 
     public function isCash(): bool

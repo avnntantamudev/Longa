@@ -37,3 +37,10 @@ function loginWeb(App\Modules\Users\Models\User $user): App\Modules\Users\Models
 
     return $user;
 }
+
+/*
+| Testes de concorrência: dados gravados de verdade (outros processos têm de os ver).
+*/
+pest()->extend(TestCase::class)
+    ->use(Illuminate\Foundation\Testing\DatabaseTruncation::class)
+    ->in('Concurrency');

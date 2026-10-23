@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Requests\Http\Controllers\OfferController;
 use App\Modules\Requests\Http\Controllers\TrainingRequestController;
 use Illuminate\Support\Facades\Route;
 
@@ -15,4 +16,15 @@ Route::middleware(['auth:sanctum', 'auth.session', 'onboarded', 'role:student'])
         Route::get('{trainingRequest}', [TrainingRequestController::class, 'show'])->name('show');
         Route::post('{trainingRequest}/cancel', [TrainingRequestController::class, 'cancel'])->name('cancel');
         Route::post('{trainingRequest}/republish', [TrainingRequestController::class, 'republish'])->middleware('throttle:training-requests')->name('republish');
+    });
+
+Route::middleware(['auth:sanctum', 'auth.session', 'onboarded', 'role:trainer'])
+    ->prefix('offers')
+    ->name('api.offers.')
+    ->group(function () {
+        Route::get('/', [OfferController::class, 'index'])->name('index');
+        Route::get('{offer}', [OfferController::class, 'show'])->name('show');
+        Route::post('{offer}/view', [OfferController::class, 'view'])->name('view');
+        Route::post('{offer}/accept', [OfferController::class, 'accept'])->middleware('throttle:offer-responses')->name('accept');
+        Route::post('{offer}/decline', [OfferController::class, 'decline'])->middleware('throttle:offer-responses')->name('decline');
     });

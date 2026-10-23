@@ -1,6 +1,7 @@
 # Autenticação
 
-Login e registo são o mesmo fluxo: o utilizador indica o telemóvel, **escolhe receber o código por SMS ou\nWhatsApp** (e no ecrã do código pode pedir de novo pelo outro canal) e,
+Login e registo são o mesmo fluxo: o utilizador indica o telemóvel, **escolhe receber o código por SMS ou
+WhatsApp** (e no ecrã do código pode pedir de novo pelo outro canal) e,
 se o número ainda não tiver conta, a conta é criada ao validar o código. O perfil (aluno, formador,
 empresa) é escolhido a seguir, em `POST /onboarding`.
 

@@ -1,9 +1,120 @@
+@import '@fontsource-variable/inter';
 @import 'tailwindcss';
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
+@source '../views';
+@source '../js';
 
+/*
+ * Tokens de design do LONGA.
+ * Cores de marca: azul marinho #0B1F3A (primária) e laranja #FF7A00 (ação/destaque).
+ * Usar sempre os tokens (bg-navy-900, text-orange-500, rounded-card, shadow-card...) em vez de valores soltos.
+ */
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Inter Variable', Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+    /* Marca: azul marinho */
+    --color-navy-50: #eef3fa;
+    --color-navy-100: #d6e0ef;
+    --color-navy-200: #adc1de;
+    --color-navy-300: #7f9cc7;
+    --color-navy-400: #4f74aa;
+    --color-navy-500: #2f558c;
+    --color-navy-600: #1f416f;
+    --color-navy-700: #163156;
+    --color-navy-800: #102745;
+    --color-navy-900: #0b1f3a;
+    --color-navy-950: #061224;
+
+    /* Marca: laranja */
+    --color-orange-50: #fff4e8;
+    --color-orange-100: #ffe5c7;
+    --color-orange-200: #ffc98f;
+    --color-orange-300: #ffab57;
+    --color-orange-400: #ff9129;
+    --color-orange-500: #ff7a00;
+    --color-orange-600: #db6500;
+    --color-orange-700: #b35100;
+    --color-orange-800: #8a3e00;
+    --color-orange-900: #612c00;
+
+    /* Superfícies e texto */
+    --color-surface: #ffffff;
+    --color-surface-muted: #f5f7fa;
+    --color-border: #e3e8ef;
+    --color-ink: #0b1f3a;
+    --color-ink-muted: #5b6b82;
+    --color-ink-subtle: #8a97aa;
+
+    /* Estados */
+    --color-success: #16a34a;
+    --color-success-soft: #e8f7ee;
+    --color-warning: #d97706;
+    --color-warning-soft: #fef5e6;
+    --color-danger: #dc2626;
+    --color-danger-soft: #fdecec;
+    --color-info: #2563eb;
+    --color-info-soft: #eaf1fe;
+
+    /* Tipografia (escala mobile-first) */
+    --text-display: 1.75rem;
+    --text-display--line-height: 2.25rem;
+    --text-display--font-weight: 700;
+    --text-title: 1.25rem;
+    --text-title--line-height: 1.75rem;
+    --text-title--font-weight: 600;
+    --text-body: 1rem;
+    --text-body--line-height: 1.5rem;
+    --text-caption: 0.8125rem;
+    --text-caption--line-height: 1.125rem;
+
+    /* Raios */
+    --radius-control: 0.75rem;
+    --radius-card: 1rem;
+    --radius-sheet: 1.5rem;
+
+    /* Sombras */
+    --shadow-card: 0 1px 2px rgb(11 31 58 / 0.06), 0 2px 8px rgb(11 31 58 / 0.06);
+    --shadow-raised: 0 4px 16px rgb(11 31 58 / 0.12);
+    --shadow-nav: 0 -1px 0 rgb(11 31 58 / 0.06), 0 -4px 16px rgb(11 31 58 / 0.06);
+
+    /* Pontos de quebra: o desenho de referência é 360–390px */
+    --breakpoint-xs: 22.5rem;
+}
+
+@layer base {
+    html {
+        -webkit-tap-highlight-color: transparent;
+        text-size-adjust: 100%;
+    }
+
+    body {
+        @apply bg-surface-muted font-sans text-body text-ink antialiased;
+    }
+
+    :focus-visible {
+        @apply outline-3 outline-offset-2 outline-orange-500;
+    }
+}
+
+@layer components {
+    .btn-primary {
+        @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-control bg-orange-500 px-5 font-semibold text-white transition-colors hover:bg-orange-600 active:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-60;
+    }
+
+    .btn-secondary {
+        @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-control border border-border bg-surface px-5 font-semibold text-navy-900 transition-colors hover:bg-navy-50 disabled:cursor-not-allowed disabled:opacity-60;
+    }
+
+    .card {
+        @apply rounded-card bg-surface p-4 shadow-card;
+    }
+}
+
+/* Espaço para a barra inferior e para o "notch" dos telemóveis */
+.pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+.pt-safe {
+    padding-top: env(safe-area-inset-top);
 }

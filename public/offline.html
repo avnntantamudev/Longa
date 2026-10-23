@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="pt">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0B1F3A">
+    <title>Sem ligação · LONGA</title>
+    <style>
+        :root { --navy: #0B1F3A; --orange: #FF7A00; --muted: #5B6B82; --bg: #F5F7FA; }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+            padding: 24px 16px; background: var(--bg); color: var(--navy);
+            font-family: "Inter Variable", Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        }
+        main { width: 100%; max-width: 360px; text-align: center; }
+        img { width: 72px; height: 72px; border-radius: 18px; }
+        h1 { font-size: 1.375rem; margin: 24px 0 8px; }
+        p { color: var(--muted); line-height: 1.5; margin: 0 0 24px; }
+        button {
+            width: 100%; min-height: 48px; border: 0; border-radius: 12px; background: var(--orange);
+            color: #fff; font: inherit; font-weight: 600; cursor: pointer;
+        }
+        button:focus-visible { outline: 3px solid var(--navy); outline-offset: 2px; }
+    </style>
+</head>
+<body>
+<main>
+    <img src="/icons/icon-192.png" alt="LONGA">
+    <h1>Sem ligação à internet</h1>
+    <p>Não foi possível abrir esta página. Verifique os dados móveis ou o Wi-Fi e tente novamente.</p>
+    <button type="button" onclick="location.reload()">Tentar de novo</button>
+</main>
+<script>
+    window.addEventListener('online', function () { location.reload(); });
+</script>
+</body>
+</html>

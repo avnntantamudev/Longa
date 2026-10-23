@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Monolog\Formatter\JsonFormatter;
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
@@ -81,6 +82,25 @@ return [
             'level' => env('LOG_LEVEL', 'debug'),
             'max_files' => 3,
             'replace_placeholders' => true,
+        ],
+
+        // Uma linha JSON por evento, para agregadores de logs (Loki, ELK, CloudWatch...)
+        'json' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/longa.json.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'max_files' => env('LOG_DAILY_DAYS', 14),
+            'formatter' => JsonFormatter::class,
+            'replace_placeholders' => true,
+        ],
+
+        // Trilho de auditoria (ações sensíveis); complementa a tabela audit_logs
+        'audit' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/audit.log'),
+            'level' => 'info',
+            'max_files' => env('LOG_AUDIT_DAYS', 365),
+            'formatter' => JsonFormatter::class,
         ],
 
         'slack' => [

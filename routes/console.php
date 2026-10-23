@@ -2,9 +2,14 @@
 
 declare(strict_types=1);
 
-use Illuminate\Foundation\Inspiring;
+use App\Events\PingBroadcast;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
+Artisan::command('longa:ping {message=pong}', function (string $message) {
+    PingBroadcast::dispatch($message);
+    $this->info("Evento enviado para o canal longa.ping: {$message}");
+})->purpose('Envia um evento de teste pelo Reverb');
+
+// Métricas do Horizon (gráficos de throughput e tempos de espera)
+Schedule::command('horizon:snapshot')->everyFiveMinutes();

@@ -30,6 +30,9 @@ return [
 
     'env' => env('APP_ENV', 'production'),
 
+    // Versão apresentada em /api/v1/health
+    'version' => env('APP_VERSION', '0.1.0'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Debug Mode
@@ -67,7 +70,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => env('APP_TIMEZONE', 'Africa/Luanda'),
 
     /*
     |--------------------------------------------------------------------------
@@ -80,11 +83,11 @@ return [
     |
     */
 
-    'locale' => env('APP_LOCALE', 'en'),
+    'locale' => env('APP_LOCALE', 'pt'),
 
-    'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
+    'fallback_locale' => env('APP_FALLBACK_LOCALE', 'pt'),
 
-    'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
+    'faker_locale' => env('APP_FAKER_LOCALE', 'pt_PT'),
 
     /*
     |--------------------------------------------------------------------------

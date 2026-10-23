@@ -1,0 +1,97 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Modules\Matching\Services;
+
+use App\Modules\Matching\Support\MatchCandidate;
+use App\Modules\Requests\Models\TrainingRequest;
+use App\Modules\Sessions\Enums\SessionState;
+use App\Modules\Users\Enums\UserStatus;
+use App\Modules\Users\Enums\VerificationStatus;
+use Illuminate\Support\Facades\DB;
+
+/**
+ * Encontra e ordena os formadores elegíveis para um pedido (uma única consulta SQL).
+ *
+ * Elegível:
+ *  - conta ativa e não apagada; perfil verificado, com onboarding concluído e "Disponível";
+ *  - ensina a área do pedido e aceita a modalidade (presencial/online);
+ *  - presencial: a ≤ raio do matching (5 km) do local do pedido E o pedido dentro do raio de atuação do formador;
+ *  - sem aula marcada numa janela à volta da hora pedida (conflito de horário);
+ *  - não é o próprio aluno e ainda não recebeu oferta deste pedido.
+ *
+ * Ordenação: peso_score × score/100 + peso_distância × (1 − distância/raio), desempate pela distância.
+ * Online: sem filtro de distância; ordena só pelo score.
+ */
+class TrainerMatcher
+{
+    /**
+     * @param  list<int>  $excludeTrainerIds
+     * @return list<MatchCandidate>
+     */
+    public function candidates(TrainingRequest $request, int $limit, array $excludeTrainerIds = []): array
+    {
+        $config = config('longa.matching');
+        $radius = (int) $config['radius_m'];
+        $weightScore = (float) $config['weight_score'];
+        $weightDistance = (float) $config['weight_distance'];
+        $window = (int) $config['conflict_window_minutes'];
+        $online = $request->modality === 'online';
+
+        // POINT(longitude, latitude) com SRID 4326 (ordem verificada, ver docs/database.md)
+        $point = 'ST_SRID(POINT(?, ?), 4326)';
+        $pointBindings = [$request->longitude, $request->latitude];
+
+        $query = DB::table('trainer_profiles as tp')
+            ->join('users as u', 'u.id', '=', 'tp.user_id')
+            ->join('skill_trainer_profile as stp', function ($join) use ($request) {
+                $join->on('stp.trainer_profile_id', '=', 'tp.id')->where('stp.skill_id', '=', $request->skill_id);
+            })
+            ->select(['tp.id', 'tp.user_id', 'tp.score'])
+            ->selectRaw("ROUND(ST_Distance_Sphere(tp.location, {$point})) as distance_m", $pointBindings)
+            ->where('u.status', UserStatus::Active->value)
+            ->whereNull('u.deleted_at')
+            ->where('tp.user_id', '!=', $request->student_id)
+            ->where('tp.verification_status', VerificationStatus::Verified->value)
+            ->where('tp.is_available', true)
+            ->whereNotNull('tp.onboarding_completed_at')
+            ->whereNotNull('tp.latitude')
+            ->whereRaw('JSON_CONTAINS(tp.modalities, ?)', [json_encode($online ? 'online' : 'in_person')])
+            ->when($excludeTrainerIds !== [], fn ($q) => $q->whereNotIn('tp.id', $excludeTrainerIds))
+            ->whereNotExists(function ($q) use ($request, $window) {
+                $q->selectRaw('1')
+                    ->from('training_sessions as s')
+                    ->whereColumn('s.trainer_profile_id', 'tp.id')
+                    ->where('s.state', SessionState::Scheduled->value)
+                    ->whereBetween('s.scheduled_at', [
+                        $request->scheduled_at->copy()->subMinutes($window),
+                        $request->scheduled_at->copy()->addMinutes($window),
+                    ]);
+            });
+
+        if ($online) {
+            $query->selectRaw('(tp.score / 100) as rank_score')
+                ->orderByDesc('rank_score');
+        } else {
+            $query
+                // Pré-filtro pelo índice SPATIAL (retângulo do círculo) e depois a distância real
+                ->whereRaw("MBRContains(ST_Buffer({$point}, ?), tp.location)", [...$pointBindings, $radius])
+                ->whereRaw("ST_Distance_Sphere(tp.location, {$point}) <= LEAST(?, tp.service_radius_m)", [...$pointBindings, $radius])
+                ->selectRaw(
+                    "(? * tp.score / 100 + ? * (1 - ST_Distance_Sphere(tp.location, {$point}) / ?)) as rank_score",
+                    [$weightScore, $weightDistance, ...$pointBindings, $radius],
+                )
+                ->orderByDesc('rank_score')
+                ->orderBy('distance_m');
+        }
+
+        return $query->limit($limit)->get()->map(fn (object $row) => new MatchCandidate(
+            trainerProfileId: (int) $row->id,
+            userId: (int) $row->user_id,
+            distanceM: (int) $row->distance_m,
+            score: (int) $row->score,
+            rankScore: (float) $row->rank_score,
+        ))->all();
+    }
+}

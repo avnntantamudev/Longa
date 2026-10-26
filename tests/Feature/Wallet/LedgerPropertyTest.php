@@ -60,12 +60,15 @@ function runFlow(string $scenario, int $amount, ?int $trainerProfileId): array
     $tick = fn () => test()->artisan('longa:sessions:tick');
 
     if ($scenario === 'payment_failed') {
+        // O gateway é um singleton: recriá-lo para a configuração valer só neste fluxo
         config(['longa.payments.mock_outcome' => 'failed']);
+        app()->forgetInstance(App\Modules\Payments\Contracts\PaymentProvider::class);
         try {
             app(PayForSession::class)->handle($session, $student, 'multicaixa_express');
         } catch (ApiException) {
         }
         config(['longa.payments.mock_outcome' => 'succeeded']);
+        app()->forgetInstance(App\Modules\Payments\Contracts\PaymentProvider::class);
 
         return [$session, null];
     }

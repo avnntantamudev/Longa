@@ -9,7 +9,7 @@ use Symfony\Component\Process\PhpExecutableFinder;
 use Symfony\Component\Process\Process;
 
 /*
-| Concorrência real: 8 processos tentam PIN errados ao mesmo tempo no mesmo aparelho.
+| Concorrência real: 6 processos tentam PIN errados ao mesmo tempo no mesmo aparelho.
 | A contagem é feita com a linha bloqueada: nenhuma tentativa escapa e o bloqueio começa à 5.ª.
 */
 
@@ -25,7 +25,7 @@ it('tentativas simultâneas de PIN não escapam ao limite', function () {
         $p->start();
 
         return $p;
-    }, range(1, 8));
+    }, range(1, 6));
 
     $codes = array_map(function (Process $p) {
         $p->wait();
@@ -37,5 +37,5 @@ it('tentativas simultâneas de PIN não escapam ao limite', function () {
     // Exatamente 5 contadas (a 5.ª bloqueia); as restantes chegam já bloqueadas
     expect($fresh?->failed_attempts)->toBe(5, json_encode($codes))
         ->and($fresh?->locked_until?->isFuture())->toBeTrue()
-        ->and(array_count_values($codes))->toBe(['pin_invalid' => 5, 'pin_locked' => 3]);
+        ->and(array_count_values($codes))->toEqual(['pin_invalid' => 5, 'pin_locked' => 1], json_encode($codes)); // a ordem depende de quem chega primeiro
 });

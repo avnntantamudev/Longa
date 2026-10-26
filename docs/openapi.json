@@ -220,6 +220,95 @@
                 }
             }
         },
+        "/sessions/{session}/events": {
+            "get": {
+                "operationId": "sessions.events",
+                "summary": "Linha do tempo da aula (participantes)",
+                "tags": [
+                    "Aulas e chat",
+                    "Session"
+                ],
+                "parameters": [
+                    {
+                        "name": "session",
+                        "in": "path",
+                        "required": true,
+                        "description": "The session ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "type": {
+                                                        "type": "string"
+                                                    },
+                                                    "from_state": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "to_state": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "by": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "system",
+                                                            "student",
+                                                            "trainer",
+                                                            "admin"
+                                                        ]
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "type",
+                                                    "from_state",
+                                                    "to_state",
+                                                    "by",
+                                                    "created_at"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/sessions/{session}/messages": {
             "get": {
                 "operationId": "sessions.messages",
@@ -718,6 +807,176 @@
                 }
             }
         },
+        "/wallet": {
+            "get": {
+                "operationId": "wallet.show",
+                "summary": "Saldos: dispon\u00edvel, pendente (aulas pagas por confirmar), total ganho e comiss\u00f5es em d\u00edvida (Kz)",
+                "tags": [
+                    "Carteira",
+                    "Wallet"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "available": {
+                                                    "type": "integer"
+                                                },
+                                                "pending": {
+                                                    "type": "integer",
+                                                    "description": "L\u00edquido das aulas pagas ainda por confirmar (retidas em escrow)"
+                                                },
+                                                "total_earned": {
+                                                    "type": "integer",
+                                                    "description": "Tudo o que entrou na carteira (antes de compensa\u00e7\u00f5es de comiss\u00e3o e levantamentos)"
+                                                },
+                                                "commission_due": {
+                                                    "type": "string"
+                                                },
+                                                "currency": {
+                                                    "type": "string",
+                                                    "const": "AOA"
+                                                }
+                                            },
+                                            "required": [
+                                                "available",
+                                                "pending",
+                                                "total_earned",
+                                                "commission_due",
+                                                "currency"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/wallet/movements": {
+            "get": {
+                "operationId": "wallet.movements",
+                "summary": "Movimentos da carteira (pagina\u00e7\u00e3o por cursor)",
+                "tags": [
+                    "Carteira",
+                    "Wallet"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated set of `WalletMovementResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/WalletMovementResource"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "next_cursor": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "The \"cursor\" that points to the next set of items."
+                                                },
+                                                "prev_cursor": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "The \"cursor\" that points to the previous set of items."
+                                                }
+                                            },
+                                            "required": [
+                                                "path",
+                                                "per_page",
+                                                "next_cursor",
+                                                "prev_cursor"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/skills": {
             "get": {
                 "operationId": "skills",
@@ -837,6 +1096,341 @@
                     }
                 },
                 "security": []
+            }
+        },
+        "/sessions/{session}/disputes": {
+            "get": {
+                "operationId": "sessions.disputes.index",
+                "summary": "Disputas de uma aula",
+                "tags": [
+                    "Disputas",
+                    "Dispute"
+                ],
+                "parameters": [
+                    {
+                        "name": "session",
+                        "in": "path",
+                        "required": true,
+                        "description": "The session ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `DisputeResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "allOf": [
+                                                    {
+                                                        "$ref": "#/components/schemas/DisputeResource"
+                                                    },
+                                                    {
+                                                        "type": "object",
+                                                        "required": [
+                                                            "attachments"
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "sessions.disputes.store",
+                "description": "Requer `Idempotency-Key`. O valor fica retido at\u00e9 \u00e0 decis\u00e3o do admin.\nErros: `dispute_not_allowed` (409).",
+                "summary": "Abrir disputa (multipart, com anexos opcionais)",
+                "tags": [
+                    "Disputas",
+                    "Dispute"
+                ],
+                "parameters": [
+                    {
+                        "name": "session",
+                        "in": "path",
+                        "required": true,
+                        "description": "The session ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "description": "Chave \u00fanica por a\u00e7\u00e3o (8\u2013100 caracteres: letras, n\u00fameros, \"-\" e \"_\"). Repetir o mesmo pedido com a mesma chave devolve a resposta guardada (24 h, cabe\u00e7alho `Idempotent-Replayed: true`); a mesma chave com outro corpo d\u00e1 422 `idempotency_key_reused`; um pedido ainda em curso d\u00e1 409 `request_in_progress`.",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z0-9_-]{8,100}$"
+                        },
+                        "example": "3f1c9a2e-7b4d-4e8a-9c1f-2a6b8d0e4f13"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OpenDisputeRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`DisputeResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/DisputeResource"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "required": [
+                                                        "attachments"
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/dispute-attachments/{attachment}": {
+            "get": {
+                "operationId": "disputes.attachment",
+                "summary": "Link tempor\u00e1rio para uma evid\u00eancia (participantes da aula e admin)",
+                "tags": [
+                    "Disputas",
+                    "Dispute"
+                ],
+                "parameters": [
+                    {
+                        "name": "attachment",
+                        "in": "path",
+                        "required": true,
+                        "description": "The attachment ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "url": {
+                                                    "type": "string"
+                                                },
+                                                "expires_in": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "url",
+                                                "expires_in"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/disputes/{dispute}/resolve": {
+            "post": {
+                "operationId": "admin.disputes.resolve",
+                "description": "Requer `Idempotency-Key`. `released` liberta tudo ao formador, `refunded` devolve tudo ao aluno,\n`partially_refunded` d\u00e1 `trainer_share` Kz ao formador (antes da comiss\u00e3o) e devolve o resto.\nErros: `dispute_already_resolved` (409).",
+                "summary": "Decidir disputa (admin)",
+                "tags": [
+                    "Disputas",
+                    "Dispute"
+                ],
+                "parameters": [
+                    {
+                        "name": "dispute",
+                        "in": "path",
+                        "required": true,
+                        "description": "The dispute ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "description": "Chave \u00fanica por a\u00e7\u00e3o (8\u2013100 caracteres: letras, n\u00fameros, \"-\" e \"_\"). Repetir o mesmo pedido com a mesma chave devolve a resposta guardada (24 h, cabe\u00e7alho `Idempotent-Replayed: true`); a mesma chave com outro corpo d\u00e1 422 `idempotency_key_reused`; um pedido ainda em curso d\u00e1 409 `request_in_progress`.",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z0-9_-]{8,100}$"
+                        },
+                        "example": "3f1c9a2e-7b4d-4e8a-9c1f-2a6b8d0e4f13"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "decision": {
+                                        "type": "string",
+                                        "enum": [
+                                            "released",
+                                            "refunded",
+                                            "partially_refunded"
+                                        ]
+                                    },
+                                    "trainer_share": {
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ],
+                                        "minimum": 1
+                                    },
+                                    "note": {
+                                        "type": "string",
+                                        "minLength": 5,
+                                        "maxLength": 1000
+                                    }
+                                },
+                                "required": [
+                                    "decision",
+                                    "note"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`DisputeResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/DisputeResource"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "required": [
+                                                        "attachments"
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
             }
         },
         "/companies": {
@@ -1378,6 +1972,570 @@
                 }
             }
         },
+        "/sessions/{session}/start": {
+            "post": {
+                "operationId": "sessions.start",
+                "summary": "Iniciar aula (formador)",
+                "tags": [
+                    "Execu\u00e7\u00e3o da aula",
+                    "SessionExecution"
+                ],
+                "parameters": [
+                    {
+                        "name": "session",
+                        "in": "path",
+                        "required": true,
+                        "description": "The session ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`SessionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/SessionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/sessions/{session}/finish": {
+            "post": {
+                "operationId": "sessions.finish",
+                "description": "Devolve v\u00e1rios tokens, um por janela de 30 s: a app mostra-os em sequ\u00eancia, mesmo sem rede, e pede\num novo lote antes de acabarem (POST /sessions/{id}/qr). Os tokens s\u00f3 existem nesta resposta.",
+                "summary": "Terminar aula e obter o lote de QR (formador)",
+                "tags": [
+                    "Execu\u00e7\u00e3o da aula",
+                    "SessionExecution"
+                ],
+                "parameters": [
+                    {
+                        "name": "session",
+                        "in": "path",
+                        "required": true,
+                        "description": "The session ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {}
+                                        },
+                                        "qr": {
+                                            "type": "object",
+                                            "properties": {
+                                                "batch_id": {
+                                                    "type": "string"
+                                                },
+                                                "rotation_seconds": {
+                                                    "type": "integer"
+                                                },
+                                                "tokens": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "token": {
+                                                                "type": "string"
+                                                            },
+                                                            "code": {
+                                                                "type": "string"
+                                                            },
+                                                            "valid_from": {
+                                                                "type": "string"
+                                                            },
+                                                            "expires_at": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "token",
+                                                            "code",
+                                                            "valid_from",
+                                                            "expires_at"
+                                                        ]
+                                                    }
+                                                },
+                                                "server_time": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "batch_id",
+                                                "rotation_seconds",
+                                                "tokens",
+                                                "server_time"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "qr"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/sessions/{session}/qr": {
+            "post": {
+                "operationId": "sessions.qr",
+                "summary": "Novo lote de QR (formador), com a aula \u00e0 espera de confirma\u00e7\u00e3o",
+                "tags": [
+                    "Execu\u00e7\u00e3o da aula",
+                    "SessionExecution"
+                ],
+                "parameters": [
+                    {
+                        "name": "session",
+                        "in": "path",
+                        "required": true,
+                        "description": "The session ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {}
+                                        },
+                                        "qr": {
+                                            "type": "object",
+                                            "properties": {
+                                                "batch_id": {
+                                                    "type": "string"
+                                                },
+                                                "rotation_seconds": {
+                                                    "type": "integer"
+                                                },
+                                                "tokens": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "token": {
+                                                                "type": "string"
+                                                            },
+                                                            "code": {
+                                                                "type": "string"
+                                                            },
+                                                            "valid_from": {
+                                                                "type": "string"
+                                                            },
+                                                            "expires_at": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "token",
+                                                            "code",
+                                                            "valid_from",
+                                                            "expires_at"
+                                                        ]
+                                                    }
+                                                },
+                                                "server_time": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "batch_id",
+                                                "rotation_seconds",
+                                                "tokens",
+                                                "server_time"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "qr"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/sessions/{session}/confirm": {
+            "post": {
+                "operationId": "sessions.confirm",
+                "description": "Requer `Idempotency-Key`. Liberta o valor retido para o formador (menos a comiss\u00e3o).\nErros: `qr_invalid` (422), `qr_locked` (429), `qr_outside_window` (409), `session_not_confirmable` (409).",
+                "summary": "Confirmar aula com o QR ou o c\u00f3digo de 6 d\u00edgitos (aluno)",
+                "tags": [
+                    "Execu\u00e7\u00e3o da aula",
+                    "SessionExecution"
+                ],
+                "parameters": [
+                    {
+                        "name": "session",
+                        "in": "path",
+                        "required": true,
+                        "description": "The session ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "description": "Chave \u00fanica por a\u00e7\u00e3o (8\u2013100 caracteres: letras, n\u00fameros, \"-\" e \"_\"). Repetir o mesmo pedido com a mesma chave devolve a resposta guardada (24 h, cabe\u00e7alho `Idempotent-Replayed: true`); a mesma chave com outro corpo d\u00e1 422 `idempotency_key_reused`; um pedido ainda em curso d\u00e1 409 `request_in_progress`.",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z0-9_-]{8,100}$"
+                        },
+                        "example": "3f1c9a2e-7b4d-4e8a-9c1f-2a6b8d0e4f13"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ConfirmSessionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {}
+                                        },
+                                        "message": {
+                                            "anyOf": [
+                                                {
+                                                    "type": "string"
+                                                },
+                                                {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "Aula confirmada. Confirme que pagou ao formador em m\u00e3o."
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/sessions/{session}/confirm-without-qr": {
+            "post": {
+                "operationId": "sessions.confirm-without-qr",
+                "description": "Requer `Idempotency-Key`. Liberta o valor retido para o formador.",
+                "summary": "Confirmar sem QR (aluno), com a aula \u00e0 espera de confirma\u00e7\u00e3o",
+                "tags": [
+                    "Execu\u00e7\u00e3o da aula",
+                    "SessionExecution"
+                ],
+                "parameters": [
+                    {
+                        "name": "session",
+                        "in": "path",
+                        "required": true,
+                        "description": "The session ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "description": "Chave \u00fanica por a\u00e7\u00e3o (8\u2013100 caracteres: letras, n\u00fameros, \"-\" e \"_\"). Repetir o mesmo pedido com a mesma chave devolve a resposta guardada (24 h, cabe\u00e7alho `Idempotent-Replayed: true`); a mesma chave com outro corpo d\u00e1 422 `idempotency_key_reused`; um pedido ainda em curso d\u00e1 409 `request_in_progress`.",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z0-9_-]{8,100}$"
+                        },
+                        "example": "3f1c9a2e-7b4d-4e8a-9c1f-2a6b8d0e4f13"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`SessionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/SessionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/sessions/{session}/cancel": {
+            "post": {
+                "operationId": "sessions.cancel",
+                "description": "Requer `Idempotency-Key`. Reembolso conforme a pol\u00edtica: aluno \u2265 6 h antes \u2192 total; depois \u2192 o formador\nfica com 25%; formador cancela \u2192 total.",
+                "summary": "Cancelar aula agendada (aluno ou formador)",
+                "tags": [
+                    "Execu\u00e7\u00e3o da aula",
+                    "SessionExecution"
+                ],
+                "parameters": [
+                    {
+                        "name": "session",
+                        "in": "path",
+                        "required": true,
+                        "description": "The session ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "description": "Chave \u00fanica por a\u00e7\u00e3o (8\u2013100 caracteres: letras, n\u00fameros, \"-\" e \"_\"). Repetir o mesmo pedido com a mesma chave devolve a resposta guardada (24 h, cabe\u00e7alho `Idempotent-Replayed: true`); a mesma chave com outro corpo d\u00e1 422 `idempotency_key_reused`; um pedido ainda em curso d\u00e1 409 `request_in_progress`.",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z0-9_-]{8,100}$"
+                        },
+                        "example": "3f1c9a2e-7b4d-4e8a-9c1f-2a6b8d0e4f13"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reason": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 255
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`SessionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/SessionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/sessions/{session}/no-show": {
+            "post": {
+                "operationId": "sessions.no-show",
+                "description": "Requer `Idempotency-Key`. A outra parte tem 24 h para contestar (abre disputa); sem contesta\u00e7\u00e3o,\na liquida\u00e7\u00e3o segue a pol\u00edtica.",
+                "summary": "Reportar falta da outra parte (aluno ou formador)",
+                "tags": [
+                    "Execu\u00e7\u00e3o da aula",
+                    "SessionExecution"
+                ],
+                "parameters": [
+                    {
+                        "name": "session",
+                        "in": "path",
+                        "required": true,
+                        "description": "The session ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "description": "Chave \u00fanica por a\u00e7\u00e3o (8\u2013100 caracteres: letras, n\u00fameros, \"-\" e \"_\"). Repetir o mesmo pedido com a mesma chave devolve a resposta guardada (24 h, cabe\u00e7alho `Idempotent-Replayed: true`); a mesma chave com outro corpo d\u00e1 422 `idempotency_key_reused`; um pedido ainda em curso d\u00e1 409 `request_in_progress`.",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z0-9_-]{8,100}$"
+                        },
+                        "example": "3f1c9a2e-7b4d-4e8a-9c1f-2a6b8d0e4f13"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "note": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`SessionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/SessionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/health": {
             "get": {
                 "operationId": "health",
@@ -1602,6 +2760,255 @@
                 "responses": {
                     "204": {
                         "description": "No content"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/sessions/{session}/pay": {
+            "post": {
+                "operationId": "sessions.pay",
+                "description": "Requer o cabe\u00e7alho `Idempotency-Key`. O valor fica retido (escrow) at\u00e9 a aula ser confirmada por QR.\nGateway simulado nesta fase. Erros: `payment_failed` (402), `payment_window_expired` (410).",
+                "summary": "Pagar a aula (aluno)",
+                "tags": [
+                    "Pagamentos",
+                    "Payment"
+                ],
+                "parameters": [
+                    {
+                        "name": "session",
+                        "in": "path",
+                        "required": true,
+                        "description": "The session ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "description": "Chave \u00fanica por a\u00e7\u00e3o (8\u2013100 caracteres: letras, n\u00fameros, \"-\" e \"_\"). Repetir o mesmo pedido com a mesma chave devolve a resposta guardada (24 h, cabe\u00e7alho `Idempotent-Replayed: true`); a mesma chave com outro corpo d\u00e1 422 `idempotency_key_reused`; um pedido ainda em curso d\u00e1 409 `request_in_progress`.",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z0-9_-]{8,100}$"
+                        },
+                        "example": "3f1c9a2e-7b4d-4e8a-9c1f-2a6b8d0e4f13"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "method": {
+                                        "type": "string",
+                                        "enum": [
+                                            "multicaixa_express",
+                                            "reference"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "method"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`SessionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/SessionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/sessions/{session}/confirm-cash": {
+            "post": {
+                "operationId": "sessions.confirm-cash",
+                "description": "Requer `Idempotency-Key`. S\u00f3 depois de a aula estar conclu\u00edda por QR. A comiss\u00e3o LONGA fica em d\u00edvida\ndo formador (descontada do saldo dispon\u00edvel dele, se houver).",
+                "summary": "Confirmar que pagou ao formador em m\u00e3o (aluno)",
+                "tags": [
+                    "Pagamentos",
+                    "Cash"
+                ],
+                "parameters": [
+                    {
+                        "name": "session",
+                        "in": "path",
+                        "required": true,
+                        "description": "The session ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "description": "Chave \u00fanica por a\u00e7\u00e3o (8\u2013100 caracteres: letras, n\u00fameros, \"-\" e \"_\"). Repetir o mesmo pedido com a mesma chave devolve a resposta guardada (24 h, cabe\u00e7alho `Idempotent-Replayed: true`); a mesma chave com outro corpo d\u00e1 422 `idempotency_key_reused`; um pedido ainda em curso d\u00e1 409 `request_in_progress`.",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z0-9_-]{8,100}$"
+                        },
+                        "example": "3f1c9a2e-7b4d-4e8a-9c1f-2a6b8d0e4f13"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`SessionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/SessionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/trainers/{trainer}/commission-payments": {
+            "post": {
+                "operationId": "admin.commission-payments",
+                "description": "Requer `Idempotency-Key` (usado tamb\u00e9m como chave da transa\u00e7\u00e3o no ledger).",
+                "summary": "Admin: registar comiss\u00e3o recebida de um formador",
+                "tags": [
+                    "Pagamentos",
+                    "Cash"
+                ],
+                "parameters": [
+                    {
+                        "name": "trainer",
+                        "in": "path",
+                        "required": true,
+                        "description": "The trainer ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "description": "Chave \u00fanica por a\u00e7\u00e3o (8\u2013100 caracteres: letras, n\u00fameros, \"-\" e \"_\"). Repetir o mesmo pedido com a mesma chave devolve a resposta guardada (24 h, cabe\u00e7alho `Idempotent-Replayed: true`); a mesma chave com outro corpo d\u00e1 422 `idempotency_key_reused`; um pedido ainda em curso d\u00e1 409 `request_in_progress`.",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z0-9_-]{8,100}$"
+                        },
+                        "example": "3f1c9a2e-7b4d-4e8a-9c1f-2a6b8d0e4f13"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "amount": {
+                                        "type": "integer",
+                                        "minimum": 1
+                                    },
+                                    "note": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 255
+                                    }
+                                },
+                                "required": [
+                                    "amount"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "transaction_id": {
+                                                    "type": "integer"
+                                                },
+                                                "outstanding": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "transaction_id",
+                                                "outstanding"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -3425,6 +4832,134 @@
                 ],
                 "title": "CompanyResource"
             },
+            "ConfirmSessionRequest": {
+                "type": "object",
+                "properties": {
+                    "token": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Conte\u00fado do QR lido.",
+                        "maxLength": 64
+                    },
+                    "code": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "C\u00f3digo de 6 d\u00edgitos (alternativa ao QR). @example 482913"
+                    },
+                    "latitude": {
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "description": "Localiza\u00e7\u00e3o do aluno no momento (opcional; s\u00f3 sinal de risco)."
+                    },
+                    "longitude": {
+                        "type": [
+                            "number",
+                            "null"
+                        ]
+                    }
+                },
+                "title": "ConfirmSessionRequest"
+            },
+            "DisputeResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "session_id": {
+                        "type": "integer"
+                    },
+                    "opened_by": {
+                        "type": "integer"
+                    },
+                    "reason": {
+                        "type": "string"
+                    },
+                    "reason_label": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "resolution": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "trainer_share": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "resolution_note": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "resolved_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "attachments": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "integer"
+                                },
+                                "name": {
+                                    "type": "string"
+                                },
+                                "mime": {
+                                    "type": "string"
+                                },
+                                "size": {
+                                    "type": "integer"
+                                }
+                            },
+                            "required": [
+                                "id",
+                                "name",
+                                "mime",
+                                "size"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "session_id",
+                    "opened_by",
+                    "reason",
+                    "reason_label",
+                    "description",
+                    "status",
+                    "resolution",
+                    "trainer_share",
+                    "resolution_note",
+                    "resolved_at",
+                    "created_at"
+                ],
+                "title": "DisputeResource"
+            },
             "EmployeeRequest": {
                 "type": "object",
                 "properties": {
@@ -3659,6 +5194,46 @@
                     "profiles"
                 ],
                 "title": "OnboardingRequest"
+            },
+            "OpenDisputeRequest": {
+                "type": "object",
+                "properties": {
+                    "reason": {
+                        "type": "string",
+                        "enum": [
+                            "lesson_not_happened",
+                            "quality",
+                            "no_show_contest",
+                            "other"
+                        ],
+                        "examples": [
+                            "lesson_not_happened"
+                        ]
+                    },
+                    "description": {
+                        "type": "string",
+                        "minLength": 10,
+                        "maxLength": 2000
+                    },
+                    "attachments": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {
+                            "type": "string",
+                            "format": "binary",
+                            "contentMediaType": "application/octet-stream",
+                            "description": "Imagem (JPG, PNG, WebP) ou PDF at\u00e9 5 MB; o tipo \u00e9 verificado pelo conte\u00fado."
+                        },
+                        "maxItems": 5
+                    }
+                },
+                "required": [
+                    "reason",
+                    "description"
+                ],
+                "title": "OpenDisputeRequest"
             },
             "OtpChannel": {
                 "type": "string",
@@ -3913,6 +5488,27 @@
                     "state": {
                         "type": "string"
                     },
+                    "state_label": {
+                        "type": "string",
+                        "enum": [
+                            "A aguardar pagamento",
+                            "Pagamento falhou",
+                            "Agendada",
+                            "Em curso",
+                            "A aguardar confirma\u00e7\u00e3o",
+                            "Conclu\u00edda",
+                            "Cancelada pelo aluno",
+                            "Cancelada pelo formador",
+                            "Falta do formador",
+                            "Falta do aluno",
+                            "Em disputa",
+                            "Reembolsada",
+                            "Reembolsada parcialmente"
+                        ]
+                    },
+                    "actions": {
+                        "type": "string"
+                    },
                     "request_id": {
                         "type": "integer"
                     },
@@ -3939,6 +5535,57 @@
                     },
                     "longitude": {
                         "type": "number"
+                    },
+                    "duration_minutes": {
+                        "type": "integer"
+                    },
+                    "ends_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "payment_method": {
+                        "type": "string"
+                    },
+                    "payment_due_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "started_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "ended_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "confirmed_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "confirmation_deadline": {
+                        "type": "null"
+                    },
+                    "no_show_contest_until": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "cash_confirmed_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "amount": {
                         "type": "integer"
@@ -4030,6 +5677,8 @@
                 "required": [
                     "id",
                     "state",
+                    "state_label",
+                    "actions",
                     "request_id",
                     "title",
                     "skill",
@@ -4039,6 +5688,16 @@
                     "neighborhood",
                     "latitude",
                     "longitude",
+                    "duration_minutes",
+                    "ends_at",
+                    "payment_method",
+                    "payment_due_at",
+                    "started_at",
+                    "ended_at",
+                    "confirmed_at",
+                    "confirmation_deadline",
+                    "no_show_contest_until",
+                    "cash_confirmed_at",
                     "amount",
                     "role",
                     "conversation_id",
@@ -4099,6 +5758,20 @@
                         "type": "string",
                         "format": "date-time",
                         "description": "Data e hora pretendidas (ISO 8601). @example 2026-10-24T14:00:00+01:00"
+                    },
+                    "duration_minutes": {
+                        "type": "integer",
+                        "description": "Dura\u00e7\u00e3o da aula em minutos (30 a 480). @example 60",
+                        "minimum": 30,
+                        "maximum": 480
+                    },
+                    "payment_method": {
+                        "type": "string",
+                        "description": "\"electronic\" (Multicaixa, retido em escrow) ou \"cash\" (pago em m\u00e3o ao formador).",
+                        "enum": [
+                            "electronic",
+                            "cash"
+                        ]
                     },
                     "modality": {
                         "type": "string",
@@ -4828,6 +6501,58 @@
                     "code"
                 ],
                 "title": "VerifyOtpRequest"
+            },
+            "WalletMovementResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "bucket": {
+                        "type": "string",
+                        "enum": [
+                            "available",
+                            "commission_due"
+                        ]
+                    },
+                    "type": {
+                        "type": "string"
+                    },
+                    "label": {
+                        "type": "string",
+                        "enum": [
+                            "Aula confirmada",
+                            "Parte de aula cancelada ou em disputa",
+                            "Comiss\u00e3o de aula paga em m\u00e3o",
+                            "Comiss\u00e3o entregue \u00e0 LONGA",
+                            "Comiss\u00e3o descontada do saldo",
+                            "Estorno",
+                            "Movimento"
+                        ]
+                    },
+                    "amount": {
+                        "type": "integer"
+                    },
+                    "session_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "bucket",
+                    "type",
+                    "label",
+                    "amount",
+                    "session_id",
+                    "created_at"
+                ],
+                "title": "WalletMovementResource"
             }
         },
         "responses": {

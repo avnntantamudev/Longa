@@ -76,6 +76,33 @@ Chaves VAPID (Web Push): `php artisan webpush:vapid` em Linux/Docker. No Windows
 node -e "const c=require('crypto');const k=c.generateKeyPairSync('ec',{namedCurve:'prime256v1'});const p=k.publicKey.export({format:'jwk'}),s=k.privateKey.export({format:'jwk'});const b=x=>Buffer.from(x,'base64url');console.log('VAPID_PUBLIC_KEY='+Buffer.concat([Buffer.from([4]),b(p.x),b(p.y)]).toString('base64url'));console.log('VAPID_PRIVATE_KEY='+s.d)"
 ```
 
+## Aula, QR e dinheiro localmente (Fase 3)
+
+Com os mesmos processos da Fase 2 a correr:
+
+```bash
+php artisan longa:demo:lesson                 # aula a começar agora: aluno +244 900 000 001, formador +244 900 000 002
+php artisan longa:demo:lesson --cash          # idem, paga em mão
+```
+
+1. Telemóvel A (aluno): entre com `900 000 001`, abra a aula e **Pagar** (gateway simulado).
+2. Telemóvel B (formador): entre com `900 000 002`, **Iniciar aula** e depois **Terminar aula** → aparece o QR.
+3. Aluno: **Escanear QR para confirmar** (ou escreva o código de 6 dígitos). O formador vê "Aula confirmada"
+   e o valor em **Carteira**.
+
+A câmara e o Web Push exigem HTTPS nos telemóveis ([docs/pwa-https.md](docs/pwa-https.md)).
+Simular falhas do gateway: `PAYMENT_MOCK_OUTCOME=failed` no `.env`, ou um telefone a acabar em `0000`.
+
+Backoffice (disputas, aulas, ledger, comissões em mão, reconciliações): `/backoffice`, com um utilizador
+com o papel `admin` (`php artisan tinker` → `User::where('phone', '+244…')->first()->assignRole('admin')`).
+
+```bash
+php artisan longa:sessions:tick      # regras automáticas (o scheduler corre a cada minuto)
+php artisan longa:ledger:reconcile   # verificação do ledger (de hora a hora)
+php artisan longa:ledger:rebuild     # reconstrói a cache de saldos
+LONGA_PROPERTY_FLOWS=1000 php artisan test --filter=LedgerPropertyTest   # mais fluxos aleatórios
+```
+
 ## Qualidade
 
 ```bash
@@ -99,4 +126,6 @@ O hook de pre-commit (`.githooks/pre-commit`) corre Pint, Larastan e vue-tsc. O 
 - [Registo de decisões](docs/decisions.md)
 - [Máquinas de estados (pedido, oferta, aula)](docs/state-machines.md)
 - [Tempo real e notificações (Reverb, Web Push, SMS, iOS)](docs/notifications.md)
+- [Livro-razão, comissões e reconciliação](docs/ledger.md)
+- [Modelo de ameaças da Fase 3](docs/threat-model.md)
 - Contrato da API: [docs/openapi.json](docs/openapi.json) (gerado com `composer openapi`; interativo em `/docs/api` em ambiente local)

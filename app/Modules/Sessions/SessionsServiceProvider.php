@@ -22,6 +22,8 @@ class SessionsServiceProvider extends ServiceProvider
         ]);
 
         if ($this->app->runningInConsole()) {
+            $this->commands([Console\DemoLessonCommand::class]);
+
             Artisan::command('longa:sessions:tick', function (SessionTimeoutRules $rules) {
                 foreach ($rules->run() as $rule => $count) {
                     if ($count > 0) {

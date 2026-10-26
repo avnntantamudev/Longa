@@ -10,6 +10,7 @@ use App\Modules\Sessions\Http\Requests\SendMessageRequest;
 use App\Modules\Sessions\Http\Resources\MessageResource;
 use App\Modules\Sessions\Http\Resources\SessionResource;
 use App\Modules\Sessions\Models\Message;
+use App\Modules\Sessions\Models\SessionEvent;
 use App\Modules\Sessions\Models\TrainingSession;
 use App\Modules\Users\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -95,6 +96,29 @@ class SessionController extends Controller
         $message = $action->handle($session, $user, $request->validated('body'), $request->attachment(), $request->validated('client_id'));
 
         return (new MessageResource($message->load('sender')))->response()->setStatusCode(201);
+    }
+
+    /**
+     * Linha do tempo da aula (participantes).
+     */
+    public function events(TrainingSession $session): JsonResponse
+    {
+        Gate::authorize('view', $session);
+
+        $events = $session->events()->orderBy('id')->get()->map(fn (SessionEvent $e) => [
+            'type' => $e->type,
+            'from_state' => $e->from_state,
+            'to_state' => $e->to_state,
+            'by' => match ($e->actor_id) {
+                null => 'system',
+                $session->student_id => 'student',
+                $session->trainer->user_id => 'trainer',
+                default => 'admin',
+            },
+            'created_at' => $e->created_at->toIso8601String(),
+        ]);
+
+        return response()->json(['data' => $events]);
     }
 
     /**

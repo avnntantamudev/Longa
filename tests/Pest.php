@@ -17,11 +17,15 @@ pest()->extend(TestCase::class)
 /**
  * Inicia uma sessão API completa (token de acesso + AuthSession) para o utilizador.
  */
-function apiLogin(App\Modules\Users\Models\User $user): App\Modules\Users\Models\User
+function apiLogin(App\Modules\Users\Models\User $user, bool $pinVerified = true): App\Modules\Users\Models\User
 {
     app('auth')->forgetGuards();
     $tokens = app(App\Modules\Auth\Services\AuthSessionService::class)->startApi(request(), $user, 'Teste');
     test()->withToken($tokens->accessToken);
+    // Como uma app que acabou de pedir o PIN (pagamentos exigem PIN recente)
+    if ($pinVerified) {
+        app(App\Modules\Auth\Services\PinService::class)->markRecent($tokens->sessionId);
+    }
 
     return $user;
 }

@@ -7,6 +7,7 @@ use App\Http\Middleware\AuditAction;
 use App\Http\Middleware\EnsureIdempotency;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Modules\Auth\Http\Middleware\EnsureAuthSessionIsActive;
+use App\Modules\Auth\Http\Middleware\RequireRecentPin;
 use App\Modules\Users\Http\Middleware\EnsureOnboarded;
 use App\Support\Api\ApiExceptionRenderer;
 use Illuminate\Foundation\Application;
@@ -43,6 +44,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => RoleMiddleware::class,
             'onboarded' => EnsureOnboarded::class,
             'idempotent' => EnsureIdempotency::class,
+            'pin.recent' => RequireRecentPin::class,
         ]);
 
         $middleware->redirectGuestsTo('/entrar');

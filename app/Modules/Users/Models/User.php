@@ -30,6 +30,8 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string|null $name
  * @property string|null $email
  * @property string|null $photo
+ * @property string|null $pin_hash
+ * @property \Illuminate\Support\Carbon|null $pin_set_at
  * @property \Illuminate\Support\Carbon|null $photo_updated_at
  * @property UserStatus $status
  * @property string $locale
@@ -38,7 +40,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property \Illuminate\Support\Carbon|null $onboarded_at
  */
 #[Fillable(['phone', 'name', 'email', 'locale', 'phone_verified_at', 'last_login_at', 'onboarded_at'])]
-#[Hidden(['remember_token'])]
+#[Hidden(['remember_token', 'pin_hash'])]
 #[UseFactory(UserFactory::class)]
 class User extends Authenticatable implements FilamentUser, HasAvatar, HasName
 {

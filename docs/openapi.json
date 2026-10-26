@@ -596,6 +596,97 @@
                 "security": []
             }
         },
+        "/auth/pin/login": {
+            "post": {
+                "operationId": "auth.pin.login",
+                "description": "Erros: `pin_invalid` (422), `pin_locked` (429), `device_not_trusted` (401: entrar com o c\u00f3digo).",
+                "summary": "Entrar com o PIN num aparelho de confian\u00e7a (sem c\u00f3digo SMS)",
+                "tags": [
+                    "Autentica\u00e7\u00e3o",
+                    "Pin"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "device_token": {
+                                        "type": "string",
+                                        "minLength": 64,
+                                        "maxLength": 64
+                                    },
+                                    "pin": {
+                                        "type": "string"
+                                    },
+                                    "device_name": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 120
+                                    }
+                                },
+                                "required": [
+                                    "device_token",
+                                    "pin"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "token_type": {
+                                            "type": "string",
+                                            "const": "Bearer"
+                                        },
+                                        "access_token": {
+                                            "type": "string"
+                                        },
+                                        "expires_in": {
+                                            "type": "integer"
+                                        },
+                                        "refresh_token": {
+                                            "type": "string"
+                                        },
+                                        "refresh_expires_in": {
+                                            "type": "integer"
+                                        },
+                                        "session_id": {
+                                            "type": "string"
+                                        },
+                                        "user": {
+                                            "$ref": "#/components/schemas/UserResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "token_type",
+                                        "access_token",
+                                        "expires_in",
+                                        "refresh_token",
+                                        "refresh_expires_in",
+                                        "session_id",
+                                        "user"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                },
+                "security": []
+            }
+        },
         "/auth/token/refresh": {
             "post": {
                 "operationId": "auth.token.refresh",
@@ -764,6 +855,309 @@
                         "in": "path",
                         "required": true,
                         "description": "The session ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/auth/pin/setup": {
+            "post": {
+                "operationId": "auth.pin.setup",
+                "summary": "Criar o PIN (logo depois de entrar com o c\u00f3digo) ou repor um PIN esquecido (c\u00f3digo recente)",
+                "tags": [
+                    "Autentica\u00e7\u00e3o",
+                    "Pin"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "pin": {
+                                        "type": "string"
+                                    },
+                                    "pin_confirmation": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "pin",
+                                    "pin_confirmation"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "pin_set": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "pin_set"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/auth/pin/change": {
+            "post": {
+                "operationId": "auth.pin.change",
+                "summary": "Alterar o PIN (com o PIN atual). Os outros aparelhos saem da conta",
+                "tags": [
+                    "Autentica\u00e7\u00e3o",
+                    "Pin"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "current_pin": {
+                                        "type": "string"
+                                    },
+                                    "pin": {
+                                        "type": "string"
+                                    },
+                                    "pin_confirmation": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "current_pin",
+                                    "pin",
+                                    "pin_confirmation"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "pin_set": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "pin_set"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/auth/pin/verify": {
+            "post": {
+                "operationId": "auth.pin.verify",
+                "description": "Erros: `pin_invalid` (422), `pin_locked` (429).",
+                "summary": "Confirmar o PIN antes de uma opera\u00e7\u00e3o com dinheiro (v\u00e1lido 5 minutos nesta sess\u00e3o)",
+                "tags": [
+                    "Autentica\u00e7\u00e3o",
+                    "Pin"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "pin": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "pin"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "verified": {
+                                                    "type": "boolean"
+                                                },
+                                                "valid_for": {
+                                                    "type": "integer",
+                                                    "const": 300
+                                                }
+                                            },
+                                            "required": [
+                                                "verified",
+                                                "valid_for"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/auth/devices": {
+            "get": {
+                "operationId": "auth.devices.index",
+                "summary": "Os meus aparelhos de confian\u00e7a",
+                "tags": [
+                    "Autentica\u00e7\u00e3o",
+                    "Pin"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "last_used_at": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string"
+                                                    },
+                                                    "current": {
+                                                        "type": "boolean"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "name",
+                                                    "last_used_at",
+                                                    "created_at",
+                                                    "current"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/auth/devices/{device}": {
+            "delete": {
+                "operationId": "auth.devices.destroy",
+                "summary": "Remover um aparelho (passa a precisar do c\u00f3digo SMS para entrar)",
+                "tags": [
+                    "Autentica\u00e7\u00e3o",
+                    "Pin"
+                ],
+                "parameters": [
+                    {
+                        "name": "device",
+                        "in": "path",
+                        "required": true,
+                        "description": "The device ID",
                         "schema": {
                             "type": "string",
                             "format": "uuid"
@@ -7612,6 +8006,9 @@
                     "needs_onboarding": {
                         "type": "boolean"
                     },
+                    "pin_set": {
+                        "type": "boolean"
+                    },
                     "created_at": {
                         "type": [
                             "string",
@@ -7631,6 +8028,7 @@
                     "roles",
                     "profiles",
                     "needs_onboarding",
+                    "pin_set",
                     "created_at"
                 ],
                 "title": "UserResource"

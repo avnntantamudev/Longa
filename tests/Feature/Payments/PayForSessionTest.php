@@ -56,9 +56,9 @@ it('pagamento recusado: a aula passa a payment_failed e nada entra no ledger', f
 
 it('fora da janela de pagamento: recusa e a regra R3 liberta o formador', function () {
     $session = acceptedSession();
-    apiLogin($session->student);
 
     $this->travel(11)->minutes();
+    apiLogin($session->student); // PIN confirmado agora (o anterior teria expirado com a viagem)
     pay($session->id)->assertStatus(410)->assertJsonPath('error.code', 'payment_window_expired');
 
     $this->artisan('longa:sessions:tick')->assertSuccessful();

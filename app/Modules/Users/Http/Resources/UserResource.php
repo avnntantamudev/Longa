@@ -40,6 +40,7 @@ class UserResource extends JsonResource
                 'company_rh' => in_array(Role::CompanyRh->value, $roles, true),
             ],
             'needs_onboarding' => $this->onboarded_at === null,
+            'pin_set' => $this->pin_hash !== null,
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }

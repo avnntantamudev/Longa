@@ -153,7 +153,7 @@ class AuthSessionService
         return new TokenPair($access->plainTextToken, $accessTtl * 60, $refresh->plainTextToken, $refreshTtl * 60, $session->id);
     }
 
-    private function deviceNameFrom(Request $request): string
+    public function deviceNameFrom(Request $request): string
     {
         $agent = (string) $request->userAgent();
 

@@ -84,6 +84,16 @@ class TokenStore {
     await _store.write(_refresh, null);
   }
 
+  static const _lastActive = 'last_active';
+
+  /// Último uso da app (para pedir o PIN ao fim de 1 hora sem uso, mesmo depois de a fechar).
+  Future<DateTime?> lastActive() async {
+    final value = await _store.read(_lastActive);
+    return value == null ? null : DateTime.fromMillisecondsSinceEpoch(int.tryParse(value) ?? 0);
+  }
+
+  Future<void> touch([DateTime? at]) => _store.write(_lastActive, (at ?? DateTime.now()).millisecondsSinceEpoch.toString());
+
   /// "Usar outra conta" ou aparelho revogado: esquece tudo.
   Future<void> clearAll() async {
     await clearSession();

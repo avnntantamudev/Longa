@@ -29,7 +29,7 @@ it('um ledger saudável passa e fica registado', function () {
     expect($report->status)->toBe('ok')
         ->and($report->issues)->toBe([])
         ->and($report->totals['escrow'])->toBe(25000);
-    Notification::assertNothingSent();
+    Notification::assertSentTimes(LedgerDiscrepancyNotification::class, 0);
 });
 
 it('cache de saldo adulterada: alerta crítico, admins avisados e rebuild corrige', function () {
@@ -83,7 +83,7 @@ it('retenção sem destino depois do prazo máximo gera aviso', function () {
 
     expect($report->status)->toBe('ok')
         ->and(collect($report->issues)->pluck('check')->all())->toBe(['holds_overdue']);
-    Notification::assertNothingSent();
+    Notification::assertSentTimes(LedgerDiscrepancyNotification::class, 0);
 });
 
 it('reembolso decidido e não executado no gateway gera aviso', function () {

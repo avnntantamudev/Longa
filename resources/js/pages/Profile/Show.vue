@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import CompanyLinks from '@/components/CompanyLinks.vue';
 import PhotoPicker from '@/components/PhotoPicker.vue';
+import SecuritySettings from '@/components/SecuritySettings.vue';
 import { api } from '@/lib/api';
 import type { RoleName } from '@/types/global';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
@@ -73,6 +74,8 @@ onMounted(async () => {
     </section>
 
     <CompanyLinks />
+
+    <SecuritySettings />
 
     <section v-if="trainerStatus" class="card mt-4">
         <div class="flex items-center justify-between gap-3">

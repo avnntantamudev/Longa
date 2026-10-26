@@ -39,7 +39,7 @@ function disputedSession(): Dispute
 function backofficeAdmin(): User
 {
     $admin = User::factory()->withRole(Role::Admin)->create();
-    test()->actingAs($admin);
+    loginWeb($admin);
 
     return $admin;
 }

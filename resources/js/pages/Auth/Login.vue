@@ -5,7 +5,7 @@ import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue';
 
 type Channel = 'sms' | 'whatsapp';
 
-const props = defineProps<{ phone: string | null; channel: Channel; codeLength: number; resendIn: number }>();
+const props = defineProps<{ phone: string | null; channel: Channel; codeLength: number; resendIn: number; resetPin?: boolean }>();
 
 const channels: Array<{ value: Channel; label: string }> = [
     { value: 'sms', label: 'SMS' },
@@ -89,8 +89,10 @@ const maskedPhone = computed(() => (props.phone ? `${props.phone.slice(0, 4)} ${
 
     <section class="card p-6">
         <template v-if="step === 'phone'">
-            <h1 class="text-title">Entrar ou criar conta</h1>
-            <p class="mt-1 text-caption text-ink-muted">Enviamos um código de acesso. Não precisa de palavra-passe.</p>
+            <h1 class="text-title">{{ resetPin ? 'Esqueceu o PIN?' : 'Entrar ou criar conta' }}</h1>
+            <p class="mt-1 text-caption text-ink-muted">
+                {{ resetPin ? 'Confirme o seu número com um código e crie um PIN novo.' : 'Enviamos um código de acesso uma vez; depois entra só com o seu PIN.' }}
+            </p>
 
             <form class="mt-6 grid gap-4" novalidate @submit.prevent="sendCode">
                 <FormField label="Número de telemóvel" for="phone" :error="phoneForm.errors.phone">

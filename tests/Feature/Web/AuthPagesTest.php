@@ -29,8 +29,11 @@ it('faz login na PWA por OTP e leva um utilizador novo para o registo', function
 
     $this->get('/entrar')->assertInertia(fn (Assert $page) => $page->where('phone', '+244923456789'));
 
+    // Primeira vez: cria o PIN e depois segue para o registo
     $this->post('/entrar/verificar', ['phone' => '+244923456789', 'code' => webCode('+244923456789')])
-        ->assertRedirect(route('onboarding.show'));
+        ->assertRedirect(route('pin.setup'))
+        ->assertCookie('longa_device');
+    $this->post('/pin/criar', ['pin' => '482916', 'pin_confirmation' => '482916'])->assertRedirect(route('onboarding.show'));
 
     $this->assertAuthenticated();
     expect(AuthSession::query()->where('type', 'web')->count())->toBe(1);
@@ -49,7 +52,7 @@ it('mostra o erro do código junto do campo', function () {
 });
 
 it('leva utilizadores já registados para o início', function () {
-    User::factory()->create(['phone' => '+244923456789']);
+    User::factory()->create(['phone' => '+244923456789', 'pin_hash' => bcrypt('482916')]);
     $this->post('/entrar/codigo', ['phone' => '923456789']);
 
     $this->post('/entrar/verificar', ['phone' => '+244923456789', 'code' => webCode('+244923456789')])->assertRedirect(route('home'));

@@ -71,7 +71,7 @@ it('o relatório de operação conta aulas por estado e formadores ativos', func
 
 it('o admin vê os relatórios e exporta CSV (Excel) e PDF', function () {
     reportFixture();
-    $this->actingAs(User::factory()->withRole(Role::Admin)->create());
+    loginWeb(User::factory()->withRole(Role::Admin)->create());
 
     $this->get('/backoffice/relatorios?from='.now()->subDays(3)->toDateString().'&to='.now()->addDays(3)->toDateString())
         ->assertOk()->assertSee('Comissões LONGA')->assertSee('3.750');

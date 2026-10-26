@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 
 /**
@@ -168,6 +169,24 @@ class PinService
         }
 
         return $result['user'];
+    }
+
+    /**
+     * Verifica o PIN sem aparelho de confiança (ex.: token API sem X-Device-Token): limite de 5 tentativas
+     * a cada 15 minutos por utilizador.
+     */
+    public function checkWithoutDevice(User $user, string $pin): void
+    {
+        $key = 'pin-check:'.$user->id;
+        if (RateLimiter::tooManyAttempts($key, self::LOCK_AFTER)) {
+            throw new ApiException('pin_locked', 'Demasiadas tentativas. Tente de novo dentro de '.self::LOCK_MINUTES.' minutos.', 429);
+        }
+        if ($user->pin_hash === null || ! Hash::check($pin, $user->pin_hash)) {
+            RateLimiter::hit($key, self::LOCK_MINUTES * 60);
+
+            throw new ApiException('pin_invalid', 'PIN errado.', 422, ['pin' => ['PIN errado.']]);
+        }
+        RateLimiter::clear($key);
     }
 
     /**

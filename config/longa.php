@@ -21,6 +21,9 @@ return [
         // Token de acesso da API (minutos) e token de refresh (minutos; 30 dias)
         'access_token_ttl' => (int) env('SANCTUM_TOKEN_EXPIRATION', 60),
         'refresh_token_ttl' => (int) env('SANCTUM_REFRESH_EXPIRATION', 43200),
+        // PIN: pedir de novo ao fim de X minutos sem uso; administradores no máximo X horas
+        'pin_idle_minutes' => (int) env('LONGA_PIN_IDLE_MINUTES', 60),
+        'admin_pin_hours' => (int) env('LONGA_ADMIN_PIN_HOURS', 8),
     ],
 
     'otp' => [

@@ -4,6 +4,7 @@ import BrandLogo from '@/components/BrandLogo.vue';
 import UserAvatar from '@/components/UserAvatar.vue';
 import InstallPrompt from '@/components/InstallPrompt.vue';
 import NetworkStatus from '@/components/NetworkStatus.vue';
+import PinPrompt from '@/components/PinPrompt.vue';
 import UpdatePrompt from '@/components/UpdatePrompt.vue';
 import { navigationFor, type NavItem } from '@/lib/navigation';
 import { Link, usePage } from '@inertiajs/vue3';
@@ -115,5 +116,6 @@ function isActive(item: NavItem): boolean {
         <NetworkStatus />
         <InstallPrompt />
         <UpdatePrompt />
+        <PinPrompt />
     </div>
 </template>

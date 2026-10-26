@@ -23,7 +23,7 @@ it('sem valores gravados usa os de config (VIP 50.000 Kz, 10%)', function () {
 
 it('o admin muda as definições no backoffice; fica auditado e vale para novas operações', function () {
     $admin = User::factory()->withRole(Role::Admin)->create();
-    $this->actingAs($admin);
+    loginWeb($admin);
 
     Livewire::test(Settings::class)
         ->assertSet('data.vip_price', 50000)
@@ -48,5 +48,6 @@ it('recusa valores fora dos limites', function () {
 
 it('só administradores abrem as definições', function () {
     $this->actingAs(User::factory()->withRole(Role::Trainer)->create())->get('/backoffice/definicoes')->assertForbidden();
-    $this->actingAs(User::factory()->withRole(Role::Admin)->create())->get('/backoffice/definicoes')->assertOk()->assertSee('Preço VIP por ano');
+    loginWeb(User::factory()->withRole(Role::Admin)->create());
+    $this->get('/backoffice/definicoes')->assertOk()->assertSee('Preço VIP por ano');
 });

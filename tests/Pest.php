@@ -35,9 +35,17 @@ function apiLogin(App\Modules\Users\Models\User $user, bool $pinVerified = true)
  */
 function loginWeb(App\Modules\Users\Models\User $user): App\Modules\Users\Models\User
 {
+    // Utilizador com PIN e sessão acabada de desbloquear (como depois de introduzir o PIN)
+    if ($user->pin_hash === null) {
+        $user->forceFill(['pin_hash' => Illuminate\Support\Facades\Hash::make('482916'), 'pin_set_at' => now()])->save();
+    }
     test()->actingAs($user);
     $session = App\Modules\Auth\Models\AuthSession::query()->create(['user_id' => $user->id, 'type' => 'web', 'last_active_at' => now()]);
-    test()->withSession([App\Modules\Auth\Services\AuthSessionService::SESSION_KEY => $session->id]);
+    test()->withSession([
+        App\Modules\Auth\Services\AuthSessionService::SESSION_KEY => $session->id,
+        App\Modules\Auth\Http\Middleware\EnsurePinUnlocked::UNLOCKED_AT => now()->getTimestamp(),
+        App\Modules\Auth\Http\Middleware\EnsurePinUnlocked::LAST_SEEN => now()->getTimestamp(),
+    ]);
 
     return $user;
 }

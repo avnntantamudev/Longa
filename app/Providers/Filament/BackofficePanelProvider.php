@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers\Filament;
 
+use App\Modules\Auth\Http\Middleware\EnsurePinUnlocked;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -51,6 +52,7 @@ class BackofficePanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
-            ->authMiddleware([Authenticate::class]);
+            // O admin confirma o PIN ao abrir o backoffice e de novo após 1 h sem uso ou 8 h
+            ->authMiddleware([Authenticate::class, EnsurePinUnlocked::class]);
     }
 }

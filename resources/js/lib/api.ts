@@ -1,4 +1,5 @@
 import { useNetworkState } from '@/composables/useNetworkState';
+import { requestPin } from '@/lib/pinPrompt';
 
 /**
  * Cliente da API /api/v1 para a PWA.
@@ -100,14 +101,31 @@ async function request<T>(method: Method, path: string, body?: unknown, options:
  * Executa o pedido com o estado global de rede. Erros da API (4xx) não contam como falha de rede:
  * são mostrados no próprio formulário.
  */
-function send<T>(method: Method, path: string, body?: unknown, options?: RequestOptions): Promise<T> {
+function send<T>(method: Method, path: string, body?: unknown, options?: RequestOptions, pinRetried = false): Promise<T> {
     const network = useNetworkState();
-    return network.track(() => request<T>(method, path, body, options)).catch((error: unknown) => {
+    return network.track(() => request<T>(method, path, body, options)).catch(async (error: unknown) => {
         if (error instanceof ApiError && error.status < 500) {
             network.dismiss();
         }
+        if (error instanceof ApiError && error.status === 423) {
+            // Pagamentos: pedir o PIN e repetir o mesmo pedido (mesma chave de idempotência)
+            if (error.code === 'pin_required' && !pinRetried) {
+                await requestPin();
+                return send<T>(method, path, body, options, true);
+            }
+            // Sessão bloqueada por inatividade ou sem PIN criado: ir para o ecrã certo
+            const redirect = error.details.redirect;
+            if (typeof redirect === 'string') {
+                window.location.href = redirect;
+            }
+        }
         throw error;
     });
+}
+
+/** Pedido sem as regras de PIN e rede (usado pelo próprio teclado de PIN). */
+export function rawRequest<T>(method: Method, path: string, body?: unknown): Promise<T> {
+    return request<T>(method, path, body);
 }
 
 export const api = {

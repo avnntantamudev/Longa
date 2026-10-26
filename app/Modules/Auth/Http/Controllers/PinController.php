@@ -14,8 +14,6 @@ use App\Support\Api\ApiException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\RateLimiter;
 
 /**
  * PIN de 6 dígitos e aparelhos de confiança.
@@ -80,7 +78,11 @@ class PinController extends Controller
     {
         $data = $request->validate(['current_pin' => ['required', 'digits:6'], 'pin' => ['required', 'digits:6', 'confirmed']], ['pin.confirmed' => 'Os dois PIN não coincidem.']);
         $user = $this->user($request);
-        $this->checkWithoutDevice($user, $data['current_pin'], 'current_pin');
+        try {
+            $pins->checkWithoutDevice($user, $data['current_pin']);
+        } catch (ApiException $e) {
+            throw new ApiException($e->errorCode, $e->getMessage(), $e->status, $e->errorCode === 'pin_invalid' ? ['current_pin' => ['PIN errado.']] : []);
+        }
 
         $pins->set($user, $data['pin'], $this->device($request, $pins));
 
@@ -101,7 +103,7 @@ class PinController extends Controller
         if ($device !== null && $device->user_id === $user->id) {
             $pins->attempt($device, $data['pin']);
         } else {
-            $this->checkWithoutDevice($user, $data['pin'], 'pin');
+            $pins->checkWithoutDevice($user, $data['pin']);
         }
 
         $session = $sessions->current($request);
@@ -138,23 +140,6 @@ class PinController extends Controller
         $pins->revoke($device, 'user');
 
         return response()->json(null, 204);
-    }
-
-    /**
-     * Sem aparelho (ex.: token API sem X-Device-Token): limite de 5 tentativas a cada 15 min por utilizador.
-     */
-    private function checkWithoutDevice(User $user, string $pin, string $field): void
-    {
-        $key = 'pin-check:'.$user->id;
-        if (RateLimiter::tooManyAttempts($key, PinService::LOCK_AFTER)) {
-            throw new ApiException('pin_locked', 'Demasiadas tentativas. Tente de novo mais tarde.', 429);
-        }
-        if ($user->pin_hash === null || ! Hash::check($pin, $user->pin_hash)) {
-            RateLimiter::hit($key, PinService::LOCK_MINUTES * 60);
-
-            throw new ApiException('pin_invalid', 'PIN errado.', 422, [$field => ['PIN errado.']]);
-        }
-        RateLimiter::clear($key);
     }
 
     private function device(Request $request, PinService $pins): ?TrustedDevice

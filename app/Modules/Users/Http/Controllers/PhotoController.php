@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Users\Http\Resources\UserResource;
 use App\Modules\Users\Models\User;
 use App\Modules\Users\Services\ProfilePhotos;
+use App\Support\Api\ApiException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -43,10 +44,14 @@ class PhotoController extends Controller
     }
 
     /**
-     * Remover a foto.
+     * Remover a foto (só alunos; os formadores têm de ter foto).
      */
     public function destroy(Request $request, ProfilePhotos $photos): UserResource
     {
+        if ($this->user($request)->trainerProfile !== null) {
+            throw new ApiException('photo_required', 'Os formadores têm de ter foto. Pode trocá-la por outra.', 409);
+        }
+
         return new UserResource($photos->remove($this->user($request)));
     }
 

@@ -58,6 +58,14 @@ it('conclui o onboarding do formador por passos', function () {
         'latitude' => -8.9167, 'longitude' => 13.1833,
         'service_radius_m' => 5000, 'accept_location' => true,
     ])->assertOk()
+        ->assertJsonPath('data.onboarding.completed', false) // falta a foto
+        ->assertJsonPath('data.onboarding.photo', false);
+
+    Illuminate\Support\Facades\Storage::fake('local');
+    $this->post('/api/v1/me/photo', ['photo' => Illuminate\Http\UploadedFile::fake()->image('eu.jpg', 600, 600)], ['Accept' => 'application/json'])->assertOk();
+
+    $this->getJson('/api/v1/me/trainer-profile')
+        ->assertJsonPath('data.onboarding.photo', true)
         ->assertJsonPath('data.onboarding.completed', true)
         ->assertJsonPath('data.verification_status', 'unverified');
 

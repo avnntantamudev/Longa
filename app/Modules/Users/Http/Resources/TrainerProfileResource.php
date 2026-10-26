@@ -39,6 +39,7 @@ class TrainerProfileResource extends JsonResource
             'is_available' => $this->is_available,
             'skills' => SkillResource::collection($this->whenLoaded('skills')),
             'onboarding' => [
+                'photo' => $this->user->photo !== null,
                 'details' => filled($this->bio),
                 'skills' => $this->relationLoaded('skills') ? $this->skills->isNotEmpty() : null,
                 'location' => $this->hasLocation(),

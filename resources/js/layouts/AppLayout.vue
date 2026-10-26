@@ -70,6 +70,15 @@ function isActive(item: NavItem): boolean {
 
             <!-- Espaço inferior reservado para a barra de navegação no telemóvel -->
             <main class="mx-auto w-full max-w-3xl flex-1 px-4 pb-28 pt-4 md:px-8 md:pb-10 md:pt-8">
+                <Link
+                    v-if="user && user.roles.includes('trainer') && !user.photo_url && !page.url.startsWith('/onboarding')"
+                    href="/perfil"
+                    class="mb-4 flex items-center gap-3 rounded-control bg-orange-50 p-3 text-caption text-orange-600"
+                    role="status"
+                >
+                    <AppIcon name="user" />
+                    <span><strong>Carregue a sua foto de perfil.</strong> Sem foto deixa de receber pedidos TRIM TRIM.</span>
+                </Link>
                 <slot />
             </main>
         </div>

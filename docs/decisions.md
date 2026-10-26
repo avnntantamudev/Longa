@@ -28,6 +28,7 @@ Decisões de produto e de arquitetura, com a data e o motivo. As mais recentes f
 | 2026-10-23 | **Laravel 13** em vez de 11. | O 11 deixou de ter correções de segurança e tem vulnerabilidades abertas. | Cliente |
 | 2026-10-23 | **Português europeu/angolano** na interface ("si", "Pesquisar", "Saltar"), apesar de o kit ter termos pt-BR. | Norma usada em Angola. | Equipa |
 | 2026-10-23 | **Backoffice Filament 5 em `/backoffice`**, sem login próprio: o admin entra pela PWA com OTP e a sessão web é partilhada (`canAccessPanel` exige papel admin e conta ativa). Decisões de disputa pedem fundamentação e a palavra CONFIRMAR; ledger e reconciliações só de leitura. | Um único método de autenticação; nenhuma palavra-passe de admin para roubar. | Equipa |
+| 2026-10-26 | **Foto de perfil obrigatória para formadores** (alunos opcional), recodificada no servidor sem metadados. Sem foto não completa o registo, não pede verificação e não recebe pedidos; os formadores antigos têm até 2026-11-02 (`LONGA_TRAINER_PHOTO_REQUIRED_FROM`). O admin pode remover fotos impróprias. | Pedido do cliente: a foto aparece sempre aos outros perfis e cria confiança; o admin compara-a com o BI. | Cliente |
 
 ## Em aberto
 

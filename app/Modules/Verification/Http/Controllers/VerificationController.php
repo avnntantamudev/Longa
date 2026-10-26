@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace App\Modules\Verification\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Notifications\Notifications\PhotoRejectedNotification;
 use App\Modules\Users\Models\User;
+use App\Modules\Users\Services\ProfilePhotos;
 use App\Modules\Verification\Actions\ReviewVerification;
 use App\Modules\Verification\Actions\SubmitIdentityVerification;
 use App\Modules\Verification\Http\Requests\SubmitVerificationRequest;
 use App\Modules\Verification\Http\Resources\VerificationResource;
 use App\Modules\Verification\Models\Verification;
+use App\Support\Api\ApiException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -77,5 +80,25 @@ class VerificationController extends Controller
         $admin = $request->user();
 
         return new VerificationResource($action->reject($verification, $admin, $data['reason'])->load('user'));
+    }
+
+    /**
+     * Remover a foto de um utilizador (admin): imprópria ou não corresponde ao BI.
+     *
+     * O utilizador é avisado e tem de carregar outra; um formador sem foto deixa de receber pedidos.
+     */
+    public function rejectPhoto(Request $request, User $user, ProfilePhotos $photos): JsonResponse
+    {
+        $data = $request->validate(['reason' => ['required', 'string', 'min:5', 'max:255']]);
+        if ($user->photo === null) {
+            throw new ApiException('photo_missing', 'Este utilizador não tem foto.', 409);
+        }
+
+        /** @var User $admin */
+        $admin = $request->user();
+        $photos->remove($user, $admin, $data['reason']);
+        $user->notify(new PhotoRejectedNotification($data['reason']));
+
+        return response()->json(['data' => ['user_id' => $user->id, 'photo_url' => null]]);
     }
 }

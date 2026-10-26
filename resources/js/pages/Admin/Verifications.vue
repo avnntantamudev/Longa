@@ -35,6 +35,14 @@ async function reject(item: Verification): Promise<void> {
     }
 }
 
+async function rejectPhoto(item: Verification): Promise<void> {
+    const reason = prompt('Porque remove a foto? (o formador vai ver o motivo)', 'Não se vê bem o rosto');
+    if (item.user && reason && reason.trim().length >= 5) {
+        await api.post(`/admin/users/${item.user.id}/photo/reject`, { reason: reason.trim() });
+        await load();
+    }
+}
+
 onMounted(load);
 </script>
 
@@ -59,6 +67,7 @@ onMounted(load);
             <div class="mt-3 grid grid-cols-2 gap-2">
                 <button type="button" class="btn-primary min-h-10" @click="approve(item)">Aprovar</button>
                 <button type="button" class="btn-outline min-h-10" @click="reject(item)">Rejeitar</button>
+                <button v-if="item.user?.photo_url" type="button" class="text-caption font-semibold text-danger" @click="rejectPhoto(item)">Foto imprópria</button>
             </div>
         </li>
     </ul>

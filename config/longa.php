@@ -112,6 +112,12 @@ return [
         'mask_contacts' => (bool) env('LONGA_CHAT_MASK_CONTACTS', true),
     ],
 
+    // Foto de perfil obrigatória para formadores. Os formadores registados antes desta regra
+    // continuam a receber pedidos sem foto até esta data (aviso na app).
+    'trainers' => [
+        'photo_required_from' => env('LONGA_TRAINER_PHOTO_REQUIRED_FROM', '2026-11-02 00:00:00'),
+    ],
+
     // Disputas: evidências (imagem ou PDF) no disco privado
     'disputes' => [
         'max_attachments' => (int) env('LONGA_DISPUTE_MAX_ATTACHMENTS', 5),

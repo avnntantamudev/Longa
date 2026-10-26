@@ -28,6 +28,10 @@ class SubmitIdentityVerification
         $profile = $user->trainerProfile
             ?? throw new ApiException('profile_missing', 'Só formadores podem submeter verificação.', 409);
 
+        if ($user->photo === null) {
+            throw new ApiException('photo_required', 'Carregue a sua foto antes de pedir a verificação: é comparada com o BI.', 409);
+        }
+
         $hash = Verification::hashDocument(Verification::normalizeDocument($documentNumber));
 
         $usedElsewhere = Verification::query()

@@ -9,6 +9,7 @@ use App\Modules\Requests\Models\TrainingRequest;
 use App\Modules\Sessions\Enums\SessionState;
 use App\Modules\Users\Enums\UserStatus;
 use App\Modules\Users\Enums\VerificationStatus;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -58,6 +59,7 @@ class TrainerMatcher
             ->where('tp.verification_status', VerificationStatus::Verified->value)
             ->where('tp.is_available', true)
             ->whereNotNull('tp.onboarding_completed_at')
+            ->when(now()->gte(Carbon::parse((string) config('longa.trainers.photo_required_from'))), fn ($q) => $q->whereNotNull('u.photo'))
             ->whereNotNull('tp.latitude')
             ->whereRaw('JSON_CONTAINS(tp.modalities, ?)', [json_encode($online ? 'online' : 'in_person')])
             ->when($excludeTrainerIds !== [], fn ($q) => $q->whereNotIn('tp.id', $excludeTrainerIds))

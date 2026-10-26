@@ -3458,7 +3458,7 @@
             },
             "delete": {
                 "operationId": "me.photo.destroy",
-                "summary": "Remover a foto",
+                "summary": "Remover a foto (s\u00f3 alunos; os formadores t\u00eam de ter foto)",
                 "tags": [
                     "Perfil",
                     "Photo"
@@ -4712,6 +4712,89 @@
                                                         "user"
                                                     ]
                                                 }
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/users/{user}/photo/reject": {
+            "post": {
+                "operationId": "admin.users.photo.reject",
+                "description": "O utilizador \u00e9 avisado e tem de carregar outra; um formador sem foto deixa de receber pedidos.",
+                "summary": "Remover a foto de um utilizador (admin): impr\u00f3pria ou n\u00e3o corresponde ao BI",
+                "tags": [
+                    "Verifica\u00e7\u00e3o",
+                    "Verification"
+                ],
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "description": "The user ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reason": {
+                                        "type": "string",
+                                        "minLength": 5,
+                                        "maxLength": 255
+                                    }
+                                },
+                                "required": [
+                                    "reason"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "user_id": {
+                                                    "type": "integer"
+                                                },
+                                                "photo_url": {
+                                                    "type": "null"
+                                                }
+                                            },
+                                            "required": [
+                                                "user_id",
+                                                "photo_url"
                                             ]
                                         }
                                     },
@@ -6382,6 +6465,9 @@
                     "onboarding": {
                         "type": "object",
                         "properties": {
+                            "photo": {
+                                "type": "boolean"
+                            },
                             "details": {
                                 "type": "boolean"
                             },
@@ -6399,6 +6485,7 @@
                             }
                         },
                         "required": [
+                            "photo",
                             "details",
                             "skills",
                             "location",

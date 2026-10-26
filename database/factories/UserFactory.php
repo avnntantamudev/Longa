@@ -8,6 +8,7 @@ use App\Modules\Users\Enums\Role;
 use App\Modules\Users\Enums\UserStatus;
 use App\Modules\Users\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
 /**
  * @extends Factory<User>
@@ -30,6 +31,14 @@ class UserFactory extends Factory
             'locale' => 'pt',
             'onboarded_at' => now(),
         ];
+    }
+
+    /**
+     * Com foto registada (só o nome; os ficheiros não existem nos testes).
+     */
+    public function withPhoto(): static
+    {
+        return $this->state(fn () => ['photo' => strtolower(Str::random(32)), 'photo_updated_at' => now()]);
     }
 
     public function notOnboarded(): static

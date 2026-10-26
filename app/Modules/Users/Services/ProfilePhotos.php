@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Users\Services;
 
+use App\Modules\Users\Actions\UpdateTrainerProfile;
 use App\Modules\Users\Models\User;
 use App\Support\Audit\AuditLogger;
 use Illuminate\Http\UploadedFile;
@@ -37,6 +38,10 @@ class ProfilePhotos
         $user->forceFill(['photo' => $name, 'photo_updated_at' => now()])->save();
         $this->deleteFiles($previous);
         $this->audit->record('profile.photo_updated', $user, [], $user->id);
+
+        if ($user->trainerProfile !== null) {
+            app(UpdateTrainerProfile::class)->refreshCompletion($user->trainerProfile->setRelation('user', $user));
+        }
 
         return $user;
     }

@@ -12,8 +12,10 @@ use App\Modules\Users\Enums\VerificationStatus;
 use App\Modules\Users\Models\Skill;
 use App\Modules\Users\Models\TrainerProfile;
 use App\Modules\Users\Models\User;
+use App\Modules\Users\Services\ProfilePhotos;
 use App\Support\Api\ApiException;
 use Illuminate\Console\Command;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 
 /**
@@ -84,6 +86,16 @@ class SimulateTrainersCommand extends Command
             $profile->score = random_int(40, 95);
             $profile->save();
             $profile->skills()->syncWithoutDetaching([$skill->id]);
+
+            // Foto obrigatória para receber pedidos: um quadrado colorido gerado na hora
+            if ($user->photo === null) {
+                $image = imagecreatetruecolor(400, 400);
+                imagefill($image, 0, 0, (int) imagecolorallocate($image, random_int(40, 200), random_int(40, 200), random_int(40, 200)));
+                $path = tempnam(sys_get_temp_dir(), 'sim').'.png';
+                imagepng($image, $path);
+                app(ProfilePhotos::class)->store($user, new UploadedFile($path, 'simulado.png', 'image/png', null, true));
+                @unlink($path);
+            }
 
             return $profile;
         });

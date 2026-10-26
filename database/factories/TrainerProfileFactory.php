@@ -27,7 +27,7 @@ class TrainerProfileFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => User::factory()->withRole(Role::Trainer),
+            'user_id' => User::factory()->withRole(Role::Trainer)->withPhoto(),
             'bio' => fake()->sentence(12),
             'years_experience' => fake()->numberBetween(1, 15),
             'modalities' => ['in_person'],

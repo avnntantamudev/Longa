@@ -16,5 +16,6 @@ Route::middleware(['auth:sanctum', 'auth.session'])->group(function () {
         Route::get('verifications', [VerificationController::class, 'index'])->name('verifications.index');
         Route::post('verifications/{verification}/approve', [VerificationController::class, 'approve'])->name('verifications.approve');
         Route::post('verifications/{verification}/reject', [VerificationController::class, 'reject'])->name('verifications.reject');
+        Route::post('users/{user}/photo/reject', [VerificationController::class, 'rejectPhoto'])->name('users.photo.reject');
     });
 });

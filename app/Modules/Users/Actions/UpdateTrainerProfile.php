@@ -64,9 +64,9 @@ class UpdateTrainerProfile
             ?? throw new ApiException('profile_missing', 'Ainda não tem o perfil de formador. Escolha-o primeiro no registo.', 409);
     }
 
-    private function refreshCompletion(TrainerProfile $profile): TrainerProfile
+    public function refreshCompletion(TrainerProfile $profile): TrainerProfile
     {
-        $complete = filled($profile->bio) && $profile->hasLocation() && $profile->skills()->exists();
+        $complete = filled($profile->bio) && $profile->hasLocation() && $profile->skills()->exists() && $profile->user->photo !== null;
 
         if ($complete && $profile->onboarding_completed_at === null) {
             $profile->onboarding_completed_at = now();

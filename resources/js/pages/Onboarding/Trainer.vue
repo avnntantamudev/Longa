@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import AppIcon from '@/components/AppIcon.vue';
 import FormField from '@/components/FormField.vue';
+import PhotoPicker from '@/components/PhotoPicker.vue';
 import { useGeolocation } from '@/composables/useGeolocation';
 import { api, ApiError } from '@/lib/api';
 import type { Skill, Zone } from '@/types/global';
-import { Head, router } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { computed, onMounted, reactive, ref } from 'vue';
 
 const props = defineProps<{ skills: Skill[]; zones: Zone[] }>();
@@ -34,6 +35,8 @@ const selectedSkills = ref<number[]>([]);
 const location = reactive({ municipality: '', neighborhood: '', latitude: null as number | null, longitude: null as number | null, service_radius_m: 5000, accept_location: false });
 const verification = reactive({ document_number: '', files: [] as File[] });
 const verificationStatus = ref('unverified');
+const page = usePage();
+const photo = ref<string | null>(page.props.auth.user?.photo_url ?? null);
 
 const geo = useGeolocation();
 const zoneKey = ref('');
@@ -81,6 +84,10 @@ async function save(action: () => Promise<unknown>): Promise<boolean> {
 }
 
 async function next(): Promise<void> {
+    if (step.value === 0 && !photo.value) {
+        errors.value = { photo: 'Carregue a sua foto: os alunos veem-na e a LONGA compara-a com o BI.' };
+        return;
+    }
     const actions = [
         () => api.put('/me/trainer-profile/details', details),
         () => api.put('/me/trainer-profile/skills', { skill_ids: selectedSkills.value }),
@@ -147,6 +154,10 @@ function submitVerification(): Promise<unknown> {
         <!-- 1. Sobre si -->
         <template v-if="step === 0">
             <h1 class="text-title">Apresente-se aos alunos</h1>
+            <div class="grid gap-1">
+                <PhotoPicker :name="page.props.auth.user?.name" :src="photo" required @changed="(url) => (photo = url)" />
+                <p v-if="errors.photo" class="text-caption text-danger" role="alert">{{ errors.photo }}</p>
+            </div>
             <FormField label="Apresentação" for="bio" :error="errors.bio" hint="O que ensina, a quem e como. Mínimo 20 caracteres.">
                 <textarea id="bio" v-model="details.bio" class="input min-h-32 py-3" maxlength="2000" />
             </FormField>

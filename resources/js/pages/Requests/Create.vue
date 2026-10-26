@@ -20,6 +20,8 @@ const form = reactive({
     description: '',
     amount: null as number | null,
     scheduled_at: toLocalInput(suggested),
+    duration_minutes: 60,
+    payment_method: 'electronic' as 'electronic' | 'cash',
     modality: 'in_person' as 'in_person' | 'online',
     municipality: '',
     neighborhood: '',
@@ -120,6 +122,25 @@ async function submit(): Promise<void> {
                 <input id="when" v-model="form.scheduled_at" class="input" type="datetime-local" :min="minDate" />
             </FormField>
         </div>
+
+        <FormField label="Duração" for="duration" :error="errors.duration_minutes">
+            <select id="duration" v-model.number="form.duration_minutes" class="input">
+                <option v-for="m in [30, 45, 60, 90, 120, 180, 240]" :key="m" :value="m">{{ m < 60 ? `${m} min` : `${m / 60} h`.replace('.5', ',5') }}</option>
+            </select>
+        </FormField>
+
+        <fieldset class="grid gap-2">
+            <legend class="mb-1 text-caption font-semibold">Pagamento</legend>
+            <div class="flex gap-2">
+                <button type="button" class="chip" :class="{ 'chip-active': form.payment_method === 'electronic' }" @click="form.payment_method = 'electronic'">Pela LONGA</button>
+                <button type="button" class="chip" :class="{ 'chip-active': form.payment_method === 'cash' }" @click="form.payment_method = 'cash'">Em mão</button>
+            </div>
+            <p class="text-caption text-ink-muted">
+                {{ form.payment_method === 'electronic'
+                    ? 'Paga quando o formador aceitar. O valor fica retido e só é libertado depois de confirmar a aula com o QR.'
+                    : 'Paga ao formador no dia da aula. Confirma na app depois da aula.' }}
+            </p>
+        </fieldset>
 
         <fieldset class="grid gap-2">
             <legend class="mb-1 text-caption font-semibold">Modalidade</legend>

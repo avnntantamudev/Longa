@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { api } from '@/lib/api';
 import { kwanza, when } from '@/lib/format';
+import { stateBadge } from '@/lib/session';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed, onMounted, ref } from 'vue';
 
 interface Session {
     id: number;
     title: string;
+    state: string;
+    state_label: string;
     skill: string;
     scheduled_at: string;
     neighborhood: string;
@@ -48,7 +51,10 @@ onMounted(async () => {
                         {{ session.role === 'student' ? `com ${session.trainer?.name}` : `aluno ${session.student?.name}` }}
                     </p>
                 </div>
-                <span class="text-caption font-semibold">{{ kwanza(session.role === 'trainer' ? (session.trainer_net ?? session.amount) : session.amount) }}</span>
+                <div class="flex shrink-0 flex-col items-end gap-1">
+                    <span class="badge" :class="stateBadge(session.state)">{{ session.state_label }}</span>
+                    <span class="text-caption font-semibold">{{ kwanza(session.role === 'trainer' ? (session.trainer_net ?? session.amount) : session.amount) }}</span>
+                </div>
             </Link>
         </li>
     </ul>

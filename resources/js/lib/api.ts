@@ -42,8 +42,21 @@ function xsrfToken(): string | null {
 
 type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
-async function request<T>(method: Method, path: string, body?: unknown): Promise<T> {
+export interface RequestOptions {
+    /** Operações com dinheiro: a mesma chave em todas as tentativas da mesma ação (ver newIdempotencyKey) */
+    idempotencyKey?: string;
+}
+
+/** Uma chave por ação do utilizador; reutilizar em repetições depois de falha de rede. */
+export function newIdempotencyKey(): string {
+    return crypto.randomUUID();
+}
+
+async function request<T>(method: Method, path: string, body?: unknown, options: RequestOptions = {}): Promise<T> {
     const headers: Record<string, string> = { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' };
+    if (options.idempotencyKey) {
+        headers['Idempotency-Key'] = options.idempotencyKey;
+    }
     const token = xsrfToken();
     if (token) {
         headers['X-XSRF-TOKEN'] = token;
@@ -87,9 +100,9 @@ async function request<T>(method: Method, path: string, body?: unknown): Promise
  * Executa o pedido com o estado global de rede. Erros da API (4xx) não contam como falha de rede:
  * são mostrados no próprio formulário.
  */
-function send<T>(method: Method, path: string, body?: unknown): Promise<T> {
+function send<T>(method: Method, path: string, body?: unknown, options?: RequestOptions): Promise<T> {
     const network = useNetworkState();
-    return network.track(() => request<T>(method, path, body)).catch((error: unknown) => {
+    return network.track(() => request<T>(method, path, body, options)).catch((error: unknown) => {
         if (error instanceof ApiError && error.status < 500) {
             network.dismiss();
         }
@@ -99,7 +112,7 @@ function send<T>(method: Method, path: string, body?: unknown): Promise<T> {
 
 export const api = {
     get: <T>(path: string) => send<T>('GET', path),
-    post: <T>(path: string, body?: unknown) => send<T>('POST', path, body),
+    post: <T>(path: string, body?: unknown, options?: RequestOptions) => send<T>('POST', path, body, options),
     put: <T>(path: string, body?: unknown) => send<T>('PUT', path, body),
     patch: <T>(path: string, body?: unknown) => send<T>('PATCH', path, body),
     delete: <T>(path: string) => send<T>('DELETE', path),

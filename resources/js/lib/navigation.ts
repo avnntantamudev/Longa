@@ -21,6 +21,7 @@ export function navigationFor(roles: RoleName[] = []): NavItem[] {
     }
     if (roles.includes('trainer')) {
         items.push({ label: 'TRIM TRIM', href: '/formador/ofertas', icon: 'bell', available: true });
+        items.push({ label: 'Carteira', href: '/carteira', icon: 'wallet', available: true });
     }
     if (roles.length === 0) {
         items.push({ label: 'Explorar', href: '/explorar', icon: 'search', available: false });

@@ -20,4 +20,7 @@ Route::get('/disputas/anexos/{attachment}', [DisputeController::class, 'download
 Route::middleware(['auth', 'auth.session', 'onboarded'])->group(function () {
     Route::get('/aulas', [PageController::class, 'index'])->name('sessions.index');
     Route::get('/aulas/{session}', [PageController::class, 'show'])->name('sessions.show');
+    Route::get('/aulas/{session}/qr', [PageController::class, 'qr'])->name('sessions.qr');
+    Route::get('/aulas/{session}/confirmar', [PageController::class, 'scan'])->name('sessions.scan');
+    Route::get('/aulas/{session}/disputa', [PageController::class, 'dispute'])->name('sessions.dispute');
 });

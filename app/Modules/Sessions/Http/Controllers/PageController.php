@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Sessions\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Sessions\Enums\SessionState;
 use App\Modules\Sessions\Models\TrainingSession;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -25,5 +26,32 @@ class PageController extends Controller
         Gate::authorize('view', $session);
 
         return Inertia::render('Sessions/Show', ['sessionId' => $session->id]);
+    }
+
+    /** QR de confirmação (formador da aula). */
+    public function qr(TrainingSession $session): Response
+    {
+        Gate::authorize('actAsTrainer', $session);
+
+        return Inertia::render('Sessions/Qr', ['sessionId' => $session->id]);
+    }
+
+    /** Leitor do QR (aluno da aula). */
+    public function scan(TrainingSession $session): Response
+    {
+        Gate::authorize('actAsStudent', $session);
+
+        return Inertia::render('Sessions/Scan', ['sessionId' => $session->id]);
+    }
+
+    /** Abrir disputa ou contestar falta (participantes). */
+    public function dispute(TrainingSession $session): Response
+    {
+        Gate::authorize('view', $session);
+
+        return Inertia::render('Sessions/Dispute', [
+            'sessionId' => $session->id,
+            'contest' => in_array($session->state, [SessionState::NoShowTrainer, SessionState::NoShowStudent], true),
+        ]);
     }
 }

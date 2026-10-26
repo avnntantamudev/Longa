@@ -30,12 +30,15 @@ final class Accounts
 
     public const CASH_SETTLEMENT = 'cash_settlement';
 
+    /** Receita das subscrições VIP (separada das comissões) */
+    public const SUBSCRIPTION_REVENUE = 'subscription_revenue';
+
     public const TRAINER_AVAILABLE = 'trainer_available';
 
     public const TRAINER_COMMISSION_DUE = 'trainer_commission_due';
 
     /** @var list<string> */
-    public const SYSTEM = [self::FUNDS_IN, self::ESCROW, self::PLATFORM_REVENUE, self::REFUNDS_PAYABLE, self::CASH_SETTLEMENT];
+    public const SYSTEM = [self::FUNDS_IN, self::ESCROW, self::PLATFORM_REVENUE, self::REFUNDS_PAYABLE, self::CASH_SETTLEMENT, self::SUBSCRIPTION_REVENUE];
 
     public static function trainerAvailable(TrainerProfile|int $trainer): string
     {

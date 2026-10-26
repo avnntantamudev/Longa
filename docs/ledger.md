@@ -23,7 +23,8 @@ Código: `app/Modules/Wallet/Ledger` (`LedgerService` é a única porta de escri
 | `escrow` | positivo | Dinheiro dos alunos retido; **= soma dos `escrow_holds` em `held`** |
 | `platform_revenue` | positivo | Comissões da LONGA |
 | `refunds_payable` | positivo | Reembolsos decididos à espera de execução pelo gateway |
-| `cash_settlement` | negativo | Contrapartida das comissões recebidas em dinheiro pelo admin |
+| `cash_settlement` | negativo | Contrapartida do dinheiro recebido em mão pelo admin (comissões, VIP) |
+| `subscription_revenue` | positivo | Receita das subscrições VIP (separada das comissões) |
 | `trainer_available:{id}` | positivo | Saldo disponível do formador (levantamentos na Fase 5) |
 | `trainer_commission_due:{id}` | negativo | Comissão em dívida de aulas pagas em dinheiro |
 
@@ -41,6 +42,8 @@ O **pendente** do formador (retido em aulas ainda não confirmadas) é a soma do
 | `cash_commission_due` | platform_revenue +3.750 · trainer_commission_due −3.750 |
 | `cash_commission_received` | cash_settlement −3.750 · trainer_commission_due +3.750 |
 | `commission_offset` | trainer_available −x · trainer_commission_due +x |
+| `vip_subscription` (na app) | funds_in −50.000 · subscription_revenue +50.000 |
+| `vip_subscription` (em mão) | cash_settlement −50.000 · subscription_revenue +50.000 |
 | `reversal` | lançamentos simétricos de uma transação anterior |
 
 ## Comissão e arredondamento

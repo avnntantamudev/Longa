@@ -4510,6 +4510,222 @@
                 }
             }
         },
+        "/me/vip": {
+            "get": {
+                "operationId": "vip.show",
+                "summary": "Estado VIP, pre\u00e7o atual, vantagens e hist\u00f3rico",
+                "tags": [
+                    "VIP",
+                    "Vip"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is_vip": {
+                                                    "type": "boolean"
+                                                },
+                                                "vip_until": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "price": {
+                                                    "type": "integer"
+                                                },
+                                                "duration_days": {
+                                                    "type": "integer"
+                                                },
+                                                "commission_percent": {
+                                                    "type": "integer"
+                                                },
+                                                "standard_commission_percent": {
+                                                    "type": "integer"
+                                                },
+                                                "refundable": {
+                                                    "type": "boolean"
+                                                },
+                                                "history": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "source": {
+                                                                "type": "string"
+                                                            },
+                                                            "amount": {
+                                                                "type": "integer"
+                                                            },
+                                                            "starts_at": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "ends_at": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "source",
+                                                            "amount",
+                                                            "starts_at",
+                                                            "ends_at"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "is_vip",
+                                                "vip_until",
+                                                "price",
+                                                "duration_days",
+                                                "commission_percent",
+                                                "standard_commission_percent",
+                                                "refundable",
+                                                "history"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/me/vip/purchase": {
+            "post": {
+                "operationId": "vip.purchase",
+                "description": "Requer `Idempotency-Key`. Renovar soma a dura\u00e7\u00e3o ao fim do VIP em vigor. Sem reembolso a meio do per\u00edodo.\nErros: `payment_failed` (402), `payment_in_progress` (409), `vip_not_allowed` (409).",
+                "summary": "Comprar ou renovar o VIP",
+                "tags": [
+                    "VIP",
+                    "Vip"
+                ],
+                "parameters": [
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "description": "Chave \u00fanica por a\u00e7\u00e3o (8\u2013100 caracteres: letras, n\u00fameros, \"-\" e \"_\"). Repetir o mesmo pedido com a mesma chave devolve a resposta guardada (24 h, cabe\u00e7alho `Idempotent-Replayed: true`); a mesma chave com outro corpo d\u00e1 422 `idempotency_key_reused`; um pedido ainda em curso d\u00e1 409 `request_in_progress`.",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z0-9_-]{8,100}$"
+                        },
+                        "example": "3f1c9a2e-7b4d-4e8a-9c1f-2a6b8d0e4f13"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "method": {
+                                        "type": "string",
+                                        "enum": [
+                                            "multicaixa_express",
+                                            "reference"
+                                        ],
+                                        "examples": [
+                                            "multicaixa_express"
+                                        ]
+                                    },
+                                    "accept_terms": {
+                                        "enum": [
+                                            "yes",
+                                            "on",
+                                            "1",
+                                            1,
+                                            "true",
+                                            true
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "method"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "starts_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "ends_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "amount": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "status",
+                                                "starts_at",
+                                                "ends_at",
+                                                "amount"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/me/verifications": {
             "get": {
                 "operationId": "verifications.mine",

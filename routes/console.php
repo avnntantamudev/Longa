@@ -43,6 +43,9 @@ Schedule::command('longa:matching-tick')->everyTenSeconds()->withoutOverlapping(
 // Regras automáticas das aulas (R1–R5)
 Schedule::command('longa:sessions:tick')->everyMinute()->withoutOverlapping(5);
 
+// Avisos de fim da subscrição VIP
+Schedule::command('longa:vip:reminders')->dailyAt('09:00')->withoutOverlapping(30);
+
 // Reconciliação do ledger
 Schedule::command('longa:ledger:reconcile')->hourly()->withoutOverlapping(30);
 

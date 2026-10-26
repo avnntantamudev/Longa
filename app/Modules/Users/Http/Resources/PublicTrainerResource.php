@@ -30,6 +30,7 @@ class PublicTrainerResource extends JsonResource
             'modalities' => $this->modalities ?? [],
             'rate_amount' => $this->rate_amount,
             'rate_unit' => $this->rate_unit,
+            'province' => $this->province,
             'municipality' => $this->municipality,
             'neighborhood' => $this->neighborhood,
             'service_radius_m' => $this->service_radius_m,

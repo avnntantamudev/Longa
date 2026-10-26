@@ -79,6 +79,7 @@ class AcceptOffer
                 'ends_at' => $request->scheduled_at->copy()->addMinutes($request->duration_minutes),
                 'payment_method' => $request->payment_method,
                 'modality' => $request->modality,
+                'province' => $request->province,
                 'municipality' => $request->municipality,
                 'neighborhood' => $request->neighborhood,
                 'latitude' => $request->latitude,

@@ -24,6 +24,7 @@ class PageController extends Controller
         return Inertia::render('Requests/Create', [
             'skills' => SkillResource::collection(Skill::query()->active()->orderBy('category')->orderBy('name')->get())->resolve(),
             'zones' => config('locations.zones'),
+            'provinces' => config('locations.provinces'),
             'minAmount' => (int) config('longa.requests.min_amount'),
             'minLeadMinutes' => (int) config('longa.requests.min_lead_minutes'),
             'commissionPercent' => app(PlatformSettings::class)->int('commission_percent'),

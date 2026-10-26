@@ -43,6 +43,7 @@ export interface Skill {
 }
 
 export interface Zone {
+    province: string;
     municipality: string;
     neighborhood: string;
     lat: number;

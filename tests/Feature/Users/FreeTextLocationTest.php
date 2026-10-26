@@ -38,3 +38,20 @@ it('continua a recusar pontos fora de Angola', function () {
         'service_radius_m' => 5000, 'accept_location' => true,
     ])->assertStatus(422);
 });
+
+it('guarda a província e recusa províncias inexistentes', function () {
+    $trainer = TrainerProfile::factory()->create();
+    apiLogin($trainer->user);
+    $body = ['municipality' => 'Lobito', 'neighborhood' => 'Compão', 'latitude' => -12.3644, 'longitude' => 13.5367, 'service_radius_m' => 5000, 'accept_location' => true];
+
+    $this->putJson('/api/v1/me/trainer-profile/location', [...$body, 'province' => 'Benguela'])->assertOk()->assertJsonPath('data.province', 'Benguela');
+    $this->putJson('/api/v1/me/trainer-profile/location', [...$body, 'province' => 'Lisboa'])->assertStatus(422);
+    $this->getJson('/api/v1/provinces')->assertOk()->assertJsonCount(21, 'data');
+});
+
+it('a província do pedido passa para a aula', function () {
+    $session = acceptedSession('electronic');
+
+    expect($session->province)->toBe('Luanda')
+        ->and($session->request->province)->toBe('Luanda');
+});

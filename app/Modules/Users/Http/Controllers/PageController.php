@@ -31,6 +31,7 @@ class PageController extends Controller
         return Inertia::render('Onboarding/Trainer', [
             'skills' => SkillResource::collection(Skill::query()->active()->orderBy('category')->orderBy('name')->get())->resolve(),
             'zones' => config('locations.zones'),
+            'provinces' => config('locations.provinces'),
         ]);
     }
 

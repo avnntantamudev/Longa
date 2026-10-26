@@ -23,7 +23,7 @@ class CreateTrainingRequest
     public function __construct(private readonly MatchingCoordinator $matching, private readonly AuditLogger $audit) {}
 
     /**
-     * @param  array{skill_id: int, title: string, description?: string|null, amount: int, scheduled_at: string, duration_minutes?: int, payment_method?: string, modality: string, municipality: string, neighborhood: string, latitude: float, longitude: float}  $data
+     * @param  array{skill_id: int, title: string, description?: string|null, amount: int, scheduled_at: string, duration_minutes?: int, payment_method?: string, modality: string, province: string, municipality: string, neighborhood: string, latitude: float, longitude: float}  $data
      */
     public function handle(User $student, array $data, ?TrainingRequest $republishedFrom = null): TrainingRequest
     {

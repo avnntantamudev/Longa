@@ -39,6 +39,7 @@ class RepublishTrainingRequest
             'duration_minutes' => $original->duration_minutes,
             'payment_method' => $original->payment_method,
             'modality' => $original->modality,
+            'province' => $original->province,
             'municipality' => $original->municipality,
             'neighborhood' => $original->neighborhood,
             'latitude' => $original->latitude,

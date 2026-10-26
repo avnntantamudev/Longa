@@ -45,7 +45,7 @@ class UpdateTrainerProfile
     }
 
     /**
-     * @param  array{municipality: string, neighborhood: string, latitude: float, longitude: float, service_radius_m: int}  $data
+     * @param  array{province: string, municipality: string, neighborhood: string, latitude: float, longitude: float, service_radius_m: int}  $data
      */
     public function location(User $user, array $data): TrainerProfile
     {

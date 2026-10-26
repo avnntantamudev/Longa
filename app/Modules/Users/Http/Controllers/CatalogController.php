@@ -34,6 +34,14 @@ class CatalogController extends Controller
      *
      * @unauthenticated
      */
+    /**
+     * Províncias de Angola (21, divisão de 2024).
+     */
+    public function provinces(): JsonResponse
+    {
+        return response()->json(['data' => config('locations.provinces')]);
+    }
+
     public function zones(): JsonResponse
     {
         return response()->json(['data' => config('locations.zones')]);

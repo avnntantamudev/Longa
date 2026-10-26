@@ -35,6 +35,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property int $duration_minutes
  * @property string $payment_method
  * @property string $modality
+ * @property string $province
  * @property string $municipality
  * @property string $neighborhood
  * @property float $latitude
@@ -57,7 +58,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 #[Fillable([
     'student_id', 'skill_id', 'title', 'description', 'amount', 'commission', 'trainer_net', 'scheduled_at', 'duration_minutes',
     'payment_method', 'modality',
-    'municipality', 'neighborhood', 'latitude', 'longitude', 'republished_from_id',
+    'province', 'municipality', 'neighborhood', 'latitude', 'longitude', 'republished_from_id',
 ])]
 #[Hidden(['location'])]
 #[UseFactory(TrainingRequestFactory::class)]

@@ -7,7 +7,7 @@ import type { Skill, Zone } from '@/types/global';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import { computed, onMounted, reactive, ref } from 'vue';
 
-const props = defineProps<{ skills: Skill[]; zones: Zone[] }>();
+const props = defineProps<{ skills: Skill[]; zones: Zone[]; provinces: string[] }>();
 
 interface TrainerProfile {
     bio: string | null;
@@ -15,6 +15,7 @@ interface TrainerProfile {
     modalities: string[];
     rate_amount: number | null;
     rate_unit: string | null;
+    province: string;
     municipality: string | null;
     neighborhood: string | null;
     latitude: number | null;
@@ -31,7 +32,7 @@ const saving = ref(false);
 
 const details = reactive({ bio: '', years_experience: null as number | null, modalities: ['in_person'] as string[], rate_amount: null as number | null, rate_unit: 'session' });
 const selectedSkills = ref<number[]>([]);
-const location = reactive({ municipality: '', neighborhood: '', latitude: null as number | null, longitude: null as number | null, service_radius_m: 5000, accept_location: false });
+const location = reactive({ province: 'Luanda', municipality: '', neighborhood: '', latitude: null as number | null, longitude: null as number | null, service_radius_m: 5000, accept_location: false });
 const verification = reactive({ document_number: '', files: [] as File[] });
 const verificationStatus = ref('unverified');
 
@@ -92,6 +93,7 @@ onMounted(async () => {
     details.rate_unit = data.rate_unit ?? 'session';
     selectedSkills.value = (data.skills ?? []).map((s) => s.id);
     Object.assign(location, {
+        province: data.province,
         municipality: data.municipality ?? '',
         neighborhood: data.neighborhood ?? '',
         latitude: data.latitude,
@@ -253,7 +255,7 @@ function submitVerification(): Promise<unknown> {
             <p class="-mt-3 text-caption text-ink-muted">
                 Usamos a localização só para lhe enviar pedidos perto de si. Marque no mapa o ponto de onde parte (pode ser aproximado). Os alunos veem apenas o bairro, nunca o ponto.
             </p>
-            <LocationPicker :value="location" :zones="zones" :radius-m="location.service_radius_m" :errors="errors" />
+            <LocationPicker :value="location" :zones="zones" :provinces="provinces" :radius-m="location.service_radius_m" :errors="errors" />
 
             <FormField :label="`Raio de atuação: ${(location.service_radius_m / 1000).toFixed(0)} km`" for="radius">
                 <input id="radius" v-model.number="location.service_radius_m" type="range" min="1000" max="20000" step="1000" class="accent-orange-500" />

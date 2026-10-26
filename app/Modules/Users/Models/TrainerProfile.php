@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property list<string>|null $modalities
  * @property int|null $rate_amount
  * @property string|null $rate_unit
+ * @property string $province
  * @property string|null $municipality
  * @property string|null $neighborhood
  * @property float|null $latitude
@@ -35,7 +36,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property-read User $user
  */
 #[Fillable([
-    'bio', 'years_experience', 'modalities', 'rate_amount', 'rate_unit', 'municipality', 'neighborhood',
+    'bio', 'years_experience', 'modalities', 'rate_amount', 'rate_unit', 'province', 'municipality', 'neighborhood',
     'latitude', 'longitude', 'service_radius_m', 'is_available', 'onboarding_completed_at',
 ])]
 // A coluna espacial gerada não é útil fora da base de dados

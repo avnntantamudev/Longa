@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Route;
 // Prefixo /api/v1 (ModuleServiceProvider)
 Route::get('skills', [CatalogController::class, 'skills'])->name('api.skills');
 Route::get('zones', [CatalogController::class, 'zones'])->name('api.zones');
+Route::get('provinces', [CatalogController::class, 'provinces'])->name('api.provinces');
 Route::get('trainers/{trainer}', [CatalogController::class, 'trainer'])->name('api.trainers.show');
 
 Route::middleware(['auth:sanctum', 'auth.session'])->group(function () {

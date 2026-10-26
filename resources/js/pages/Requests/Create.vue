@@ -7,7 +7,7 @@ import type { Skill, Zone } from '@/types/global';
 import { Head, router } from '@inertiajs/vue3';
 import { computed, reactive, ref } from 'vue';
 
-const props = defineProps<{ skills: Skill[]; zones: Zone[]; minAmount: number; minLeadMinutes: number; commissionPercent: number }>();
+const props = defineProps<{ skills: Skill[]; zones: Zone[]; minAmount: number; minLeadMinutes: number; commissionPercent: number; provinces: string[] }>();
 
 // Sugestão: daqui a duas horas, arredondado à hora
 const suggested = new Date(Date.now() + 2 * 3600_000);
@@ -22,6 +22,7 @@ const form = reactive({
     duration_minutes: 60,
     payment_method: 'electronic' as 'electronic' | 'cash',
     modality: 'in_person' as 'in_person' | 'online',
+    province: 'Luanda',
     municipality: '',
     neighborhood: '',
     latitude: null as number | null,
@@ -122,7 +123,7 @@ async function submit(): Promise<void> {
             <legend class="sr-only">Local</legend>
             <p class="font-semibold">Onde vai ser a aula?</p>
             <p class="-mt-2 text-caption text-ink-muted">Marque o local no mapa. Os formadores só veem o bairro e a distância aproximada até aceitarem.</p>
-            <LocationPicker :value="form" :zones="zones" :errors="errors" />
+            <LocationPicker :value="form" :zones="zones" :provinces="provinces" :errors="errors" />
         </fieldset>
 
         <p v-if="form.amount" class="text-caption text-ink-muted">

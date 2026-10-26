@@ -33,6 +33,8 @@ class StoreTrainingRequestRequest extends FormRequest
             /** "electronic" (Multicaixa, retido em escrow) ou "cash" (pago em mão ao formador). */
             'payment_method' => ['sometimes', Rule::in(['electronic', 'cash'])],
             'modality' => ['required', Rule::in(['in_person', 'online'])],
+            /** Província (lista de 21). Sem valor: Luanda. @example Luanda */
+            'province' => ['sometimes', 'string', Rule::in(config('locations.provinces'))],
             'municipality' => ['required', 'string', 'max:80'],
             'neighborhood' => ['required', 'string', 'max:80'],
             'latitude' => ['required', 'numeric', new InAngola],
@@ -63,7 +65,7 @@ class StoreTrainingRequestRequest extends FormRequest
     }
 
     /**
-     * @return array{skill_id: int, title: string, description: string|null, amount: int, scheduled_at: string, duration_minutes: int, payment_method: string, modality: string, municipality: string, neighborhood: string, latitude: float, longitude: float}
+     * @return array{skill_id: int, title: string, description: string|null, amount: int, scheduled_at: string, duration_minutes: int, payment_method: string, modality: string, province: string, municipality: string, neighborhood: string, latitude: float, longitude: float}
      */
     public function requestData(): array
     {
@@ -76,6 +78,7 @@ class StoreTrainingRequestRequest extends FormRequest
             'duration_minutes' => (int) ($this->validated('duration_minutes') ?? 60),
             'payment_method' => (string) ($this->validated('payment_method') ?? 'electronic'),
             'modality' => (string) $this->validated('modality'),
+            'province' => (string) ($this->validated('province') ?? 'Luanda'),
             'municipality' => (string) $this->validated('municipality'),
             'neighborhood' => (string) $this->validated('neighborhood'),
             'latitude' => (float) $this->validated('latitude'),

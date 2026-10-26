@@ -1014,7 +1014,6 @@
         "/zones": {
             "get": {
                 "operationId": "zones",
-                "summary": "Zonas para escolha manual de local",
                 "tags": [
                     "Cat\u00e1logo",
                     "Catalog"
@@ -1038,8 +1037,37 @@
                             }
                         }
                     }
-                },
-                "security": []
+                }
+            }
+        },
+        "/provinces": {
+            "get": {
+                "operationId": "provinces",
+                "summary": "Prov\u00edncias de Angola (21, divis\u00e3o de 2024)",
+                "tags": [
+                    "Cat\u00e1logo",
+                    "Catalog"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "/trainers/{trainer}": {
@@ -5599,6 +5627,9 @@
                             "null"
                         ]
                     },
+                    "province": {
+                        "type": "string"
+                    },
                     "municipality": {
                         "type": [
                             "string",
@@ -5643,6 +5674,7 @@
                     "modalities",
                     "rate_amount",
                     "rate_unit",
+                    "province",
                     "municipality",
                     "neighborhood",
                     "service_radius_m",
@@ -5839,6 +5871,9 @@
                     "modality": {
                         "type": "string"
                     },
+                    "province": {
+                        "type": "string"
+                    },
                     "municipality": {
                         "type": "string"
                     },
@@ -6027,6 +6062,7 @@
                     "skill",
                     "scheduled_at",
                     "modality",
+                    "province",
                     "municipality",
                     "neighborhood",
                     "latitude",
@@ -6121,6 +6157,33 @@
                         "enum": [
                             "in_person",
                             "online"
+                        ]
+                    },
+                    "province": {
+                        "type": "string",
+                        "description": "Prov\u00edncia (lista de 21). Sem valor: Luanda. @example Luanda",
+                        "enum": [
+                            "Bengo",
+                            "Benguela",
+                            "Bi\u00e9",
+                            "Cabinda",
+                            "Cuando",
+                            "Cuanza Norte",
+                            "Cuanza Sul",
+                            "Cubango",
+                            "Cunene",
+                            "Huambo",
+                            "Hu\u00edla",
+                            "Icolo e Bengo",
+                            "Luanda",
+                            "Lunda Norte",
+                            "Lunda Sul",
+                            "Malanje",
+                            "Moxico",
+                            "Moxico Leste",
+                            "Namibe",
+                            "U\u00edge",
+                            "Zaire"
                         ]
                     },
                     "municipality": {
@@ -6220,6 +6283,9 @@
                     "modality": {
                         "type": "string"
                     },
+                    "province": {
+                        "type": "string"
+                    },
                     "municipality": {
                         "type": "string"
                     },
@@ -6278,6 +6344,7 @@
                     "amount",
                     "scheduled_at",
                     "modality",
+                    "province",
                     "municipality",
                     "neighborhood",
                     "latitude",
@@ -6381,6 +6448,33 @@
             "TrainerLocationRequest": {
                 "type": "object",
                 "properties": {
+                    "province": {
+                        "type": "string",
+                        "description": "Prov\u00edncia (lista de 21). Sem valor: Luanda. @example Luanda",
+                        "enum": [
+                            "Bengo",
+                            "Benguela",
+                            "Bi\u00e9",
+                            "Cabinda",
+                            "Cuando",
+                            "Cuanza Norte",
+                            "Cuanza Sul",
+                            "Cubango",
+                            "Cunene",
+                            "Huambo",
+                            "Hu\u00edla",
+                            "Icolo e Bengo",
+                            "Luanda",
+                            "Lunda Norte",
+                            "Lunda Sul",
+                            "Malanje",
+                            "Moxico",
+                            "Moxico Leste",
+                            "Namibe",
+                            "U\u00edge",
+                            "Zaire"
+                        ]
+                    },
                     "municipality": {
                         "type": "string",
                         "maxLength": 80
@@ -6460,6 +6554,9 @@
                     "modality": {
                         "type": "string"
                     },
+                    "province": {
+                        "type": "string"
+                    },
                     "municipality": {
                         "type": "string"
                     },
@@ -6498,6 +6595,7 @@
                     "trainer_net",
                     "scheduled_at",
                     "modality",
+                    "province",
                     "municipality",
                     "neighborhood",
                     "distance_m",
@@ -6542,6 +6640,9 @@
                             "string",
                             "null"
                         ]
+                    },
+                    "province": {
+                        "type": "string"
                     },
                     "municipality": {
                         "type": [
@@ -6629,6 +6730,7 @@
                     "modalities",
                     "rate_amount",
                     "rate_unit",
+                    "province",
                     "municipality",
                     "neighborhood",
                     "latitude",

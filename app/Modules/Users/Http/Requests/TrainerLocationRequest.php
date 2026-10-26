@@ -6,6 +6,7 @@ namespace App\Modules\Users\Http\Requests;
 
 use App\Modules\Users\Rules\InAngola;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class TrainerLocationRequest extends FormRequest
 {
@@ -15,6 +16,8 @@ class TrainerLocationRequest extends FormRequest
     public function rules(): array
     {
         return [
+            /** Província (lista de 21). Sem valor: Luanda. @example Luanda */
+            'province' => ['sometimes', 'string', Rule::in(config('locations.provinces'))],
             'municipality' => ['required', 'string', 'max:80'],
             'neighborhood' => ['required', 'string', 'max:80'],
             'latitude' => ['required', 'numeric', new InAngola],
@@ -26,11 +29,12 @@ class TrainerLocationRequest extends FormRequest
     }
 
     /**
-     * @return array{municipality: string, neighborhood: string, latitude: float, longitude: float, service_radius_m: int}
+     * @return array{province: string, municipality: string, neighborhood: string, latitude: float, longitude: float, service_radius_m: int}
      */
     public function locationData(): array
     {
         return [
+            'province' => (string) ($this->validated('province') ?? 'Luanda'),
             'municipality' => (string) $this->validated('municipality'),
             'neighborhood' => (string) $this->validated('neighborhood'),
             'latitude' => (float) $this->validated('latitude'),

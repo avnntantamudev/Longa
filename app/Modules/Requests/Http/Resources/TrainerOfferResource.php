@@ -35,6 +35,7 @@ class TrainerOfferResource extends JsonResource
             'trainer_net' => $trainingRequest->trainer_net,
             'scheduled_at' => $trainingRequest->scheduled_at->toIso8601String(),
             'modality' => $trainingRequest->modality,
+            'province' => $trainingRequest->province,
             'municipality' => $trainingRequest->municipality,
             'neighborhood' => $trainingRequest->neighborhood,
             // Arredondada aos 100 m para não permitir triangular a morada

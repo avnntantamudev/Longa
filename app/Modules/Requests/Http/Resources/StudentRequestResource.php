@@ -31,6 +31,7 @@ class StudentRequestResource extends JsonResource
             'amount' => $this->amount,
             'scheduled_at' => $this->scheduled_at->toIso8601String(),
             'modality' => $this->modality,
+            'province' => $this->province,
             'municipality' => $this->municipality,
             'neighborhood' => $this->neighborhood,
             'latitude' => $this->latitude,

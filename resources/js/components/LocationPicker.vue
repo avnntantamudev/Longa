@@ -13,6 +13,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
  * pessoas perto é o ponto no mapa. Escolher um bairro sugerido centra o mapa nele (se ainda não houver ponto).
  */
 export interface LocationValue {
+    province: string;
     municipality: string;
     neighborhood: string;
     latitude: number | null;
@@ -20,7 +21,7 @@ export interface LocationValue {
 }
 
 // O objeto (reactive) do formulário da página: o componente altera os campos diretamente
-const props = withDefaults(defineProps<{ value: LocationValue; zones: Zone[]; radiusM?: number | null; errors?: Record<string, string> }>(), { radiusM: null, errors: () => ({}) });
+const props = withDefaults(defineProps<{ value: LocationValue; zones: Zone[]; provinces: string[]; radiusM?: number | null; errors?: Record<string, string> }>(), { radiusM: null, errors: () => ({}) });
 const model = computed(() => props.value);
 
 const LUANDA: [number, number] = [-8.8383, 13.2344];
@@ -30,9 +31,10 @@ let map: L.Map | null = null;
 let marker: L.Marker | null = null;
 let circle: L.Circle | null = null;
 
-const municipalities = computed(() => [...new Set(props.zones.map((z) => z.municipality))].sort());
+const provinceZones = computed(() => props.zones.filter((z) => z.province === model.value.province));
+const municipalities = computed(() => [...new Set(provinceZones.value.map((z) => z.municipality))].sort());
 const neighborhoods = computed(() =>
-    props.zones.filter((z) => !model.value.municipality || z.municipality === model.value.municipality).map((z) => z.neighborhood),
+    provinceZones.value.filter((z) => !model.value.municipality || z.municipality === model.value.municipality).map((z) => z.neighborhood),
 );
 
 const pin = L.divIcon({
@@ -88,7 +90,7 @@ async function useMyLocation(): Promise<void> {
 }
 
 function onNeighborhood(): void {
-    const zone = props.zones.find((z) => z.neighborhood.toLowerCase() === model.value.neighborhood.trim().toLowerCase());
+    const zone = provinceZones.value.find((z) => z.neighborhood.toLowerCase() === model.value.neighborhood.trim().toLowerCase());
     if (!zone) return;
     if (!model.value.municipality) model.value.municipality = zone.municipality;
     if (model.value.latitude === null) setPoint(zone.lat, zone.lng, true);
@@ -125,6 +127,12 @@ onBeforeUnmount(() => map?.remove());
             </p>
             <p v-if="errors.latitude || errors.longitude" class="text-caption text-danger">{{ errors.latitude || errors.longitude }}</p>
         </div>
+
+        <FormField label="Província" for="loc-province" :error="errors.province">
+            <select id="loc-province" v-model="model.province" class="input">
+                <option v-for="p in provinces" :key="p" :value="p">{{ p }}</option>
+            </select>
+        </FormField>
 
         <div class="grid gap-3 sm:grid-cols-2">
             <FormField label="Município" for="loc-municipality" :error="errors.municipality">

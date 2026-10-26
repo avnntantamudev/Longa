@@ -43,6 +43,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
  * @property \Illuminate\Support\Carbon|null $no_show_contest_until
  * @property \Illuminate\Support\Carbon|null $cash_confirmed_at
  * @property string $modality
+ * @property string $province
  * @property string $municipality
  * @property string $neighborhood
  * @property float $latitude
@@ -57,7 +58,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
  */
 #[Fillable([
     'training_request_id', 'student_id', 'trainer_profile_id', 'skill_id', 'title', 'amount', 'commission', 'trainer_net',
-    'scheduled_at', 'duration_minutes', 'ends_at', 'payment_method', 'payment_due_at', 'modality', 'municipality',
+    'scheduled_at', 'duration_minutes', 'ends_at', 'payment_method', 'payment_due_at', 'modality', 'province', 'municipality',
     'neighborhood', 'latitude', 'longitude', 'escrow_reference',
 ])]
 class TrainingSession extends Model

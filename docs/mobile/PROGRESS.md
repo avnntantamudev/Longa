@@ -3,7 +3,7 @@
 Tarefa autónoma iniciada a 2026-10-26 18:00 (pedido do utilizador às 16:12). Se a sessão parar, retomar
 pelo primeiro passo por fazer.
 
-Estado: EM CURSO
+Estado: CONCLUÍDO (2026-10-26) — ver RELATORIO.md
 
 | # | Passo | Estado |
 |---|---|---|
@@ -14,5 +14,5 @@ Estado: EM CURSO
 | 4 | Formador: TRIM TRIM (contagem, agendados), aceitar, iniciar/terminar, QR rotativo, carteira, ganhos, VIP | feito (4aed249) |
 | 5 | Perfil: foto, aparelhos, alterar PIN, empresas (consentimento) | feito (4aed249) |
 | 6 | Tempo real (Reverb/Pusher) + polling de segurança | feito (4aed249) |
-| 7 | Testes (cliente da API, refresh, PIN, rotação do QR) e CI verde | a verificar no CI |
-| 8 | Relatório `docs/mobile/RELATORIO.md`, script de plataformas, push, CI, marcar CONCLUÍDO | por fazer |
+| 7 | Testes (cliente da API, refresh, PIN, rotação do QR) e CI verde | feito (516187e, CI verde: análise + 23 testes) |
+| 8 | Relatório `docs/mobile/RELATORIO.md`, script de plataformas, push, CI, marcar CONCLUÍDO | feito |

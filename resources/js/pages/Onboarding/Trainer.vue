@@ -35,6 +35,43 @@ const selectedSkills = ref<number[]>([]);
 const location = reactive({ municipality: '', neighborhood: '', latitude: null as number | null, longitude: null as number | null, service_radius_m: 5000, accept_location: false });
 const verification = reactive({ document_number: '', files: [] as File[] });
 const verificationStatus = ref('unverified');
+
+interface Suggestion {
+    id: number;
+    name: string;
+    status: 'pending' | 'approved' | 'rejected';
+    skill: { id: number; name: string } | null;
+    review_note: string | null;
+}
+const suggestions = ref<Suggestion[]>([]);
+const otherSkill = ref('');
+const suggesting = ref(false);
+
+async function loadSuggestions(): Promise<void> {
+    suggestions.value = (await api.get<{ data: Suggestion[] }>('/me/trainer-profile/skill-suggestions')).data;
+}
+
+async function suggestSkill(): Promise<void> {
+    if (otherSkill.value.trim().length < 3) {
+        errors.value = { other: 'Escreva o nome da área (pelo menos 3 caracteres).' };
+        return;
+    }
+    suggesting.value = true;
+    errors.value = {};
+    try {
+        const { data } = await api.post<{ data: Suggestion }>('/me/trainer-profile/skill-suggestions', { name: otherSkill.value.trim() });
+        // Já existia na lista: fica selecionada
+        if (data.status === 'approved' && data.skill && !selectedSkills.value.includes(data.skill.id)) {
+            selectedSkills.value = [...selectedSkills.value, data.skill.id];
+        }
+        otherSkill.value = '';
+        await loadSuggestions();
+    } catch (error) {
+        errors.value = { other: error instanceof ApiError ? (Object.values(error.fieldErrors())[0] ?? error.message) : 'Sem ligação. Tente de novo.' };
+    } finally {
+        suggesting.value = false;
+    }
+}
 const page = usePage();
 const photo = ref<string | null>(page.props.auth.user?.photo_url ?? null);
 
@@ -65,6 +102,7 @@ onMounted(async () => {
         service_radius_m: data.service_radius_m,
     });
     verificationStatus.value = data.verification_status;
+    await loadSuggestions();
 });
 
 async function save(action: () => Promise<unknown>): Promise<boolean> {
@@ -90,7 +128,7 @@ async function next(): Promise<void> {
     }
     const actions = [
         () => api.put('/me/trainer-profile/details', details),
-        () => api.put('/me/trainer-profile/skills', { skill_ids: selectedSkills.value }),
+        () => (selectedSkills.value.length === 0 && suggestions.value.some((x) => x.status === 'pending') ? Promise.resolve() : api.put('/me/trainer-profile/skills', { skill_ids: selectedSkills.value })),
         () => api.put('/me/trainer-profile/location', location),
         () => submitVerification(),
     ];
@@ -208,6 +246,27 @@ function submitVerification(): Promise<unknown> {
                 </div>
             </section>
             <p v-if="errors.skill_ids" class="text-caption text-danger">{{ errors.skill_ids }}</p>
+
+            <section class="card grid gap-2">
+                <h2 class="font-semibold">Não encontra a sua área?</h2>
+                <p class="text-caption text-ink-muted">Escreva-a. A LONGA analisa e, se aprovar, passa a receber pedidos dessa área.</p>
+                <div class="flex gap-2">
+                    <input v-model="otherSkill" class="input flex-1" maxlength="80" placeholder="Ex.: Contabilidade no Primavera" @keydown.enter.prevent="suggestSkill" />
+                    <button type="button" class="btn-secondary min-h-12 px-4" :disabled="suggesting" @click="suggestSkill">Sugerir</button>
+                </div>
+                <p v-if="errors.other" class="text-caption text-danger" role="alert">{{ errors.other }}</p>
+                <ul v-if="suggestions.length" class="grid gap-1 text-caption">
+                    <li v-for="item in suggestions" :key="item.id" class="flex items-center justify-between gap-2 rounded-control bg-navy-50 px-3 py-2">
+                        <span class="truncate">{{ item.name }}<template v-if="item.status === 'approved' && item.skill && item.skill.name !== item.name"> → {{ item.skill.name }}</template></span>
+                        <span class="badge shrink-0" :class="{ 'badge-warning': item.status === 'pending', 'badge-success': item.status === 'approved', 'badge-neutral': item.status === 'rejected' }">
+                            {{ item.status === 'pending' ? 'Em análise' : item.status === 'approved' ? 'Aprovada' : 'Não aprovada' }}
+                        </span>
+                    </li>
+                </ul>
+                <p v-if="selectedSkills.length === 0 && suggestions.some((x) => x.status === 'pending')" class="text-caption text-ink-muted">
+                    Pode continuar: começa a receber pedidos quando a área for aprovada.
+                </p>
+            </section>
         </template>
 
         <!-- 3. Local -->

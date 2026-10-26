@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import AppIcon from '@/components/AppIcon.vue';
 import FormField from '@/components/FormField.vue';
+import LocationPicker from '@/components/LocationPicker.vue';
 import PhotoPicker from '@/components/PhotoPicker.vue';
-import { useGeolocation } from '@/composables/useGeolocation';
 import { api, ApiError } from '@/lib/api';
 import type { Skill, Zone } from '@/types/global';
 import { Head, router, usePage } from '@inertiajs/vue3';
@@ -75,8 +74,6 @@ async function suggestSkill(): Promise<void> {
 const page = usePage();
 const photo = ref<string | null>(page.props.auth.user?.photo_url ?? null);
 
-const geo = useGeolocation();
-const zoneKey = ref('');
 
 const skillsByCategory = computed(() => {
     const groups: Record<string, Skill[]> = {};
@@ -147,25 +144,6 @@ function toggleSkill(id: number): void {
 
 function toggleModality(value: string): void {
     details.modalities = details.modalities.includes(value) ? details.modalities.filter((m) => m !== value) : [...details.modalities, value];
-}
-
-async function useMyLocation(): Promise<void> {
-    await geo.locate();
-    if (geo.coords.value) {
-        location.latitude = geo.coords.value.latitude;
-        location.longitude = geo.coords.value.longitude;
-    }
-}
-
-function chooseZone(): void {
-    const zone = props.zones.find((z) => `${z.municipality}|${z.neighborhood}` === zoneKey.value);
-    if (zone) {
-        Object.assign(location, { municipality: zone.municipality, neighborhood: zone.neighborhood });
-        if (geo.status.value !== 'ok') {
-            location.latitude = zone.lat;
-            location.longitude = zone.lng;
-        }
-    }
 }
 
 function onFiles(event: Event): void {
@@ -273,25 +251,9 @@ function submitVerification(): Promise<unknown> {
         <template v-else-if="step === 2">
             <h1 class="text-title">Onde dá aulas?</h1>
             <p class="-mt-3 text-caption text-ink-muted">
-                Usamos a localização só para lhe enviar pedidos perto de si. Os alunos veem apenas o bairro, nunca a sua morada.
+                Usamos a localização só para lhe enviar pedidos perto de si. Marque no mapa o ponto de onde parte (pode ser aproximado). Os alunos veem apenas o bairro, nunca o ponto.
             </p>
-            <button type="button" class="btn-secondary w-full" :disabled="geo.status.value === 'locating'" @click="useMyLocation">
-                <AppIcon name="map-pin" :size="20" />
-                {{ geo.status.value === 'locating' ? 'A obter localização…' : 'Usar a minha localização' }}
-            </button>
-            <p v-if="geo.status.value === 'ok'" class="text-caption text-success">Localização obtida (precisão ~{{ geo.coords.value?.accuracy }} m).</p>
-            <p v-else-if="geo.status.value === 'denied'" class="text-caption text-warning">Sem permissão de localização. Escolha a zona abaixo.</p>
-            <p v-else-if="geo.status.value === 'unavailable'" class="text-caption text-warning">Não foi possível obter a localização. Escolha a zona abaixo.</p>
-
-            <FormField label="Zona" for="zone" :error="errors.municipality || errors.neighborhood">
-                <select id="zone" v-model="zoneKey" class="input" @change="chooseZone">
-                    <option value="" disabled>Escolha o bairro</option>
-                    <option v-for="zone in zones" :key="`${zone.municipality}|${zone.neighborhood}`" :value="`${zone.municipality}|${zone.neighborhood}`">
-                        {{ zone.neighborhood }} ({{ zone.municipality }})
-                    </option>
-                </select>
-            </FormField>
-            <p v-if="errors.latitude" class="text-caption text-danger">{{ errors.latitude }}</p>
+            <LocationPicker :value="location" :zones="zones" :radius-m="location.service_radius_m" :errors="errors" />
 
             <FormField :label="`Raio de atuação: ${(location.service_radius_m / 1000).toFixed(0)} km`" for="radius">
                 <input id="radius" v-model.number="location.service_radius_m" type="range" min="1000" max="20000" step="1000" class="accent-orange-500" />

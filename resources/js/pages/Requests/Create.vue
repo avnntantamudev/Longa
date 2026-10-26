@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import AppIcon from '@/components/AppIcon.vue';
+import LocationPicker from '@/components/LocationPicker.vue';
 import FormField from '@/components/FormField.vue';
-import { useGeolocation } from '@/composables/useGeolocation';
 import { api, ApiError } from '@/lib/api';
 import { kwanza, toLocalInput } from '@/lib/format';
 import type { Skill, Zone } from '@/types/global';
@@ -30,8 +29,6 @@ const form = reactive({
 });
 const errors = ref<Record<string, string>>({});
 const saving = ref(false);
-const geo = useGeolocation();
-const zoneKey = ref('');
 
 const minDate = toLocalInput(new Date(Date.now() + props.minLeadMinutes * 60_000));
 const hasLocation = computed(() => form.latitude !== null && form.neighborhood !== '');
@@ -40,35 +37,6 @@ function onSkill(): void {
     const skill = props.skills.find((s) => s.id === form.skill_id);
     if (skill && form.title === '') {
         form.title = `Aula de ${skill.name.split(' — ')[0]}`;
-    }
-}
-
-async function useMyLocation(): Promise<void> {
-    await geo.locate();
-    if (geo.coords.value) {
-        form.latitude = geo.coords.value.latitude;
-        form.longitude = geo.coords.value.longitude;
-        // Bairro mais próximo das zonas conhecidas (o aluno pode corrigir)
-        const nearest = [...props.zones].sort(
-            (a, b) => Math.hypot(a.lat - form.latitude!, a.lng - form.longitude!) - Math.hypot(b.lat - form.latitude!, b.lng - form.longitude!),
-        )[0];
-        if (nearest) {
-            zoneKey.value = `${nearest.municipality}|${nearest.neighborhood}`;
-            form.municipality = nearest.municipality;
-            form.neighborhood = nearest.neighborhood;
-        }
-    }
-}
-
-function chooseZone(): void {
-    const zone = props.zones.find((z) => `${z.municipality}|${z.neighborhood}` === zoneKey.value);
-    if (zone) {
-        form.municipality = zone.municipality;
-        form.neighborhood = zone.neighborhood;
-        if (geo.status.value !== 'ok') {
-            form.latitude = zone.lat;
-            form.longitude = zone.lng;
-        }
     }
 }
 
@@ -153,22 +121,8 @@ async function submit(): Promise<void> {
         <fieldset class="card grid gap-3">
             <legend class="sr-only">Local</legend>
             <p class="font-semibold">Onde vai ser a aula?</p>
-            <p class="-mt-2 text-caption text-ink-muted">Os formadores só veem o bairro e a distância aproximada até aceitarem.</p>
-            <button type="button" class="btn-secondary w-full" :disabled="geo.status.value === 'locating'" @click="useMyLocation">
-                <AppIcon name="map-pin" :size="20" />
-                {{ geo.status.value === 'locating' ? 'A obter localização…' : 'Usar a minha localização' }}
-            </button>
-            <p v-if="geo.status.value === 'denied' || geo.status.value === 'unavailable'" class="text-caption text-warning">
-                Não foi possível usar a localização. Escolha o bairro abaixo.
-            </p>
-            <FormField label="Bairro" for="zone" :error="errors.neighborhood || errors.latitude">
-                <select id="zone" v-model="zoneKey" class="input" @change="chooseZone">
-                    <option value="" disabled>Escolha o bairro</option>
-                    <option v-for="zone in zones" :key="`${zone.municipality}|${zone.neighborhood}`" :value="`${zone.municipality}|${zone.neighborhood}`">
-                        {{ zone.neighborhood }} ({{ zone.municipality }})
-                    </option>
-                </select>
-            </FormField>
+            <p class="-mt-2 text-caption text-ink-muted">Marque o local no mapa. Os formadores só veem o bairro e a distância aproximada até aceitarem.</p>
+            <LocationPicker :value="form" :zones="zones" :errors="errors" />
         </fieldset>
 
         <p v-if="form.amount" class="text-caption text-ink-muted">

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Requests\Services;
 
+use App\Support\Settings\PlatformSettings;
+
 /**
  * Comissão LONGA, descontada ao formador (decisão do cliente, docs/decisions.md).
  * Tudo em Kz inteiros; a comissão arredonda ao Kz, meio para cima.
@@ -17,7 +19,7 @@ final class Commission
      */
     public static function split(int $amount, ?int $percent = null): array
     {
-        $percent ??= (int) config('longa.requests.commission_percent');
+        $percent ??= app(PlatformSettings::class)->int('commission_percent');
         $commission = intdiv($amount * $percent + 50, 100);
 
         return ['amount' => $amount, 'commission' => $commission, 'trainer_net' => $amount - $commission];

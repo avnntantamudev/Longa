@@ -112,6 +112,22 @@ return [
         'mask_contacts' => (bool) env('LONGA_CHAT_MASK_CONTACTS', true),
     ],
 
+    // Formador VIP (subscrição anual). Valores por omissão: o admin muda-os em Backoffice → Definições.
+    'vip' => [
+        'price' => (int) env('LONGA_VIP_PRICE', 50000),
+        'commission_percent' => (int) env('LONGA_VIP_COMMISSION_PERCENT', 10),
+        'duration_days' => (int) env('LONGA_VIP_DURATION_DAYS', 365),
+        // Avisos antes de a subscrição terminar (dias)
+        'reminder_days' => [30, 7, 1],
+    ],
+
+    // Pedidos para outro dia (não hoje): ficam abertos até X horas antes da aula
+    'scheduled_requests' => [
+        'close_hours_before' => (int) env('LONGA_SCHEDULED_CLOSE_HOURS', 2),
+        // Máximo de formadores avisados por push num pedido agendado (os restantes veem-no na lista)
+        'max_push' => (int) env('LONGA_SCHEDULED_MAX_PUSH', 50),
+    ],
+
     // Foto de perfil obrigatória para formadores. Os formadores registados antes desta regra
     // continuam a receber pedidos sem foto até esta data (aviso na app).
     'trainers' => [

@@ -9,6 +9,7 @@ use App\Modules\Requests\Models\RequestOffer;
 use App\Modules\Requests\Models\TrainingRequest;
 use App\Modules\Users\Http\Resources\SkillResource;
 use App\Modules\Users\Models\Skill;
+use App\Support\Settings\PlatformSettings;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -25,7 +26,7 @@ class PageController extends Controller
             'zones' => config('locations.zones'),
             'minAmount' => (int) config('longa.requests.min_amount'),
             'minLeadMinutes' => (int) config('longa.requests.min_lead_minutes'),
-            'commissionPercent' => (int) config('longa.requests.commission_percent'),
+            'commissionPercent' => app(PlatformSettings::class)->int('commission_percent'),
         ]);
     }
 

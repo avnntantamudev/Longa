@@ -36,6 +36,7 @@ class StudentRequestResource extends JsonResource
             'neighborhood' => $this->neighborhood,
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,
+            'scheduled' => $this->scheduled,
             'expires_at' => $this->expires_at?->toIso8601String(),
             'seconds_left' => $this->expires_at ? max(0, (int) now()->diffInSeconds($this->expires_at, false)) : null,
             'wave' => $this->wave,

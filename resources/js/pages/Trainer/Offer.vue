@@ -27,6 +27,8 @@ interface Offer {
     neighborhood: string;
     distance_m: number;
     seconds_left: number;
+    scheduled: boolean;
+    expires_at: string;
     session_id?: number | null;
 }
 
@@ -129,7 +131,8 @@ onMounted(() => {
             </div>
 
             <div class="mt-5 flex justify-center">
-                <CountdownRing v-if="isOpen" :seconds="countdown.secondsLeft.value" />
+                <CountdownRing v-if="isOpen && !offer.scheduled" :seconds="countdown.secondsLeft.value" />
+                <p v-else-if="isOpen" class="rounded-full bg-white/10 px-4 py-2 text-caption">Pedido agendado · aceite até {{ when(offer.expires_at) }}</p>
             </div>
 
             <div v-if="zone && offer.modality !== 'online'" class="mt-4">

@@ -11,6 +11,7 @@ use App\Modules\Requests\Services\Commission;
 use App\Modules\Users\Models\User;
 use App\Support\Api\ApiException;
 use App\Support\Audit\AuditLogger;
+use App\Support\Settings\PlatformSettings;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -46,6 +47,7 @@ class CreateTrainingRequest
                 'republished_from_id' => $republishedFrom?->id,
             ]);
             $request->student_id = $student->id;
+            $request->scheduled = $this->isScheduled($scheduledAt);
             $request->save();
 
             return $request;
@@ -85,5 +87,16 @@ class CreateTrainingRequest
         if ($duplicate) {
             throw new ApiException('duplicate_request', 'Já tem um pedido igual para essa altura.', 409);
         }
+    }
+
+    /**
+     * Outro dia (não hoje, hora de Angola) e com o fecho (X h antes) ainda bem no futuro.
+     */
+    private function isScheduled(Carbon $scheduledAt): bool
+    {
+        $closeAt = $scheduledAt->copy()->subHours(app(PlatformSettings::class)->int('scheduled_request_close_hours'));
+
+        return ! $scheduledAt->copy()->setTimezone('Africa/Luanda')->isSameDay(now('Africa/Luanda'))
+            && $closeAt->gt(now()->addSeconds((int) config('longa.requests.ttl')));
     }
 }

@@ -41,7 +41,7 @@ class NewOfferNotification extends Notification implements ShouldQueue, SmsNotif
 
         if ($notifiable->pushSubscriptions()->exists()) {
             $channels[] = WebPushChannel::class;
-        } elseif ($this->allowSmsFallback($notifiable)) {
+        } elseif (! $this->offer->request->scheduled && $this->allowSmsFallback($notifiable)) {
             $channels[] = SmsChannel::class;
         }
 
@@ -94,6 +94,10 @@ class NewOfferNotification extends Notification implements ShouldQueue, SmsNotif
     private function headline(): string
     {
         $request = $this->offer->request;
+
+        if ($request->scheduled) {
+            return 'Pedido para '.Formats::when($request->scheduled_at).': '.$request->skill->name.' '.Formats::kwanza($request->amount);
+        }
 
         return 'Novo pedido a '.Formats::distance($this->offer->distance_m).': '.$request->skill->name.' '.Formats::kwanza($request->amount);
     }

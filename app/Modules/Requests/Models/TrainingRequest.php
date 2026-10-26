@@ -29,6 +29,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property string $title
  * @property string|null $description
  * @property int $amount
+ * @property bool $scheduled
  * @property int $commission
  * @property int $trainer_net
  * @property \Illuminate\Support\Carbon $scheduled_at
@@ -82,6 +83,7 @@ class TrainingRequest extends Model
             'longitude' => 'float',
             'amount' => 'integer',
             'commission' => 'integer',
+            'scheduled' => 'boolean',
             'trainer_net' => 'integer',
         ];
     }

@@ -31,7 +31,7 @@ class TrainerMatcher
      * @param  list<int>  $excludeTrainerIds
      * @return list<MatchCandidate>
      */
-    public function candidates(TrainingRequest $request, int $limit, array $excludeTrainerIds = []): array
+    public function candidates(TrainingRequest $request, int $limit, array $excludeTrainerIds = [], bool $scheduled = false): array
     {
         $config = config('longa.matching');
         $radius = (int) $config['radius_m'];
@@ -83,10 +83,20 @@ class TrainerMatcher
             $query->selectRaw('(tp.score / 100) as rank_score')
                 ->orderByDesc('rank_score');
         } else {
+            if ($scheduled) {
+                // Outro dia: dentro do raio, ou VIP da mesma província (qualquer distância)
+                $query->whereRaw(
+                    "(ST_Distance_Sphere(tp.location, {$point}) <= LEAST(?, tp.service_radius_m) OR (tp.province = ? AND EXISTS(SELECT 1 FROM trainer_subscriptions vs WHERE vs.trainer_profile_id = tp.id AND vs.status = 'active' AND vs.starts_at <= ? AND vs.ends_at > ?)))",
+                    [...$pointBindings, $radius, $request->province, now(), now()],
+                );
+            } else {
+                $query
+                    // Pré-filtro pelo índice SPATIAL (retângulo do círculo) e depois a distância real
+                    ->whereRaw("MBRContains(ST_Buffer({$point}, ?), tp.location)", [...$pointBindings, $radius])
+                    ->whereRaw("ST_Distance_Sphere(tp.location, {$point}) <= LEAST(?, tp.service_radius_m)", [...$pointBindings, $radius]);
+            }
+
             $query
-                // Pré-filtro pelo índice SPATIAL (retângulo do círculo) e depois a distância real
-                ->whereRaw("MBRContains(ST_Buffer({$point}, ?), tp.location)", [...$pointBindings, $radius])
-                ->whereRaw("ST_Distance_Sphere(tp.location, {$point}) <= LEAST(?, tp.service_radius_m)", [...$pointBindings, $radius])
                 ->selectRaw(
                     "(? * tp.score / 100 + ? * (1 - ST_Distance_Sphere(tp.location, {$point}) / ?)) as rank_score",
                     [$weightScore, $weightDistance, ...$pointBindings, $radius],

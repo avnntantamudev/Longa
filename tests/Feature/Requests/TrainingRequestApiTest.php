@@ -16,6 +16,8 @@ use Database\Factories\TrainerProfileFactory;
 use Illuminate\Support\Facades\Event;
 
 beforeEach(function () {
+    // TRIM TRIM do próprio dia (pedidos para outro dia têm testes próprios em ScheduledRequestsTest)
+    $this->travelTo(now()->setTime(8, 0));
     Event::fake([OfferSent::class, RequestExpired::class, RequestCancelled::class]);
     $this->sgme = Skill::query()->where('slug', 'sgme-gestao-empresarial')->firstOrFail();
     $this->student = User::factory()->withRole(Role::Student)->create();
@@ -30,7 +32,7 @@ function payload(array $overrides = []): array
         'title' => 'Aula de SGME',
         'description' => 'Rever controlo e monitorização.',
         'amount' => 25000,
-        'scheduled_at' => now()->addDay()->setTime(14, 0)->toIso8601String(),
+        'scheduled_at' => now()->setTime(14, 0)->toIso8601String(),
         'modality' => 'in_person',
         'municipality' => 'Talatona',
         'neighborhood' => 'Talatona',
@@ -106,7 +108,7 @@ it('deteta pedidos duplicados', function () {
     apiLogin($this->student);
 
     $this->postJson('/api/v1/training-requests', payload())->assertCreated();
-    $this->postJson('/api/v1/training-requests', payload(['scheduled_at' => now()->addDay()->setTime(15, 0)->toIso8601String()]))
+    $this->postJson('/api/v1/training-requests', payload(['scheduled_at' => now()->setTime(15, 0)->toIso8601String()]))
         ->assertStatus(409)
         ->assertJsonPath('error.code', 'duplicate_request');
 });

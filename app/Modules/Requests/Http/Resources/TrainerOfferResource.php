@@ -29,6 +29,7 @@ class TrainerOfferResource extends JsonResource
             'id' => $this->id,
             'state' => $this->state->value,
             'request_id' => $trainingRequest->id,
+            'scheduled' => $trainingRequest->scheduled,
             'title' => $trainingRequest->title,
             'description' => $trainingRequest->description,
             'skill' => $trainingRequest->skill->name,

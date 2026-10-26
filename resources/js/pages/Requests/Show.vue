@@ -19,6 +19,8 @@ interface TrainingRequest {
     scheduled_at: string;
     neighborhood: string;
     seconds_left: number | null;
+    scheduled: boolean;
+    expires_at: string | null;
     wave: number;
     open_offers: number;
     session_id: number | null;
@@ -94,11 +96,14 @@ async function republish(): Promise<void> {
                 <span class="absolute inset-3 rounded-full bg-orange-500/20" />
                 <span class="relative inline-flex size-16 items-center justify-center rounded-full bg-orange-500"><AppIcon name="search" :size="30" /></span>
             </div>
-            <h1 class="mt-6 text-title">A procurar formadores perto de si…</h1>
+            <h1 class="mt-6 text-title">{{ request.scheduled ? 'Pedido enviado aos formadores' : 'A procurar formadores perto de si…' }}</h1>
             <p class="mt-1 text-navy-200">
                 {{ request.open_offers > 0 ? `${request.open_offers} formador(es) a ver o seu pedido agora` : 'A preparar o próximo envio' }}
             </p>
-            <p class="mt-4 text-caption text-navy-300">Tempo restante {{ minutesLeft }} · envio {{ request.wave }}</p>
+            <p v-if="request.scheduled" class="mt-4 text-caption text-navy-300">
+                Aula noutro dia: formadores perto de si e formadores VIP da província podem aceitar até {{ request.expires_at ? when(request.expires_at) : '' }}. Avisamos quando alguém aceitar.
+            </p>
+            <p v-else class="mt-4 text-caption text-navy-300">Tempo restante {{ minutesLeft }} · envio {{ request.wave }}</p>
         </section>
 
         <!-- Sem formadores -->

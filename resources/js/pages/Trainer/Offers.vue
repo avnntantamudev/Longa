@@ -4,7 +4,7 @@ import { usePolling, usePrivateChannel } from '@/composables/useRealtime';
 import { api, ApiError } from '@/lib/api';
 import { distance, kwanza, when } from '@/lib/format';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 interface Offer {
     id: number;
@@ -16,10 +16,14 @@ interface Offer {
     neighborhood: string;
     distance_m: number;
     seconds_left: number;
+    scheduled: boolean;
+    expires_at: string;
 }
 
 const page = usePage();
 const offers = ref<Offer[]>([]);
+const now = computed(() => offers.value.filter((o) => !o.scheduled));
+const scheduled = computed(() => offers.value.filter((o) => o.scheduled));
 const available = ref<boolean | null>(null);
 const availabilityError = ref<string | null>(null);
 
@@ -86,9 +90,9 @@ onMounted(() => Promise.all([load(), loadProfile()]));
     </div>
 
     <h2 class="mt-6 text-title">Pedidos em aberto</h2>
-    <p v-if="offers.length === 0" class="card mt-3 text-ink-muted">Sem pedidos neste momento. Quando chegar um, abre aqui automaticamente.</p>
+    <p v-if="now.length === 0" class="card mt-3 text-ink-muted">Sem pedidos neste momento. Quando chegar um, abre aqui automaticamente.</p>
     <ul class="mt-3 grid gap-3">
-        <li v-for="offer in offers" :key="offer.id">
+        <li v-for="offer in now" :key="offer.id">
             <Link :href="`/formador/ofertas/${offer.id}`" class="card flex items-center gap-3">
                 <div class="min-w-0 flex-1">
                     <p class="font-semibold">{{ offer.skill }} · {{ kwanza(offer.amount) }}</p>
@@ -98,4 +102,20 @@ onMounted(() => Promise.all([load(), loadProfile()]));
             </Link>
         </li>
     </ul>
+
+    <template v-if="scheduled.length">
+        <h2 class="mt-6 text-title">Pedidos agendados</h2>
+        <p class="mt-1 text-caption text-ink-muted">Aulas para outro dia. O primeiro formador a aceitar fica com a aula.</p>
+        <ul class="mt-3 grid gap-3">
+            <li v-for="offer in scheduled" :key="offer.id">
+                <Link :href="`/formador/ofertas/${offer.id}`" class="card flex items-center gap-3">
+                    <div class="min-w-0 flex-1">
+                        <p class="font-semibold">{{ offer.skill }} · {{ kwanza(offer.trainer_net) }} para si</p>
+                        <p class="text-caption text-ink-muted">{{ when(offer.scheduled_at) }} · {{ offer.neighborhood }} · {{ distance(offer.distance_m) }}</p>
+                    </div>
+                    <span class="badge badge-neutral shrink-0">até {{ when(offer.expires_at) }}</span>
+                </Link>
+            </li>
+        </ul>
+    </template>
 </template>

@@ -136,3 +136,19 @@ sequenceDiagram
   `released` → `completed`, `refunded` → `refunded`, `partially_refunded` (parte do formador entre 1 Kz e valor − 1) →
   `partially_refunded`. Disputa e aula são bloqueadas (`FOR UPDATE`); uma segunda decisão diferente recebe 409
   `dispute_already_resolved` e não move dinheiro. A liquidação usa a chave de ledger `escrow:settle:session:{id}`.
+
+## Pedidos para outro dia (agendados)
+
+Um pedido é **agendado** quando a aula não é hoje (hora de Angola) e o fecho ainda está longe.
+
+| | Hoje (TRIM TRIM) | Outro dia (agendado) |
+|---|---|---|
+| Quem recebe | formadores a 5 km, em ondas (10, depois 15), VIP primeiro | formadores a 5 km **e** VIP da mesma província, todos de uma vez |
+| Prazo da oferta | 60 s | até ao fecho do pedido |
+| Fecho do pedido | 5 min | X h antes da aula (Definições, por omissão 2 h) |
+| Sem candidatos | expira logo | espera; a cada 10 min entram formadores que ficaram elegíveis |
+| Notificação | push (SMS se não houver push) | push para os primeiros 50 (VIP primeiro), sem SMS; os outros veem em "Pedidos agendados" |
+| Oferta que vence | conta para a pontuação | não penaliza |
+
+O aceitar é o mesmo nos dois casos (bloqueio do pedido: só um formador fica com a aula).
+

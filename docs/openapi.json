@@ -6525,6 +6525,9 @@
                     "longitude": {
                         "type": "number"
                     },
+                    "scheduled": {
+                        "type": "boolean"
+                    },
                     "expires_at": {
                         "type": [
                             "string",
@@ -6576,6 +6579,7 @@
                     "neighborhood",
                     "latitude",
                     "longitude",
+                    "scheduled",
                     "expires_at",
                     "seconds_left",
                     "wave",
@@ -6754,6 +6758,9 @@
                     "request_id": {
                         "type": "integer"
                     },
+                    "scheduled": {
+                        "type": "boolean"
+                    },
                     "title": {
                         "type": "string"
                     },
@@ -6817,6 +6824,7 @@
                     "id",
                     "state",
                     "request_id",
+                    "scheduled",
                     "title",
                     "description",
                     "skill",

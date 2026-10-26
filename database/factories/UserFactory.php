@@ -22,7 +22,8 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'phone' => '+2449'.fake()->unique()->numerify('########'),
+            // Último dígito nunca 0: telefones terminados em 0000 são recusados pelo gateway simulado
+            'phone' => '+2449'.fake()->unique()->numerify('#######').fake()->numberBetween(1, 9),
             'phone_verified_at' => now(),
             'name' => fake()->name(),
             'email' => null,

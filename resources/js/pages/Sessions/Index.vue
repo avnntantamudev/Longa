@@ -2,6 +2,7 @@
 import { api } from '@/lib/api';
 import { kwanza, when } from '@/lib/format';
 import { stateBadge } from '@/lib/session';
+import UserAvatar from '@/components/UserAvatar.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed, onMounted, ref } from 'vue';
 
@@ -16,8 +17,8 @@ interface Session {
     amount: number;
     trainer_net?: number;
     role: 'student' | 'trainer';
-    trainer?: { name: string };
-    student?: { name: string };
+    trainer?: { name: string; photo_thumb_url: string | null };
+    student?: { name: string; photo_thumb_url: string | null };
 }
 
 const page = usePage();
@@ -43,7 +44,10 @@ onMounted(async () => {
     <ul v-else class="mt-6 grid gap-3">
         <li v-for="session in sessions" :key="session.id">
             <Link :href="`/aulas/${session.id}`" class="card flex items-center gap-3">
-                <span class="avatar-initials">{{ (session.role === 'student' ? session.trainer?.name : session.student?.name)?.slice(0, 2).toUpperCase() }}</span>
+                <UserAvatar
+                    :name="session.role === 'student' ? session.trainer?.name : session.student?.name"
+                    :src="session.role === 'student' ? session.trainer?.photo_thumb_url : session.student?.photo_thumb_url"
+                />
                 <div class="min-w-0 flex-1">
                     <p class="truncate font-semibold">{{ session.title }}</p>
                     <p class="text-caption text-ink-muted">

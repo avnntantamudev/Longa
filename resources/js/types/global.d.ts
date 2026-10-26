@@ -8,6 +8,8 @@ export interface AuthUser {
     id: number;
     name: string | null;
     phone: string;
+    photo_url: string | null;
+    photo_thumb_url: string | null;
     roles: RoleName[];
     needs_onboarding: boolean;
 }

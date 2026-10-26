@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AppIcon from '@/components/AppIcon.vue';
 import BrandLogo from '@/components/BrandLogo.vue';
+import UserAvatar from '@/components/UserAvatar.vue';
 import InstallPrompt from '@/components/InstallPrompt.vue';
 import NetworkStatus from '@/components/NetworkStatus.vue';
 import UpdatePrompt from '@/components/UpdatePrompt.vue';
@@ -51,7 +52,10 @@ function isActive(item: NavItem): boolean {
             </nav>
             <div class="mt-auto p-6">
                 <Link v-if="!user" href="/entrar" class="btn-primary w-full">Entrar</Link>
-                <p v-else class="truncate text-caption text-navy-200">{{ user.name ?? user.phone }}</p>
+                <Link v-else href="/perfil" class="flex items-center gap-3">
+                    <UserAvatar :name="user.name" :src="user.photo_thumb_url" :size="36" />
+                    <span class="truncate text-caption text-navy-200">{{ user.name ?? user.phone }}</span>
+                </Link>
             </div>
         </aside>
 

@@ -56,10 +56,11 @@ class SessionResource extends JsonResource
             'trainer_net' => $this->when($isTrainer, $this->trainer_net),
             'role' => $isTrainer ? 'trainer' : 'student',
             'conversation_id' => $this->conversation?->id,
-            'student' => $this->when($isTrainer, fn () => ['name' => $this->student->name]),
+            'student' => $this->when($isTrainer, fn () => ['name' => $this->student->name, ...$this->student->photoUrls()]),
             'trainer' => $this->when(! $isTrainer, fn () => [
                 'id' => $this->trainer->id,
                 'name' => $this->trainer->user->name,
+                ...$this->trainer->user->photoUrls(),
                 'bio' => $this->trainer->bio,
                 'years_experience' => $this->trainer->years_experience,
                 'neighborhood' => $this->trainer->neighborhood,

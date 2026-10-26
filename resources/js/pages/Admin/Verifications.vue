@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import UserAvatar from '@/components/UserAvatar.vue';
 import { api } from '@/lib/api';
 import { Head } from '@inertiajs/vue3';
 import { onMounted, ref } from 'vue';
@@ -9,7 +10,7 @@ interface Verification {
     document_number_masked: string | null;
     documents_count: number;
     created_at: string;
-    user?: { id: number; name: string | null };
+    user?: { id: number; name: string | null; photo_url: string | null };
 }
 
 const items = ref<Verification[]>([]);
@@ -49,7 +50,7 @@ onMounted(load);
     <ul v-else class="mt-6 grid gap-3">
         <li v-for="item in items" :key="item.id" class="card">
             <div class="flex items-center gap-3">
-                <span class="avatar-initials">{{ (item.user?.name ?? '?').slice(0, 2).toUpperCase() }}</span>
+                <UserAvatar :name="item.user?.name" :src="item.user?.photo_url" :size="56" />
                 <div class="min-w-0 flex-1">
                     <p class="font-semibold">{{ item.user?.name }}</p>
                     <p class="text-caption text-ink-muted">BI {{ item.document_number_masked }} · {{ item.documents_count }} documento(s)</p>

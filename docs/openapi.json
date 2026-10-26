@@ -3399,6 +3399,95 @@
                 }
             }
         },
+        "/me/photo": {
+            "post": {
+                "operationId": "me.photo",
+                "description": "JPG, PNG ou WebP at\u00e9 5 MB (tipo verificado pelo conte\u00fado). \u00c9 recortada em quadrado e recodificada;\nos metadados (incluindo GPS) s\u00e3o removidos.",
+                "summary": "Carregar ou trocar a foto (multipart, campo `photo`)",
+                "tags": [
+                    "Perfil",
+                    "Photo"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "photo": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "contentMediaType": "application/octet-stream",
+                                        "description": "Maximum file size: 5120 kilobytes."
+                                    }
+                                },
+                                "required": [
+                                    "photo"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`UserResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/UserResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "me.photo.destroy",
+                "summary": "Remover a foto",
+                "tags": [
+                    "Perfil",
+                    "Photo"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`UserResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/UserResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/me": {
             "patch": {
                 "operationId": "me.update",
@@ -5256,6 +5345,18 @@
                             "null"
                         ]
                     },
+                    "photo_url": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "photo_thumb_url": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "bio": {
                         "type": [
                             "string",
@@ -5323,6 +5424,8 @@
                 "required": [
                     "id",
                     "name",
+                    "photo_url",
+                    "photo_thumb_url",
                     "bio",
                     "years_experience",
                     "modalities",
@@ -5617,10 +5720,24 @@
                                     "string",
                                     "null"
                                 ]
+                            },
+                            "photo_url": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "photo_thumb_url": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
                             }
                         },
                         "required": [
-                            "name"
+                            "name",
+                            "photo_url",
+                            "photo_thumb_url"
                         ]
                     },
                     "trainer": {
@@ -5630,6 +5747,18 @@
                                 "type": "integer"
                             },
                             "name": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "photo_url": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "photo_thumb_url": {
                                 "type": [
                                     "string",
                                     "null"
@@ -5663,6 +5792,8 @@
                         "required": [
                             "id",
                             "name",
+                            "photo_url",
+                            "photo_thumb_url",
                             "bio",
                             "years_experience",
                             "neighborhood",
@@ -6354,6 +6485,18 @@
                             "null"
                         ]
                     },
+                    "photo_url": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "photo_thumb_url": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "status": {
                         "type": "string"
                     },
@@ -6400,6 +6543,8 @@
                     "name",
                     "phone",
                     "email",
+                    "photo_url",
+                    "photo_thumb_url",
                     "status",
                     "locale",
                     "roles",
@@ -6456,11 +6601,25 @@
                                     "string",
                                     "null"
                                 ]
+                            },
+                            "photo_url": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "photo_thumb_url": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
                             }
                         },
                         "required": [
                             "id",
-                            "name"
+                            "name",
+                            "photo_url",
+                            "photo_thumb_url"
                         ]
                     }
                 },

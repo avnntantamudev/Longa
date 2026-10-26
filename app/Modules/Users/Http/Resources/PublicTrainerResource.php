@@ -24,6 +24,7 @@ class PublicTrainerResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->user->name,
+            ...$this->user->photoUrls(),
             'bio' => $this->bio,
             'years_experience' => $this->years_experience,
             'modalities' => $this->modalities ?? [],

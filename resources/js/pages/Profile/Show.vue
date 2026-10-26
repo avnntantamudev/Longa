@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import PhotoPicker from '@/components/PhotoPicker.vue';
 import { api } from '@/lib/api';
 import type { RoleName } from '@/types/global';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
@@ -26,15 +27,6 @@ const verificationLabels: Record<string, string> = {
     rejected: 'Verificação rejeitada',
 };
 
-const initials = computed(() =>
-    (user.value?.name ?? '?')
-        .split(' ')
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((part) => part[0])
-        .join('')
-        .toUpperCase(),
-);
 
 function formatDate(value: string | null): string {
     return value ? new Intl.DateTimeFormat('pt-AO', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value)) : '—';
@@ -68,8 +60,8 @@ onMounted(async () => {
 <template>
     <Head title="Perfil" />
 
-    <section v-if="user" class="card flex items-center gap-4">
-        <span class="avatar-initials size-14 text-title">{{ initials }}</span>
+    <section v-if="user" class="card grid gap-4">
+        <PhotoPicker :name="user.name" :src="user.photo_url" :required="user.roles.includes('trainer')" />
         <div class="min-w-0 flex-1">
             <p class="truncate text-title">{{ user.name }}</p>
             <p class="text-caption text-ink-muted">{{ user.phone }}</p>

@@ -29,7 +29,7 @@ class VerificationResource extends JsonResource
             'rejection_reason' => $this->rejection_reason,
             'reviewed_at' => $this->reviewed_at?->toIso8601String(),
             'created_at' => $this->created_at->toIso8601String(),
-            'user' => $this->whenLoaded('user', fn () => ['id' => $this->user->id, 'name' => $this->user->name]),
+            'user' => $this->whenLoaded('user', fn () => ['id' => $this->user->id, 'name' => $this->user->name, ...$this->user->photoUrls()]),
         ];
     }
 }

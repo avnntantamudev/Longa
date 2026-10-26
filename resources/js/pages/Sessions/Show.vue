@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import ChatPanel from '@/components/ChatPanel.vue';
 import MiniMap from '@/components/MiniMap.vue';
+import UserAvatar from '@/components/UserAvatar.vue';
 import { usePolling, usePrivateChannel } from '@/composables/useRealtime';
 import { api, ApiError, newIdempotencyKey } from '@/lib/api';
 import { kwanza, when } from '@/lib/format';
@@ -25,15 +26,7 @@ const keys = new Map<SessionAction, string>();
 const meId = computed(() => page.props.auth.user?.id ?? 0);
 const isTrainer = computed(() => session.value?.role === 'trainer');
 const counterpart = computed(() => (session.value?.role === 'student' ? session.value.trainer?.name : session.value?.student?.name) ?? '');
-const initials = computed(() =>
-    counterpart.value
-        .split(' ')
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((p) => p[0])
-        .join('')
-        .toUpperCase(),
-);
+const counterpartPhoto = computed(() => (session.value?.role === 'student' ? session.value.trainer?.photo_url : session.value?.student?.photo_url) ?? null);
 const has = (action: SessionAction) => session.value?.actions.includes(action) ?? false;
 const late = computed(() => {
     if (!session.value) return false;
@@ -110,7 +103,7 @@ onMounted(load);
         <!-- Cartão do outro participante -->
         <section class="rounded-sheet bg-navy-900 p-5 text-white">
             <div class="flex items-center gap-4">
-                <span class="avatar-initials size-16 text-title">{{ initials }}</span>
+                <UserAvatar :name="counterpart" :src="counterpartPhoto" :size="64" />
                 <div class="min-w-0">
                     <p class="text-caption font-semibold text-orange-400">{{ session.role === 'student' ? 'Formador' : 'Aluno' }}</p>
                     <p class="truncate text-title">{{ counterpart }}</p>

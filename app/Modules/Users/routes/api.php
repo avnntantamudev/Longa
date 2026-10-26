@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Users\Http\Controllers\AvailabilityController;
 use App\Modules\Users\Http\Controllers\CatalogController;
 use App\Modules\Users\Http\Controllers\MeController;
+use App\Modules\Users\Http\Controllers\PhotoController;
 use App\Modules\Users\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -16,6 +17,8 @@ Route::get('trainers/{trainer}', [CatalogController::class, 'trainer'])->name('a
 Route::middleware(['auth:sanctum', 'auth.session'])->group(function () {
     Route::get('me', MeController::class)->name('api.me');
     Route::patch('me', [ProfileController::class, 'updateMe'])->name('api.me.update');
+    Route::post('me/photo', [PhotoController::class, 'store'])->middleware('throttle:10,1')->name('api.me.photo');
+    Route::delete('me/photo', [PhotoController::class, 'destroy'])->name('api.me.photo.destroy');
     Route::post('onboarding', [ProfileController::class, 'onboarding'])->name('api.onboarding');
 
     Route::put('me/student-profile', [ProfileController::class, 'updateStudent'])->name('api.me.student');

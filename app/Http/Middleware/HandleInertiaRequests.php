@@ -33,6 +33,7 @@ class HandleInertiaRequests extends Middleware
                 'user' => $user instanceof User ? [
                     'id' => $user->id,
                     'name' => $user->name,
+                    ...$user->photoUrls(),
                     'phone' => $user->phone,
                     'roles' => $user->getRoleNames()->all(),
                     'needs_onboarding' => $user->onboarded_at === null,

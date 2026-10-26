@@ -9,6 +9,7 @@ use App\Modules\Requests\Enums\RequestState;
 use App\Modules\Requests\Events\RequestMatched;
 use App\Modules\Requests\Models\RequestOffer;
 use App\Modules\Requests\Models\TrainingRequest;
+use App\Modules\Requests\Services\Commission;
 use App\Modules\Sessions\Enums\SessionState;
 use App\Modules\Sessions\Models\Conversation;
 use App\Modules\Sessions\Models\TrainingSession;
@@ -65,6 +66,9 @@ class AcceptOffer
 
             $this->ensureCanAccept($request, $offer);
 
+            // Comissão do formador que aceita (reduzida se for VIP), fixada nesta aula
+            $split = Commission::splitFor($request->amount, $offer->trainer_profile_id);
+
             $session = TrainingSession::query()->create([
                 'training_request_id' => $request->id,
                 'student_id' => $request->student_id,
@@ -72,8 +76,9 @@ class AcceptOffer
                 'skill_id' => $request->skill_id,
                 'title' => $request->title,
                 'amount' => $request->amount,
-                'commission' => $request->commission,
-                'trainer_net' => $request->trainer_net,
+                'commission' => $split['commission'],
+                'trainer_net' => $split['trainer_net'],
+                'commission_percent' => $split['percent'],
                 'scheduled_at' => $request->scheduled_at,
                 'duration_minutes' => $request->duration_minutes,
                 'ends_at' => $request->scheduled_at->copy()->addMinutes($request->duration_minutes),

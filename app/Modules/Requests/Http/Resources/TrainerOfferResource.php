@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Requests\Http\Resources;
 
 use App\Modules\Requests\Models\RequestOffer;
+use App\Modules\Requests\Services\Commission;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -22,6 +23,7 @@ class TrainerOfferResource extends JsonResource
     public function toArray(Request $request): array
     {
         $trainingRequest = $this->request;
+        $split = Commission::splitFor($trainingRequest->amount, $this->trainer_profile_id);
 
         return [
             'id' => $this->id,
@@ -31,8 +33,9 @@ class TrainerOfferResource extends JsonResource
             'description' => $trainingRequest->description,
             'skill' => $trainingRequest->skill->name,
             'amount' => $trainingRequest->amount,
-            'commission' => $trainingRequest->commission,
-            'trainer_net' => $trainingRequest->trainer_net,
+            'commission' => $split['commission'],
+            'commission_percent' => $split['percent'],
+            'trainer_net' => $split['trainer_net'],
             'scheduled_at' => $trainingRequest->scheduled_at->toIso8601String(),
             'modality' => $trainingRequest->modality,
             'province' => $trainingRequest->province,

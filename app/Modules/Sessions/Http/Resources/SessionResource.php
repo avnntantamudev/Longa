@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Sessions\Http\Resources;
 
+use App\Modules\Payments\Services\VipSubscriptions;
 use App\Modules\Sessions\Models\TrainingSession;
 use App\Modules\Sessions\Services\AvailableActions;
 use Illuminate\Http\Request;
@@ -55,6 +56,7 @@ class SessionResource extends JsonResource
             'amount' => $this->amount,
             'commission' => $this->when($isTrainer, $this->commission),
             'trainer_net' => $this->when($isTrainer, $this->trainer_net),
+            'commission_percent' => $this->when($isTrainer, $this->commission_percent),
             'role' => $isTrainer ? 'trainer' : 'student',
             'conversation_id' => $this->conversation?->id,
             'student' => $this->when($isTrainer, fn () => ['name' => $this->student->name, ...$this->student->photoUrls()]),
@@ -66,6 +68,7 @@ class SessionResource extends JsonResource
                 'years_experience' => $this->trainer->years_experience,
                 'neighborhood' => $this->trainer->neighborhood,
                 'verified' => $this->trainer->isVerified(),
+                'vip' => app(VipSubscriptions::class)->isVip($this->trainer),
                 'score' => $this->trainer->score,
             ]),
             'created_at' => $this->created_at->toIso8601String(),

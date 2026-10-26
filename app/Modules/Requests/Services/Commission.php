@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Requests\Services;
 
+use App\Modules\Payments\Services\VipSubscriptions;
+use App\Modules\Users\Models\TrainerProfile;
 use App\Support\Settings\PlatformSettings;
 
 /**
@@ -23,5 +25,27 @@ final class Commission
         $commission = intdiv($amount * $percent + 50, 100);
 
         return ['amount' => $amount, 'commission' => $commission, 'trainer_net' => $amount - $commission];
+    }
+
+    /**
+     * Percentagem a aplicar a este formador agora: reduzida enquanto for VIP.
+     */
+    public static function percentFor(TrainerProfile|int $trainer): int
+    {
+        $settings = app(PlatformSettings::class);
+
+        return app(VipSubscriptions::class)->isVip($trainer)
+            ? $settings->int('vip_commission_percent')
+            : $settings->int('commission_percent');
+    }
+
+    /**
+     * @return array{amount: int, commission: int, trainer_net: int, percent: int}
+     */
+    public static function splitFor(int $amount, TrainerProfile|int $trainer): array
+    {
+        $percent = self::percentFor($trainer);
+
+        return [...self::split($amount, $percent), 'percent' => $percent];
     }
 }

@@ -31,6 +31,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
  * @property int $amount
  * @property int $commission
  * @property int $trainer_net
+ * @property int $commission_percent
  * @property \Illuminate\Support\Carbon $scheduled_at
  * @property int $duration_minutes
  * @property \Illuminate\Support\Carbon|null $ends_at
@@ -57,7 +58,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
  * @property-read Conversation|null $conversation
  */
 #[Fillable([
-    'training_request_id', 'student_id', 'trainer_profile_id', 'skill_id', 'title', 'amount', 'commission', 'trainer_net',
+    'training_request_id', 'student_id', 'trainer_profile_id', 'skill_id', 'title', 'amount', 'commission', 'trainer_net', 'commission_percent',
     'scheduled_at', 'duration_minutes', 'ends_at', 'payment_method', 'payment_due_at', 'modality', 'province', 'municipality',
     'neighborhood', 'latitude', 'longitude', 'escrow_reference',
 ])]

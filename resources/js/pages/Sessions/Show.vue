@@ -109,6 +109,7 @@ onMounted(load);
                     <p class="truncate text-title">{{ counterpart }}</p>
                     <span class="badge badge-brand mt-1">{{ session.skill }}</span>
                     <span v-if="session.trainer?.verified" class="badge badge-success mt-1 ml-1">Verificado LONGA</span>
+                    <span v-if="session.trainer?.vip" class="badge mt-1 ml-1 bg-orange-500 text-white">⭐ VIP</span>
                 </div>
             </div>
             <p v-if="session.trainer?.bio" class="mt-3 text-caption text-navy-100">{{ session.trainer.bio }}</p>

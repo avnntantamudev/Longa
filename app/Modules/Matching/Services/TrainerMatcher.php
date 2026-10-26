@@ -73,6 +73,12 @@ class TrainerMatcher
                     ->where('s.ends_at', '>', $start);
             });
 
+        // VIP primeiro (dentro do raio), depois a ordenação normal
+        $query->selectRaw(
+            "EXISTS(SELECT 1 FROM trainer_subscriptions ts WHERE ts.trainer_profile_id = tp.id AND ts.status = 'active' AND ts.starts_at <= ? AND ts.ends_at > ?) as is_vip",
+            [now(), now()],
+        )->orderByDesc('is_vip');
+
         if ($online) {
             $query->selectRaw('(tp.score / 100) as rank_score')
                 ->orderByDesc('rank_score');

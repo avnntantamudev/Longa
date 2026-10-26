@@ -5864,6 +5864,9 @@
                     "verified": {
                         "type": "boolean"
                     },
+                    "vip": {
+                        "type": "string"
+                    },
                     "score": {
                         "type": "integer"
                     },
@@ -5895,6 +5898,7 @@
                     "neighborhood",
                     "service_radius_m",
                     "verified",
+                    "vip",
                     "score",
                     "badges"
                 ],
@@ -6162,6 +6166,9 @@
                     "trainer_net": {
                         "type": "integer"
                     },
+                    "commission_percent": {
+                        "type": "integer"
+                    },
                     "role": {
                         "type": "string",
                         "enum": [
@@ -6248,6 +6255,9 @@
                             "verified": {
                                 "type": "boolean"
                             },
+                            "vip": {
+                                "type": "string"
+                            },
                             "score": {
                                 "type": "integer"
                             }
@@ -6261,6 +6271,7 @@
                             "years_experience",
                             "neighborhood",
                             "verified",
+                            "vip",
                             "score"
                         ]
                     },
@@ -6761,6 +6772,9 @@
                     "commission": {
                         "type": "integer"
                     },
+                    "commission_percent": {
+                        "type": "integer"
+                    },
                     "trainer_net": {
                         "type": "integer"
                     },
@@ -6808,6 +6822,7 @@
                     "skill",
                     "amount",
                     "commission",
+                    "commission_percent",
                     "trainer_net",
                     "scheduled_at",
                     "modality",
@@ -6890,6 +6905,9 @@
                     "verification_status": {
                         "type": "string"
                     },
+                    "vip": {
+                        "type": "string"
+                    },
                     "score": {
                         "type": "integer"
                     },
@@ -6953,6 +6971,7 @@
                     "longitude",
                     "service_radius_m",
                     "verification_status",
+                    "vip",
                     "score",
                     "badges",
                     "is_available",

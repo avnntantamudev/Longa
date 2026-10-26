@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Users\Http\Resources;
 
+use App\Modules\Payments\Services\VipSubscriptions;
 use App\Modules\Users\Models\TrainerProfile;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -35,6 +36,7 @@ class TrainerProfileResource extends JsonResource
             'longitude' => $this->longitude,
             'service_radius_m' => $this->service_radius_m,
             'verification_status' => $this->verification_status->value,
+            'vip' => app(VipSubscriptions::class)->isVip($this->resource),
             'score' => $this->score,
             'badges' => $this->badges ?? [],
             'is_available' => $this->is_available,

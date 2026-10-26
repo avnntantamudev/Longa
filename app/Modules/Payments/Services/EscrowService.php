@@ -57,7 +57,7 @@ class EscrowService
                 'amount' => $session->amount,
                 'commission' => $session->commission,
                 'trainer_net' => $session->trainer_net,
-                'commission_percent' => (int) config('longa.requests.commission_percent'),
+                'commission_percent' => $session->commission_percent,
                 // Prazo máximo esperado para a retenção ter destino (alerta da reconciliação se ultrapassado)
                 'expires_at' => $session->ends_at?->copy()->addHours((int) config('longa.session_rules.hold_max_days') * 24),
                 'hold_transaction_id' => $transaction->id,

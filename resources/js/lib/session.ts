@@ -41,7 +41,7 @@ export interface Session {
     trainer_net?: number;
     role: 'student' | 'trainer';
     student?: { name: string | null; photo_url: string | null; photo_thumb_url: string | null };
-    trainer?: { name: string | null; photo_url: string | null; photo_thumb_url: string | null; bio: string | null; years_experience: number | null; neighborhood: string | null; verified: boolean; score: number };
+    trainer?: { name: string | null; photo_url: string | null; photo_thumb_url: string | null; bio: string | null; years_experience: number | null; neighborhood: string | null; verified: boolean; vip: boolean; score: number };
 }
 
 export interface QrToken {

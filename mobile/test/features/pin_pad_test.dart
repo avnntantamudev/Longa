@@ -10,7 +10,7 @@ void main() {
     for (final d in ['4', '8', '2']) {
       await tester.tap(find.text(d));
     }
-    await tester.tap(find.bySemanticsLabel('Apagar'));
+    await tester.tap(find.text('⌫'));
     for (final d in ['2', '9', '1', '6']) {
       await tester.tap(find.text(d));
     }

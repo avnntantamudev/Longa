@@ -27,4 +27,6 @@ jobs:
       - name: Análise estática
         run: flutter analyze --no-fatal-infos
       - name: Testes
-        run: flutter test
+        run: |
+          set -o pipefail
+          flutter test --machine | dart run tool/report_test_failures.dart

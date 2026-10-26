@@ -80,3 +80,14 @@ it('o admin regista a comissão recebida em dinheiro, sem ultrapassar a dívida'
     apiLogin($session->trainer->user);
     $this->postJson($url, ['amount' => 1], ['Idempotency-Key' => 'receive-hack'])->assertForbidden();
 });
+
+it('aula em mão de valor tão baixo que a comissão é 0 Kz confirma sem dívida', function () {
+    $session = acceptedSession('cash', ['amount' => 3, 'commission' => 0, 'trainer_net' => 3]);
+    completeByQr($session);
+
+    app(ConfirmCashPayment::class)->handle($session->fresh() ?? $session, $session->student);
+
+    expect($session->fresh()?->cash_confirmed_at)->not->toBeNull()
+        ->and(app(App\Modules\Payments\Services\CommissionDebts::class)->outstanding($session->trainer_profile_id))->toBe(0)
+        ->and(LedgerTransaction::query()->where('type', 'cash_commission_due')->count())->toBe(0);
+});

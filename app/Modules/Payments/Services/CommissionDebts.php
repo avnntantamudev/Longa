@@ -22,8 +22,15 @@ class CommissionDebts
 {
     public function __construct(private readonly LedgerService $ledger, private readonly AuditLogger $audit) {}
 
-    public function register(TrainingSession $session, ?User $actor, string $reason): LedgerTransaction
+    /**
+     * Devolve null quando a comissão arredonda para 0 Kz (aulas de 1 a 3 Kz): não há dívida a registar.
+     */
+    public function register(TrainingSession $session, ?User $actor, string $reason): ?LedgerTransaction
     {
+        if ($session->commission === 0) {
+            return null;
+        }
+
         return $this->ledger->post('cash_commission_due', "cash:due:session:{$session->id}", [
             Accounts::PLATFORM_REVENUE => $session->commission,
             Accounts::trainerCommissionDue($session->trainer_profile_id) => -$session->commission,

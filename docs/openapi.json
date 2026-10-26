@@ -977,6 +977,156 @@
                 }
             }
         },
+        "/me/reports/earnings": {
+            "get": {
+                "operationId": "reports.earnings",
+                "summary": "Ganhos por m\u00eas num ano (aulas, creditado, comiss\u00f5es, recebido em m\u00e3o)",
+                "tags": [
+                    "Carteira",
+                    "Earnings"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "year": {
+                                                    "type": "integer"
+                                                },
+                                                "months": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "month": {
+                                                                "anyOf": [
+                                                                    {
+                                                                        "type": "string"
+                                                                    },
+                                                                    {}
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "month"
+                                                        ],
+                                                        "additionalProperties": {}
+                                                    }
+                                                },
+                                                "totals": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "lessons": {
+                                                            "type": "number"
+                                                        },
+                                                        "cash_lessons": {
+                                                            "type": "number"
+                                                        },
+                                                        "credited": {
+                                                            "type": "number"
+                                                        },
+                                                        "commissions": {
+                                                            "type": "number"
+                                                        },
+                                                        "cash_received": {
+                                                            "type": "number"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "lessons",
+                                                        "cash_lessons",
+                                                        "credited",
+                                                        "commissions",
+                                                        "cash_received"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "year",
+                                                "months",
+                                                "totals"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/me/reports/earnings/export": {
+            "get": {
+                "operationId": "reports.earnings.export",
+                "summary": "Exportar o relat\u00f3rio de ganhos (`format`: pdf ou csv)",
+                "tags": [
+                    "Carteira",
+                    "Earnings"
+                ],
+                "parameters": [
+                    {
+                        "name": "format",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "pdf",
+                                "csv"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            },
+                            "text/csv; charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Transfer-Encoding": {
+                                "required": true,
+                                "schema": {
+                                    "type": "string",
+                                    "enum": [
+                                        "chunked"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/skills": {
             "get": {
                 "operationId": "skills",

@@ -66,6 +66,7 @@ onMounted(load);
             <p class="text-display" data-testid="available">{{ kwanza(summary.available) }}</p>
             <p class="mt-1 text-caption text-navy-200">Levantamentos disponíveis brevemente.</p>
             <Link href="/vip" class="mt-3 inline-block rounded-full bg-orange-500 px-4 py-1.5 text-caption font-semibold text-white">⭐ Formador VIP</Link>
+            <Link href="/carteira/ganhos" class="mt-3 ml-2 inline-block rounded-full bg-white/10 px-4 py-1.5 text-caption font-semibold text-white">Os meus ganhos</Link>
         </section>
 
         <div class="mt-3 grid grid-cols-2 gap-3">

@@ -49,6 +49,8 @@ Os testes correm em **MySQL** (base `longa_testing`): `CREATE DATABASE longa_tes
 
 ## TRIM TRIM localmente (Fase 2)
 
+No Windows/Laragon, `scripts\dev-start.bat` arranca tudo de uma vez (Redis se estiver parado, web, fila, agendador e tempo real), cada processo numa janela. O MySQL tem de estar ligado no Laragon.
+
 Processos necessários (no Docker já correm em `worker`, `scheduler` e `reverb`):
 
 ```bash

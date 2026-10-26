@@ -7,6 +7,7 @@ namespace App\Modules\Companies\Actions;
 use App\Modules\Auth\Support\PhoneNumber;
 use App\Modules\Companies\Models\Company;
 use App\Modules\Companies\Models\CompanyEmployee;
+use App\Modules\Notifications\Notifications\CompanyConsentRequestNotification;
 use App\Modules\Users\Models\User;
 use App\Support\Api\ApiException;
 
@@ -24,8 +25,11 @@ class ManageEmployees
         $data = $this->normalize($data);
         $this->ensurePhoneIsFree($company, $data['phone'] ?? null);
 
-        /** @var CompanyEmployee */
-        return $company->employees()->create($data);
+        /** @var CompanyEmployee $employee */
+        $employee = $company->employees()->create($data);
+        $this->askConsent($employee);
+
+        return $employee;
     }
 
     /**
@@ -38,9 +42,28 @@ class ManageEmployees
             $this->ensurePhoneIsFree($employee->company, $data['phone'], $employee->id);
         }
 
-        $employee->fill($data)->save();
+        $phoneChanged = array_key_exists('phone', $data) && $data['phone'] !== $employee->phone;
+        $employee->fill($data);
+        // Outro telefone é outra pessoa: a autorização dada antes deixa de valer
+        if ($phoneChanged) {
+            $employee->forceFill(['consent_status' => 'pending', 'consent_at' => null]);
+        }
+        $employee->save();
+
+        if ($phoneChanged) {
+            $this->askConsent($employee);
+        }
 
         return $employee;
+    }
+
+    /**
+     * Se o colaborador já usa a LONGA, recebe o pedido de autorização (aceita ou recusa no Perfil).
+     */
+    private function askConsent(CompanyEmployee $employee): void
+    {
+        $user = $employee->phone === null ? null : User::query()->where('phone', $employee->phone)->first();
+        $user?->notify(new CompanyConsentRequestNotification($employee->loadMissing('company')));
     }
 
     public function remove(CompanyEmployee $employee): void

@@ -21,11 +21,26 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $department
  * @property string|null $job_title
  * @property string $status
+ * @property string $consent_status
+ * @property \Illuminate\Support\Carbon|null $consent_at
  */
 #[Fillable(['user_id', 'name', 'phone', 'email', 'department', 'job_title', 'status'])]
 class CompanyEmployee extends Model
 {
     protected $attributes = ['status' => 'active'];
+
+    protected function casts(): array
+    {
+        return ['consent_at' => 'datetime'];
+    }
+
+    /**
+     * Pode a empresa ver as formações deste colaborador?
+     */
+    public function hasConsented(): bool
+    {
+        return $this->consent_status === 'accepted' && $this->user_id !== null;
+    }
 
     /**
      * @return BelongsTo<Company, $this>

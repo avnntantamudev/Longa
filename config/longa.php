@@ -38,6 +38,8 @@ return [
         'terms' => env('LONGA_TERMS_VERSION', '2026-10'),
         'privacy' => env('LONGA_PRIVACY_VERSION', '2026-10'),
         'location' => env('LONGA_LOCATION_CONSENT_VERSION', '2026-10'),
+        // Autorização para a empresa (RH) ver as formações do colaborador
+        'company_reports' => env('LONGA_COMPANY_REPORTS_CONSENT_VERSION', '2026-10'),
     ],
 
     // Pedidos de aula e matching TRIM TRIM (Fase 2). Valores [AJUSTAR] com o cliente.

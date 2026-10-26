@@ -21,6 +21,8 @@ class ConsentRecorder
 
     public const LOCATION = 'location';
 
+    public const COMPANY_REPORTS = 'company_reports';
+
     public function __construct(private readonly Request $request) {}
 
     /**

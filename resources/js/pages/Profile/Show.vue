@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CompanyLinks from '@/components/CompanyLinks.vue';
 import PhotoPicker from '@/components/PhotoPicker.vue';
 import { api } from '@/lib/api';
 import type { RoleName } from '@/types/global';
@@ -70,6 +71,8 @@ onMounted(async () => {
             </div>
         </div>
     </section>
+
+    <CompanyLinks />
 
     <section v-if="trainerStatus" class="card mt-4">
         <div class="flex items-center justify-between gap-3">

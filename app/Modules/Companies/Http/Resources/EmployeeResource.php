@@ -27,6 +27,8 @@ class EmployeeResource extends JsonResource
             'job_title' => $this->job_title,
             'status' => $this->status,
             'has_longa_account' => $this->user_id !== null,
+            // pending | accepted | declined | revoked: só 'accepted' entra no relatório RH
+            'consent_status' => $this->consent_status,
         ];
     }
 }

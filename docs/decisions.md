@@ -29,6 +29,10 @@ Decisões de produto e de arquitetura, com a data e o motivo. As mais recentes f
 | 2026-10-23 | **Português europeu/angolano** na interface ("si", "Pesquisar", "Saltar"), apesar de o kit ter termos pt-BR. | Norma usada em Angola. | Equipa |
 | 2026-10-23 | **Backoffice Filament 5 em `/backoffice`**, sem login próprio: o admin entra pela PWA com OTP e a sessão web é partilhada (`canAccessPanel` exige papel admin e conta ativa). Decisões de disputa pedem fundamentação e a palavra CONFIRMAR; ledger e reconciliações só de leitura. | Um único método de autenticação; nenhuma palavra-passe de admin para roubar. | Equipa |
 | 2026-10-26 | **Foto de perfil obrigatória para formadores** (alunos opcional), recodificada no servidor sem metadados. Sem foto não completa o registo, não pede verificação e não recebe pedidos; os formadores antigos têm até 2026-11-02 (`LONGA_TRAINER_PHOTO_REQUIRED_FROM`). O admin pode remover fotos impróprias. | Pedido do cliente: a foto aparece sempre aos outros perfis e cria confiança; o admin compara-a com o BI. | Cliente |
+| 2026-10-26 | **Definições editáveis pelo admin** (comissão, comissão VIP, preço/duração VIP, fecho dos pedidos agendados), auditadas; aplicam-se só a operações novas. | Pedido do cliente: "o admin pode configurar isso". | Cliente |
+| 2026-10-26 | **Formador VIP**: 50.000 Kz/ano, comissão 10%, prioridade nas ondas, selo, pedidos de outro dia em toda a província; renovar soma ao fim atual; **sem reembolso a meio** (provisório, o cliente não respondeu). | Respostas do cliente às perguntas VIP. | Cliente |
+| 2026-10-26 | **"Mesma cidade" = mesma província** (21 províncias, divisão de 2024). Pedidos para outro dia: formadores a 5 km + VIP da província, abertos até 2 h antes. | Respostas do cliente. | Cliente |
+| 2026-10-26 | **Relatório RH só com autorização do colaborador** (aceitar/recusar/retirar no Perfil); mostra aulas concluídas, horas e custo, nunca chat nem local. | Proteção de dados: a empresa não deve ver formações pessoais sem consentimento. | Cliente |
 
 ## Em aberto
 

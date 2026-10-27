@@ -11,7 +11,7 @@ Regras:
   prefixo interno do conteúdo do QR (`LONGA:` — o utilizador não o vê e mantém QR antigos válidos).
 - Slogans antigos ("Kulonga = Ensinar", "De Longi para Longi") saem; usar "marketplace • formadores".
 
-Estado: EM CURSO
+Estado: CONCLUÍDO (CI verde em dd1920f)
 
 | # | Passo | Estado |
 |---|---|---|
@@ -19,6 +19,6 @@ Estado: EM CURSO
 | 2 | Ícones da PWA (`scripts/generate-icons.py`) e manifest (nome, cores) | feito |
 | 3 | Textos visíveis na PWA (Vue, Blade, layouts, slogans) | feito |
 | 4 | Textos do servidor (SMS/WhatsApp, notificações, PDF, backoffice, APP_NAME) | feito |
-| 5 | Testes ajustados, suite e CI verdes | suite local verde (CI no passo 7) |
+| 5 | Testes ajustados, suite e CI verdes | feito |
 | 6 | Documentação (README, docs) e decisão registada | feito |
-| 7 | Commit + push, CI, marcar CONCLUÍDO | por fazer |
+| 7 | Commit + push, CI, marcar CONCLUÍDO | feito |

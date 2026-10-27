@@ -78,7 +78,7 @@ export function stateBadge(state: string): string {
 export function eventLabel(type: string): string {
     const labels: Record<string, string> = {
         payment_requested: 'Pagamento pedido',
-        payment_confirmed: 'Pagamento recebido (retido pela LONGA)',
+        payment_confirmed: 'Pagamento recebido (retido pelo Garimpo)',
         payment_failed: 'Pagamento falhou',
         scheduled: 'Aula agendada',
         started: 'Aula iniciada',

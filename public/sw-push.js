@@ -1,5 +1,5 @@
 /*
- * Web Push no service worker da LONGA (importado pelo sw.js gerado pelo Workbox).
+ * Web Push no service worker do Garimpo (importado pelo sw.js gerado pelo Workbox).
  * - "push": mostra a notificação enviada pelo servidor (laravel-notification-channels/webpush).
  * - "notificationclick": abre o URL da notificação (ex.: /formador/ofertas/123), reutilizando
  *   uma janela da app já aberta quando existe.
@@ -14,10 +14,10 @@ self.addEventListener('push', (event) => {
     try {
         payload = event.data.json();
     } catch {
-        payload = { title: 'LONGA', body: event.data.text() };
+        payload = { title: 'Garimpo', body: event.data.text() };
     }
 
-    const { title = 'LONGA', ...options } = payload;
+    const { title = 'Garimpo', ...options } = payload;
     event.waitUntil(self.registration.showNotification(title, options));
 });
 

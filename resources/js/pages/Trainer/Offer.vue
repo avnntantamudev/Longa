@@ -123,7 +123,7 @@ onMounted(() => {
                 <p class="mt-1 font-semibold">{{ offer.title }}</p>
                 <p class="text-caption text-navy-200">{{ offer.skill }}</p>
                 <p class="mt-3 text-2xl font-bold text-orange-400">{{ kwanza(offer.amount) }}</p>
-                <p class="text-caption text-navy-200">Recebe {{ kwanza(offer.trainer_net) }} (comissão LONGA {{ kwanza(offer.commission) }})</p>
+                <p class="text-caption text-navy-200">Recebe {{ kwanza(offer.trainer_net) }} (comissão do Garimpo {{ kwanza(offer.commission) }})</p>
                 <p class="mt-3 flex items-center gap-2 text-caption">
                     <AppIcon name="calendar" :size="16" /> {{ when(offer.scheduled_at) }} · {{ offer.modality === 'online' ? 'Online' : offer.neighborhood }}
                 </p>

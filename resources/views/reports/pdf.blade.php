@@ -16,7 +16,7 @@
     </style>
 </head>
 <body>
-    <h1>LONGA · {{ $title }}</h1>
+    <h1>Garimpo · {{ $title }}</h1>
     <p class="period">{{ $period }}</p>
 
     @foreach ($sections as $section)

@@ -26,7 +26,7 @@ function isActive(item: NavItem): boolean {
         <aside class="hidden w-64 shrink-0 flex-col bg-navy-900 text-white md:flex">
             <div class="px-6 py-6">
                 <BrandLogo :size="36" />
-                <p class="mt-1 text-caption text-navy-200">Kulonga = Ensinar</p>
+                <p class="mt-1 text-caption text-navy-200">marketplace • formadores</p>
             </div>
             <nav aria-label="Navegação principal" class="flex flex-col gap-1 px-3">
                 <template v-for="item in navigation" :key="item.href">

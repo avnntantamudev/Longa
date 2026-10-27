@@ -25,7 +25,7 @@ async function activate(): Promise<void> {
         <div class="flex-1">
             <p class="font-semibold">{{ title ?? 'Ative as notificações' }}</p>
             <p class="text-caption text-ink-muted">
-                <template v-if="state === 'needs-install'">No iPhone, instale primeiro a LONGA no ecrã principal (Partilhar → Adicionar ao ecrã principal).</template>
+                <template v-if="state === 'needs-install'">No iPhone, instale primeiro o Garimpo no ecrã principal (Partilhar → Adicionar ao ecrã principal).</template>
                 <template v-else-if="state === 'denied'">As notificações estão bloqueadas. Ative-as nas definições do navegador.</template>
                 <template v-else>{{ description ?? 'Para receber pedidos mesmo com a app fechada.' }}</template>
             </p>

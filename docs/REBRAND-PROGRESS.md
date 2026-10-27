@@ -17,7 +17,7 @@ Estado: EM CURSO
 |---|---|---|
 | 1 | Logótipo SVG (`BrandLogo.vue`) a partir da imagem | feito |
 | 2 | Ícones da PWA (`scripts/generate-icons.py`) e manifest (nome, cores) | feito |
-| 3 | Textos visíveis na PWA (Vue, Blade, layouts, slogans) | por fazer |
+| 3 | Textos visíveis na PWA (Vue, Blade, layouts, slogans) | feito |
 | 4 | Textos do servidor (SMS/WhatsApp, notificações, PDF, backoffice, APP_NAME) | por fazer |
 | 5 | Testes ajustados, suite e CI verdes | por fazer |
 | 6 | Documentação (README, docs) e decisão registada | por fazer |

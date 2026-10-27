@@ -101,7 +101,7 @@ async function submit(): Promise<void> {
         <fieldset class="grid gap-2">
             <legend class="mb-1 text-caption font-semibold">Pagamento</legend>
             <div class="flex gap-2">
-                <button type="button" class="chip" :class="{ 'chip-active': form.payment_method === 'electronic' }" @click="form.payment_method = 'electronic'">Pela LONGA</button>
+                <button type="button" class="chip" :class="{ 'chip-active': form.payment_method === 'electronic' }" @click="form.payment_method = 'electronic'">Pelo Garimpo</button>
                 <button type="button" class="chip" :class="{ 'chip-active': form.payment_method === 'cash' }" @click="form.payment_method = 'cash'">Em mão</button>
             </div>
             <p class="text-caption text-ink-muted">
@@ -127,7 +127,7 @@ async function submit(): Promise<void> {
         </fieldset>
 
         <p v-if="form.amount" class="text-caption text-ink-muted">
-            Paga {{ kwanza(form.amount) }}. A comissão LONGA ({{ commissionPercent }}%) é descontada ao formador.
+            Paga {{ kwanza(form.amount) }}. A comissão do Garimpo ({{ commissionPercent }}%) é descontada ao formador.
         </p>
 
         <p v-if="errors.general" class="text-caption text-danger" role="alert">{{ errors.general }}</p>

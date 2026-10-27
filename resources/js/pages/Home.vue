@@ -16,9 +16,9 @@ defineProps<{
     <Head title="Início" />
 
     <section class="rounded-sheet bg-navy-900 px-5 py-8 text-white md:px-8 md:py-10">
-        <p class="text-caption font-semibold uppercase tracking-widest text-orange-400">Kulonga = Ensinar</p>
+        <p class="text-caption font-semibold uppercase tracking-widest text-orange-400">marketplace • formadores</p>
         <h1 class="mt-2 text-display md:text-4xl md:leading-tight">A plataforma que formaliza quem ensina em Angola</h1>
-        <p class="mt-3 text-navy-100">De Longi para Longi: formadores verificados perto de si, pagamento seguro e certificado no fim.</p>
+        <p class="mt-3 text-navy-100">Formadores verificados perto de si, pagamento seguro e certificado no fim.</p>
 
         <div class="mt-6 grid grid-cols-2 gap-3 sm:max-w-md">
             <template v-if="!user">
@@ -33,7 +33,7 @@ defineProps<{
         </div>
     </section>
 
-    <h2 class="mt-8 text-title">Porquê a LONGA?</h2>
+    <h2 class="mt-8 text-title">Porquê o Garimpo?</h2>
     <ul class="mt-4 grid gap-3 sm:grid-cols-3">
         <li v-for="profile in profiles" :key="profile.key" class="card flex gap-3 sm:flex-col">
             <span class="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-600">

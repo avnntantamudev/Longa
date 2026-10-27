@@ -50,12 +50,12 @@ async function submit(): Promise<void> {
 <template>
     <Head title="Criar conta" />
 
-    <h1 class="text-display">Bem-vindo à LONGA</h1>
-    <p class="mt-1 text-ink-muted">Falta pouco. Diga-nos como se chama e como quer usar a LONGA.</p>
+    <h1 class="text-display">Bem-vindo ao Garimpo</h1>
+    <p class="mt-1 text-ink-muted">Falta pouco. Diga-nos como se chama e como quer usar o Garimpo.</p>
 
     <form class="mt-6 grid gap-5" novalidate @submit.prevent="submit">
         <FormField label="Nome completo" for="name" :error="errors.name">
-            <input id="name" v-model="form.name" class="input" autocomplete="name" placeholder="Ex.: Maria Longi" />
+            <input id="name" v-model="form.name" class="input" autocomplete="name" placeholder="Ex.: Maria Silva" />
         </FormField>
 
         <fieldset class="grid gap-2">
@@ -86,7 +86,7 @@ async function submit(): Promise<void> {
         <div class="grid gap-3">
             <label class="flex items-start gap-3 text-caption">
                 <input v-model="form.accept_terms" type="checkbox" class="mt-0.5 size-5 accent-orange-500" />
-                <span>Li e aceito os Termos de Utilização da LONGA.</span>
+                <span>Li e aceito os Termos de Utilização do Garimpo.</span>
             </label>
             <p v-if="errors.accept_terms" class="text-caption text-danger">{{ errors.accept_terms }}</p>
             <label class="flex items-start gap-3 text-caption">

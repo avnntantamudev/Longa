@@ -180,5 +180,5 @@ const maskedPhone = computed(() => (props.phone ? `${props.phone.slice(0, 4)} ${
         </template>
     </section>
 
-    <p class="mt-4 text-center text-caption text-ink-muted">Nunca partilhe este código. A LONGA nunca o pede por telefone.</p>
+    <p class="mt-4 text-center text-caption text-ink-muted">Nunca partilhe este código. O Garimpo nunca o pede por telefone.</p>
 </template>

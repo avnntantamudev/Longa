@@ -108,7 +108,7 @@ onMounted(load);
                     <p class="text-caption font-semibold text-orange-400">{{ session.role === 'student' ? 'Formador' : 'Aluno' }}</p>
                     <p class="truncate text-title">{{ counterpart }}</p>
                     <span class="badge badge-brand mt-1">{{ session.skill }}</span>
-                    <span v-if="session.trainer?.verified" class="badge badge-success mt-1 ml-1">Verificado LONGA</span>
+                    <span v-if="session.trainer?.verified" class="badge badge-success mt-1 ml-1">Verificado Garimpo</span>
                     <span v-if="session.trainer?.vip" class="badge mt-1 ml-1 bg-orange-500 text-white">⭐ VIP</span>
                 </div>
             </div>
@@ -125,7 +125,7 @@ onMounted(load);
                 <div><dt class="text-ink-muted">Onde</dt><dd class="font-semibold">{{ session.modality === 'online' ? 'Online' : `${session.neighborhood}, ${session.municipality}` }}</dd></div>
                 <div><dt class="text-ink-muted">Valor</dt><dd class="font-semibold">{{ kwanza(session.amount) }}</dd></div>
                 <div v-if="isTrainer"><dt class="text-ink-muted">Recebe</dt><dd class="font-semibold">{{ kwanza(session.trainer_net ?? 0) }}</dd></div>
-                <div><dt class="text-ink-muted">Pagamento</dt><dd class="font-semibold">{{ session.payment_method === 'cash' ? 'Em mão' : 'Pela LONGA' }}</dd></div>
+                <div><dt class="text-ink-muted">Pagamento</dt><dd class="font-semibold">{{ session.payment_method === 'cash' ? 'Em mão' : 'Pelo Garimpo' }}</dd></div>
             </dl>
             <div v-if="session.modality !== 'online' && ['scheduled', 'pending_payment', 'in_progress'].includes(session.state)" class="mt-3">
                 <MiniMap :lat="session.latitude" :lng="session.longitude" :approximate="false" :label="session.neighborhood" />
@@ -142,7 +142,7 @@ onMounted(load);
                 <template v-if="!isTrainer">
                     <p class="font-semibold">Pague para garantir a aula</p>
                     <p class="text-caption text-ink-muted">
-                        O valor fica retido pela LONGA e só é libertado ao formador depois de confirmar a aula.
+                        O valor fica retido pelo Garimpo e só é libertado ao formador depois de confirmar a aula.
                         <template v-if="session.payment_due_at">Prazo: {{ when(session.payment_due_at) }}.</template>
                     </p>
                     <div v-if="has('pay')" class="flex gap-2">
@@ -223,7 +223,7 @@ onMounted(load);
                 <Link v-if="has('dispute')" :href="`/aulas/${session.id}/disputa`" class="btn-primary w-full">Contestar a falta</Link>
             </template>
 
-            <p v-else-if="session.state === 'disputed'" class="text-caption text-ink-muted">Disputa em análise pela LONGA. O valor fica retido até à decisão.</p>
+            <p v-else-if="session.state === 'disputed'" class="text-caption text-ink-muted">Disputa em análise pelo Garimpo. O valor fica retido até à decisão.</p>
             <p v-else class="text-caption text-ink-muted">{{ session.state_label }}.</p>
 
             <!-- Cancelar / reportar falta -->

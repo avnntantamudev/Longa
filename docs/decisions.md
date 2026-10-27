@@ -33,6 +33,7 @@ Decisões de produto e de arquitetura, com a data e o motivo. As mais recentes f
 | 2026-10-26 | **Formador VIP**: 50.000 Kz/ano, comissão 10%, prioridade nas ondas, selo, pedidos de outro dia em toda a província; renovar soma ao fim atual; **sem reembolso a meio** (provisório, o cliente não respondeu). | Respostas do cliente às perguntas VIP. | Cliente |
 | 2026-10-26 | **"Mesma cidade" = mesma província** (21 províncias, divisão de 2024). Pedidos para outro dia: formadores a 5 km + VIP da província, abertos até 2 h antes. | Respostas do cliente. | Cliente |
 | 2026-10-26 | **Relatório RH só com autorização do colaborador** (aceitar/recusar/retirar no Perfil); mostra aulas concluídas, horas e custo, nunca chat nem local. | Proteção de dados: a empresa não deve ver formações pessoais sem consentimento. | Cliente |
+| 2026-10-27 | **Novo nome: Garimpo** (antes LONGA), com o logótipo enviado (pino laranja com "G", "marketplace • formadores"). Muda tudo o que o utilizador vê; ficam os nomes internos (`config/longa.php`, `LONGA_*`, `longa:*`, base de dados, prefixo `LONGA:` do QR, para os QR já emitidos continuarem válidos). A app mobile fica em pausa. | Pedido do cliente. | Cliente |
 
 ## Em aberto
 

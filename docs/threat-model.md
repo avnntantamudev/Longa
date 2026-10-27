@@ -47,9 +47,9 @@ Aluno, formador, administrador, atacante externo (sem conta ou com conta própri
 
 ## Riscos aceites nesta fase
 
-- **Conluio aluno + formador** para simular aulas: sem impacto financeiro para a LONGA (o dinheiro é do aluno),
+- **Conluio aluno + formador** para simular aulas: sem impacto financeiro para o Garimpo (o dinheiro é do aluno),
   mas pode inflacionar pontuações. Sinal de risco por localização; análise na Fase 4 (pontuação).
-- **Aulas em mão**: a LONGA não controla o pagamento; só regista a dívida de comissão.
+- **Aulas em mão**: o Garimpo não controla o pagamento; só regista a dívida de comissão.
 - **Relógio do telemóvel errado**: o QR usa a hora do servidor (desvio calculado em cada lote).
 - **Sem rede no momento da confirmação**: o formador mostra o lote que tem (5 min); o aluno precisa de rede
   para confirmar. Alternativa: confirmar mais tarde sem QR ou com o código.

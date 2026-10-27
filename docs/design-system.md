@@ -1,14 +1,17 @@
-# Design system do LONGA
+# Design system do Garimpo
 
 Fonte: kit de telas enviado a 23/10/2026 (16 imagens, algumas repetidas). Os tokens vivem em
 `resources/css/app.css` (`@theme`); a referência visual dos componentes está em `/_kit` (só em ambiente local).
 
 ## Marca
 
-- **Logótipo:** livro aberto laranja com um ponto por cima da lombada + "LONGA" em negrito.
+- **Nome:** Garimpo (antes LONGA; mudou a 2026-10-27). Nomes internos (`config/longa.php`, `LONGA_*`, `longa:*`,
+  prefixo `LONGA:` do QR) mantêm-se.
+- **Logótipo:** pino de localização laranja `#ED731D` com um "G" + "GARIMPO" em negrito; original em
+  `resources/brand/garimpo-logo.jpg`.
   Componente `BrandLogo.vue` (variante `light` para fundos escuros, `dark` para claros). Ícones PWA gerados
   com a mesma geometria por `scripts/generate-icons.py`.
-- **Assinaturas:** "Kulonga = Ensinar" (kikongo), "A plataforma que formaliza quem ensina em Angola", "De Longi para Longi".
+- **Assinatura:** "marketplace • formadores" (do logótipo). Ícones da PWA: marca laranja sobre fundo branco.
 - **Cores:** marinho `#0B1F3A` (cabeçalhos, barra lateral, botão alternativo) e laranja `#FF7A00` (ação principal,
   filtro ativo, destaques). As amostras das imagens dão ≈ `#101838` e ≈ `#F86800`: a diferença vem da compressão
   das imagens, por isso mantêm-se os valores do briefing.

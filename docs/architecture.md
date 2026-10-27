@@ -1,4 +1,4 @@
-# Arquitetura do LONGA
+# Arquitetura do Garimpo
 
 ## Módulos
 

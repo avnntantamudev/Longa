@@ -1,6 +1,6 @@
 # Livro-razão (ledger) financeiro
 
-Todo o dinheiro da LONGA passa por um livro-razão de **dupla entrada**, imutável e auditável.
+Todo o dinheiro do Garimpo passa por um livro-razão de **dupla entrada**, imutável e auditável.
 Código: `app/Modules/Wallet/Ledger` (`LedgerService` é a única porta de escrita).
 
 ## Princípios
@@ -21,7 +21,7 @@ Código: `app/Modules/Wallet/Ledger` (`LedgerService` é a única porta de escri
 |---|---|---|
 | `funds_in` | negativo | Contrapartida do dinheiro que entrou pelo gateway |
 | `escrow` | positivo | Dinheiro dos alunos retido; **= soma dos `escrow_holds` em `held`** |
-| `platform_revenue` | positivo | Comissões da LONGA |
+| `platform_revenue` | positivo | Comissões do Garimpo |
 | `refunds_payable` | positivo | Reembolsos decididos à espera de execução pelo gateway |
 | `cash_settlement` | negativo | Contrapartida do dinheiro recebido em mão pelo admin (comissões, VIP) |
 | `subscription_revenue` | positivo | Receita das subscrições VIP (separada das comissões) |

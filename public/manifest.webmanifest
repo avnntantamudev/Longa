@@ -1,7 +1,7 @@
 {
     "id": "/",
-    "name": "LONGA",
-    "short_name": "LONGA",
+    "name": "Garimpo",
+    "short_name": "Garimpo",
     "description": "Formação perto de si: alunos, formadores e empresas.",
     "lang": "pt",
     "dir": "ltr",
@@ -9,7 +9,7 @@
     "scope": "/",
     "display": "standalone",
     "orientation": "portrait",
-    "background_color": "#0B1F3A",
+    "background_color": "#FFFFFF",
     "theme_color": "#0B1F3A",
     "categories": ["education", "business"],
     "icons": [

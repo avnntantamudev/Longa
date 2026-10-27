@@ -1,8 +1,8 @@
 """Gera os ícones PNG da PWA (192, 512, maskable, apple-touch) e o favicon, sem dependências externas.
 
-Desenho (alinhado com o kit de telas): livro aberto laranja (#FF7A00) com um ponto por cima da
-lombada, sobre fundo azul marinho (#0B1F3A). O mesmo desenho existe em SVG em
-resources/js/components/BrandLogo.vue.
+Desenho: marca Garimpo — pino de localização laranja (#ED731D) com um "G", sobre fundo branco
+(resources/brand/garimpo-logo.jpg). A mesma geometria existe em SVG em resources/js/components/BrandLogo.vue
+(viewBox 0 0 78.6 100).
 
 Uso: python scripts/generate-icons.py
 """
@@ -10,15 +10,19 @@ import os
 import struct
 import zlib
 
-NAVY = (0x0B, 0x1F, 0x3A, 255)
-ORANGE = (0xFF, 0x7A, 0x00, 255)
+WHITE = (0xFF, 0xFF, 0xFF, 255)
+ORANGE = (0xED, 0x73, 0x1D, 255)
 CLEAR = (0, 0, 0, 0)
 OUT = os.path.join(os.path.dirname(__file__), "..", "public", "icons")
 
-# Geometria num quadrado unitário (0..1), igual à do SVG (viewBox 0 0 100 100)
-LEFT_PAGE = [(0.14, 0.36), (0.47, 0.44), (0.47, 0.84), (0.14, 0.76)]
-RIGHT_PAGE = [(0.53, 0.44), (0.86, 0.36), (0.86, 0.76), (0.53, 0.84)]
-DOT = (0.5, 0.25, 0.085)  # centro x, centro y, raio
+# Geometria do SVG (viewBox 0 0 78.6 100): pino = círculo + ponta; furo, abertura em diagonal e barra do G
+PIN_CIRCLE = (39.3, 39.3, 39.3)
+PIN_TIP = [(9.3, 64.7), (69.3, 64.7), (39.3, 100.0)]
+HOLE = (39.3, 39.3, 21.5)
+OPENING = [(51.3, 34.6), (80.0, 34.6), (80.0, 6.1)]
+BAR_END = (37.5, 40.7, 6.1)
+BAR = (37.5, 34.6, 78.6, 46.8)  # x0, y0, x1, y1
+MARK_RATIO = 0.786  # largura / altura
 
 SUPERSAMPLE = 4  # antialiasing
 
@@ -60,9 +64,20 @@ def in_polygon(u, v, poly):
     return inside
 
 
+def in_circle(x, y, c):
+    cx, cy, r = c
+    return (x - cx) ** 2 + (y - cy) ** 2 <= r * r
+
+
 def in_mark(u, v):
-    cx, cy, r = DOT
-    return in_polygon(u, v, LEFT_PAGE) or in_polygon(u, v, RIGHT_PAGE) or (u - cx) ** 2 + (v - cy) ** 2 <= r * r
+    # (u, v) no quadrado unitário; a marca ocupa a altura toda, centrada na horizontal
+    x = (u - (1 - MARK_RATIO) / 2) * 100
+    y = v * 100
+    pin = in_circle(x, y, PIN_CIRCLE) or in_polygon(x, y, PIN_TIP)
+    cut = in_circle(x, y, HOLE) or in_polygon(x, y, OPENING)
+    x0, y0, x1, y1 = BAR
+    bar = in_circle(x, y, PIN_CIRCLE) and (in_circle(x, y, BAR_END) or (x0 <= x <= x1 and y0 <= y <= y1))
+    return (pin and not cut) or bar
 
 
 def in_rounded_rect(u, v, radius):
@@ -73,14 +88,14 @@ def in_rounded_rect(u, v, radius):
 
 def icon(size, maskable):
     # maskable: o desenho ocupa a zona segura central (80%) e o fundo cobre tudo
-    scale = 0.72 if maskable else 0.92
+    scale = 0.6 if maskable else 0.8
 
     def sample(u, v):
         if not maskable and not in_rounded_rect(u, v, 0.22):
             return CLEAR
         mu = (u - 0.5) / scale + 0.5
         mv = (v - 0.5) / scale + 0.5
-        return ORANGE if in_mark(mu, mv) else NAVY
+        return ORANGE if in_mark(mu, mv) else WHITE
 
     def pixel(x, y):
         acc = [0, 0, 0, 0]

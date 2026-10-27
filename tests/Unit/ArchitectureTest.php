@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
-| Regras de arquitetura do LONGA (ver docs/architecture.md).
+| Regras de arquitetura do Garimpo (ver docs/architecture.md).
 */
 
 arch('não há chamadas de debug esquecidas')

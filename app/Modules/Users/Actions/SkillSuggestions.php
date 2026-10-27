@@ -47,7 +47,7 @@ class SkillSuggestions
         }
 
         if ($existingSkill === null && SkillSuggestion::query()->where('trainer_profile_id', $trainer->id)->where('status', SkillSuggestion::PENDING)->count() >= self::MAX_PENDING) {
-            throw new ApiException('too_many_suggestions', 'Já tem '.self::MAX_PENDING.' áreas em análise. Aguarde a decisão da LONGA.', 409);
+            throw new ApiException('too_many_suggestions', 'Já tem '.self::MAX_PENDING.' áreas em análise. Aguarde a decisão do Garimpo.', 409);
         }
 
         return DB::transaction(function () use ($trainer, $name, $normalized, $existingSkill) {

@@ -14,7 +14,7 @@ use App\Support\Audit\AuditLogger;
 
 /**
  * Comissões de aulas pagas em dinheiro (regra do cliente, docs/decisions.md):
- *  - registar: o formador recebeu o valor em mão, logo deve a comissão à LONGA;
+ *  - registar: o formador recebeu o valor em mão, logo deve a comissão ao Garimpo;
  *  - compensar: se tiver saldo disponível (aulas pagas eletronicamente), a dívida é descontada;
  *  - receber: o admin marca o dinheiro da comissão como recebido.
  */

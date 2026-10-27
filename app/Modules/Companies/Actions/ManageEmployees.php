@@ -12,7 +12,7 @@ use App\Modules\Users\Models\User;
 use App\Support\Api\ApiException;
 
 /**
- * Funcionários de uma empresa geridos pelo RH. Se o telefone corresponder a um utilizador LONGA,
+ * Funcionários de uma empresa geridos pelo RH. Se o telefone corresponder a um utilizador do Garimpo,
  * o funcionário fica ligado a essa conta (para presenças e certificados nas fases seguintes).
  */
 class ManageEmployees
@@ -58,7 +58,7 @@ class ManageEmployees
     }
 
     /**
-     * Se o colaborador já usa a LONGA, recebe o pedido de autorização (aceita ou recusa no Perfil).
+     * Se o colaborador já usa o Garimpo, recebe o pedido de autorização (aceita ou recusa no Perfil).
      */
     private function askConsent(CompanyEmployee $employee): void
     {

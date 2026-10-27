@@ -13,6 +13,6 @@ class LogWhatsAppProvider implements WhatsAppProvider
 {
     public function sendOtp(string $to, string $code): void
     {
-        Log::channel('sms')->info('WhatsApp', ['to' => $to, 'message' => "LONGA (WhatsApp): o seu código é {$code}."]);
+        Log::channel('sms')->info('WhatsApp', ['to' => $to, 'message' => "Garimpo (WhatsApp): o seu código é {$code}."]);
     }
 }

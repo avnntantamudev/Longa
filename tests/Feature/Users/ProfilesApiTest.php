@@ -13,12 +13,12 @@ it('conclui o registo com vários perfis e regista os consentimentos', function 
     $user = apiLogin(User::factory()->notOnboarded()->create());
 
     $this->postJson('/api/v1/onboarding', [
-        'name' => 'Maria Longi',
+        'name' => 'Maria Silva',
         'profiles' => ['student', 'trainer'],
         'accept_terms' => true,
         'accept_privacy' => true,
     ])->assertOk()
-        ->assertJsonPath('data.name', 'Maria Longi')
+        ->assertJsonPath('data.name', 'Maria Silva')
         ->assertJsonPath('data.profiles.student', true)
         ->assertJsonPath('data.profiles.trainer', true)
         ->assertJsonPath('data.needs_onboarding', false);

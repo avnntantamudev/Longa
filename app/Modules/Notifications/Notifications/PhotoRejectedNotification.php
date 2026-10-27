@@ -12,7 +12,7 @@ use NotificationChannels\WebPush\WebPushChannel;
 use NotificationChannels\WebPush\WebPushMessage;
 
 /**
- * A LONGA removeu a foto de perfil (imprópria ou diferente do BI): carregar outra.
+ * O Garimpo removeu a foto de perfil (imprópria ou diferente do BI): carregar outra.
  */
 class PhotoRejectedNotification extends Notification implements ShouldQueue
 {

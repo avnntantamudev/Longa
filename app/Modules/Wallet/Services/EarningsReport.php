@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 /**
  * Ganhos do formador por mês (um ano). Os valores em dinheiro vêm do ledger; o número de aulas das aulas.
  *  - creditado: o que entrou na carteira (aulas confirmadas e partes de cancelamentos/disputas);
- *  - comissões: comissão LONGA das aulas deste formador (incluindo as pagas em mão);
+ *  - comissões: comissão do Garimpo das aulas deste formador (incluindo as pagas em mão);
  *  - em mão: valor das aulas pagas diretamente pelo aluno.
  */
 class EarningsReport
@@ -81,7 +81,7 @@ class EarningsReport
     public static function sections(array $report): array
     {
         $names = ['', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-        $headers = ['Mês', 'Aulas', 'Em mão', 'Creditado na carteira', 'Comissões LONGA', 'Recebido em mão'];
+        $headers = ['Mês', 'Aulas', 'Em mão', 'Creditado na carteira', 'Comissões do Garimpo', 'Recebido em mão'];
         $rows = array_map(fn ($m) => [$names[$m['month']], $m['lessons'], $m['cash_lessons'], $m['credited'], $m['commissions'], $m['cash_received']], $report['months']);
         $t = $report['totals'];
 

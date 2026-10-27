@@ -74,7 +74,7 @@ it('o admin vê os relatórios e exporta CSV (Excel) e PDF', function () {
     loginWeb(User::factory()->withRole(Role::Admin)->create());
 
     $this->get('/backoffice/relatorios?from='.now()->subDays(3)->toDateString().'&to='.now()->addDays(3)->toDateString())
-        ->assertOk()->assertSee('Comissões LONGA')->assertSee('3.750');
+        ->assertOk()->assertSee('Comissões do Garimpo')->assertSee('3.750');
     $this->get('/backoffice/relatorios?tab=operations')->assertOk()->assertSee('Aulas por estado');
 
     $csv = Livewire::test(Reports::class)->call('export', 'csv');

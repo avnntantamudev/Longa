@@ -113,7 +113,7 @@ return [
     'chat' => [
         'max_attachment_kb' => (int) env('LONGA_CHAT_MAX_ATTACHMENT_KB', 10240),
         'attachment_link_minutes' => (int) env('LONGA_CHAT_ATTACHMENT_LINK_MINUTES', 10),
-        // Esconde telefones/e-mails escritos no chat (comunicação fica na LONGA nesta fase) [AJUSTAR]
+        // Esconde telefones/e-mails escritos no chat (comunicação fica no Garimpo nesta fase) [AJUSTAR]
         'mask_contacts' => (bool) env('LONGA_CHAT_MASK_CONTACTS', true),
     ],
 
@@ -158,7 +158,7 @@ return [
 
     'sms' => [
         'driver' => env('SMS_DRIVER', 'log'),
-        'sender_id' => env('SMS_SENDER_ID', 'LONGA'),
+        'sender_id' => env('SMS_SENDER_ID', 'Garimpo'),
         'api_url' => env('SMS_API_URL'),
         'api_key' => env('SMS_API_KEY'),
     ],

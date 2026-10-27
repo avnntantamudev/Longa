@@ -16,7 +16,7 @@ class OnboardingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            /** @example Maria Longi */
+            /** @example Maria Silva */
             'name' => ['required', 'string', 'min:2', 'max:120'],
             /** Um ou mais perfis. @example ["student"] */
             'profiles' => ['required', 'array', 'min:1', 'max:3'],

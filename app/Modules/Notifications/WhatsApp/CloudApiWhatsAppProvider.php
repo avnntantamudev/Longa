@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Http;
 /**
  * WhatsApp Cloud API (Meta), diretamente, sem intermediários.
  *
- * Requisitos (a tratar pelo cliente): conta Meta Business verificada, número dedicado da LONGA e um
+ * Requisitos (a tratar pelo cliente): conta Meta Business verificada, número dedicado do Garimpo e um
  * modelo de categoria "Authentication" aprovado (WHATSAPP_OTP_TEMPLATE) com botão "copiar código".
  * Ver https://developers.facebook.com/docs/whatsapp/business-management-api/authentication-templates
  */

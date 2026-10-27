@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\Log;
  * Escrow de uma aula sobre o livro-razão (docs/ledger.md).
  *
  *  hold()    entrada externa → escrow (após cobrança confirmada pelo gateway)
- *  settle()  escrow → formador (líquido) + LONGA (comissão sobre a parte do formador) + reembolso ao aluno
+ *  settle()  escrow → formador (líquido) + Garimpo (comissão sobre a parte do formador) + reembolso ao aluno
  *            Cobre libertação total, reembolso total e reembolso parcial com um único cálculo.
  *
  * Cada operação é idempotente (chave derivada da aula) e bloqueia o hold (SELECT … FOR UPDATE):

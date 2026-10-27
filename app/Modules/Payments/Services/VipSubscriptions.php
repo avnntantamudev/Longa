@@ -64,7 +64,7 @@ class VipSubscriptions
         $subscription = $this->registerPending($trainer, $method, $key);
 
         if ($subscription->status === TrainerSubscription::PENDING && $subscription->external_reference === null) {
-            $result = $this->provider->charge($subscription->amount, $user->phone, $method, $key, 'LONGA · Subscrição VIP');
+            $result = $this->provider->charge($subscription->amount, $user->phone, $method, $key, 'Garimpo · Subscrição VIP');
             $subscription->forceFill([
                 'provider' => $this->provider->name(),
                 'external_reference' => $result->reference,

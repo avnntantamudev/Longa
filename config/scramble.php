@@ -57,11 +57,11 @@ return [
         /*
          * Description rendered on the home page of the API documentation (`/docs/api`).
          */
-        'description' => 'API da LONGA (PWA e app Flutter). Autenticação: cookie de sessão Sanctum (PWA) ou Bearer token obtido em /auth/otp/verify. Erros no formato {error: {code, message, details}, request_id}.',
+        'description' => 'API do Garimpo (PWA e app Flutter). Autenticação: cookie de sessão Sanctum (PWA) ou Bearer token obtido em /auth/otp/verify. Erros no formato {error: {code, message, details}, request_id}.',
     ],
 
     'ui' => [
-        'title' => 'LONGA API',
+        'title' => 'Garimpo API',
     ],
 
     /*

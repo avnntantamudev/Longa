@@ -9,7 +9,7 @@ use App\Modules\Users\Models\TrainerProfile;
 use App\Support\Settings\PlatformSettings;
 
 /**
- * Comissão LONGA, descontada ao formador (decisão do cliente, docs/decisions.md).
+ * Comissão do Garimpo, descontada ao formador (decisão do cliente, docs/decisions.md).
  * Tudo em Kz inteiros; a comissão arredonda ao Kz, meio para cima.
  *
  * Ex.: 25.000 Kz com 15% → comissão 3.750 Kz, formador recebe 21.250 Kz.

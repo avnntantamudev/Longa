@@ -81,7 +81,7 @@ class SessionUpdateNotification extends Notification implements ShouldQueue
                 ? "{$title} foi confirmada. O pagamento foi feito em mão."
                 : "{$title} foi confirmada. Kz ".number_format($this->session->trainer_net, 0, ',', '.').' disponíveis na sua carteira.'],
             self::CANCELLED => ['Aula cancelada', "{$title} foi cancelada.".($this->detail ? " Motivo: {$this->detail}" : '')],
-            self::DISPUTE_OPENED => ['Disputa aberta', "Foi aberta uma disputa sobre {$title}. O valor fica retido até à decisão da LONGA."],
+            self::DISPUTE_OPENED => ['Disputa aberta', "Foi aberta uma disputa sobre {$title}. O valor fica retido até à decisão do Garimpo."],
             default => ['Disputa decidida', "A disputa sobre {$title} foi decidida: ".match ($this->detail) {
                 'released' => 'valor libertado ao formador.',
                 'refunded' => 'reembolso total ao aluno.',

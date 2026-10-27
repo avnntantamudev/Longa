@@ -73,7 +73,7 @@ class NewOfferNotification extends Notification implements ShouldQueue, SmsNotif
 
     public function toSms(object $notifiable): string
     {
-        return 'LONGA: '.$this->headline().'. '.$this->details().'. Responda em '.$this->offer->secondsLeft().'s: '
+        return 'Garimpo: '.$this->headline().'. '.$this->details().'. Responda em '.$this->offer->secondsLeft().'s: '
             .url('/formador/ofertas/'.$this->offer->id);
     }
 

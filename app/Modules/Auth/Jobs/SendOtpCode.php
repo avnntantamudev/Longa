@@ -49,6 +49,6 @@ class SendOtpCode implements ShouldBeEncrypted, ShouldQueue
             }
         }
 
-        $sms->send($this->phone, "LONGA: o seu código é {$this->code}. Válido durante {$this->minutes} minutos. Não o partilhe com ninguém.");
+        $sms->send($this->phone, "Garimpo: o seu código é {$this->code}. Válido durante {$this->minutes} minutos. Não o partilhe com ninguém.");
     }
 }

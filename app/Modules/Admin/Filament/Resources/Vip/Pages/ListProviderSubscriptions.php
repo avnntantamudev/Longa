@@ -29,7 +29,7 @@ class ListProviderSubscriptions extends ListRecords
                 ->modalHeading('Registar VIP sem pagamento na app')
                 ->modalDescription(fn (PlatformSettings $s) => 'Em mão: entra no ledger o preço atual ('.number_format($s->int('vip_price'), 0, ',', '.').' Kz). Cortesia: sem dinheiro. Em ambos, soma '.$s->int('vip_duration_days').' dias ao VIP em vigor.')
                 ->schema([
-                    Select::make('provider_profile_id')->label('Formador')->required()->searchable()
+                    Select::make('provider_profile_id')->label('Técnico')->required()->searchable()
                         ->getSearchResultsUsing(fn (string $search) => ProviderProfile::query()->join('users', 'users.id', '=', 'provider_profiles.user_id')
                             ->where(fn ($q) => $q->where('users.name', 'like', "%{$search}%")->orWhere('users.phone', 'like', "%{$search}%"))
                             ->limit(20)->pluck('users.name', 'provider_profiles.id')->all())

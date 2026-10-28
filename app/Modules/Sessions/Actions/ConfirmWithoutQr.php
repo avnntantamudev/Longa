@@ -15,9 +15,9 @@ use App\Support\Audit\AuditLogger;
 use Illuminate\Support\Facades\DB;
 
 /**
- * O aluno confirma que a aula aconteceu sem ler o QR (ex.: esqueceu-se no fim da aula). Só com a aula
- * à espera de confirmação (o formador terminou, ou regra R1/R2). Liberta o escrow; idempotente.
- * Quem confirma é sempre o aluno, que é quem pagou: não há forma de o formador se autoconfirmar.
+ * O cliente confirma que o serviço aconteceu sem ler o QR (ex.: esqueceu-se no fim do serviço). Só com o serviço
+ * à espera de confirmação (o técnico terminou, ou regra R1/R2). Liberta o escrow; idempotente.
+ * Quem confirma é sempre o cliente, que é quem pagou: não há forma de o técnico se autoconfirmar.
  */
 class ConfirmWithoutQr
 {
@@ -38,7 +38,7 @@ class ConfirmWithoutQr
             }
 
             if ($locked->state !== SessionState::AwaitingConfirmation) {
-                throw new ApiException('session_not_awaiting', 'A aula ainda não está à espera de confirmação. Use o QR do formador.', 409);
+                throw new ApiException('session_not_awaiting', 'O serviço ainda não está à espera de confirmação. Use o QR do técnico.', 409);
             }
 
             $this->lifecycle->transition($locked, SessionState::Completed, 'confirmed', $client, ['method' => 'manual'], ['confirmed_at' => now()]);

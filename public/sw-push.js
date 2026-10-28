@@ -1,7 +1,7 @@
 /*
  * Web Push no service worker do BISCA (importado pelo sw.js gerado pelo Workbox).
  * - "push": mostra a notificação enviada pelo servidor (laravel-notification-channels/webpush).
- * - "notificationclick": abre o URL da notificação (ex.: /formador/ofertas/123), reutilizando
+ * - "notificationclick": abre o URL da notificação (ex.: /tecnico/ofertas/123), reutilizando
  *   uma janela da app já aberta quando existe.
  */
 

@@ -16,7 +16,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
- * O aluno publica um pedido: valida as regras de negócio, calcula a comissão, passa a "searching"
+ * O cliente publica um pedido: valida as regras de negócio, calcula a comissão, passa a "searching"
  * (expira em 5 min) e envia a 1.ª onda do TRIM TRIM.
  */
 class CreateServiceRequest
@@ -31,7 +31,7 @@ class CreateServiceRequest
         $scheduledAt = Carbon::parse($data['scheduled_at']);
 
         $request = DB::transaction(function () use ($client, $data, $scheduledAt, $republishedFrom) {
-            // Serializa os pedidos do mesmo aluno para os limites não serem contornados em paralelo
+            // Serializa os pedidos do mesmo cliente para os limites não serem contornados em paralelo
             User::query()->whereKey($client->id)->lockForUpdate()->first();
 
             $this->ensureWithinActiveLimit($client);
@@ -69,7 +69,7 @@ class CreateServiceRequest
             ->count();
 
         if ($active >= $max) {
-            throw new ApiException('too_many_active_requests', "Já tem {$active} pedido(s) à procura de formador. Aguarde ou cancele um deles.", 409);
+            throw new ApiException('too_many_active_requests', "Já tem {$active} pedido(s) à procura de técnico. Aguarde ou cancele um deles.", 409);
         }
     }
 

@@ -10,8 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * Oferta vista pelo formador ANTES de aceitar: bairro e distância aproximada, nunca a localização
- * exata nem o telefone ou nome completo do aluno.
+ * Oferta vista pelo técnico ANTES de aceitar: bairro e distância aproximada, nunca a localização
+ * exata nem o telefone ou nome completo do cliente.
  *
  * @mixin RequestOffer
  */

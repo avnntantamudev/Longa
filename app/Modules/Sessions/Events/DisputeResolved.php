@@ -13,7 +13,7 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Disputa decidida pelo admin (canal privado da aula: aluno e formador).
+ * Disputa decidida pelo admin (canal privado do serviço: cliente e técnico).
  */
 class DisputeResolved implements ShouldBroadcast, ShouldDispatchAfterCommit
 {

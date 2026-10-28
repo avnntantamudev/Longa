@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Subscrição VIP do formador (anual por omissão). Renovar soma a duração ao fim da subscrição em vigor.
+ * Subscrição VIP do técnico (anual por omissão). Renovar soma a duração ao fim da subscrição em vigor.
  *
  * @property int $id
  * @property int $provider_profile_id

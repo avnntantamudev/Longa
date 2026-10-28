@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * Perfil de formador visto pelo próprio (inclui coordenadas e estado do onboarding).
+ * Perfil de técnico visto pelo próprio (inclui coordenadas e estado do onboarding).
  * Para terceiros usar PublicProviderResource.
  *
  * @mixin ProviderProfile

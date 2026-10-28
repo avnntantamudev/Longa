@@ -52,13 +52,13 @@ it('impede o mesmo BI em duas contas', function () {
     submitBi('001234567la042')->assertStatus(409)->assertJsonPath('error.code', 'document_already_used');
 });
 
-it('só formadores submetem verificação', function () {
+it('só técnicos submetem verificação', function () {
     apiLogin(User::factory()->withRole(Role::Client)->create());
 
     submitBi()->assertForbidden()->assertJsonPath('error.code', 'forbidden');
 });
 
-it('o admin aprova e o formador fica verificado', function () {
+it('o admin aprova e o técnico fica verificado', function () {
     $profile = ProviderProfile::factory()->create();
     apiLogin($profile->user);
     $id = submitBi()->json('data.id');

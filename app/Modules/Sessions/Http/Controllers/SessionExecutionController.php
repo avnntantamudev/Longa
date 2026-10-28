@@ -20,14 +20,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 /**
- * Execução da aula: iniciar, terminar e mostrar o QR, confirmar.
+ * Execução do serviço: iniciar, terminar e mostrar o QR, confirmar.
  *
- * @tags Execução da aula
+ * @tags Execução do serviço
  */
 class SessionExecutionController extends Controller
 {
     /**
-     * Iniciar aula (formador).
+     * Iniciar serviço (técnico).
      */
     public function start(Request $request, ServiceJob $session, StartSession $action): SessionResource
     {
@@ -37,7 +37,7 @@ class SessionExecutionController extends Controller
     }
 
     /**
-     * Terminar aula e obter o lote de QR (formador).
+     * Terminar serviço e obter o lote de QR (técnico).
      *
      * Devolve vários tokens, um por janela de 30 s: a app mostra-os em sequência, mesmo sem rede, e pede
      * um novo lote antes de acabarem (POST /sessions/{id}/qr). Os tokens só existem nesta resposta.
@@ -50,7 +50,7 @@ class SessionExecutionController extends Controller
     }
 
     /**
-     * Novo lote de QR (formador), com a aula à espera de confirmação.
+     * Novo lote de QR (técnico), com o serviço à espera de confirmação.
      */
     public function qr(Request $request, ServiceJob $session, FinishSession $action): JsonResponse
     {
@@ -60,9 +60,9 @@ class SessionExecutionController extends Controller
     }
 
     /**
-     * Confirmar aula com o QR ou o código de 6 dígitos (aluno).
+     * Confirmar serviço com o QR ou o código de 6 dígitos (cliente).
      *
-     * Requer `Idempotency-Key`. Liberta o valor retido para o formador (menos a comissão).
+     * Requer `Idempotency-Key`. Liberta o valor retido para o técnico (menos a comissão).
      * Erros: `qr_invalid` (422), `qr_locked` (429), `qr_outside_window` (409), `session_not_confirmable` (409).
      */
     public function confirm(ConfirmSessionRequest $request, ServiceJob $session, ConfirmSession $action): JsonResponse
@@ -81,15 +81,15 @@ class SessionExecutionController extends Controller
         return response()->json([
             'data' => $this->resource($confirmed)->resolve($request),
             'message' => $confirmed->isCash()
-                ? 'Aula confirmada. Confirme que pagou ao formador em mão.'
-                : 'Aula confirmada, Kz '.number_format($confirmed->amount, 0, ',', '.').' libertados para o formador.',
+                ? 'Serviço confirmado. Confirme que pagou ao técnico em mão.'
+                : 'Serviço confirmado, Kz '.number_format($confirmed->amount, 0, ',', '.').' libertados para o técnico.',
         ]);
     }
 
     /**
-     * Confirmar sem QR (aluno), com a aula à espera de confirmação.
+     * Confirmar sem QR (cliente), com o serviço à espera de confirmação.
      *
-     * Requer `Idempotency-Key`. Liberta o valor retido para o formador.
+     * Requer `Idempotency-Key`. Liberta o valor retido para o técnico.
      */
     public function confirmWithoutQr(Request $request, ServiceJob $session, ConfirmWithoutQr $action): SessionResource
     {
@@ -99,10 +99,10 @@ class SessionExecutionController extends Controller
     }
 
     /**
-     * Cancelar aula agendada (aluno ou formador).
+     * Cancelar serviço agendado (cliente ou técnico).
      *
-     * Requer `Idempotency-Key`. Reembolso conforme a política: aluno ≥ 6 h antes → total; depois → o formador
-     * fica com 25%; formador cancela → total.
+     * Requer `Idempotency-Key`. Reembolso conforme a política: cliente ≥ 6 h antes → total; depois → o técnico
+     * fica com 25%; técnico cancela → total.
      */
     public function cancel(Request $request, ServiceJob $session, CancelSession $action): SessionResource
     {
@@ -113,7 +113,7 @@ class SessionExecutionController extends Controller
     }
 
     /**
-     * Reportar falta da outra parte (aluno ou formador).
+     * Reportar falta da outra parte (cliente ou técnico).
      *
      * Requer `Idempotency-Key`. A outra parte tem 24 h para contestar (abre disputa); sem contestação,
      * a liquidação segue a política.

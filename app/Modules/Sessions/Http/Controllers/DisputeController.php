@@ -22,7 +22,7 @@ use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Disputas: abrir (aluno ou parte acusada de faltar), consultar e decidir (admin).
+ * Disputas: abrir (cliente ou parte acusada de faltar), consultar e decidir (admin).
  *
  * @tags Disputas
  */
@@ -50,7 +50,7 @@ class DisputeController extends Controller
     }
 
     /**
-     * Disputas de uma aula.
+     * Disputas de um serviço.
      */
     public function index(ServiceJob $session): JsonResponse
     {
@@ -60,7 +60,7 @@ class DisputeController extends Controller
     }
 
     /**
-     * Link temporário para uma evidência (participantes da aula e admin).
+     * Link temporário para uma evidência (participantes do serviço e admin).
      */
     public function attachmentLink(Request $request, DisputeAttachment $attachment): JsonResponse
     {
@@ -95,8 +95,8 @@ class DisputeController extends Controller
     /**
      * Decidir disputa (admin).
      *
-     * Requer `Idempotency-Key`. `released` liberta tudo ao formador, `refunded` devolve tudo ao aluno,
-     * `partially_refunded` dá `provider_share` Kz ao formador (antes da comissão) e devolve o resto.
+     * Requer `Idempotency-Key`. `released` liberta tudo ao técnico, `refunded` devolve tudo ao cliente,
+     * `partially_refunded` dá `provider_share` Kz ao técnico (antes da comissão) e devolve o resto.
      * Erros: `dispute_already_resolved` (409).
      */
     public function resolve(Request $request, Dispute $dispute, ResolveDispute $action): DisputeResource

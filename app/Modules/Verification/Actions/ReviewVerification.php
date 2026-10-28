@@ -12,7 +12,7 @@ use App\Support\Audit\AuditLogger;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Admin aprova ou rejeita uma verificação pendente; o estado do formador acompanha a decisão.
+ * Admin aprova ou rejeita uma verificação pendente; o estado do técnico acompanha a decisão.
  */
 class ReviewVerification
 {

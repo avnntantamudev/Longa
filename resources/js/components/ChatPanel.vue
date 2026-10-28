@@ -5,7 +5,7 @@ import { api, ApiError } from '@/lib/api';
 import { nextTick, onMounted, ref } from 'vue';
 
 /**
- * Chat da aula (texto + PDF) pensado para rede lenta:
+ * Chat do serviço (texto + PDF) pensado para rede lenta:
  *  - envio otimista com client_id: a mensagem aparece logo como "a enviar";
  *  - se falhar fica "não enviada · tentar de novo" (o servidor não duplica reenvios com o mesmo client_id);
  *  - mensagens novas chegam pelo Reverb e, se o tempo real falhar, por atualização periódica.

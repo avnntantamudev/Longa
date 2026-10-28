@@ -13,7 +13,7 @@ use NotificationChannels\WebPush\WebPushChannel;
 use NotificationChannels\WebPush\WebPushMessage;
 
 /**
- * Avisos da execução da aula (push + na app). Complementa os eventos em tempo real, que só chegam
+ * Avisos da execução do serviço (push + na app). Complementa os eventos em tempo real, que só chegam
  * com a app aberta.
  */
 class SessionUpdateNotification extends Notification implements ShouldQueue
@@ -54,7 +54,7 @@ class SessionUpdateNotification extends Notification implements ShouldQueue
             ->body($body)
             ->icon('/icons/icon-192.png')
             ->tag("session-{$this->kind}-{$this->session->id}")
-            ->data(['url' => '/aulas/'.$this->session->id]);
+            ->data(['url' => '/servicos/'.$this->session->id]);
     }
 
     /**
@@ -64,7 +64,7 @@ class SessionUpdateNotification extends Notification implements ShouldQueue
     {
         [$title, $body] = $this->content();
 
-        return ['type' => 'session_'.$this->kind, 'title' => $title, 'body' => $body, 'session_id' => $this->session->id, 'url' => '/aulas/'.$this->session->id];
+        return ['type' => 'session_'.$this->kind, 'title' => $title, 'body' => $body, 'session_id' => $this->session->id, 'url' => '/servicos/'.$this->session->id];
     }
 
     /**
@@ -75,17 +75,17 @@ class SessionUpdateNotification extends Notification implements ShouldQueue
         $title = "\"{$this->session->title}\"";
 
         return match ($this->kind) {
-            self::STARTED => ['A aula começou', "{$title} foi iniciada pelo formador."],
-            self::QR_READY => ['Confirme a aula', "{$title} terminou. Escaneie o QR do formador para confirmar."],
-            self::CONFIRMED => ['Aula confirmada', $this->session->isCash()
+            self::STARTED => ['O serviço começou', "{$title} foi iniciado pelo técnico."],
+            self::QR_READY => ['Confirme o serviço', "{$title} terminou. Escaneie o QR do técnico para confirmar."],
+            self::CONFIRMED => ['Serviço confirmado', $this->session->isCash()
                 ? "{$title} foi confirmada. O pagamento foi feito em mão."
                 : "{$title} foi confirmada. Kz ".number_format($this->session->provider_net, 0, ',', '.').' disponíveis na sua carteira.'],
-            self::CANCELLED => ['Aula cancelada', "{$title} foi cancelada.".($this->detail ? " Motivo: {$this->detail}" : '')],
+            self::CANCELLED => ['Serviço cancelado', "{$title} foi cancelado.".($this->detail ? " Motivo: {$this->detail}" : '')],
             self::DISPUTE_OPENED => ['Disputa aberta', "Foi aberta uma disputa sobre {$title}. O valor fica retido até à decisão do BISCA."],
             default => ['Disputa decidida', "A disputa sobre {$title} foi decidida: ".match ($this->detail) {
-                'released' => 'valor libertado ao formador.',
-                'refunded' => 'reembolso total ao aluno.',
-                default => 'reembolso parcial ao aluno.',
+                'released' => 'valor libertado ao técnico.',
+                'refunded' => 'reembolso total ao cliente.',
+                default => 'reembolso parcial ao cliente.',
             }],
         };
     }

@@ -14,9 +14,9 @@ use App\Support\Api\ApiException;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Aula paga em dinheiro: depois de concluída (QR), o aluno confirma que pagou em mão.
- * Regista a comissão como dívida do formador e compensa com o saldo disponível, se houver.
- * Idempotente. A regra automática R5 faz o mesmo se o aluno não confirmar em 48 h.
+ * Serviço pago em dinheiro: depois de concluído (QR), o cliente confirma que pagou em mão.
+ * Regista a comissão como dívida do técnico e compensa com o saldo disponível, se houver.
+ * Idempotente. A regra automática R5 faz o mesmo se o cliente não confirmar em 48 h.
  */
 class ConfirmCashPayment
 {
@@ -32,7 +32,7 @@ class ConfirmCashPayment
             $locked = ServiceJob::query()->lockForUpdate()->findOrFail($session->id);
 
             if (! $locked->isCash()) {
-                throw new ApiException('not_cash_session', 'Esta aula não é paga em dinheiro.', 409);
+                throw new ApiException('not_cash_session', 'Este serviço não é paga em dinheiro.', 409);
             }
 
             if ($locked->cash_confirmed_at !== null) {
@@ -40,7 +40,7 @@ class ConfirmCashPayment
             }
 
             if ($locked->state !== SessionState::Completed) {
-                throw new ApiException('session_not_completed', 'Confirme primeiro a aula com o QR do formador.', 409);
+                throw new ApiException('session_not_completed', 'Confirme primeiro o serviço com o QR do técnico.', 409);
             }
 
             $this->debts->register($locked, $client, $reason);

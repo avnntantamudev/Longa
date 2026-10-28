@@ -5,7 +5,7 @@ import { kwanza, when } from '@/lib/format';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { onMounted, ref } from 'vue';
 
-/** Carteira do formador (só leitura; levantamentos chegam numa fase seguinte). */
+/** Carteira do técnico (só leitura; levantamentos chegam numa fase seguinte). */
 interface Summary {
     available: number;
     pending: number;
@@ -65,7 +65,7 @@ onMounted(load);
             <p class="text-caption text-navy-200">Disponível</p>
             <p class="text-display" data-testid="available">{{ kwanza(summary.available) }}</p>
             <p class="mt-1 text-caption text-navy-200">Levantamentos disponíveis brevemente.</p>
-            <Link href="/vip" class="mt-3 inline-block rounded-full bg-orange-500 px-4 py-1.5 text-caption font-semibold text-white">⭐ Formador VIP</Link>
+            <Link href="/vip" class="mt-3 inline-block rounded-full bg-orange-500 px-4 py-1.5 text-caption font-semibold text-white">⭐ Técnico VIP</Link>
             <Link href="/carteira/ganhos" class="mt-3 ml-2 inline-block rounded-full bg-white/10 px-4 py-1.5 text-caption font-semibold text-white">Os meus ganhos</Link>
         </section>
 
@@ -73,7 +73,7 @@ onMounted(load);
             <div class="card">
                 <p class="text-caption text-ink-muted">Pendente</p>
                 <p class="font-semibold">{{ kwanza(summary.pending) }}</p>
-                <p class="text-caption text-ink-muted">Aulas pagas por confirmar</p>
+                <p class="text-caption text-ink-muted">Serviços pagos por confirmar</p>
             </div>
             <div class="card">
                 <p class="text-caption text-ink-muted">Total ganho</p>
@@ -81,7 +81,7 @@ onMounted(load);
             </div>
         </div>
         <p v-if="summary.commission_due > 0" class="card mt-3 text-caption">
-            Comissões de aulas pagas em mão por entregar: <strong>{{ kwanza(summary.commission_due) }}</strong>.
+            Comissões de serviços pagos em mão por entregar: <strong>{{ kwanza(summary.commission_due) }}</strong>.
             São descontadas automaticamente dos próximos pagamentos pelo BISCA.
         </p>
 
@@ -93,11 +93,11 @@ onMounted(load);
                     <p class="truncate font-semibold">{{ m.label }}</p>
                     <p class="text-caption text-ink-muted">
                         {{ when(m.created_at) }}
-                        <Link v-if="m.session_id" :href="`/aulas/${m.session_id}`" class="underline">· ver aula</Link>
+                        <Link v-if="m.session_id" :href="`/servicos/${m.session_id}`" class="underline">· ver serviço</Link>
                     </p>
                 </div>
                 <span class="shrink-0 font-semibold" :class="m.amount > 0 && m.bucket === 'available' ? 'text-success' : ''">
-                    <!-- Na dívida, um lançamento negativo aumenta o que o formador deve -->
+                    <!-- Na dívida, um lançamento negativo aumenta o que o técnico deve -->
                     <template v-if="m.bucket === 'commission_due'">Dívida {{ m.amount < 0 ? '+' : '−' }}{{ kwanza(Math.abs(m.amount)) }}</template>
                     <template v-else>{{ m.amount > 0 ? '+' : '−' }}{{ kwanza(Math.abs(m.amount)) }}</template>
                 </span>

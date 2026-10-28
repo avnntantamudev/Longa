@@ -10,10 +10,10 @@ use App\Modules\Wallet\Ledger\Accounts;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Ganhos do formador por mês (um ano). Os valores em dinheiro vêm do ledger; o número de aulas das aulas.
- *  - creditado: o que entrou na carteira (aulas confirmadas e partes de cancelamentos/disputas);
- *  - comissões: comissão do BISCA das aulas deste formador (incluindo as pagas em mão);
- *  - em mão: valor das aulas pagas diretamente pelo aluno.
+ * Ganhos do técnico por mês (um ano). Os valores em dinheiro vêm do ledger; o número de serviços dos serviços.
+ *  - creditado: o que entrou na carteira (serviços confirmados e partes de cancelamentos/disputas);
+ *  - comissões: comissão do BISCA dos serviços deste técnico (incluindo as pagos em mão);
+ *  - em mão: valor dos serviços pagos diretamente pelo cliente.
  */
 class EarningsReport
 {
@@ -81,7 +81,7 @@ class EarningsReport
     public static function sections(array $report): array
     {
         $names = ['', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-        $headers = ['Mês', 'Aulas', 'Em mão', 'Creditado na carteira', 'Comissões do BISCA', 'Recebido em mão'];
+        $headers = ['Mês', 'Serviços', 'Em mão', 'Creditado na carteira', 'Comissões do BISCA', 'Recebido em mão'];
         $rows = array_map(fn ($m) => [$names[$m['month']], $m['lessons'], $m['cash_lessons'], $m['credited'], $m['commissions'], $m['cash_received']], $report['months']);
         $t = $report['totals'];
 

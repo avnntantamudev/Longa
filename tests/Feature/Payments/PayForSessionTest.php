@@ -16,7 +16,7 @@ function pay(int $sessionId, string $key = 'pay-session-0001'): Illuminate\Testi
     return test()->postJson("/api/v1/sessions/{$sessionId}/pay", ['method' => 'multicaixa_express'], ['Idempotency-Key' => $key]);
 }
 
-it('o aluno paga: o valor fica em escrow e a aula fica agendada', function () {
+it('o cliente paga: o valor fica em escrow e o serviço fica agendado', function () {
     $session = acceptedSession();
     apiLogin($session->client);
 
@@ -43,7 +43,7 @@ it('pagar duas vezes não cobra nem retém duas vezes (mesma chave ou chave nova
         ->and(app(LedgerService::class)->balance(Accounts::ESCROW))->toBe(25000);
 });
 
-it('pagamento recusado: a aula passa a payment_failed e nada entra no ledger', function () {
+it('pagamento recusado: o serviço passa a payment_failed e nada entra no ledger', function () {
     $session = acceptedSession();
     $session->client->forceFill(['phone' => '+244923450000'])->save(); // o mock recusa telefones terminados em 0000
     apiLogin($session->client);
@@ -54,7 +54,7 @@ it('pagamento recusado: a aula passa a payment_failed e nada entra no ledger', f
         ->and(LedgerTransaction::query()->count())->toBe(0);
 });
 
-it('fora da janela de pagamento: recusa e a regra R3 liberta o formador', function () {
+it('fora da janela de pagamento: recusa e a regra R3 liberta o técnico', function () {
     $session = acceptedSession();
 
     $this->travel(11)->minutes();
@@ -67,7 +67,7 @@ it('fora da janela de pagamento: recusa e a regra R3 liberta o formador', functi
         ->and(SessionEvent::query()->where('type', 'payment_window_expired')->exists())->toBeTrue();
 });
 
-it('só o aluno da aula paga e aulas em dinheiro não se pagam aqui', function () {
+it('só o cliente do serviço pago e serviços em dinheiro não se pagam aqui', function () {
     $session = acceptedSession();
     apiLogin(User::factory()->create());
     pay($session->id)->assertForbidden();

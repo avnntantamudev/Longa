@@ -21,7 +21,7 @@ use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
 /**
- * Aulas (só leitura): estado, linha do tempo e movimentos de dinheiro.
+ * Serviços (só leitura): estado, linha do tempo e movimentos de dinheiro.
  */
 class ServiceJobResource extends Resource
 {
@@ -31,11 +31,11 @@ class ServiceJobResource extends Resource
 
     protected static string|UnitEnum|null $navigationGroup = 'Operações';
 
-    protected static ?string $modelLabel = 'aula';
+    protected static ?string $modelLabel = 'serviço';
 
-    protected static ?string $pluralModelLabel = 'aulas';
+    protected static ?string $pluralModelLabel = 'serviços';
 
-    protected static ?string $slug = 'aulas';
+    protected static ?string $slug = 'servicos';
 
     protected static ?int $navigationSort = 2;
 
@@ -55,9 +55,9 @@ class ServiceJobResource extends Resource
             ->defaultSort('scheduled_at', 'desc')
             ->columns([
                 TextColumn::make('id')->label('#'),
-                TextColumn::make('title')->label('Aula')->searchable(),
-                TextColumn::make('client.name')->label('Aluno'),
-                TextColumn::make('provider.user.name')->label('Formador'),
+                TextColumn::make('title')->label('Serviço')->searchable(),
+                TextColumn::make('client.name')->label('Cliente'),
+                TextColumn::make('provider.user.name')->label('Técnico'),
                 TextColumn::make('amount')->label('Valor')->formatStateUsing(fn (int $state) => SessionSections::kz($state)),
                 TextColumn::make('state')->label('Estado')->badge()->formatStateUsing(fn (SessionState $state) => $state->label()),
                 TextColumn::make('scheduled_at')->label('Data')->dateTime('d/m/Y H:i')->sortable(),

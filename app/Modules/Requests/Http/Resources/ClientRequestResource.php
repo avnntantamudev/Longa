@@ -10,8 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * Pedido visto pelo aluno que o publicou. Não mostra quais formadores receberam a oferta;
- * os dados do formador só aparecem na aula, depois de ele aceitar.
+ * Pedido visto pelo cliente que o publicou. Não mostra quais técnicos receberam a oferta;
+ * os dados do técnico só aparecem no serviço, depois de ele aceitar.
  *
  * @mixin ServiceRequest
  */
@@ -40,7 +40,7 @@ class ClientRequestResource extends JsonResource
             'expires_at' => $this->expires_at?->toIso8601String(),
             'seconds_left' => $this->expires_at ? max(0, (int) now()->diffInSeconds($this->expires_at, false)) : null,
             'wave' => $this->wave,
-            // Quantos formadores estão a ver a oferta agora (sem dizer quem)
+            // Quantos técnicos estão a ver a oferta agora (sem dizer quem)
             'open_offers' => $this->offers()->whereIn('state', OfferState::open())->where('expires_at', '>', now())->count(),
             'session_id' => $this->session?->id,
             'cancel_reason' => $this->cancel_reason,

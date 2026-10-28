@@ -30,7 +30,7 @@ class ProfileController extends Controller
     /**
      * Concluir o registo.
      *
-     * Define o nome, os perfis (aluno, formador, empresa) e regista a aceitação dos termos e da privacidade.
+     * Define o nome, os perfis (cliente, técnico, empresa) e regista a aceitação dos termos e da privacidade.
      */
     public function onboarding(OnboardingRequest $request, CompleteOnboarding $action): UserResource
     {
@@ -49,12 +49,12 @@ class ProfileController extends Controller
     }
 
     /**
-     * Atualizar o perfil de aluno.
+     * Atualizar o perfil de cliente.
      */
     public function updateClient(ClientProfileRequest $request): JsonResponse
     {
         $profile = $this->user($request)->clientProfile
-            ?? throw new ApiException('profile_missing', 'Ainda não tem o perfil de aluno.', 409);
+            ?? throw new ApiException('profile_missing', 'Ainda não tem o perfil de cliente.', 409);
 
         $profile->fill($request->validated())->save();
 
@@ -62,18 +62,18 @@ class ProfileController extends Controller
     }
 
     /**
-     * Ver o próprio perfil de formador.
+     * Ver o próprio perfil de técnico.
      */
     public function showProvider(Request $request): ProviderProfileResource
     {
         $profile = $this->user($request)->providerProfile
-            ?? throw new ApiException('profile_missing', 'Ainda não tem o perfil de formador.', 409);
+            ?? throw new ApiException('profile_missing', 'Ainda não tem o perfil de técnico.', 409);
 
         return new ProviderProfileResource($profile->load('categories'));
     }
 
     /**
-     * Formador: apresentação, experiência, modalidades e preço.
+     * Técnico: apresentação, experiência, modalidades e preço.
      */
     public function providerDetails(ProviderDetailsRequest $request, UpdateProviderProfile $action): ProviderProfileResource
     {
@@ -84,7 +84,7 @@ class ProfileController extends Controller
     }
 
     /**
-     * Formador: áreas de formação.
+     * Técnico: áreas de serviço.
      */
     public function providerCategories(ProviderCategoriesRequest $request, UpdateProviderProfile $action): ProviderProfileResource
     {
@@ -92,7 +92,7 @@ class ProfileController extends Controller
     }
 
     /**
-     * Formador: local e raio de atuação.
+     * Técnico: local e raio de atuação.
      */
     public function providerLocation(ProviderLocationRequest $request, UpdateProviderProfile $action): ProviderProfileResource
     {

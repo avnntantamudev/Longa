@@ -19,26 +19,26 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 
 /**
- * Simula formadores para testar o TRIM TRIM localmente (só em ambientes não produtivos).
+ * Simula técnicos para testar o TRIM TRIM localmente (só em ambientes não produtivos).
  *
  *   php artisan longa:simulate-providers 8 --zone=Talatona --category=sgme-gestao-empresarial
  *   php artisan longa:simulate-providers 8 --auto-accept     # aceitam ofertas com atraso aleatório (corridas reais)
  *
- * Os formadores criados têm telefones +244 91 000 0001… e podem entrar na PWA por OTP.
+ * Os técnicos criados têm telefones +244 91 000 0001… e podem entrar na PWA por OTP.
  */
 class SimulateProvidersCommand extends Command
 {
     protected $signature = 'longa:simulate-providers
-        {count=5 : Quantos formadores criar}
-        {--zone=Talatona : Bairro (config/locations.php) à volta do qual ficam os formadores}
-        {--category=sgme-gestao-empresarial : Slug da área de formação}
+        {count=5 : Quantos técnicos criar}
+        {--zone=Talatona : Bairro (config/locations.php) à volta do qual ficam os técnicos}
+        {--category=sgme-gestao-empresarial : Slug da área de serviço}
         {--radius=4000 : Distância máxima (m) ao centro da zona}
-        {--auto-accept : Fica a correr e aceita ofertas destes formadores com atraso aleatório}
+        {--auto-accept : Fica a correr e aceita ofertas destes técnicos com atraso aleatório}
         {--min-delay=2 : Atraso mínimo (s) antes de aceitar}
         {--max-delay=15 : Atraso máximo (s) antes de aceitar}
         {--duration=0 : Com --auto-accept, parar ao fim de N segundos (0 = até Ctrl+C)}';
 
-    protected $description = 'Cria formadores verificados perto de uma zona e, opcionalmente, simula aceitações';
+    protected $description = 'Cria técnicos verificados perto de uma zona e, opcionalmente, simula aceitações';
 
     public function handle(AcceptOffer $accept): int
     {
@@ -52,7 +52,7 @@ class SimulateProvidersCommand extends Command
         $category = Category::query()->where('slug', $this->option('category'))->first();
 
         if ($zone === null || $category === null) {
-            $this->error('Zona ou área de formação desconhecida.');
+            $this->error('Zona ou área de serviço desconhecida.');
 
             return self::FAILURE;
         }
@@ -60,7 +60,7 @@ class SimulateProvidersCommand extends Command
         $providers = collect(range(1, (int) $this->argument('count')))->map(function (int $i) use ($zone, $category) {
             $phone = sprintf('+24491000%04d', $i);
             $user = User::query()->firstOrCreate(['phone' => $phone], [
-                'name' => "Formador Simulado {$i}",
+                'name' => "Técnico Simulado {$i}",
                 'phone_verified_at' => now(),
                 'onboarded_at' => now(),
             ]);
@@ -72,7 +72,7 @@ class SimulateProvidersCommand extends Command
             $profile = ProviderProfile::query()->firstOrNew(['user_id' => $user->id]);
             $profile->user_id = $user->id;
             $profile->fill([
-                'bio' => 'Formador simulado para testes do TRIM TRIM.',
+                'bio' => 'Técnico simulado para testes do TRIM TRIM.',
                 'modalities' => ['in_person', 'online'],
                 'municipality' => $zone['municipality'],
                 'neighborhood' => $zone['neighborhood'],
@@ -101,7 +101,7 @@ class SimulateProvidersCommand extends Command
         });
 
         $this->table(['Telefone', 'Nome', 'Score'], $providers->map(fn (ProviderProfile $p) => [$p->user->phone, $p->user->name, $p->score])->all());
-        $this->info("{$providers->count()} formadores disponíveis em {$zone['neighborhood']} para {$category->name}.");
+        $this->info("{$providers->count()} técnicos disponíveis em {$zone['neighborhood']} para {$category->name}.");
 
         if (! $this->option('auto-accept')) {
             return self::SUCCESS;
@@ -127,7 +127,7 @@ class SimulateProvidersCommand extends Command
                     unset($scheduled[$offer->id]);
                     try {
                         $session = $accept->handle($offer);
-                        $this->info("Oferta {$offer->id}: aceite, aula {$session->id}");
+                        $this->info("Oferta {$offer->id}: aceite, serviço {$session->id}");
                     } catch (ApiException $e) {
                         $this->line("Oferta {$offer->id}: {$e->getMessage()}");
                     }

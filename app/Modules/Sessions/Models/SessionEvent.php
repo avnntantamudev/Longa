@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use LogicException;
 
 /**
- * Linha do tempo da aula (só acréscimos): transições, QR, pagamentos, sinais de risco, decisões.
+ * Linha do tempo do serviço (só acréscimos): transições, QR, pagamentos, sinais de risco, decisões.
  *
  * @property int $id
  * @property int $service_job_id
@@ -35,8 +35,8 @@ class SessionEvent extends Model
 
     protected static function booted(): void
     {
-        static::updating(fn () => throw new LogicException('A linha do tempo da aula só aceita novos eventos.'));
-        static::deleting(fn () => throw new LogicException('A linha do tempo da aula só aceita novos eventos.'));
+        static::updating(fn () => throw new LogicException('A linha do tempo do serviço só aceita novos eventos.'));
+        static::deleting(fn () => throw new LogicException('A linha do tempo do serviço só aceita novos eventos.'));
     }
 
     /**

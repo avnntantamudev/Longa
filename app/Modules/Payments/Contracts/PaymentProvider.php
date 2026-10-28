@@ -18,14 +18,14 @@ interface PaymentProvider
     public function name(): string;
 
     /**
-     * Cobra o aluno. Pode devolver "pending" (ex.: aprovação na app Multicaixa Express) e confirmar depois.
+     * Cobra o cliente. Pode devolver "pending" (ex.: aprovação na app Multicaixa Express) e confirmar depois.
      *
-     * @param  string  $phone  telefone do aluno (E.164), usado pelo Multicaixa Express
+     * @param  string  $phone  telefone do cliente (E.164), usado pelo Multicaixa Express
      */
     public function charge(int $amount, string $phone, string $method, string $idempotencyKey, string $description): ProviderResult;
 
     /**
-     * Devolve dinheiro ao aluno (total ou parcial) de uma cobrança anterior.
+     * Devolve dinheiro ao cliente (total ou parcial) de uma cobrança anterior.
      */
     public function refund(string $chargeReference, int $amount, string $idempotencyKey): ProviderResult;
 }

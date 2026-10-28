@@ -30,7 +30,7 @@ function publishRequest(Category $category, string $when, string $province = 'Lu
     [$lat, $lng] = ProviderProfileFactory::TALATONA;
     apiLogin(User::factory()->withRole(Role::Client)->create());
     $id = test()->postJson('/api/v1/service-requests', [
-        'category_id' => $category->id, 'title' => 'Aula', 'amount' => 20000, 'modality' => 'in_person',
+        'category_id' => $category->id, 'title' => 'Serviço', 'amount' => 20000, 'modality' => 'in_person',
         'scheduled_at' => $when, 'province' => $province,
         'municipality' => 'Talatona', 'neighborhood' => 'Talatona', 'latitude' => $lat, 'longitude' => $lng,
     ])->assertCreated()->json('data.id');
@@ -38,7 +38,7 @@ function publishRequest(Category $category, string $when, string $province = 'Lu
     return ServiceRequest::query()->findOrFail($id);
 }
 
-it('pedido para outro dia: formadores a 5 km e VIP da província recebem; VIP de outra província e normais longe não', function () {
+it('pedido para outro dia: técnicos a 5 km e VIP da província recebem; VIP de outra província e normais longe não', function () {
     $category = Category::query()->firstOrFail();
     [$lat, $lng] = ProviderProfileFactory::TALATONA;
     $near = ProviderProfile::factory()->verified()->withCategories($category)->create();
@@ -70,7 +70,7 @@ it('pedido para hoje continua TRIM TRIM normal (5 km, 5 minutos)', function () {
         ->and(RequestOffer::query()->where('provider_profile_id', $farVip->id)->exists())->toBeFalse();
 });
 
-it('o VIP longe aceita a aula; os outros perdem a oferta', function () {
+it('o VIP longe aceita o serviço; os outros perdem a oferta', function () {
     $category = Category::query()->firstOrFail();
     [$lat, $lng] = ProviderProfileFactory::TALATONA;
     $near = ProviderProfile::factory()->verified()->withCategories($category)->create();

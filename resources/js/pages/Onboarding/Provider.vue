@@ -122,7 +122,7 @@ async function save(action: () => Promise<unknown>): Promise<boolean> {
 
 async function next(): Promise<void> {
     if (step.value === 0 && !photo.value) {
-        errors.value = { photo: 'Carregue a sua foto: os alunos veem-na e o BISCA compara-a com o BI.' };
+        errors.value = { photo: 'Carregue a sua foto: os clientes veem-na e o BISCA compara-a com o BI.' };
         return;
     }
     const actions = [
@@ -161,7 +161,7 @@ function submitVerification(): Promise<unknown> {
 </script>
 
 <template>
-    <Head title="Perfil de formador" />
+    <Head title="Perfil de técnico" />
 
     <p class="text-caption font-semibold text-orange-600">Passo {{ step + 1 }} de {{ steps.length }} · {{ steps[step] }}</p>
     <div class="mt-2 flex gap-1.5" aria-hidden="true">
@@ -171,12 +171,12 @@ function submitVerification(): Promise<unknown> {
     <form class="mt-6 grid gap-5" novalidate @submit.prevent="next">
         <!-- 1. Sobre si -->
         <template v-if="step === 0">
-            <h1 class="text-title">Apresente-se aos alunos</h1>
+            <h1 class="text-title">Apresente-se aos clientes</h1>
             <div class="grid gap-1">
                 <PhotoPicker :name="page.props.auth.user?.name" :src="photo" required @changed="(url) => (photo = url)" />
                 <p v-if="errors.photo" class="text-caption text-danger" role="alert">{{ errors.photo }}</p>
             </div>
-            <FormField label="Apresentação" for="bio" :error="errors.bio" hint="O que ensina, a quem e como. Mínimo 20 caracteres.">
+            <FormField label="Apresentação" for="bio" :error="errors.bio" hint="O que faz, onde e como. Mínimo 20 caracteres.">
                 <textarea id="bio" v-model="details.bio" class="input min-h-32 py-3" maxlength="2000" />
             </FormField>
             <FormField label="Anos de experiência" for="exp" :error="errors.years_experience">
@@ -198,7 +198,7 @@ function submitVerification(): Promise<unknown> {
                     <select id="unit" v-model="details.rate_unit" class="input">
                         <option value="hour">hora</option>
                         <option value="two_hours">2 horas</option>
-                        <option value="session">aula</option>
+                        <option value="session">serviço</option>
                         <option value="day">dia</option>
                     </select>
                 </FormField>
@@ -207,7 +207,7 @@ function submitVerification(): Promise<unknown> {
 
         <!-- 2. Áreas -->
         <template v-else-if="step === 1">
-            <h1 class="text-title">O que ensina?</h1>
+            <h1 class="text-title">Que serviços faz?</h1>
             <p class="-mt-3 text-caption text-ink-muted">Escolha até 10 áreas. Só recebe pedidos destas áreas.</p>
             <section v-for="(group, area) in categoriesByCategory" :key="area">
                 <h2 class="mb-2 text-caption font-semibold text-ink-muted">{{ area }}</h2>
@@ -251,9 +251,9 @@ function submitVerification(): Promise<unknown> {
 
         <!-- 3. Local -->
         <template v-else-if="step === 2">
-            <h1 class="text-title">Onde dá aulas?</h1>
+            <h1 class="text-title">Onde trabalha?</h1>
             <p class="-mt-3 text-caption text-ink-muted">
-                Usamos a localização só para lhe enviar pedidos perto de si. Marque no mapa o ponto de onde parte (pode ser aproximado). Os alunos veem apenas o bairro, nunca o ponto.
+                Usamos a localização só para lhe enviar pedidos perto de si. Marque no mapa o ponto de onde parte (pode ser aproximado). Os clientes veem apenas o bairro, nunca o ponto.
             </p>
             <LocationPicker :value="location" :zones="zones" :provinces="provinces" :radius-m="location.service_radius_m" :errors="errors" />
 
@@ -263,7 +263,7 @@ function submitVerification(): Promise<unknown> {
 
             <label class="flex items-start gap-3 text-caption">
                 <input v-model="location.accept_location" type="checkbox" class="mt-0.5 size-5 accent-orange-500" />
-                <span>Autorizo o BISCA a usar a minha localização para encontrar alunos perto de mim.</span>
+                <span>Autorizo o BISCA a usar a minha localização para encontrar clientes perto de mim.</span>
             </label>
             <p v-if="errors.accept_location" class="text-caption text-danger">{{ errors.accept_location }}</p>
         </template>
@@ -272,7 +272,7 @@ function submitVerification(): Promise<unknown> {
         <template v-else>
             <h1 class="text-title">Verificação BISCA</h1>
             <p class="-mt-3 text-caption text-ink-muted">
-                Só formadores verificados aparecem na pesquisa e recebem pedidos. O seu BI fica cifrado e só a equipa de verificação o vê.
+                Só técnicos verificados aparecem na pesquisa e recebem pedidos. O seu BI fica cifrado e só a equipa de verificação o vê.
             </p>
             <div v-if="verificationStatus === 'pending'" class="card badge-warning">A sua verificação está em análise.</div>
             <template v-else>

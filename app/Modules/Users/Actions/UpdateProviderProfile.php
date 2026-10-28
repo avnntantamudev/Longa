@@ -11,9 +11,9 @@ use App\Support\Api\ApiException;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Onboarding e edição do perfil do formador, por secções:
+ * Onboarding e edição do perfil do técnico, por secções:
  *  - details: bio, experiência, modalidades, preço de referência;
- *  - categories: áreas de formação;
+ *  - categories: áreas de serviço;
  *  - location: município/bairro, coordenadas e raio de atuação (exige consentimento de localização).
  *
  * O onboarding fica concluído quando há bio, pelo menos uma área e local definidos.
@@ -61,7 +61,7 @@ class UpdateProviderProfile
     private function profileOf(User $user): ProviderProfile
     {
         return $user->providerProfile
-            ?? throw new ApiException('profile_missing', 'Ainda não tem o perfil de formador. Escolha-o primeiro no registo.', 409);
+            ?? throw new ApiException('profile_missing', 'Ainda não tem o perfil de técnico. Escolha-o primeiro no registo.', 409);
     }
 
     public function refreshCompletion(ProviderProfile $profile): ProviderProfile

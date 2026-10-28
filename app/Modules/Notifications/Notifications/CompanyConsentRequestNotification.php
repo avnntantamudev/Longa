@@ -13,7 +13,7 @@ use NotificationChannels\WebPush\WebPushChannel;
 use NotificationChannels\WebPush\WebPushMessage;
 
 /**
- * Uma empresa adicionou o utilizador como colaborador e pede para acompanhar as suas formações.
+ * Uma empresa adicionou o utilizador como colaborador e pede para acompanhar os seus serviços.
  */
 class CompanyConsentRequestNotification extends Notification implements ShouldQueue
 {
@@ -48,6 +48,6 @@ class CompanyConsentRequestNotification extends Notification implements ShouldQu
 
     private function body(): string
     {
-        return "{$this->employee->company->name} quer acompanhar as suas formações no BISCA (aulas, horas e custos). Aceite ou recuse no seu perfil.";
+        return "{$this->employee->company->name} quer acompanhar os seus serviços no BISCA (serviços, horas e custos). Aceite ou recuse no seu perfil.";
     }
 }

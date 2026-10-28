@@ -40,7 +40,7 @@ Artisan::command('longa:ledger:rebuild', function (LedgerReconciler $reconciler)
 // Rede de segurança do matching (o job AdvanceMatching de cada onda é o caminho normal)
 Schedule::command('longa:matching-tick')->everyTenSeconds()->withoutOverlapping(1);
 
-// Regras automáticas das aulas (R1–R5)
+// Regras automáticas dos serviços (R1–R5)
 Schedule::command('longa:sessions:tick')->everyMinute()->withoutOverlapping(5);
 
 // Avisos de fim da subscrição VIP

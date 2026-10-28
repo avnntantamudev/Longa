@@ -17,8 +17,8 @@ enum Role: string
     public function label(): string
     {
         return match ($this) {
-            self::Client => 'Aluno',
-            self::Provider => 'Formador',
+            self::Client => 'Cliente',
+            self::Provider => 'Técnico',
             self::CompanyRh => 'Empresa (RH)',
             self::Admin => 'Administrador',
         };

@@ -7,7 +7,7 @@ import jsQR from 'jsqr';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 
 /**
- * Confirmar a aula (aluno): lê o QR com a câmara (BarcodeDetector nativo; jsQR como alternativa)
+ * Confirmar o serviço (cliente): lê o QR com a câmara (BarcodeDetector nativo; jsQR como alternativa)
  * ou aceita o código de 6 dígitos. A localização é opcional e serve só como sinal de risco.
  */
 const props = defineProps<{ sessionId: number }>();
@@ -73,9 +73,9 @@ async function scan() {
     if (raw) {
         const parsed = parseQrPayload(raw);
         if (!parsed) {
-            error.value = 'Este QR não é de uma aula do BISCA.';
+            error.value = 'Este QR não é de um serviço do BISCA.';
         } else if (parsed.sessionId !== props.sessionId) {
-            error.value = 'Este QR é de outra aula.';
+            error.value = 'Este QR é de outro serviço.';
         } else {
             await send({ token: parsed.token });
             return;
@@ -129,26 +129,26 @@ onBeforeUnmount(stopCamera);
 </script>
 
 <template>
-    <Head title="Confirmar aula" />
+    <Head title="Confirmar serviço" />
 
     <section v-if="phase === 'done'" class="flex flex-col items-center gap-4 py-10 text-center" aria-live="assertive">
         <span class="flex size-24 items-center justify-center rounded-full bg-success text-5xl text-white">✓</span>
-        <h1 class="text-display">Aula confirmada</h1>
+        <h1 class="text-display">Serviço confirmado</h1>
         <p class="text-ink-muted">{{ message }}</p>
         <p v-if="session && session.payment_method === 'electronic'" class="text-caption text-ink-muted">Pagou {{ kwanza(session.amount) }} pelo BISCA.</p>
-        <Link :href="`/aulas/${sessionId}`" class="btn-primary w-full max-w-xs">Voltar à aula</Link>
+        <Link :href="`/servicos/${sessionId}`" class="btn-primary w-full max-w-xs">Voltar ao serviço</Link>
     </section>
 
     <section v-else class="grid gap-4">
         <h1 class="text-title">Escanear QR para confirmar</h1>
-        <p class="text-caption text-ink-muted">Aponte a câmara para o QR no telemóvel do formador.</p>
+        <p class="text-caption text-ink-muted">Aponte a câmara para o QR no telemóvel do técnico.</p>
 
         <div v-if="phase !== 'no_camera'" class="relative mx-auto aspect-square w-full max-w-sm overflow-hidden rounded-sheet bg-navy-900">
             <video ref="video" class="size-full object-cover" playsinline muted />
             <div class="pointer-events-none absolute inset-10 rounded-control border-4 border-orange-500/80" />
             <p v-if="phase === 'sending'" class="absolute inset-x-0 bottom-3 text-center text-caption font-semibold text-white">A confirmar…</p>
         </div>
-        <p v-else class="card text-caption text-ink-muted">Não foi possível usar a câmara. Peça ao formador o código de 6 dígitos.</p>
+        <p v-else class="card text-caption text-ink-muted">Não foi possível usar a câmara. Peça ao técnico o código de 6 dígitos.</p>
 
         <p v-if="error" class="rounded-control bg-danger/10 p-3 text-caption font-semibold text-danger" role="alert">{{ error }}</p>
 
@@ -158,6 +158,6 @@ onBeforeUnmount(stopCamera);
             <button type="submit" class="btn-primary" :disabled="phase === 'sending'">Confirmar</button>
         </form>
 
-        <Link :href="`/aulas/${sessionId}`" class="text-center text-caption font-semibold">Voltar</Link>
+        <Link :href="`/servicos/${sessionId}`" class="text-center text-caption font-semibold">Voltar</Link>
     </section>
 </template>

@@ -12,7 +12,7 @@ use App\Modules\Users\Models\User;
 use Database\Factories\ProviderProfileFactory;
 use Inertia\Testing\AssertableInertia as Assert;
 
-it('o aluno abre o formulário e o ecrã de procura dos seus pedidos', function () {
+it('o cliente abre o formulário e o ecrã de procura dos seus pedidos', function () {
     $request = ServiceRequest::factory()->create();
     loginWeb($request->client);
 
@@ -20,14 +20,14 @@ it('o aluno abre o formulário e o ecrã de procura dos seus pedidos', function 
     $this->get("/pedidos/{$request->id}")->assertOk()->assertInertia(fn (Assert $page) => $page->component('Requests/Show')->where('requestId', $request->id));
 });
 
-it('um aluno não abre o pedido de outro', function () {
+it('um cliente não abre o pedido de outro', function () {
     $request = ServiceRequest::factory()->create();
     loginWeb(User::factory()->withRole(Role::Client)->create());
 
     $this->get("/pedidos/{$request->id}")->assertForbidden();
 });
 
-it('o formador abre só as suas ofertas e os alunos não têm acesso ao TRIM TRIM', function () {
+it('o técnico abre só as suas ofertas e os clientes não têm acesso ao TRIM TRIM', function () {
     $sgme = Category::query()->where('slug', 'sgme-gestao-empresarial')->firstOrFail();
     [$lat, $lng] = ProviderProfileFactory::TALATONA;
     [$a, $b] = [ProviderProfile::factory()->verified()->near($lat, $lng, 300)->withCategories($sgme)->create(), ProviderProfile::factory()->verified()->near($lat, $lng, 600)->withCategories($sgme)->create()];
@@ -36,13 +36,13 @@ it('o formador abre só as suas ofertas e os alunos não têm acesso ao TRIM TRI
     $offerOfB = RequestOffer::query()->where('provider_profile_id', $b->id)->firstOrFail();
 
     loginWeb($a->user);
-    $this->get('/formador/ofertas')->assertOk()->assertInertia(fn (Assert $page) => $page->component('Provider/Offers'));
-    $this->get("/formador/ofertas/{$offerOfB->id}")->assertForbidden();
+    $this->get('/tecnico/ofertas')->assertOk()->assertInertia(fn (Assert $page) => $page->component('Provider/Offers'));
+    $this->get("/tecnico/ofertas/{$offerOfB->id}")->assertForbidden();
 
     loginWeb($request->client);
-    $this->get('/formador/ofertas')->assertForbidden();
+    $this->get('/tecnico/ofertas')->assertForbidden();
 });
 
-it('as aulas exigem sessão iniciada', function () {
-    $this->get('/aulas')->assertRedirect('/entrar');
+it('os serviços exigem sessão iniciada', function () {
+    $this->get('/servicos')->assertRedirect('/entrar');
 });

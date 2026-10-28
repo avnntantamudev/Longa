@@ -33,7 +33,7 @@ function offerOf(ProviderProfile $provider): RequestOffer
     return RequestOffer::query()->where('provider_profile_id', $provider->id)->firstOrFail();
 }
 
-it('mostra ao formador só os dados permitidos antes de aceitar', function () {
+it('mostra ao técnico só os dados permitidos antes de aceitar', function () {
     apiLogin($this->providers[0]->user);
 
     $response = $this->getJson('/api/v1/offers')->assertOk()->assertJsonCount(1, 'data');
@@ -46,7 +46,7 @@ it('mostra ao formador só os dados permitidos antes de aceitar', function () {
     expect($response->getContent())->not->toContain($this->request->client->phone);
 });
 
-it('aceita: cria a aula, as outras ofertas perdem e o pedido fica matched', function () {
+it('aceita: cria o serviço, as outras ofertas perdem e o pedido fica matched', function () {
     apiLogin($this->providers[1]->user);
     $offer = offerOf($this->providers[1]);
 
@@ -70,7 +70,7 @@ it('aceita: cria a aula, as outras ofertas perdem e o pedido fica matched', func
     Event::assertDispatched(RequestMatched::class, fn ($e) => count($e->loserUserIds) === 2);
 });
 
-it('é idempotente para o formador que ganhou', function () {
+it('é idempotente para o técnico que ganhou', function () {
     apiLogin($this->providers[0]->user);
     $offer = offerOf($this->providers[0]);
 
@@ -80,7 +80,7 @@ it('é idempotente para o formador que ganhou', function () {
     expect($second)->toBe($first)->and(ServiceJob::query()->count())->toBe(1);
 });
 
-it('responde ao perdedor que outro formador aceitou primeiro', function () {
+it('responde ao perdedor que outro técnico aceitou primeiro', function () {
     apiLogin($this->providers[0]->user);
     $this->postJson('/api/v1/offers/'.offerOf($this->providers[0])->id.'/accept')->assertOk();
 
@@ -88,7 +88,7 @@ it('responde ao perdedor que outro formador aceitou primeiro', function () {
     $this->postJson('/api/v1/offers/'.offerOf($this->providers[1])->id.'/accept')
         ->assertStatus(409)
         ->assertJsonPath('error.code', 'request_already_matched')
-        ->assertJsonPath('error.message', 'Outro formador aceitou este pedido primeiro.');
+        ->assertJsonPath('error.message', 'Outro técnico aceitou este pedido primeiro.');
 });
 
 it('impõe o prazo de 60 s no servidor, mesmo antes do job de expiração correr', function () {
@@ -123,7 +123,7 @@ it('não aceita ofertas de pedidos cancelados', function () {
     $this->postJson('/api/v1/offers/'.offerOf($this->providers[0])->id.'/accept')->assertStatus(410);
 });
 
-it('um formador não vê nem responde às ofertas de outro', function () {
+it('um técnico não vê nem responde às ofertas de outro', function () {
     apiLogin($this->providers[0]->user);
     $foreign = offerOf($this->providers[1]);
 
@@ -131,13 +131,13 @@ it('um formador não vê nem responde às ofertas de outro', function () {
     $this->postJson("/api/v1/offers/{$foreign->id}/accept")->assertForbidden();
 });
 
-it('alunos não acedem às ofertas', function () {
+it('clientes não acedem às ofertas', function () {
     apiLogin($this->request->client);
 
     $this->getJson('/api/v1/offers')->assertForbidden();
 });
 
-it('formador só fica disponível se estiver verificado e completo', function () {
+it('técnico só fica disponível se estiver verificado e completo', function () {
     $unverified = ProviderProfile::factory()->create(['is_available' => false]);
     apiLogin($unverified->user);
 

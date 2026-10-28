@@ -82,7 +82,7 @@ it('exige sessão para carregar e só serve nomes válidos', function () {
     $this->get('/fotos/'.str_repeat('a', 32).'-999.webp')->assertNotFound();
 });
 
-it('o aluno vê a foto do formador na aula e o formador a do aluno', function () {
+it('o cliente vê a foto do técnico no serviço e o técnico a do cliente', function () {
     $session = paidSession();
     $session->provider->user->forceFill(['photo' => str_repeat('b', 32)])->save();
 

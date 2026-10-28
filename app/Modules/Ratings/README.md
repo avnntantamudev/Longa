@@ -1,1 +1,1 @@
-# Ratings — Avaliações mútuas entre alunos e formadores.
+# Ratings — Avaliações mútuas entre clientes e técnicos.

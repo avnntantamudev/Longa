@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Users\Enums;
 
 /**
- * Estado de verificação do formador (resumo das verificações aprovadas).
+ * Estado de verificação do técnico (resumo das verificações aprovadas).
  */
 enum VerificationStatus: string
 {

@@ -13,14 +13,14 @@ use Illuminate\Support\Facades\Notification;
 beforeEach(fn () => Notification::fake());
 
 /**
- * Empresa com um gestor RH e uma aula concluída do aluno indicado.
+ * Empresa com um gestor RH e um serviço concluído do cliente indicado.
  *
  * @return array{0: Company, 1: User, 2: ServiceJob}
  */
 function companyWithLesson(): array
 {
     $rh = User::factory()->withRole(Role::CompanyRh)->create();
-    $company = Company::query()->create(['name' => 'Sonangol Formação']);
+    $company = Company::query()->create(['name' => 'Sonangol Serviço']);
     $company->managers()->attach($rh->id);
 
     $session = paidSession(['duration_minutes' => 90, 'scheduled_at' => now()->subDay()]);
@@ -37,7 +37,7 @@ function addEmployee(Company $company, User $rh, string $phone, string $departme
         ->assertCreated()->json('data.id');
 }
 
-it('o colaborador com conta recebe o pedido; sem autorizar, a empresa não vê nenhuma aula', function () {
+it('o colaborador com conta recebe o pedido; sem autorizar, a empresa não vê nenhum serviço', function () {
     [$company, $rh, $session] = companyWithLesson();
     $employeeId = addEmployee($company, $rh, $session->client->phone);
 
@@ -49,12 +49,12 @@ it('o colaborador com conta recebe o pedido; sem autorizar, a empresa não vê n
     expect(CompanyEmployee::query()->find($employeeId)?->consent_status)->toBe('pending');
 });
 
-it('depois de aceitar, a empresa vê aulas, horas e custo (sem dados a mais); retirar volta a esconder', function () {
+it('depois de aceitar, a empresa vê serviços, horas e custo (sem dados a mais); retirar volta a esconder', function () {
     [$company, $rh, $session] = companyWithLesson();
     $employeeId = addEmployee($company, $rh, $session->client->phone);
 
     apiLogin($session->client);
-    $this->getJson('/api/v1/me/company-links')->assertJsonPath('data.0.company', 'Sonangol Formação');
+    $this->getJson('/api/v1/me/company-links')->assertJsonPath('data.0.company', 'Sonangol Serviço');
     $this->postJson("/api/v1/me/company-links/{$employeeId}", ['decision' => 'accepted'])->assertOk()->assertJsonPath('data.consent_status', 'accepted');
 
     apiLogin($rh);

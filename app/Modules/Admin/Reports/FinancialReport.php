@@ -39,7 +39,7 @@ class FinancialReport
             'from' => $from->toDateString(),
             'to' => $to->toDateString(),
             'totals' => [
-                // Dinheiro que os alunos pagaram pela app (entrou em escrow)
+                // Dinheiro que os clientes pagaram pela app (entrou em escrow)
                 'paid_in' => $moved(Accounts::ESCROW, '+', ['escrow_hold']),
                 'commissions' => (int) $this->entries($from, $to)->where('a.code', Accounts::PLATFORM_REVENUE)->sum('e.amount'),
                 'vip' => (int) $this->entries($from, $to)->where('a.code', Accounts::SUBSCRIPTION_REVENUE)->sum('e.amount'),

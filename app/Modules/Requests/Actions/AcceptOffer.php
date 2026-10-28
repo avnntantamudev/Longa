@@ -23,15 +23,15 @@ use Illuminate\Support\Facades\DB;
 /**
  * Aceitação atómica de uma oferta TRIM TRIM. Tudo ou nada, numa única transação:
  *
- *  1. lock em Redis por pedido (reduz a disputa na BD quando muitos formadores carregam ao mesmo tempo);
+ *  1. lock em Redis por pedido (reduz a disputa na BD quando muitos técnicos carregam ao mesmo tempo);
  *  2. SELECT … FOR UPDATE na linha do pedido (serializa as aceitações do mesmo pedido entre processos);
  *  3. verifica o estado do pedido e da oferta e o prazo (decidido pelo servidor);
- *  4. cria a aula e a conversa, aceita a oferta, marca as outras como "lost", pedido → "matched";
- *  5. aula eletrónica fica em pending_payment (o aluno paga na janela de pagamento e o valor vai para o
- *     escrow); aula em dinheiro fica logo agendada.
+ *  4. cria o serviço e a conversa, aceita a oferta, marca as outras como "lost", pedido → "matched";
+ *  5. serviço eletrónica fica em pending_payment (o cliente paga na janela de pagamento e o valor vai para o
+ *     escrow); serviço em dinheiro fica logo agendado.
  *
- * Idempotente: se o mesmo formador repetir o pedido depois de ganhar, recebe a mesma aula.
- * Últimas barreiras na BD: índice único de oferta aceite por pedido e de aula por pedido.
+ * Idempotente: se o mesmo técnico repetir o pedido depois de ganhar, recebe o mesmo serviço.
+ * Últimas barreiras na BD: índice único de oferta aceite por pedido e de serviço por pedido.
  */
 class AcceptOffer
 {
@@ -59,14 +59,14 @@ class AcceptOffer
             /** @var RequestOffer $offer */
             $offer = RequestOffer::query()->lockForUpdate()->findOrFail($offer->id);
 
-            // Idempotência: este formador já ganhou esta aula
+            // Idempotência: este técnico já ganhou este serviço
             if ($offer->state === OfferState::Accepted) {
                 return ['session' => ServiceJob::query()->where('service_request_id', $request->id)->firstOrFail(), 'new' => false];
             }
 
             $this->ensureCanAccept($request, $offer);
 
-            // Comissão do formador que aceita (reduzida se for VIP), fixada nesta aula
+            // Comissão do técnico que aceita (reduzida se for VIP), fixada neste serviço
             $split = Commission::splitFor($request->amount, $offer->provider_profile_id);
 
             $session = ServiceJob::query()->create([
@@ -134,11 +134,11 @@ class AcceptOffer
     private function ensureCanAccept(ServiceRequest $request, RequestOffer $offer): void
     {
         if ($request->state === RequestState::Matched) {
-            throw new ApiException('request_already_matched', 'Outro formador aceitou este pedido primeiro.', 409);
+            throw new ApiException('request_already_matched', 'Outro técnico aceitou este pedido primeiro.', 409);
         }
 
         if ($request->state === RequestState::Cancelled) {
-            throw new ApiException('request_cancelled', 'O aluno cancelou este pedido.', 410);
+            throw new ApiException('request_cancelled', 'O cliente cancelou este pedido.', 410);
         }
 
         if ($request->state !== RequestState::Searching || $request->expires_at?->isPast()) {

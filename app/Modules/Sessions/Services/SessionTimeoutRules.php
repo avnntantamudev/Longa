@@ -22,9 +22,9 @@ use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
- * Regras automáticas da aula, todas aqui e configuradas em config/longa.php → session_rules
+ * Regras automáticas do serviço, todas aqui e configuradas em config/longa.php → session_rules
  * (docs/state-machines.md). Corridas por `php artisan longa:sessions:tick` (scheduler, a cada minuto).
- * Cada regra é idempotente: bloqueia a aula, volta a verificar o estado e usa transições condicionais.
+ * Cada regra é idempotente: bloqueia o serviço, volta a verificar o estado e usa transições condicionais.
  */
 class SessionTimeoutRules
 {
@@ -37,7 +37,7 @@ class SessionTimeoutRules
     ) {}
 
     /**
-     * @return array<string, int> número de aulas afetadas por regra
+     * @return array<string, int> número de serviços afetados por regra
      */
     public function run(): array
     {
@@ -53,7 +53,7 @@ class SessionTimeoutRules
     }
 
     /**
-     * R3: aula à espera de pagamento com o prazo vencido → payment_failed (formador libertado).
+     * R3: serviço à espera de pagamento com o prazo vencido → payment_failed (técnico libertado).
      */
     public function expireUnpaid(): int
     {
@@ -85,7 +85,7 @@ class SessionTimeoutRules
     }
 
     /**
-     * Lembrete ao aluno a meio da janela de confirmação (uma vez por aula).
+     * Lembrete ao cliente a meio da janela de confirmação (uma vez por serviço).
      */
     public function remindPendingConfirmations(): int
     {
@@ -109,9 +109,9 @@ class SessionTimeoutRules
     }
 
     /**
-     * Fim da janela de confirmação sem resposta do aluno:
-     *  - aula nunca iniciada (R1) → refunded (reembolso total);
-     *  - aula iniciada (R2) → completed (libertação para o formador).
+     * Fim da janela de confirmação sem resposta do cliente:
+     *  - serviço nunca iniciado (R1) → refunded (reembolso total);
+     *  - serviço iniciado (R2) → completed (libertação para o técnico).
      */
     public function closeConfirmationWindows(): int
     {
@@ -160,8 +160,8 @@ class SessionTimeoutRules
     }
 
     /**
-     * R5: aula em dinheiro concluída e o aluno não confirmou o pagamento em 48 h → assume-se pago
-     * (a aula aconteceu, confirmada por QR) e regista-se a comissão em dívida. O formador pode disputar.
+     * R5: serviço em dinheiro concluído e o cliente não confirmou o pagamento em 48 h → assume-se pago
+     * (o serviço aconteceu, confirmado por QR) e regista-se a comissão em dívida. O técnico pode disputar.
      */
     public function autoConfirmCash(): int
     {
@@ -182,7 +182,7 @@ class SessionTimeoutRules
     }
 
     /**
-     * Aplica $apply a cada aula selecionada, numa transação própria, com a aula bloqueada e a condição
+     * Aplica $apply a cada serviço selecionado, numa transação própria, com o serviço bloqueado e a condição
      * verificada outra vez (outro processo pode ter mudado o estado entretanto).
      *
      * @param  Closure(Builder<ServiceJob>): Builder<ServiceJob>  $select

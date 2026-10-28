@@ -67,14 +67,14 @@ async function run(action: SessionAction, path: string, body?: unknown, success?
 }
 
 async function startLesson() {
-    await run('start', 'start', undefined, 'Aula iniciada. Bom trabalho!');
+    await run('start', 'start', undefined, 'Serviço iniciado. Bom trabalho!');
 }
 
 async function finishLesson() {
     busy.value = 'finish';
     try {
         await api.post(`/sessions/${props.sessionId}/finish`);
-        router.visit(`/aulas/${props.sessionId}/qr`);
+        router.visit(`/servicos/${props.sessionId}/qr`);
     } catch (e) {
         error.value = e instanceof ApiError ? e.message : 'Sem ligação. Tente de novo.';
     } finally {
@@ -97,7 +97,7 @@ onMounted(load);
 </script>
 
 <template>
-    <Head title="Aula" />
+    <Head title="Serviço" />
 
     <template v-if="session">
         <!-- Cartão do outro participante -->
@@ -105,7 +105,7 @@ onMounted(load);
             <div class="flex items-center gap-4">
                 <UserAvatar :name="counterpart" :src="counterpartPhoto" :size="64" />
                 <div class="min-w-0">
-                    <p class="text-caption font-semibold text-orange-400">{{ session.role === 'client' ? 'Formador' : 'Aluno' }}</p>
+                    <p class="text-caption font-semibold text-orange-400">{{ session.role === 'client' ? 'Técnico' : 'Cliente' }}</p>
                     <p class="truncate text-title">{{ counterpart }}</p>
                     <span class="badge badge-brand mt-1">{{ session.category }}</span>
                     <span v-if="session.provider?.verified" class="badge badge-success mt-1 ml-1">Verificado BISCA</span>
@@ -137,90 +137,90 @@ onMounted(load);
             <p v-if="notice" class="rounded-control bg-success/10 p-3 text-caption font-semibold text-success">{{ notice }}</p>
             <p v-if="error" class="rounded-control bg-danger/10 p-3 text-caption font-semibold text-danger" role="alert">{{ error }}</p>
 
-            <!-- Pagamento (aluno) -->
+            <!-- Pagamento (cliente) -->
             <template v-if="session.state === 'pending_payment'">
                 <template v-if="!isProvider">
-                    <p class="font-semibold">Pague para garantir a aula</p>
+                    <p class="font-semibold">Pague para garantir o serviço</p>
                     <p class="text-caption text-ink-muted">
-                        O valor fica retido pelo BISCA e só é libertado ao formador depois de confirmar a aula.
+                        O valor fica retido pelo BISCA e só é libertado ao técnico depois de confirmar o serviço.
                         <template v-if="session.payment_due_at">Prazo: {{ when(session.payment_due_at) }}.</template>
                     </p>
                     <div v-if="has('pay')" class="flex gap-2">
                         <button type="button" class="chip" :class="{ 'chip-active': payMethod === 'multicaixa_express' }" @click="payMethod = 'multicaixa_express'">Multicaixa Express</button>
                         <button type="button" class="chip" :class="{ 'chip-active': payMethod === 'reference' }" @click="payMethod = 'reference'">Referência</button>
                     </div>
-                    <button v-if="has('pay')" class="btn-primary w-full" :disabled="busy !== null" @click="run('pay', 'pay', { method: payMethod }, 'Pagamento confirmado. A aula está agendada.')">
+                    <button v-if="has('pay')" class="btn-primary w-full" :disabled="busy !== null" @click="run('pay', 'pay', { method: payMethod }, 'Pagamento confirmado. O serviço está agendado.')">
                         {{ busy === 'pay' ? 'A processar…' : `Pagar ${kwanza(session.amount)}` }}
                     </button>
                     <p v-else class="text-caption text-danger">O prazo de pagamento terminou.</p>
                 </template>
-                <p v-else class="text-caption text-ink-muted">À espera do pagamento do aluno (até 10 minutos).</p>
+                <p v-else class="text-caption text-ink-muted">À espera do pagamento do cliente (até 10 minutos).</p>
             </template>
 
-            <p v-else-if="session.state === 'payment_failed'" class="text-caption text-ink-muted">O pagamento não foi concluído e a aula não foi marcada.</p>
+            <p v-else-if="session.state === 'payment_failed'" class="text-caption text-ink-muted">O pagamento não foi concluído e o serviço não foi marcado.</p>
 
-            <!-- Aula agendada -->
+            <!-- Serviço agendado -->
             <template v-else-if="session.state === 'scheduled'">
                 <p class="text-caption text-ink-muted">
-                    {{ isProvider ? 'Inicie a aula quando chegar (a partir de 15 minutos antes).' : 'O formador inicia a aula quando chegar.' }}
+                    {{ isProvider ? 'Inicie o serviço quando chegar (a partir de 15 minutos antes).' : 'O técnico inicia o serviço quando chegar.' }}
                 </p>
                 <button v-if="has('start')" class="btn-primary w-full" :disabled="busy !== null" @click="startLesson">
-                    {{ busy === 'start' ? 'A iniciar…' : 'Iniciar aula' }}
+                    {{ busy === 'start' ? 'A iniciar…' : 'Iniciar serviço' }}
                 </button>
             </template>
 
             <!-- Em curso -->
             <template v-else-if="session.state === 'in_progress'">
-                <p class="font-semibold">Aula a decorrer</p>
+                <p class="font-semibold">Serviço a decorrer</p>
                 <p class="text-caption text-ink-muted">
-                    {{ isProvider ? 'No fim, toque em "Terminar aula" e mostre o QR ao aluno.' : 'No fim, o formador mostra-lhe um QR para confirmar a aula.' }}
+                    {{ isProvider ? 'No fim, toque em "Terminar serviço" e mostre o QR ao cliente.' : 'No fim, o técnico mostra-lhe um QR para confirmar o serviço.' }}
                 </p>
                 <button v-if="has('finish')" class="btn-primary w-full" :disabled="busy !== null" @click="finishLesson">
-                    {{ busy === 'finish' ? 'A terminar…' : 'Terminar aula' }}
+                    {{ busy === 'finish' ? 'A terminar…' : 'Terminar serviço' }}
                 </button>
             </template>
 
             <!-- À espera de confirmação -->
             <template v-else-if="session.state === 'awaiting_confirmation'">
                 <template v-if="isProvider">
-                    <p class="font-semibold">À espera da confirmação do aluno</p>
-                    <p class="text-caption text-ink-muted">{{ kwanza(session.provider_net ?? 0) }} pendentes, libertados quando o aluno ler o QR.</p>
-                    <Link v-if="has('show_qr')" :href="`/aulas/${session.id}/qr`" class="btn-primary w-full">Mostrar QR</Link>
+                    <p class="font-semibold">À espera da confirmação do cliente</p>
+                    <p class="text-caption text-ink-muted">{{ kwanza(session.provider_net ?? 0) }} pendentes, libertados quando o cliente ler o QR.</p>
+                    <Link v-if="has('show_qr')" :href="`/servicos/${session.id}/qr`" class="btn-primary w-full">Mostrar QR</Link>
                 </template>
                 <template v-else>
-                    <p class="font-semibold">A aula aconteceu?</p>
+                    <p class="font-semibold">O serviço aconteceu?</p>
                     <p class="text-caption text-ink-muted">
-                        Leia o QR do formador para confirmar.
+                        Leia o QR do técnico para confirmar.
                         <template v-if="session.confirmation_deadline">Prazo: {{ when(session.confirmation_deadline) }}.</template>
                     </p>
-                    <Link :href="`/aulas/${session.id}/confirmar`" class="btn-primary w-full">Escanear QR para confirmar</Link>
+                    <Link :href="`/servicos/${session.id}/confirmar`" class="btn-primary w-full">Escanear QR para confirmar</Link>
                     <button v-if="confirming !== 'confirm_without_qr'" class="btn-outline w-full" @click="confirming = 'confirm_without_qr'">Confirmar sem QR</button>
                     <div v-else class="grid gap-2 rounded-control bg-navy-50 p-3">
-                        <p class="text-caption">Confirma que a aula aconteceu? O valor é libertado ao formador e não pode ser revertido.</p>
+                        <p class="text-caption">Confirma que o serviço aconteceu? O valor é libertado ao técnico e não pode ser revertido.</p>
                         <div class="flex gap-2">
-                            <button class="btn-primary flex-1" :disabled="busy !== null" @click="run('confirm_without_qr', 'confirm-without-qr', undefined, 'Aula confirmada. Obrigado!')">Sim, confirmar</button>
+                            <button class="btn-primary flex-1" :disabled="busy !== null" @click="run('confirm_without_qr', 'confirm-without-qr', undefined, 'Serviço confirmado. Obrigado!')">Sim, confirmar</button>
                             <button class="btn-outline flex-1" @click="confirming = null">Voltar</button>
                         </div>
                     </div>
-                    <Link :href="`/aulas/${session.id}/disputa`" class="text-center text-caption font-semibold text-danger">A aula não aconteceu ou houve um problema</Link>
+                    <Link :href="`/servicos/${session.id}/disputa`" class="text-center text-caption font-semibold text-danger">O serviço não aconteceu ou houve um problema</Link>
                 </template>
             </template>
 
             <!-- Concluída -->
             <template v-else-if="session.state === 'completed'">
-                <p class="font-semibold text-success">Aula concluída</p>
+                <p class="font-semibold text-success">Serviço concluído</p>
                 <p v-if="isProvider && session.payment_method === 'electronic'" class="text-caption text-ink-muted">{{ kwanza(session.provider_net ?? 0) }} na sua carteira.</p>
                 <template v-if="has('confirm_cash')">
-                    <p class="text-caption text-ink-muted">Confirme que pagou {{ kwanza(session.amount) }} ao formador em mão.</p>
+                    <p class="text-caption text-ink-muted">Confirme que pagou {{ kwanza(session.amount) }} ao técnico em mão.</p>
                     <button class="btn-primary w-full" :disabled="busy !== null" @click="run('confirm_cash', 'confirm-cash', undefined, 'Pagamento em mão confirmado.')">Confirmei que paguei</button>
                 </template>
             </template>
 
             <!-- Faltas -->
             <template v-else-if="['no_show_provider', 'no_show_client'].includes(session.state)">
-                <p class="font-semibold">{{ session.state === 'no_show_provider' ? 'Falta do formador reportada' : 'Falta do aluno reportada' }}</p>
+                <p class="font-semibold">{{ session.state === 'no_show_provider' ? 'Falta do técnico reportada' : 'Falta do cliente reportada' }}</p>
                 <p v-if="session.no_show_contest_until" class="text-caption text-ink-muted">Pode ser contestada até {{ when(session.no_show_contest_until) }}.</p>
-                <Link v-if="has('dispute')" :href="`/aulas/${session.id}/disputa`" class="btn-primary w-full">Contestar a falta</Link>
+                <Link v-if="has('dispute')" :href="`/servicos/${session.id}/disputa`" class="btn-primary w-full">Contestar a falta</Link>
             </template>
 
             <p v-else-if="session.state === 'disputed'" class="text-caption text-ink-muted">Disputa em análise pelo BISCA. O valor fica retido até à decisão.</p>
@@ -228,23 +228,23 @@ onMounted(load);
 
             <!-- Cancelar / reportar falta -->
             <template v-if="has('cancel')">
-                <button v-if="confirming !== 'cancel'" class="btn-outline w-full" @click="confirming = 'cancel'">Cancelar aula</button>
+                <button v-if="confirming !== 'cancel'" class="btn-outline w-full" @click="confirming = 'cancel'">Cancelar serviço</button>
                 <div v-else class="grid gap-2 rounded-control bg-navy-50 p-3">
                     <p class="text-caption">
-                        <template v-if="isProvider">O aluno é reembolsado na totalidade. Cancelamentos em cima da hora afetam a sua pontuação.</template>
-                        <template v-else-if="late">Faltam menos de 6 horas: o formador fica com 25% do valor e recebe o reembolso do resto.</template>
+                        <template v-if="isProvider">O cliente é reembolsado na totalidade. Cancelamentos em cima da hora afetam a sua pontuação.</template>
+                        <template v-else-if="late">Faltam menos de 6 horas: o técnico fica com 25% do valor e recebe o reembolso do resto.</template>
                         <template v-else>Recebe o reembolso total.</template>
                     </p>
                     <input v-model="cancelReason" class="input" maxlength="255" placeholder="Motivo (opcional)" />
                     <div class="flex gap-2">
-                        <button class="btn-primary flex-1" :disabled="busy !== null" @click="run('cancel', 'cancel', { reason: cancelReason || null }, 'Aula cancelada.')">Cancelar aula</button>
+                        <button class="btn-primary flex-1" :disabled="busy !== null" @click="run('cancel', 'cancel', { reason: cancelReason || null }, 'Serviço cancelado.')">Cancelar serviço</button>
                         <button class="btn-outline flex-1" @click="confirming = null">Voltar</button>
                     </div>
                 </div>
             </template>
             <template v-if="has('no_show')">
                 <button v-if="confirming !== 'no_show'" class="text-caption font-semibold text-danger" @click="confirming = 'no_show'">
-                    {{ isProvider ? 'O aluno não apareceu' : 'O formador não apareceu' }}
+                    {{ isProvider ? 'O cliente não apareceu' : 'O técnico não apareceu' }}
                 </button>
                 <div v-else class="grid gap-2 rounded-control bg-navy-50 p-3">
                     <p class="text-caption">A outra parte tem 24 horas para contestar. Sem contestação, aplica-se a política de faltas.</p>
@@ -267,7 +267,7 @@ onMounted(load);
             </ol>
         </section>
 
-        <h2 class="mt-6 text-title">Chat da aula</h2>
+        <h2 class="mt-6 text-title">Chat do serviço</h2>
         <p class="mb-3 text-caption text-ink-muted">Combine os detalhes aqui. Os contactos pessoais ficam escondidos nesta fase.</p>
         <ChatPanel :session-id="session.id" :me-id="meId" />
     </template>

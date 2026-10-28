@@ -20,7 +20,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 /**
- * Aula criada quando um formador aceita um pedido. Estados e regras em docs/state-machines.md.
+ * Serviço criado quando um técnico aceita um pedido. Estados e regras em docs/state-machines.md.
  *
  * @property int $id
  * @property int $service_request_id

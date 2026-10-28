@@ -111,7 +111,7 @@ class VipSubscriptions
     private function registerPending(ProviderProfile $provider, string $method, string $key): ProviderSubscription
     {
         return DB::transaction(function () use ($provider, $method, $key) {
-            // Serializa compras do mesmo formador
+            // Serializa compras do mesmo técnico
             ProviderProfile::query()->whereKey($provider->id)->lockForUpdate()->first();
 
             $existing = ProviderSubscription::query()->where('idempotency_key', $key)->first();

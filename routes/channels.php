@@ -12,15 +12,15 @@ use Illuminate\Support\Facades\Broadcast;
 | Regra: só o próprio utilizador / os participantes. Nada de canais por papel ou públicos com dados.
 */
 
-// Utilizador: ofertas TRIM TRIM (formador), avisos de pedido aceite/perdido/cancelado
+// Utilizador: ofertas TRIM TRIM (técnico), avisos de pedido aceite/perdido/cancelado
 Broadcast::channel('user.{id}', fn (User $user, int $id) => $user->id === $id);
 
-// Pedido: estado da procura, só para o aluno que o publicou
+// Pedido: estado da procura, só para o cliente que o publicou
 Broadcast::channel('request.{requestId}', function (User $user, int $requestId) {
     return ServiceRequest::query()->whereKey($requestId)->where('client_id', $user->id)->exists();
 });
 
-// Aula: chat entre o aluno e o formador da aula
+// Serviço: chat entre o cliente e o técnico do serviço
 Broadcast::channel('session.{sessionId}', function (User $user, int $sessionId) {
     return ServiceJob::query()
         ->whereKey($sessionId)

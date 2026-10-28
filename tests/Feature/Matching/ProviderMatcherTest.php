@@ -33,7 +33,7 @@ function matchedIds(int $limit = 50, array $exclude = []): array
     return array_map(fn ($c) => $c->providerProfileId, app(ProviderMatcher::class)->candidates(test()->request, $limit, $exclude));
 }
 
-it('encontra formadores dentro de 5 km e calcula a distância', function () {
+it('encontra técnicos dentro de 5 km e calcula a distância', function () {
     $near = providerAt(1200);
     $far = providerAt(6000);
 
@@ -44,7 +44,7 @@ it('encontra formadores dentro de 5 km e calcula a distância', function () {
     expect($far->id)->toBeInt();
 });
 
-it('respeita o raio de atuação do próprio formador', function () {
+it('respeita o raio de atuação do próprio técnico', function () {
     $smallRadius = providerAt(3000, state: ['service_radius_m' => 2000]);
     $bigRadius = providerAt(3000, state: ['service_radius_m' => 5000]);
 
@@ -52,7 +52,7 @@ it('respeita o raio de atuação do próprio formador', function () {
     expect($smallRadius->id)->toBeInt();
 });
 
-it('exige a área de formação do pedido', function () {
+it('exige a área de serviço do pedido', function () {
     $other = Category::query()->where('slug', 'matematica')->firstOrFail();
     providerAt(500, $other);
     $right = providerAt(800);
@@ -71,7 +71,7 @@ it('exclui indisponíveis, não verificados, sem onboarding e suspensos', functi
     expect(matchedIds())->toBe([$ok->id]);
 });
 
-it('exclui o próprio aluno e quem já recebeu oferta', function () {
+it('exclui o próprio cliente e quem já recebeu oferta', function () {
     $self = providerAt(100, state: ['user_id' => $this->request->client_id]);
     $offered = providerAt(200);
     $fresh = providerAt(300);
@@ -80,13 +80,13 @@ it('exclui o próprio aluno e quem já recebeu oferta', function () {
     expect($self->id)->toBeInt();
 });
 
-it('exclui formadores com aula marcada à mesma hora', function () {
+it('exclui técnicos com serviço marcado à mesma hora', function () {
     $busy = providerAt(200);
     $free = providerAt(300);
 
     ServiceJob::query()->create([
         'service_request_id' => ServiceRequest::factory()->create()->id, 'client_id' => $this->request->client_id,
-        'provider_profile_id' => $busy->id, 'category_id' => $this->sgme->id, 'title' => 'Outra aula',
+        'provider_profile_id' => $busy->id, 'category_id' => $this->sgme->id, 'title' => 'Outro serviço',
         'amount' => 1000, 'commission' => 150, 'provider_net' => 850,
         'scheduled_at' => $this->request->scheduled_at->copy()->addHour(), 'modality' => 'in_person',
         'municipality' => 'Talatona', 'neighborhood' => 'Talatona', 'latitude' => -8.9, 'longitude' => 13.1,

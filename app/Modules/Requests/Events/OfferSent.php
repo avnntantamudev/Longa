@@ -13,7 +13,7 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * TRIM TRIM: nova oferta para um formador (canal privado do formador).
+ * TRIM TRIM: nova oferta para um técnico (canal privado do técnico).
  */
 class OfferSent implements ShouldBroadcast, ShouldDispatchAfterCommit
 {

@@ -11,7 +11,7 @@ use App\Support\Api\ApiException;
 use App\Support\Audit\AuditLogger;
 
 /**
- * O colaborador aceita, recusa ou retira a autorização para a empresa acompanhar as suas formações.
+ * O colaborador aceita, recusa ou retira a autorização para a empresa acompanhar os seus serviços.
  * Só o próprio (mesmo telefone) decide; cada decisão fica no registo de consentimentos e na auditoria.
  */
 class EmployeeConsent

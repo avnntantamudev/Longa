@@ -17,7 +17,7 @@ use App\Support\Api\ApiException;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Cancelamento de uma aula agendada pelo aluno ou pelo formador, com o reembolso da política
+ * Cancelamento de um serviço agendado pelo cliente ou pelo técnico, com o reembolso da política
  * (RefundPolicy) lançado no ledger na mesma transação. Idempotente para quem já cancelou.
  */
 class CancelSession
@@ -42,7 +42,7 @@ class CancelSession
             }
 
             if ($locked->state !== SessionState::Scheduled) {
-                throw new ApiException('session_not_cancellable', 'Esta aula já não pode ser cancelada ('.$locked->state->label().').', 409);
+                throw new ApiException('session_not_cancellable', 'Este serviço já não pode ser cancelado ('.$locked->state->label().').', 409);
             }
 
             $late = $this->policy->isLate($locked);

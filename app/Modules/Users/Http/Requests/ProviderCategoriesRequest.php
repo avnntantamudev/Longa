@@ -15,7 +15,7 @@ class ProviderCategoriesRequest extends FormRequest
     public function rules(): array
     {
         return [
-            /** Áreas de formação (1 a 10). @example [1, 4] */
+            /** Áreas de serviço (1 a 10). @example [1, 4] */
             'category_ids' => ['required', 'array', 'min:1', 'max:10'],
             'category_ids.*' => ['integer', 'distinct', Rule::exists('categories', 'id')->where('active', true)],
         ];
@@ -34,6 +34,6 @@ class ProviderCategoriesRequest extends FormRequest
      */
     public function attributes(): array
     {
-        return ['category_ids' => 'áreas de formação'];
+        return ['category_ids' => 'áreas de serviço'];
     }
 }

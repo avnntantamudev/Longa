@@ -18,9 +18,9 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
 
 /**
- * Ofertas TRIM TRIM do formador.
+ * Ofertas TRIM TRIM do técnico.
  *
- * @tags TRIM TRIM (formador)
+ * @tags TRIM TRIM (técnico)
  */
 class OfferController extends Controller
 {
@@ -65,8 +65,8 @@ class OfferController extends Controller
     /**
      * Aceitar oferta.
      *
-     * Atómico: só um formador fica com a aula. Repetir o pedido depois de ganhar devolve a mesma aula.
-     * Erros: `request_already_matched` (409, outro formador aceitou primeiro), `offer_expired` (410),
+     * Atómico: só um técnico fica com o serviço. Repetir o pedido depois de ganhar devolve o mesmo serviço.
+     * Erros: `request_already_matched` (409, outro técnico aceitou primeiro), `offer_expired` (410),
      * `request_cancelled` (410), `request_closed` (410).
      */
     public function accept(RequestOffer $offer, AcceptOffer $action): JsonResponse

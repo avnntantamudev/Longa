@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * Perfil público do formador: sem telefone, sem e-mail e sem coordenadas exatas
+ * Perfil público do técnico: sem telefone, sem e-mail e sem coordenadas exatas
  * (só município e bairro).
  *
  * @mixin ProviderProfile

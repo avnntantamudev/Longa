@@ -48,7 +48,7 @@ async function toggle(): Promise<void> {
 
 // Nova oferta em tempo real: abre logo o ecrã TRIM TRIM
 usePrivateChannel(`user.${page.props.auth.user?.id}`, {
-    'offer.sent': (payload: { offer: Offer }) => router.visit(`/formador/ofertas/${payload.offer.id}`),
+    'offer.sent': (payload: { offer: Offer }) => router.visit(`/tecnico/ofertas/${payload.offer.id}`),
     'offer.expired': () => load(),
     'request.matched': () => load(),
     'request.cancelled': () => load(),
@@ -81,7 +81,7 @@ onMounted(() => Promise.all([load(), loadProfile()]));
             </button>
         </div>
         <p v-if="availabilityError" class="mt-3 text-caption text-orange-300" role="alert">
-            {{ availabilityError }} <Link href="/onboarding/formador" class="underline">Completar perfil</Link>
+            {{ availabilityError }} <Link href="/onboarding/tecnico" class="underline">Completar perfil</Link>
         </p>
     </section>
 
@@ -93,7 +93,7 @@ onMounted(() => Promise.all([load(), loadProfile()]));
     <p v-if="now.length === 0" class="card mt-3 text-ink-muted">Sem pedidos neste momento. Quando chegar um, abre aqui automaticamente.</p>
     <ul class="mt-3 grid gap-3">
         <li v-for="offer in now" :key="offer.id">
-            <Link :href="`/formador/ofertas/${offer.id}`" class="card flex items-center gap-3">
+            <Link :href="`/tecnico/ofertas/${offer.id}`" class="card flex items-center gap-3">
                 <div class="min-w-0 flex-1">
                     <p class="font-semibold">{{ offer.category }} · {{ kwanza(offer.amount) }}</p>
                     <p class="text-caption text-ink-muted">{{ when(offer.scheduled_at) }} · {{ offer.neighborhood }} · {{ distance(offer.distance_m) }}</p>
@@ -105,10 +105,10 @@ onMounted(() => Promise.all([load(), loadProfile()]));
 
     <template v-if="scheduled.length">
         <h2 class="mt-6 text-title">Pedidos agendados</h2>
-        <p class="mt-1 text-caption text-ink-muted">Aulas para outro dia. O primeiro formador a aceitar fica com a aula.</p>
+        <p class="mt-1 text-caption text-ink-muted">Serviços para outro dia. O primeiro técnico a aceitar fica com o serviço.</p>
         <ul class="mt-3 grid gap-3">
             <li v-for="offer in scheduled" :key="offer.id">
-                <Link :href="`/formador/ofertas/${offer.id}`" class="card flex items-center gap-3">
+                <Link :href="`/tecnico/ofertas/${offer.id}`" class="card flex items-center gap-3">
                     <div class="min-w-0 flex-1">
                         <p class="font-semibold">{{ offer.category }} · {{ kwanza(offer.provider_net) }} para si</p>
                         <p class="text-caption text-ink-muted">{{ when(offer.scheduled_at) }} · {{ offer.neighborhood }} · {{ distance(offer.distance_m) }}</p>

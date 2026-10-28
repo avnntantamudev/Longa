@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * Chat da aula (aluno ↔ formador).
+ * Chat do serviço (cliente ↔ técnico).
  *
  * @property int $id
  * @property int $service_job_id

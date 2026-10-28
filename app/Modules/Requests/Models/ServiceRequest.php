@@ -21,7 +21,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
- * Pedido de aula publicado por um aluno.
+ * Pedido de serviço publicado por um cliente.
  *
  * @property int $id
  * @property int $client_id

@@ -12,7 +12,7 @@ Route::middleware(['auth', 'auth.session', 'onboarded'])->group(function () {
     });
 
     Route::middleware('role:provider')->group(function () {
-        Route::get('/formador/ofertas', [PageController::class, 'offers'])->name('provider.offers');
-        Route::get('/formador/ofertas/{offer}', [PageController::class, 'showOffer'])->name('provider.offers.show');
+        Route::get('/tecnico/ofertas', [PageController::class, 'offers'])->name('provider.offers');
+        Route::get('/tecnico/ofertas/{offer}', [PageController::class, 'showOffer'])->name('provider.offers.show');
     });
 });

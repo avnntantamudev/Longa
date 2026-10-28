@@ -58,7 +58,7 @@ pest()->extend(TestCase::class)
     ->in('Concurrency');
 
 /**
- * Aula acabada de aceitar (como faria o TRIM TRIM): eletrónica em pending_payment, dinheiro em scheduled.
+ * Serviço acabada de aceitar (como faria o TRIM TRIM): eletrónica em pending_payment, dinheiro em scheduled.
  *
  * @param  array<string, mixed>  $overrides
  */
@@ -70,7 +70,7 @@ function acceptedSession(string $paymentMethod = 'electronic', array $overrides 
 
     $session = App\Modules\Sessions\Models\ServiceJob::query()->create([
         'service_request_id' => $request->id, 'client_id' => $request->client_id, 'provider_profile_id' => $provider->id,
-        'category_id' => $request->category_id, 'title' => 'Aula de SGME', 'amount' => 25000, 'commission' => 3750, 'provider_net' => 21250,
+        'category_id' => $request->category_id, 'title' => 'Serviço de SGME', 'amount' => 25000, 'commission' => 3750, 'provider_net' => 21250,
         'scheduled_at' => now()->addDay()->setTime(14, 0), 'duration_minutes' => 60, 'payment_method' => $paymentMethod,
         'payment_due_at' => $electronic ? now()->addMinutes(10) : null,
         'modality' => 'in_person', 'municipality' => 'Talatona', 'neighborhood' => 'Talatona', 'latitude' => -8.9167, 'longitude' => 13.1833,
@@ -83,7 +83,7 @@ function acceptedSession(string $paymentMethod = 'electronic', array $overrides 
 }
 
 /**
- * Aula eletrónica já paga (dinheiro em escrow) e agendada.
+ * Serviço eletrónica já paga (dinheiro em escrow) e agendado.
  *
  * @param  array<string, mixed>  $overrides
  */
@@ -96,7 +96,7 @@ function paidSession(array $overrides = []): App\Modules\Sessions\Models\Service
 }
 
 /**
- * Saldos do ledger relevantes para uma aula (cache e fonte de verdade têm de coincidir).
+ * Saldos do ledger relevantes para um serviço (cache e fonte de verdade têm de coincidir).
  *
  * @return array{escrow: int, provider: int, revenue: int, refunds: int, funds_in: int}
  */

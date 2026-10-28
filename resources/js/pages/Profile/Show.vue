@@ -21,7 +21,7 @@ const user = computed(() => page.props.auth.user);
 const sessions = ref<Session[]>([]);
 const providerStatus = ref<{ completed: boolean; verification: string } | null>(null);
 
-const roleLabels: Record<RoleName, string> = { client: 'Aluno', provider: 'Formador', company_rh: 'Empresa (RH)', admin: 'Administrador' };
+const roleLabels: Record<RoleName, string> = { client: 'Cliente', provider: 'Técnico', company_rh: 'Empresa (RH)', admin: 'Administrador' };
 const verificationLabels: Record<string, string> = {
     unverified: 'Por verificar',
     pending: 'Verificação em análise',
@@ -80,14 +80,14 @@ onMounted(async () => {
     <section v-if="providerStatus" class="card mt-4">
         <div class="flex items-center justify-between gap-3">
             <div>
-                <p class="font-semibold">Perfil de formador</p>
+                <p class="font-semibold">Perfil de técnico</p>
                 <p class="text-caption text-ink-muted">{{ providerStatus.completed ? 'Perfil completo' : 'Faltam dados no perfil' }}</p>
             </div>
             <span class="badge" :class="providerStatus.verification === 'verified' ? 'badge-success' : 'badge-warning'">
                 {{ verificationLabels[providerStatus.verification] }}
             </span>
         </div>
-        <Link href="/onboarding/formador" class="btn-secondary mt-3 w-full">Editar perfil de formador</Link>
+        <Link href="/onboarding/tecnico" class="btn-secondary mt-3 w-full">Editar perfil de técnico</Link>
     </section>
 
     <section v-if="user?.roles.includes('admin')" class="card mt-4">

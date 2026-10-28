@@ -9,10 +9,10 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Formações dos colaboradores de uma empresa no período (aulas concluídas, pela data da aula).
+ * Serviços dos colaboradores de uma empresa no período (serviços concluídos, pela data do serviço).
  *
  * Só entram colaboradores que AUTORIZARAM a empresa (consent_status = accepted). Mostra apenas o
- * necessário para RH: data, área, formador, duração e custo. Nunca chat, local exato ou telefone do formador.
+ * necessário para RH: data, área, técnico, duração e custo. Nunca chat, local exato ou telefone do técnico.
  */
 class CompanyServicesReport
 {
@@ -101,15 +101,15 @@ class CompanyServicesReport
             ['title' => 'Resumo', 'headers' => ['Indicador', 'Valor'], 'rows' => [
                 ['Colaboradores ativos', $t['employees']],
                 ['Autorizaram a empresa', $t['consented']],
-                ['Aulas concluídas', $t['lessons']],
-                ['Horas de formação', $hours($t['hours'])],
+                ['Serviços concluídos', $t['lessons']],
+                ['Horas de serviço', $hours($t['hours'])],
                 ['Custo (Kz)', $t['cost']],
             ]],
-            ['title' => 'Por departamento', 'headers' => ['Departamento', 'Colaboradores', 'Aulas', 'Horas', 'Custo (Kz)'],
+            ['title' => 'Por departamento', 'headers' => ['Departamento', 'Colaboradores', 'Serviços', 'Horas', 'Custo (Kz)'],
                 'rows' => array_map(fn ($d) => [$d['department'], $d['employees'], $d['lessons'], $hours($d['hours']), $d['cost']], $report['by_department'])],
-            ['title' => 'Por colaborador', 'headers' => ['Colaborador', 'Departamento', 'Aulas', 'Horas', 'Custo (Kz)'],
+            ['title' => 'Por colaborador', 'headers' => ['Colaborador', 'Departamento', 'Serviços', 'Horas', 'Custo (Kz)'],
                 'rows' => array_map(fn ($e) => [$e['name'], $e['department'], $e['lessons'], $hours($e['hours']), $e['cost']], $report['by_employee'])],
-            ['title' => 'Aulas', 'headers' => ['Data', 'Colaborador', 'Área', 'Formador', 'Horas', 'Custo (Kz)'],
+            ['title' => 'Serviços', 'headers' => ['Data', 'Colaborador', 'Área', 'Técnico', 'Horas', 'Custo (Kz)'],
                 'rows' => array_map(fn ($l) => [$l['date'], $l['employee'], $l['category'], $l['provider'], $hours($l['hours']), $l['cost']], $report['lessons'])],
         ];
     }

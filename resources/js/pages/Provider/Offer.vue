@@ -47,7 +47,7 @@ const closedMessage = computed(() => {
     }
     switch (offer.value?.state) {
         case 'lost':
-            return 'Outro formador aceitou primeiro (ou o pedido terminou).';
+            return 'Outro técnico aceitou primeiro (ou o pedido terminou).';
         case 'declined':
             return 'Recusou este pedido.';
         case 'expired':
@@ -62,16 +62,16 @@ async function load(): Promise<void> {
     offer.value = data;
     countdown.start(data.seconds_left);
     if (data.state === 'accepted' && data.session_id) {
-        router.visit(`/aulas/${data.session_id}`);
+        router.visit(`/servicos/${data.session_id}`);
     }
 }
 
 async function accept(): Promise<void> {
     busy.value = true;
     try {
-        // Seguro repetir (idempotente no servidor): o "tentar de novo" de rede não duplica a aula
+        // Seguro repetir (idempotente no servidor): o "tentar de novo" de rede não duplica o serviço
         const { data } = await api.post<{ data: { id: number } }>(`/offers/${props.offerId}/accept`);
-        router.visit(`/aulas/${data.id}`);
+        router.visit(`/servicos/${data.id}`);
     } catch (e) {
         if (e instanceof ApiError) {
             outcome.value = e.message;
@@ -85,7 +85,7 @@ async function decline(): Promise<void> {
     busy.value = true;
     try {
         await api.post(`/offers/${props.offerId}/decline`);
-        router.visit('/formador/ofertas');
+        router.visit('/tecnico/ofertas');
     } catch (e) {
         if (e instanceof ApiError) {
             outcome.value = e.message;
@@ -147,12 +147,12 @@ onMounted(() => {
                 <button type="button" class="mt-3 min-h-12 w-full rounded-control border border-orange-500/60 font-semibold text-orange-400" :disabled="busy" @click="decline">
                     Recusar
                 </button>
-                <p class="mt-3 text-center text-caption text-navy-300">Só um formador fica com a aula: o primeiro a aceitar.</p>
+                <p class="mt-3 text-center text-caption text-navy-300">Só um técnico fica com o serviço: o primeiro a aceitar.</p>
             </template>
 
             <div v-else class="mt-5 rounded-card bg-white/10 p-4 text-center" role="status">
                 <p class="font-semibold">{{ closedMessage }}</p>
-                <Link href="/formador/ofertas" class="btn-primary mt-3 w-full">Ver outros pedidos</Link>
+                <Link href="/tecnico/ofertas" class="btn-primary mt-3 w-full">Ver outros pedidos</Link>
             </div>
         </template>
 

@@ -15,14 +15,14 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Relatório de ganhos do formador.
+ * Relatório de ganhos do técnico.
  *
  * @tags Carteira
  */
 class EarningsController extends Controller
 {
     /**
-     * Ganhos por mês num ano (aulas, creditado, comissões, recebido em mão).
+     * Ganhos por mês num ano (serviços, creditado, comissões, recebido em mão).
      */
     public function show(Request $request, EarningsReport $report): JsonResponse
     {
@@ -38,7 +38,7 @@ class EarningsController extends Controller
         $provider = $this->provider($request);
         $year = $this->year($request);
         $sections = EarningsReport::sections($report->build($provider, $year));
-        $title = 'Ganhos de '.($provider->user->name ?? 'formador');
+        $title = 'Ganhos de '.($provider->user->name ?? 'técnico');
         $filename = "longa-ganhos-{$year}";
 
         return $format === 'pdf'
@@ -58,6 +58,6 @@ class EarningsController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        return $user->providerProfile ?? throw new ApiException('forbidden', 'Só formadores têm relatório de ganhos.', 403);
+        return $user->providerProfile ?? throw new ApiException('forbidden', 'Só técnicos têm relatório de ganhos.', 403);
     }
 }

@@ -61,7 +61,7 @@ function raceToAccept(array $offerIds): array
     }, $processes);
 }
 
-it('só um formador consegue a aula quando vários aceitam ao mesmo tempo', function () {
+it('só um técnico consegue o serviço quando vários aceitam ao mesmo tempo', function () {
     $offerIds = RequestOffer::query()->where('service_request_id', $this->request->id)->pluck('id')->all();
     expect($offerIds)->toHaveCount(WORKERS);
 
@@ -79,7 +79,7 @@ it('só um formador consegue a aula quando vários aceitam ao mesmo tempo', func
         ->and($this->request->fresh()?->state)->toBe(RequestState::Matched);
 });
 
-it('é idempotente sob concorrência: o mesmo formador a aceitar várias vezes recebe a mesma aula', function () {
+it('é idempotente sob concorrência: o mesmo técnico a aceitar várias vezes recebe o mesmo serviço', function () {
     $offerId = RequestOffer::query()->where('service_request_id', $this->request->id)->value('id');
 
     $results = raceToAccept(array_fill(0, 5, $offerId));

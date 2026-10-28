@@ -13,14 +13,14 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 /**
- * Dados públicos de apoio: áreas de formação, zonas e perfil público de formadores.
+ * Dados públicos de apoio: áreas de serviço, zonas e perfil público de técnicos.
  *
  * @tags Catálogo
  */
 class CatalogController extends Controller
 {
     /**
-     * Áreas de formação.
+     * Áreas de serviço.
      *
      * @unauthenticated
      */
@@ -48,9 +48,9 @@ class CatalogController extends Controller
     }
 
     /**
-     * Perfil público de um formador.
+     * Perfil público de um técnico.
      *
-     * Só formadores verificados e com onboarding concluído. Nunca inclui contactos nem coordenadas.
+     * Só técnicos verificados e com onboarding concluído. Nunca inclui contactos nem coordenadas.
      *
      * @unauthenticated
      */

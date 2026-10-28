@@ -14,8 +14,8 @@ use App\Support\Api\ApiException;
 use Illuminate\Support\Facades\DB;
 
 /**
- * "Terminar aula e mostrar QR": in_progress → awaiting_confirmation e emite um lote de QR.
- * Também serve para pedir um novo lote enquanto a aula espera confirmação (o ecrã renova sozinho).
+ * "Terminar serviço e mostrar QR": in_progress → awaiting_confirmation e emite um lote de QR.
+ * Também serve para pedir um novo lote enquanto o serviço espera confirmação (o ecrã renova sozinho).
  */
 class FinishSession
 {
@@ -36,12 +36,12 @@ class FinishSession
                     'awaiting_since' => now(),
                 ]);
             } elseif ($locked->state !== SessionState::AwaitingConfirmation) {
-                throw new ApiException('session_not_finishable', 'Inicie a aula antes de mostrar o QR.', 409);
+                throw new ApiException('session_not_finishable', 'Inicie o serviço antes de mostrar o QR.', 409);
             }
 
             $windowEnd = $locked->ends_at?->copy()->addHours((int) config('longa.session_rules.qr_window_hours_after_end'));
             if ($windowEnd !== null && now()->gt($windowEnd)) {
-                throw new ApiException('qr_window_closed', 'O prazo para confirmar a aula por QR terminou. O aluno pode confirmar na app.', 409);
+                throw new ApiException('qr_window_closed', 'O prazo para confirmar o serviço por QR terminou. O cliente pode confirmar na app.', 409);
             }
 
             $batch = $this->qr->issueBatch($locked);

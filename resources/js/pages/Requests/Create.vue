@@ -37,7 +37,7 @@ const hasLocation = computed(() => form.latitude !== null && form.neighborhood !
 function onCategory(): void {
     const category = props.categories.find((s) => s.id === form.category_id);
     if (category && form.title === '') {
-        form.title = `Aula de ${category.name.split(' — ')[0]}`;
+        form.title = `Serviço de ${category.name.split(' — ')[0]}`;
     }
 }
 
@@ -62,10 +62,10 @@ async function submit(): Promise<void> {
 </script>
 
 <template>
-    <Head title="Pedir aula" />
+    <Head title="Pedir serviço" />
 
-    <h1 class="text-display">Pedir aula</h1>
-    <p class="mt-1 text-ink-muted">Enviamos o pedido aos formadores verificados num raio de 5 km. O primeiro que aceitar fica com a aula.</p>
+    <h1 class="text-display">Pedir serviço</h1>
+    <p class="mt-1 text-ink-muted">Enviamos o pedido aos técnicos verificados num raio de 5 km. O primeiro que aceitar fica com o serviço.</p>
 
     <form class="mt-6 grid gap-4" novalidate @submit.prevent="submit">
         <FormField label="O que quer aprender?" for="category" :error="errors.category_id">
@@ -76,7 +76,7 @@ async function submit(): Promise<void> {
         </FormField>
 
         <FormField label="Tema" for="title" :error="errors.title">
-            <input id="title" v-model="form.title" class="input" maxlength="120" placeholder="Ex.: Aula de SGME" />
+            <input id="title" v-model="form.title" class="input" maxlength="120" placeholder="Ex.: Serviço de SGME" />
         </FormField>
 
         <FormField label="Detalhes (opcional)" for="desc" :error="errors.description" hint="O que quer rever, o seu nível, materiais que tem.">
@@ -106,8 +106,8 @@ async function submit(): Promise<void> {
             </div>
             <p class="text-caption text-ink-muted">
                 {{ form.payment_method === 'electronic'
-                    ? 'Paga quando o formador aceitar. O valor fica retido e só é libertado depois de confirmar a aula com o QR.'
-                    : 'Paga ao formador no dia da aula. Confirma na app depois da aula.' }}
+                    ? 'Paga quando o técnico aceitar. O valor fica retido e só é libertado depois de confirmar o serviço com o QR.'
+                    : 'Paga ao técnico no dia do serviço. Confirma na app depois do serviço.' }}
             </p>
         </fieldset>
 
@@ -121,18 +121,18 @@ async function submit(): Promise<void> {
 
         <fieldset class="card grid gap-3">
             <legend class="sr-only">Local</legend>
-            <p class="font-semibold">Onde vai ser a aula?</p>
-            <p class="-mt-2 text-caption text-ink-muted">Marque o local no mapa. Os formadores só veem o bairro e a distância aproximada até aceitarem.</p>
+            <p class="font-semibold">Onde vai ser o serviço?</p>
+            <p class="-mt-2 text-caption text-ink-muted">Marque o local no mapa. Os técnicos só veem o bairro e a distância aproximada até aceitarem.</p>
             <LocationPicker :value="form" :zones="zones" :provinces="provinces" :errors="errors" />
         </fieldset>
 
         <p v-if="form.amount" class="text-caption text-ink-muted">
-            Paga {{ kwanza(form.amount) }}. A comissão do BISCA ({{ commissionPercent }}%) é descontada ao formador.
+            Paga {{ kwanza(form.amount) }}. A comissão do BISCA ({{ commissionPercent }}%) é descontada ao técnico.
         </p>
 
         <p v-if="errors.general" class="text-caption text-danger" role="alert">{{ errors.general }}</p>
         <button type="submit" class="btn-primary w-full" :disabled="saving || !hasLocation || !form.category_id">
-            {{ saving ? 'A publicar…' : 'Procurar formador' }}
+            {{ saving ? 'A publicar…' : 'Procurar técnico' }}
         </button>
     </form>
 </template>

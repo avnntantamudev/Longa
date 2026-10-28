@@ -15,8 +15,8 @@ use App\Support\Audit\AuditLogger;
 use Illuminate\Support\Facades\DB;
 
 /**
- * O aluno cancela enquanto procura formador. As ofertas abertas ficam "lost".
- * Um pedido já aceite não se cancela aqui (o cancelamento de aulas é da Fase 3).
+ * O cliente cancela enquanto procura técnico. As ofertas abertas ficam "lost".
+ * Um pedido já aceite não se cancela aqui (o cancelamento de serviços é da Fase 3).
  */
 class CancelServiceRequest
 {
@@ -29,7 +29,7 @@ class CancelServiceRequest
             $locked = ServiceRequest::query()->lockForUpdate()->findOrFail($request->id);
 
             if ($locked->state === RequestState::Matched) {
-                throw new ApiException('request_already_matched', 'Um formador já aceitou este pedido. Veja a aula marcada.', 409);
+                throw new ApiException('request_already_matched', 'Um técnico já aceitou este pedido. Veja o serviço marcado.', 409);
             }
 
             $locked->transitionTo(RequestState::Cancelled, [

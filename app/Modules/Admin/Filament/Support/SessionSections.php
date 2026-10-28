@@ -10,22 +10,22 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 
 /**
- * Blocos de informação de uma aula reutilizados nas páginas do backoffice.
+ * Blocos de informação de um serviço reutilizados nas páginas do backoffice.
  * $prefix permite usar os mesmos blocos a partir de uma disputa ("session.").
  */
 class SessionSections
 {
     public static function details(string $prefix = ''): Section
     {
-        return Section::make('Aula')
+        return Section::make('Serviço')
             ->columns(3)
             ->schema([
                 TextEntry::make($prefix.'title')->label('Título'),
                 TextEntry::make($prefix.'state')->label('Estado')->badge()
                     ->formatStateUsing(fn (SessionState $state) => $state->label()),
                 TextEntry::make($prefix.'amount')->label('Valor')->formatStateUsing(fn (int $state) => self::kz($state)),
-                TextEntry::make($prefix.'client.name')->label('Aluno')->placeholder('—'),
-                TextEntry::make($prefix.'provider.user.name')->label('Formador')->placeholder('—'),
+                TextEntry::make($prefix.'client.name')->label('Cliente')->placeholder('—'),
+                TextEntry::make($prefix.'provider.user.name')->label('Técnico')->placeholder('—'),
                 TextEntry::make($prefix.'payment_method')->label('Pagamento')
                     ->formatStateUsing(fn (string $state) => $state === 'cash' ? 'Em mão' : 'Eletrónico'),
                 TextEntry::make($prefix.'scheduled_at')->label('Agendada para')->dateTime('d/m/Y H:i'),

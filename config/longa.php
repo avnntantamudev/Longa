@@ -41,11 +41,11 @@ return [
         'terms' => env('LONGA_TERMS_VERSION', '2026-10'),
         'privacy' => env('LONGA_PRIVACY_VERSION', '2026-10'),
         'location' => env('LONGA_LOCATION_CONSENT_VERSION', '2026-10'),
-        // Autorização para a empresa (RH) ver as formações do colaborador
+        // Autorização para a empresa (RH) ver os serviços do colaborador
         'company_reports' => env('LONGA_COMPANY_REPORTS_CONSENT_VERSION', '2026-10'),
     ],
 
-    // Pedidos de aula e matching TRIM TRIM (Fase 2). Valores [AJUSTAR] com o cliente.
+    // Pedidos de serviço e matching TRIM TRIM (Fase 2). Valores [AJUSTAR] com o cliente.
     'requests' => [
         'commission_percent' => (int) env('LONGA_COMMISSION_PERCENT', 15),
         'min_amount' => (int) env('LONGA_REQUEST_MIN_AMOUNT', 2000),
@@ -54,9 +54,9 @@ return [
         // Tempo total de procura do pedido e prazo de cada oferta (segundos)
         'ttl' => (int) env('LONGA_REQUEST_TTL', 300),
         'offer_ttl' => (int) env('LONGA_OFFER_TTL', 60),
-        // Antecedência mínima da aula (minutos)
+        // Antecedência mínima do serviço (minutos)
         'min_lead_minutes' => (int) env('LONGA_REQUEST_MIN_LEAD_MINUTES', 30),
-        // Mesmo aluno, mesma área e hora próxima com um pedido ativo = duplicado
+        // Mesmo cliente, mesma área e hora próxima com um pedido ativo = duplicado
         'duplicate_window_minutes' => (int) env('LONGA_REQUEST_DUPLICATE_WINDOW', 120),
         'create_per_hour' => (int) env('LONGA_REQUEST_CREATE_PER_HOUR', 5),
     ],
@@ -65,20 +65,20 @@ return [
         'radius_m' => (int) env('LONGA_MATCHING_RADIUS_M', 5000),
         'first_wave_size' => (int) env('LONGA_MATCHING_FIRST_WAVE', 10),
         'next_wave_size' => (int) env('LONGA_MATCHING_NEXT_WAVE', 15),
-        // Pesos da ordenação: score do formador vs proximidade (somam 1)
+        // Pesos da ordenação: score do técnico vs proximidade (somam 1)
         'weight_score' => (float) env('LONGA_MATCHING_WEIGHT_SCORE', 0.6),
         'weight_distance' => (float) env('LONGA_MATCHING_WEIGHT_DISTANCE', 0.4),
-        // Folga (minutos) antes e depois de uma aula marcada em que o formador não recebe outra
+        // Folga (minutos) antes e depois de um serviço marcado em que o técnico não recebe outra
         'conflict_buffer_minutes' => (int) env('LONGA_MATCHING_CONFLICT_BUFFER', 30),
         'accept_per_minute' => (int) env('LONGA_OFFER_ACCEPT_PER_MINUTE', 30),
-        // SMS de oferta quando o formador não tem push ativo (custa dinheiro)
+        // SMS de oferta quando o técnico não tem push ativo (custa dinheiro)
         'sms_fallback_per_provider_per_hour' => (int) env('LONGA_OFFER_SMS_PER_HOUR', 5),
     ],
 
-    // Execução da aula, QR e escrow (Fase 3). Todas as regras de tempo num só sítio [AJUSTAR]
+    // Execução do serviço, QR e escrow (Fase 3). Todas as regras de tempo num só sítio [AJUSTAR]
     'session_rules' => [
         'payment_window_minutes' => (int) env('LONGA_PAYMENT_WINDOW_MINUTES', 10),
-        // O formador pode iniciar a aula a partir de N minutos antes da hora marcada
+        // O técnico pode iniciar o serviço a partir de N minutos antes da hora marcada
         'start_early_minutes' => (int) env('LONGA_SESSION_START_EARLY_MINUTES', 15),
         // QR: cada token vale 30 s; o lote cobre 10 janelas (5 min) para aguentar falhas de rede
         'qr_rotation_seconds' => (int) env('LONGA_QR_ROTATION_SECONDS', 30),
@@ -87,7 +87,7 @@ return [
         'qr_window_hours_after_end' => (int) env('LONGA_QR_WINDOW_HOURS', 4),
         'qr_max_failed_attempts' => (int) env('LONGA_QR_MAX_FAILED_ATTEMPTS', 5),
         'qr_attempt_window_minutes' => (int) env('LONGA_QR_ATTEMPT_WINDOW_MINUTES', 10),
-        // Sinal de risco (nunca bloqueio): aluno a mais de N metros do local da aula ao ler o QR
+        // Sinal de risco (nunca bloqueio): cliente a mais de N metros do local do serviço ao ler o QR
         'presence_risk_meters' => (int) env('LONGA_PRESENCE_RISK_METERS', 500),
         // R1/R2: N horas após o fim previsto sem confirmação → awaiting_confirmation; janela de 48 h
         'auto_awaiting_after_end_hours' => (int) env('LONGA_AUTO_AWAITING_HOURS', 2),
@@ -96,7 +96,7 @@ return [
         'no_show_provider_after_minutes' => (int) env('LONGA_NO_SHOW_PROVIDER_MINUTES', 15),
         'no_show_client_after_minutes' => (int) env('LONGA_NO_SHOW_CLIENT_MINUTES', 30),
         'no_show_contest_hours' => (int) env('LONGA_NO_SHOW_CONTEST_HOURS', 24),
-        // Política de reembolso (percentagens da parte que fica para o formador, antes da comissão)
+        // Política de reembolso (percentagens da parte que fica para o técnico, antes da comissão)
         'late_cancel_hours' => (int) env('LONGA_LATE_CANCEL_HOURS', 6),
         'late_cancel_provider_share_percent' => (int) env('LONGA_LATE_CANCEL_PROVIDER_SHARE', 25),
         'no_show_client_provider_share_percent' => (int) env('LONGA_NO_SHOW_CLIENT_PROVIDER_SHARE', 50),
@@ -117,7 +117,7 @@ return [
         'mask_contacts' => (bool) env('LONGA_CHAT_MASK_CONTACTS', true),
     ],
 
-    // Formador VIP (subscrição anual). Valores por omissão: o admin muda-os em Backoffice → Definições.
+    // Técnico VIP (subscrição anual). Valores por omissão: o admin muda-os em Backoffice → Definições.
     'vip' => [
         'price' => (int) env('LONGA_VIP_PRICE', 50000),
         'commission_percent' => (int) env('LONGA_VIP_COMMISSION_PERCENT', 10),
@@ -126,14 +126,14 @@ return [
         'reminder_days' => [30, 7, 1],
     ],
 
-    // Pedidos para outro dia (não hoje): ficam abertos até X horas antes da aula
+    // Pedidos para outro dia (não hoje): ficam abertos até X horas antes do serviço
     'scheduled_requests' => [
         'close_hours_before' => (int) env('LONGA_SCHEDULED_CLOSE_HOURS', 2),
-        // Máximo de formadores avisados por push num pedido agendado (os restantes veem-no na lista)
+        // Máximo de técnicos avisados por push num pedido agendado (os restantes veem-no na lista)
         'max_push' => (int) env('LONGA_SCHEDULED_MAX_PUSH', 50),
     ],
 
-    // Foto de perfil obrigatória para formadores. Os formadores registados antes desta regra
+    // Foto de perfil obrigatória para técnicos. Os técnicos registados antes desta regra
     // continuam a receber pedidos sem foto até esta data (aviso na app).
     'providers' => [
         'photo_required_from' => env('LONGA_PROVIDER_PHOTO_REQUIRED_FROM', '2026-11-02 00:00:00'),

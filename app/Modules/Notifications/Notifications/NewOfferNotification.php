@@ -19,8 +19,8 @@ use NotificationChannels\WebPush\WebPushMessage;
 /**
  * TRIM TRIM: "Novo pedido a 1,2 km: SGME 25.000 Kz".
  *
- * Canais: notificação na app (sempre); Web Push se o formador tiver subscrições;
- * senão SMS (fallback), limitado por formador e por hora porque custa dinheiro.
+ * Canais: notificação na app (sempre); Web Push se o técnico tiver subscrições;
+ * senão SMS (fallback), limitado por técnico e por hora porque custa dinheiro.
  * O push expira com a oferta (TTL = segundos restantes): uma oferta vencida não chega atrasada.
  */
 class NewOfferNotification extends Notification implements ShouldQueue, SmsNotification
@@ -67,14 +67,14 @@ class NewOfferNotification extends Notification implements ShouldQueue, SmsNotif
             ->renotify()
             ->requireInteraction()
             ->vibrate([200, 100, 200, 100, 400])
-            ->data(['url' => '/formador/ofertas/'.$this->offer->id, 'offer_id' => $this->offer->id])
+            ->data(['url' => '/tecnico/ofertas/'.$this->offer->id, 'offer_id' => $this->offer->id])
             ->options(['TTL' => max(1, $this->offer->secondsLeft()), 'urgency' => 'high']);
     }
 
     public function toSms(object $notifiable): string
     {
         return 'BISCA: '.$this->headline().'. '.$this->details().'. Responda em '.$this->offer->secondsLeft().'s: '
-            .url('/formador/ofertas/'.$this->offer->id);
+            .url('/tecnico/ofertas/'.$this->offer->id);
     }
 
     /**
@@ -87,7 +87,7 @@ class NewOfferNotification extends Notification implements ShouldQueue, SmsNotif
             'title' => $this->headline(),
             'body' => $this->details(),
             'offer_id' => $this->offer->id,
-            'url' => '/formador/ofertas/'.$this->offer->id,
+            'url' => '/tecnico/ofertas/'.$this->offer->id,
         ];
     }
 

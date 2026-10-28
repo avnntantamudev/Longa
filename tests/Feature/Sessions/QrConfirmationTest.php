@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Cache;
 beforeEach(fn () => Cache::flush());
 
 /**
- * Leva a aula até ao QR: hora da aula, formador inicia e termina. Devolve os tokens do lote.
+ * Leva o serviço até ao QR: hora do serviço, técnico inicia e termina. Devolve os tokens do lote.
  *
  * @return list<array{token: string, code: string, valid_from: string, expires_at: string}>
  */
@@ -42,7 +42,7 @@ function confirmWith(ServiceJob $session, array $body, string $key = 'confirm-00
     return test()->postJson("/api/v1/sessions/{$session->id}/confirm", $body, ['Idempotency-Key' => $key]);
 }
 
-it('o aluno lê o QR: aula concluída e valor libertado para o formador menos a comissão', function () {
+it('o cliente lê o QR: serviço concluído e valor libertado para o técnico menos a comissão', function () {
     $session = paidSession();
     $tokens = showQr($session);
 
@@ -53,7 +53,7 @@ it('o aluno lê o QR: aula concluída e valor libertado para o formador menos a 
     confirmWith($session, ['token' => $tokens[0]['token']])
         ->assertOk()
         ->assertJsonPath('data.state', 'completed')
-        ->assertJsonPath('message', 'Aula confirmada, Kz 25.000 libertados para o formador.');
+        ->assertJsonPath('message', 'Serviço confirmado, Kz 25.000 libertados para o técnico.');
 
     $ledger = app(LedgerService::class);
     expect($ledger->balance(Accounts::ESCROW))->toBe(0)
@@ -104,7 +104,7 @@ it('aceita o código de 6 dígitos como alternativa ao QR', function () {
     expect(SessionEvent::query()->where('type', 'confirmed')->sole()->metadata['method'])->toBe('code');
 });
 
-it('recusa um QR de outra aula e um QR já usado noutra aula', function () {
+it('recusa um QR de outro serviço e um QR já usado noutra serviço', function () {
     $a = paidSession();
     $b = paidSession();
     $tokensA = showQr($a);
@@ -116,7 +116,7 @@ it('recusa um QR de outra aula e um QR já usado noutra aula', function () {
     expect($tokensA)->toHaveCount(10);
 });
 
-it('só o aluno da aula confirma: o formador não se autoconfirma', function () {
+it('só o cliente do serviço confirma: o técnico não se autoconfirma', function () {
     $session = paidSession();
     $tokens = showQr($session);
 
@@ -131,7 +131,7 @@ it('só o aluno da aula confirma: o formador não se autoconfirma', function () 
 
 it('recusa a confirmação fora da janela de tempo', function () {
     $session = paidSession();
-    // Formador começa 10 min antes e termina logo: o QR existe mas ainda não é a hora da aula
+    // Técnico começa 10 min antes e termina logo: o QR existe mas ainda não é a hora do serviço
     $this->travelTo($session->scheduled_at->copy()->subMinutes(10));
     apiLogin($session->provider->user);
     $this->postJson("/api/v1/sessions/{$session->id}/start")->assertOk();
@@ -152,7 +152,7 @@ it('bloqueia após tentativas erradas, mesmo com o código certo', function () {
     expect(SessionQrToken::query()->where('service_job_id', $session->id)->sum('attempts'))->toBeGreaterThanOrEqual(5);
 });
 
-it('regista sinal de risco se o aluno estiver longe do local, sem bloquear', function () {
+it('regista sinal de risco se o cliente estiver longe do local, sem bloquear', function () {
     $session = paidSession();
     $tokens = showQr($session);
 
@@ -163,7 +163,7 @@ it('regista sinal de risco se o aluno estiver longe do local, sem bloquear', fun
     expect($risk->metadata['distance_m'])->toBeGreaterThan(10000);
 });
 
-it('o formador só inicia na hora e não termina sem iniciar', function () {
+it('o técnico só inicia na hora e não termina sem iniciar', function () {
     $session = paidSession();
     apiLogin($session->provider->user);
 
@@ -174,7 +174,7 @@ it('o formador só inicia na hora e não termina sem iniciar', function () {
     $this->postJson("/api/v1/sessions/{$session->id}/start")->assertForbidden();
 });
 
-it('não se inicia uma aula por pagar', function () {
+it('não se inicia um serviço por pagar', function () {
     $session = acceptedSession();
     $this->travelTo($session->scheduled_at);
     apiLogin($session->provider->user);

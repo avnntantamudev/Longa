@@ -10,7 +10,7 @@ use App\Modules\Sessions\Models\SessionEvent;
 use App\Modules\Users\Models\User;
 
 /**
- * Transições da aula com registo obrigatório na linha do tempo (session_events).
+ * Transições do serviço com registo obrigatório na linha do tempo (session_events).
  * Chamar sempre dentro da transação de base de dados da operação (o evento e a transição
  * ficam gravados juntos ou nenhum).
  */

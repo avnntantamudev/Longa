@@ -31,7 +31,7 @@ function notified(User $user, string $kind): bool
     return Notification::sent($user, SessionUpdateNotification::class)->contains(fn (SessionUpdateNotification $n) => $n->kind === $kind);
 }
 
-it('fluxo QR: aluno avisado do início e do QR; formador avisado da confirmação com o valor', function () {
+it('fluxo QR: cliente avisado do início e do QR; técnico avisado da confirmação com o valor', function () {
     $session = paidSession();
     $provider = $session->provider->user;
     $this->travelTo($session->scheduled_at);
@@ -65,18 +65,18 @@ it('disputa aberta avisa a outra parte; decisão avisa ambos', function () {
     $this->travelTo($session->scheduled_at);
     app(StartSession::class)->handle($session, $session->provider->user);
     app(FinishSession::class)->handle($session, $session->provider->user);
-    $dispute = app(OpenDispute::class)->handle($session->fresh() ?? $session, $session->client, 'quality', 'A aula ficou aquém do combinado.');
+    $dispute = app(OpenDispute::class)->handle($session->fresh() ?? $session, $session->client, 'quality', 'O serviço ficou aquém do combinado.');
 
     expect(notified($session->provider->user, 'dispute_opened'))->toBeTrue()
         ->and(notified($session->client, 'dispute_opened'))->toBeFalse();
 
-    app(ResolveDispute::class)->handle($dispute, User::factory()->withRole(Role::Admin)->create(), 'refunded', null, 'Sem evidências da aula.');
+    app(ResolveDispute::class)->handle($dispute, User::factory()->withRole(Role::Admin)->create(), 'refunded', null, 'Sem evidências do serviço.');
 
     expect(notified($session->provider->user, 'dispute_resolved'))->toBeTrue()
         ->and(notified($session->client, 'dispute_resolved'))->toBeTrue();
 });
 
-it('confirmação automática (R2) também avisa o formador', function () {
+it('confirmação automática (R2) também avisa o técnico', function () {
     $session = paidSession();
     $this->travelTo($session->scheduled_at);
     app(StartSession::class)->handle($session, $session->provider->user);

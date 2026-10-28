@@ -13,14 +13,14 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Encontra e ordena os formadores elegíveis para um pedido (uma única consulta SQL).
+ * Encontra e ordena os técnicos elegíveis para um pedido (uma única consulta SQL).
  *
  * Elegível:
  *  - conta ativa e não apagada; perfil verificado, com onboarding concluído e "Disponível";
  *  - ensina a área do pedido e aceita a modalidade (presencial/online);
- *  - presencial: a ≤ raio do matching (5 km) do local do pedido E o pedido dentro do raio de atuação do formador;
- *  - sem aula ativa que se sobreponha ao horário pedido (com folga configurável);
- *  - não é o próprio aluno e ainda não recebeu oferta deste pedido.
+ *  - presencial: a ≤ raio do matching (5 km) do local do pedido E o pedido dentro do raio de atuação do técnico;
+ *  - sem serviço ativa que se sobreponha ao horário pedido (com folga configurável);
+ *  - não é o próprio cliente e ainda não recebeu oferta deste pedido.
  *
  * Ordenação: peso_score × score/100 + peso_distância × (1 − distância/raio), desempate pela distância.
  * Online: sem filtro de distância; ordena só pelo score.
@@ -63,7 +63,7 @@ class ProviderMatcher
             ->whereNotNull('tp.latitude')
             ->whereRaw('JSON_CONTAINS(tp.modalities, ?)', [json_encode($online ? 'online' : 'in_person')])
             ->when($excludeProviderIds !== [], fn ($q) => $q->whereNotIn('tp.id', $excludeProviderIds))
-            // Conflito: aula ativa do formador que se sobrepõe ao horário pedido (com folga)
+            // Conflito: serviço ativa do técnico que se sobrepõe ao horário pedido (com folga)
             ->whereNotExists(function ($q) use ($start, $end) {
                 $q->selectRaw('1')
                     ->from('service_jobs as s')

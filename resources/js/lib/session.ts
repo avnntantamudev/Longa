@@ -1,5 +1,5 @@
 /**
- * Tipos e textos da execução da aula (espelham SessionResource e AvailableActions no servidor).
+ * Tipos e textos da execução do serviço (espelham SessionResource e AvailableActions no servidor).
  */
 export type SessionAction =
     | 'pay'
@@ -80,14 +80,14 @@ export function eventLabel(type: string): string {
         payment_requested: 'Pagamento pedido',
         payment_confirmed: 'Pagamento recebido (retido pelo BISCA)',
         payment_failed: 'Pagamento falhou',
-        scheduled: 'Aula agendada',
-        started: 'Aula iniciada',
-        finished: 'Aula terminada',
+        scheduled: 'Serviço agendado',
+        started: 'Serviço iniciado',
+        finished: 'Serviço terminado',
         qr_issued: 'QR de confirmação gerado',
-        qr_scanned: 'QR lido pelo aluno',
-        confirmed: 'Aula confirmada',
-        confirmed_without_qr: 'Aula confirmada sem QR',
-        cancelled: 'Aula cancelada',
+        qr_scanned: 'QR lido pelo cliente',
+        confirmed: 'Serviço confirmado',
+        confirmed_without_qr: 'Serviço confirmado sem QR',
+        cancelled: 'Serviço cancelado',
         no_show_reported: 'Falta reportada',
         no_show_settled: 'Falta liquidada',
         dispute_opened: 'Disputa aberta',
@@ -102,7 +102,7 @@ export function eventLabel(type: string): string {
     return labels[type] ?? type.replaceAll('_', ' ');
 }
 
-/** O QR leva a aula e o token, para o leitor recusar QR de outra aula antes de enviar */
+/** O QR leva o serviço e o token, para o leitor recusar QR de outro serviço antes de enviar */
 export function qrPayload(sessionId: number, token: string): string {
     return `LONGA:${sessionId}:${token}`;
 }

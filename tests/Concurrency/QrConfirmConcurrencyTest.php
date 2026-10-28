@@ -14,11 +14,11 @@ use Symfony\Component\Process\Process;
 
 /*
 | Concorrência real: 6 processos leem o MESMO QR ao mesmo tempo. O dinheiro tem de ser libertado
-| uma única vez e todos recebem a aula concluída (idempotência).
+| uma única vez e todos recebem o serviço concluído (idempotência).
 */
 
 it('duas ou mais leituras simultâneas do mesmo QR libertam o dinheiro uma única vez', function () {
-    // Aula a decorrer agora (tempo real: os processos filhos não partilham o relógio dos testes)
+    // Serviço a decorrer agora (tempo real: os processos filhos não partilham o relógio dos testes)
     $session = paidSession(['scheduled_at' => now()->subMinutes(5)]);
     app(StartSession::class)->handle($session, $session->provider->user);
     $token = app(FinishSession::class)->handle($session, $session->provider->user)['qr']['tokens'][0]['token'];

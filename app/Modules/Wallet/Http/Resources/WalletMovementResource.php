@@ -37,9 +37,9 @@ class WalletMovementResource extends JsonResource
     public static function label(string $type): string
     {
         return match ($type) {
-            'escrow_release' => 'Aula confirmada',
-            'refund_partial' => 'Parte de aula cancelada ou em disputa',
-            'cash_commission_due' => 'Comissão de aula paga em mão',
+            'escrow_release' => 'Serviço confirmado',
+            'refund_partial' => 'Parte de serviço cancelado ou em disputa',
+            'cash_commission_due' => 'Comissão de serviço pago em mão',
             'cash_commission_received' => 'Comissão entregue ao BISCA',
             'commission_offset' => 'Comissão descontada do saldo',
             'reversal' => 'Estorno',

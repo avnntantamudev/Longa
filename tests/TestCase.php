@@ -9,6 +9,6 @@ use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
 {
-    /** Papéis e áreas de formação existem em todos os testes com base de dados. */
+    /** Papéis e áreas de serviço existem em todos os testes com base de dados. */
     protected string $seeder = TestingSeeder::class;
 }

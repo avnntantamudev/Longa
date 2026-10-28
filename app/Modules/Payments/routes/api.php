@@ -17,7 +17,7 @@ Route::middleware(['auth:sanctum', 'auth.session', 'onboarded'])->group(function
 Route::middleware(['auth:sanctum', 'auth.session', 'onboarded'])->group(function () {
     Route::post('sessions/{session}/confirm-cash', [CashController::class, 'confirm'])->middleware('idempotent')->name('api.sessions.confirm-cash');
 
-    // Formador VIP
+    // Técnico VIP
     Route::get('me/vip', [VipController::class, 'show'])->middleware('role:provider')->name('api.vip.show');
     Route::post('me/vip/purchase', [VipController::class, 'purchase'])
         ->middleware(['role:provider', 'pin.recent', 'idempotent', 'throttle:5,1'])

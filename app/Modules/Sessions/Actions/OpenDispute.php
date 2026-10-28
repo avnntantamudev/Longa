@@ -20,7 +20,7 @@ use Illuminate\Support\Str;
 
 /**
  * Abrir disputa (o dinheiro fica retido até à decisão do admin):
- *  - aluno, com a aula à espera de confirmação ("a aula não aconteceu", "problema com a aula");
+ *  - cliente, com o serviço à espera de confirmação ("o serviço não aconteceu", "problema com o serviço");
  *  - a parte acusada de faltar, dentro do prazo de contestação (24 h).
  */
 class OpenDispute
@@ -92,7 +92,7 @@ class OpenDispute
         };
 
         if (! $allowed) {
-            throw new ApiException('dispute_not_allowed', 'Não é possível abrir uma disputa nesta aula neste momento.', 409);
+            throw new ApiException('dispute_not_allowed', 'Não é possível abrir uma disputa neste serviço neste momento.', 409);
         }
     }
 }

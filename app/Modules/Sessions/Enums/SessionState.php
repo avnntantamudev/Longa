@@ -7,13 +7,13 @@ namespace App\Modules\Sessions\Enums;
 use App\Support\StateMachine\StateEnum;
 
 /**
- * Aula (docs/state-machines.md).
+ * Serviço (docs/state-machines.md).
  *
  *  pending_payment → scheduled | payment_failed
  *  scheduled → in_progress | cancelled_by_client | cancelled_by_provider | no_show_provider | no_show_client
  *            | awaiting_confirmation (regra R1: nunca iniciada)
  *  in_progress → awaiting_confirmation
- *  awaiting_confirmation → completed | disputed | refunded (regra R1 sem resposta do aluno)
+ *  awaiting_confirmation → completed | disputed | refunded (regra R1 sem resposta do cliente)
  *  no_show_provider | no_show_client → disputed (a outra parte contesta dentro do prazo)
  *  disputed → completed | refunded | partially_refunded (decisão do admin)
  */
@@ -61,7 +61,7 @@ enum SessionState: string implements StateEnum
     }
 
     /**
-     * Aulas que ocupam o horário do formador (conflitos no matching).
+     * Serviços que ocupam o horário do técnico (conflitos no matching).
      *
      * @return list<self>
      */
@@ -79,10 +79,10 @@ enum SessionState: string implements StateEnum
             self::InProgress => 'Em curso',
             self::AwaitingConfirmation => 'A aguardar confirmação',
             self::Completed => 'Concluída',
-            self::CancelledByClient => 'Cancelada pelo aluno',
-            self::CancelledByProvider => 'Cancelada pelo formador',
-            self::NoShowProvider => 'Falta do formador',
-            self::NoShowClient => 'Falta do aluno',
+            self::CancelledByClient => 'Cancelada pelo cliente',
+            self::CancelledByProvider => 'Cancelada pelo técnico',
+            self::NoShowProvider => 'Falta do técnico',
+            self::NoShowClient => 'Falta do cliente',
             self::Disputed => 'Em disputa',
             self::Refunded => 'Reembolsada',
             self::PartiallyRefunded => 'Reembolsada parcialmente',

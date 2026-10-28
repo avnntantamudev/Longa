@@ -12,7 +12,7 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * O aluno cancelou: fecha o ecrã de procura e as ofertas abertas nos formadores.
+ * O cliente cancelou: fecha o ecrã de procura e as ofertas abertas nos técnicos.
  */
 class RequestCancelled implements ShouldBroadcast, ShouldDispatchAfterCommit
 {
@@ -21,7 +21,7 @@ class RequestCancelled implements ShouldBroadcast, ShouldDispatchAfterCommit
     public string $broadcastQueue = 'notifications';
 
     /**
-     * @param  list<int>  $providerUserIds  formadores com oferta aberta
+     * @param  list<int>  $providerUserIds  técnicos com oferta aberta
      */
     public function __construct(public readonly ServiceRequest $request, public readonly array $providerUserIds = []) {}
 

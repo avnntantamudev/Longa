@@ -68,11 +68,11 @@ it('protege as páginas autenticadas e exige o registo concluído', function () 
     $this->get('/onboarding')->assertOk()->assertInertia(fn (Assert $page) => $page->component('Onboarding/Start'));
 });
 
-it('mostra o onboarding do formador com áreas e zonas', function () {
+it('mostra o onboarding do técnico com áreas e zonas', function () {
     $profile = ProviderProfile::factory()->create();
     loginWeb($profile->user);
 
-    $this->get('/onboarding/formador')->assertOk()->assertInertia(fn (Assert $page) => $page
+    $this->get('/onboarding/tecnico')->assertOk()->assertInertia(fn (Assert $page) => $page
         ->component('Onboarding/Provider')
         ->has('categories')
         ->has('zones'));

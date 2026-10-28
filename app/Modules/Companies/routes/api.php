@@ -23,7 +23,7 @@ Route::middleware(['auth:sanctum', 'auth.session'])->prefix('companies')->name('
     Route::get('{company}/reports/services/export', [CompanyReportController::class, 'export'])->middleware('throttle:20,1')->name('reports.services.export');
 });
 
-// O colaborador decide se a empresa vê as suas formações
+// O colaborador decide se a empresa vê os seus serviços
 Route::middleware(['auth:sanctum', 'auth.session'])->group(function () {
     Route::get('me/company-links', [CompanyReportController::class, 'myLinks'])->name('api.me.company-links');
     Route::post('me/company-links/{employee}', [CompanyReportController::class, 'decide'])->middleware('throttle:20,1')->name('api.me.company-links.decide');

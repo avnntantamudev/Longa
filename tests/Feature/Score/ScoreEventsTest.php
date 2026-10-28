@@ -27,7 +27,7 @@ function newOfferFor(ProviderProfile $provider, Category $category): RequestOffe
     return RequestOffer::query()->where('service_request_id', $request->id)->where('provider_profile_id', $provider->id)->firstOrFail();
 }
 
-it('regista recusas repetidas e ofertas sem resposta e mostra o resumo ao formador', function () {
+it('regista recusas repetidas e ofertas sem resposta e mostra o resumo ao técnico', function () {
     apiLogin($this->provider->user);
 
     foreach (range(1, 3) as $i) {
@@ -46,7 +46,7 @@ it('regista recusas repetidas e ofertas sem resposta e mostra o resumo ao formad
     expect(ScoreEvent::query()->sum('points'))->toBe(0);
 });
 
-it('o admin vê os eventos de um formador; outros não', function () {
+it('o admin vê os eventos de um técnico; outros não', function () {
     apiLogin(User::factory()->withRole(Role::Admin)->create());
     $this->getJson("/api/v1/admin/providers/{$this->provider->id}/score-events")->assertOk();
 
@@ -54,7 +54,7 @@ it('o admin vê os eventos de um formador; outros não', function () {
     $this->getJson("/api/v1/admin/providers/{$this->provider->id}/score-events")->assertForbidden();
 });
 
-it('um formador suspenso deixa de receber pedidos e não consegue aceitar ofertas já recebidas', function () {
+it('um técnico suspenso deixa de receber pedidos e não consegue aceitar ofertas já recebidas', function () {
     apiLogin($this->provider->user);
     $offer = newOfferFor($this->provider, $this->sgme);
 

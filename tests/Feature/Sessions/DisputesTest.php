@@ -22,7 +22,7 @@ beforeEach(function () {
     Storage::fake('local');
 });
 
-/** Aula paga, iniciada e à espera de confirmação do aluno. */
+/** Serviço pago, iniciado e à espera de confirmação do cliente. */
 function awaitingSession(): ServiceJob
 {
     $session = paidSession();
@@ -43,7 +43,7 @@ function openDispute(ServiceJob $session, User $as, array $body = []): Illuminat
 
     return test()->post("/api/v1/sessions/{$session->id}/disputes", [
         'reason' => 'lesson_not_happened',
-        'description' => 'O formador chegou e saiu passados 10 minutos.',
+        'description' => 'O técnico chegou e saiu passados 10 minutos.',
         ...$body,
     ], ['Accept' => 'application/json', 'Idempotency-Key' => 'dispute-'.uniqid()]);
 }
@@ -55,7 +55,7 @@ function resolveAs(User $admin, Dispute $dispute, array $body): Illuminate\Testi
     return test()->postJson("/api/v1/admin/disputes/{$dispute->id}/resolve", [...$body, 'note' => 'Analisadas as evidências.'], ['Idempotency-Key' => 'resolve-'.uniqid()]);
 }
 
-it('o aluno abre disputa com anexos: aula em disputa e dinheiro retido', function () {
+it('o cliente abre disputa com anexos: serviço em disputa e dinheiro retido', function () {
     Event::fake([DisputeOpened::class]);
     $session = awaitingSession();
 
@@ -94,19 +94,19 @@ it('valida tipo, tamanho e número de anexos', function () {
     expect(Dispute::query()->count())->toBe(0);
 });
 
-it('só o aluno abre disputa durante a confirmação; terceiros não veem a aula', function () {
+it('só o cliente abre disputa durante a confirmação; terceiros não veem o serviço', function () {
     $session = awaitingSession();
 
     openDispute($session, $session->provider->user)->assertStatus(409)->assertJsonPath('error.code', 'dispute_not_allowed');
     openDispute($session, User::factory()->withRole(Role::Client)->create())->assertForbidden();
 });
 
-it('não se abre disputa numa aula agendada ou já concluída', function () {
+it('não se abre disputa num serviço agendado ou já concluída', function () {
     $session = paidSession();
     openDispute($session, $session->client)->assertStatus(409);
 });
 
-it('o formador contesta a falta dentro de 24 h; depois já não', function () {
+it('o técnico contesta a falta dentro de 24 h; depois já não', function () {
     $session = paidSession();
     $this->travelTo($session->scheduled_at->copy()->addMinutes(20));
     apiLogin($session->client);
@@ -132,7 +132,7 @@ it('contestação fora do prazo é recusada', function () {
     openDispute($session, $session->provider->user, ['reason' => 'no_show_contest'])->assertStatus(409);
 });
 
-it('o admin liberta ao formador', function () {
+it('o admin liberta ao técnico', function () {
     $session = awaitingSession();
     openDispute($session, $session->client)->assertCreated();
     $admin = User::factory()->withRole(Role::Admin)->create();
@@ -144,7 +144,7 @@ it('o admin liberta ao formador', function () {
         ->and(AuditLog::query()->where('action', 'disputes.resolved')->count())->toBe(1);
 });
 
-it('o admin reembolsa tudo ao aluno', function () {
+it('o admin reembolsa tudo ao cliente', function () {
     $session = awaitingSession();
     openDispute($session, $session->client)->assertCreated();
 
@@ -154,7 +154,7 @@ it('o admin reembolsa tudo ao aluno', function () {
         ->and(balances($session))->toBe(['escrow' => 0, 'provider' => 0, 'revenue' => 0, 'refunds' => 0, 'funds_in' => 0]);
 });
 
-it('o admin reembolsa em parte: comissão só sobre a parte do formador', function () {
+it('o admin reembolsa em parte: comissão só sobre a parte do técnico', function () {
     $session = awaitingSession();
     openDispute($session, $session->client)->assertCreated();
     $admin = User::factory()->withRole(Role::Admin)->create();
@@ -164,7 +164,7 @@ it('o admin reembolsa em parte: comissão só sobre a parte do formador', functi
     resolveAs($admin, $dispute, ['decision' => 'partially_refunded', 'provider_share' => 25000])->assertStatus(422);
     resolveAs($admin, $dispute, ['decision' => 'partially_refunded', 'provider_share' => 10000])->assertOk();
 
-    // 10.000 → comissão 1.500, formador 8.500; reembolso 15.000
+    // 10.000 → comissão 1.500, técnico 8.500; reembolso 15.000
     expect($session->fresh()?->state)->toBe(SessionState::PartiallyRefunded)
         ->and(balances($session))->toBe(['escrow' => 0, 'provider' => 8500, 'revenue' => 1500, 'refunds' => 0, 'funds_in' => -10000]);
 });

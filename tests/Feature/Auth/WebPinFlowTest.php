@@ -57,7 +57,7 @@ it('depois de 1 hora sem uso pede o PIN; a API da PWA responde 423 com o destino
     $this->get('/perfil')->assertOk();
     $this->travel(61)->minutes();
     $this->get('/perfil')->assertRedirect(route('pin.unlock'));
-    $this->getJson('/api/v1/sessions', ['Referer' => 'http://localhost/aulas'])
+    $this->getJson('/api/v1/sessions', ['Referer' => 'http://localhost/servicos'])
         ->assertStatus(423)->assertJsonPath('error.code', 'pin_unlock_required')->assertJsonPath('error.details.redirect', route('pin.unlock'));
 
     $this->get('/desbloquear')->assertOk()->assertInertia(fn (Assert $p) => $p->component('Auth/Pin')->where('mode', 'unlock'));

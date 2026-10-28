@@ -1,1 +1,1 @@
-# Verification — Verificação de identidade e documentos dos formadores.
+# Verification — Verificação de identidade e documentos dos técnicos.

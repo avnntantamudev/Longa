@@ -18,17 +18,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 /**
- * Aulas pagas em dinheiro.
+ * Serviços pagos em dinheiro.
  *
  * @tags Pagamentos
  */
 class CashController extends Controller
 {
     /**
-     * Confirmar que pagou ao formador em mão (aluno).
+     * Confirmar que pagou ao técnico em mão (cliente).
      *
-     * Requer `Idempotency-Key`. Só depois de a aula estar concluída por QR. A comissão do BISCA fica em dívida
-     * do formador (descontada do saldo disponível dele, se houver).
+     * Requer `Idempotency-Key`. Só depois de o serviço estar concluído por QR. A comissão do BISCA fica em dívida
+     * do técnico (descontada do saldo disponível dele, se houver).
      */
     public function confirm(Request $request, ServiceJob $session, ConfirmCashPayment $action): SessionResource
     {
@@ -41,7 +41,7 @@ class CashController extends Controller
     }
 
     /**
-     * Admin: registar comissão recebida de um formador.
+     * Admin: registar comissão recebida de um técnico.
      *
      * Requer `Idempotency-Key` (usado também como chave da transação no ledger).
      */

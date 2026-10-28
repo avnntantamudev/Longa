@@ -4,7 +4,7 @@ import { kwanza, when } from '@/lib/format';
 import { Head } from '@inertiajs/vue3';
 import { onMounted, ref } from 'vue';
 
-/** Formador VIP: estado, vantagens e compra/renovação (sem reembolso a meio do período). */
+/** Técnico VIP: estado, vantagens e compra/renovação (sem reembolso a meio do período). */
 interface Vip {
     is_vip: boolean;
     vip_until: string | null;
@@ -38,7 +38,7 @@ async function buy() {
     try {
         await api.post('/me/vip/purchase', { method: method.value, accept_terms: true }, { idempotencyKey: key });
         key = null;
-        notice.value = 'Pagamento confirmado. Já é formador VIP!';
+        notice.value = 'Pagamento confirmado. Já é técnico VIP!';
         await load();
     } catch (e) {
         if (e instanceof ApiError) {
@@ -56,9 +56,9 @@ onMounted(load);
 </script>
 
 <template>
-    <Head title="Formador VIP" />
+    <Head title="Técnico VIP" />
 
-    <h1 class="text-display">Formador VIP</h1>
+    <h1 class="text-display">Técnico VIP</h1>
 
     <template v-if="vip">
         <section class="mt-4 rounded-sheet bg-navy-900 p-5 text-white">
@@ -71,9 +71,9 @@ onMounted(load);
             <h2 class="font-semibold">Vantagens</h2>
             <ul class="mt-2 grid gap-2 text-caption">
                 <li>⭐ <strong>Pedidos de outro dia em toda a província</strong>, não só a 5 km.</li>
-                <li>⚡ <strong>Prioridade</strong>: recebe os pedidos TRIM TRIM antes dos outros formadores.</li>
-                <li>💰 <strong>Comissão de {{ vip.commission_percent }}%</strong> em vez de {{ vip.standard_commission_percent }}% nas aulas aceites enquanto for VIP.</li>
-                <li>🏅 <strong>Selo VIP</strong> visível aos alunos.</li>
+                <li>⚡ <strong>Prioridade</strong>: recebe os pedidos TRIM TRIM antes dos outros técnicos.</li>
+                <li>💰 <strong>Comissão de {{ vip.commission_percent }}%</strong> em vez de {{ vip.standard_commission_percent }}% nos serviços aceites enquanto for VIP.</li>
+                <li>🏅 <strong>Selo VIP</strong> visível aos clientes.</li>
             </ul>
         </section>
 

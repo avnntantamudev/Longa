@@ -11,7 +11,7 @@ use App\Support\Audit\AuditLogger;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Primeiro passo do registo: nome, perfis escolhidos (aluno, formador, empresa) e aceitação
+ * Primeiro passo do registo: nome, perfis escolhidos (cliente, técnico, empresa) e aceitação
  * dos termos e da política de privacidade. Pode ser repetido para acrescentar perfis.
  */
 class CompleteOnboarding

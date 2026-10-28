@@ -118,8 +118,8 @@ class MatchingCoordinator
     }
 
     /**
-     * Pedido para outro dia: oferta a todos os elegíveis de uma vez (formadores a 5 km + VIP da mesma
-     * província), válida até ao fecho do pedido. A cada varredura (10 min) entram formadores que
+     * Pedido para outro dia: oferta a todos os elegíveis de uma vez (técnicos a 5 km + VIP da mesma
+     * província), válida até ao fecho do pedido. A cada varredura (10 min) entram técnicos que
      * entretanto ficaram elegíveis. Sem candidatos não expira: espera até ao fecho.
      * Push só para os primeiros N (VIP primeiro); os restantes veem o pedido na lista "Pedidos agendados".
      *

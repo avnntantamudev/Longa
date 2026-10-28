@@ -10,8 +10,8 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 
 /**
- * Avisa os formadores cujo VIP está a terminar (30/7/1 dias) ou terminou. Cada aviso é enviado uma vez,
- * registado na última subscrição do formador (a que define o fim).
+ * Avisa os técnicos cujo VIP está a terminar (30/7/1 dias) ou terminou. Cada aviso é enviado uma vez,
+ * registado na última subscrição do técnico (a que define o fim).
  */
 class VipRemindersCommand extends Command
 {
@@ -25,7 +25,7 @@ class VipRemindersCommand extends Command
         $days = config('longa.vip.reminder_days');
         $sent = 0;
 
-        // Última subscrição ativa de cada formador = fim do VIP
+        // Última subscrição ativa de cada técnico = fim do VIP
         $latest = ProviderSubscription::query()
             ->where('status', ProviderSubscription::ACTIVE)
             ->whereIn('id', ProviderSubscription::query()->selectRaw('MAX(id)')->where('status', ProviderSubscription::ACTIVE)->groupBy('provider_profile_id'))

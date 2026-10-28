@@ -8,7 +8,7 @@ use App\Support\StateMachine\StateEnum;
 
 /**
  * Oferta TRIM TRIM: sent → viewed → accepted | declined | expired | lost.
- * "lost": outro formador aceitou primeiro (ou o pedido foi cancelado/expirou).
+ * "lost": outro técnico aceitou primeiro (ou o pedido foi cancelado/expirou).
  */
 enum OfferState: string implements StateEnum
 {
@@ -39,7 +39,7 @@ enum OfferState: string implements StateEnum
     }
 
     /**
-     * Ofertas a que o formador ainda pode responder.
+     * Ofertas a que o técnico ainda pode responder.
      *
      * @return list<self>
      */

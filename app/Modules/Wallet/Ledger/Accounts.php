@@ -11,12 +11,12 @@ use App\Modules\Users\Models\ProviderProfile;
  *
  * Convenção de sinal (a soma de todas as contas é sempre 0):
  *  - funds_in              contrapartida do dinheiro que entra pelo gateway (negativa quando entra dinheiro)
- *  - escrow                dinheiro dos alunos retido (positiva; = soma dos holds "held")
+ *  - escrow                dinheiro dos clientes retido (positiva; = soma dos holds "held")
  *  - platform_revenue      comissões do BISCA (positiva)
  *  - refunds_payable       reembolsos decididos à espera do gateway (positiva enquanto por pagar)
  *  - cash_settlement       contrapartida das comissões recebidas em dinheiro (negativa quando recebe)
- *  - provider_available:{id}       saldo disponível do formador (positivo)
- *  - provider_commission_due:{id}  comissão em dívida de aulas pagas em dinheiro (negativa = deve)
+ *  - provider_available:{id}       saldo disponível do técnico (positivo)
+ *  - provider_commission_due:{id}  comissão em dívida de serviços pagos em dinheiro (negativa = deve)
  */
 final class Accounts
 {

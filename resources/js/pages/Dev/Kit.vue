@@ -24,11 +24,11 @@ const chips = ['Disciplina: Matemática', 'Distância: 5 km', 'Preço'];
     <h2 class="mt-8 text-title">Botões</h2>
     <div class="mt-3 grid gap-3 sm:grid-cols-2">
         <button type="button" class="btn-primary">Contratar</button>
-        <button type="button" class="btn-navy">Tornar-se Formador</button>
+        <button type="button" class="btn-navy">Tornar-se Técnico</button>
         <button type="button" class="btn-outline">Aceitar</button>
         <button type="button" class="btn-secondary">Salvar rascunho</button>
         <button type="button" class="btn-primary" disabled>Desativado</button>
-        <button type="button" class="btn-primary rounded-full">Sou Aluno</button>
+        <button type="button" class="btn-primary rounded-full">Sou Cliente</button>
     </div>
 
     <h2 class="mt-8 text-title">Pesquisa e filtros</h2>
@@ -67,13 +67,13 @@ const chips = ['Disciplina: Matemática', 'Distância: 5 km', 'Preço'];
         </label>
     </div>
 
-    <h2 class="mt-8 text-title">Cartão de formador</h2>
+    <h2 class="mt-8 text-title">Cartão de técnico</h2>
     <article class="card mt-3 flex gap-4">
         <span class="avatar-initials size-16 text-title">ML</span>
         <div class="flex-1">
             <p class="font-semibold">Maria Silva</p>
             <p class="text-caption text-ink-muted">Matemática</p>
-            <p class="mt-1 text-caption"><span class="text-orange-500">★</span> 4,9 · 32 aulas</p>
+            <p class="mt-1 text-caption"><span class="text-orange-500">★</span> 4,9 · 32 serviços</p>
             <p class="mt-1 font-semibold">5.000 Kz / 2h</p>
             <p class="mt-1 flex items-center gap-1 text-caption text-ink-muted">
                 <AppIcon name="map-pin" :size="14" /> 1,2 km · Talatona

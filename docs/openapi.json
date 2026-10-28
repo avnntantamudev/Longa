@@ -16,492 +16,6 @@
         }
     ],
     "paths": {
-        "/sessions": {
-            "get": {
-                "operationId": "sessions.index",
-                "summary": "As minhas aulas (como aluno ou formador)",
-                "tags": [
-                    "Aulas e chat",
-                    "Session"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Paginated set of `SessionResource`",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/SessionResource"
-                                            }
-                                        },
-                                        "links": {
-                                            "type": "object",
-                                            "properties": {
-                                                "first": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
-                                                },
-                                                "last": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
-                                                },
-                                                "prev": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
-                                                },
-                                                "next": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
-                                                }
-                                            },
-                                            "required": [
-                                                "first",
-                                                "last",
-                                                "prev",
-                                                "next"
-                                            ]
-                                        },
-                                        "meta": {
-                                            "type": "object",
-                                            "properties": {
-                                                "current_page": {
-                                                    "type": "integer",
-                                                    "minimum": 1
-                                                },
-                                                "from": {
-                                                    "type": [
-                                                        "integer",
-                                                        "null"
-                                                    ],
-                                                    "minimum": 1
-                                                },
-                                                "last_page": {
-                                                    "type": "integer",
-                                                    "minimum": 1
-                                                },
-                                                "links": {
-                                                    "type": "array",
-                                                    "description": "Generated paginator links.",
-                                                    "items": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                            "url": {
-                                                                "type": [
-                                                                    "string",
-                                                                    "null"
-                                                                ]
-                                                            },
-                                                            "label": {
-                                                                "type": "string"
-                                                            },
-                                                            "active": {
-                                                                "type": "boolean"
-                                                            }
-                                                        },
-                                                        "required": [
-                                                            "url",
-                                                            "label",
-                                                            "active"
-                                                        ]
-                                                    }
-                                                },
-                                                "path": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ],
-                                                    "description": "Base path for paginator generated URLs."
-                                                },
-                                                "per_page": {
-                                                    "type": "integer",
-                                                    "description": "Number of items shown per page.",
-                                                    "minimum": 0
-                                                },
-                                                "to": {
-                                                    "type": [
-                                                        "integer",
-                                                        "null"
-                                                    ],
-                                                    "description": "Number of the last item in the slice.",
-                                                    "minimum": 1
-                                                },
-                                                "total": {
-                                                    "type": "integer",
-                                                    "description": "Total number of items being paginated.",
-                                                    "minimum": 0
-                                                }
-                                            },
-                                            "required": [
-                                                "current_page",
-                                                "from",
-                                                "last_page",
-                                                "links",
-                                                "path",
-                                                "per_page",
-                                                "to",
-                                                "total"
-                                            ]
-                                        }
-                                    },
-                                    "required": [
-                                        "data",
-                                        "links",
-                                        "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/sessions/{session}": {
-            "get": {
-                "operationId": "sessions.show",
-                "summary": "Ver aula",
-                "tags": [
-                    "Aulas e chat",
-                    "Session"
-                ],
-                "parameters": [
-                    {
-                        "name": "session",
-                        "in": "path",
-                        "required": true,
-                        "description": "The session ID",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "`SessionResource`",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/components/schemas/SessionResource"
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/sessions/{session}/events": {
-            "get": {
-                "operationId": "sessions.events",
-                "summary": "Linha do tempo da aula (participantes)",
-                "tags": [
-                    "Aulas e chat",
-                    "Session"
-                ],
-                "parameters": [
-                    {
-                        "name": "session",
-                        "in": "path",
-                        "required": true,
-                        "description": "The session ID",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "properties": {
-                                                    "type": {
-                                                        "type": "string"
-                                                    },
-                                                    "from_state": {
-                                                        "type": [
-                                                            "string",
-                                                            "null"
-                                                        ]
-                                                    },
-                                                    "to_state": {
-                                                        "type": [
-                                                            "string",
-                                                            "null"
-                                                        ]
-                                                    },
-                                                    "by": {
-                                                        "type": "string",
-                                                        "enum": [
-                                                            "system",
-                                                            "client",
-                                                            "provider",
-                                                            "admin"
-                                                        ]
-                                                    },
-                                                    "created_at": {
-                                                        "type": "string"
-                                                    }
-                                                },
-                                                "required": [
-                                                    "type",
-                                                    "from_state",
-                                                    "to_state",
-                                                    "by",
-                                                    "created_at"
-                                                ]
-                                            }
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/sessions/{session}/messages": {
-            "get": {
-                "operationId": "sessions.messages",
-                "description": "Pagina\u00e7\u00e3o por cursor: `before` (mensagens mais antigas) ou `after` (novas desde a \u00faltima recebida).",
-                "summary": "Mensagens do chat",
-                "tags": [
-                    "Aulas e chat",
-                    "Session"
-                ],
-                "parameters": [
-                    {
-                        "name": "session",
-                        "in": "path",
-                        "required": true,
-                        "description": "The session ID",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "name": "after",
-                        "in": "query",
-                        "schema": {
-                            "type": "integer",
-                            "default": 0
-                        }
-                    },
-                    {
-                        "name": "before",
-                        "in": "query",
-                        "schema": {
-                            "type": "integer",
-                            "default": 0
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Array of `MessageResource`",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/MessageResource"
-                                            }
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            },
-            "post": {
-                "operationId": "sessions.messages.send",
-                "summary": "Enviar mensagem (texto e/ou PDF)",
-                "tags": [
-                    "Aulas e chat",
-                    "Session"
-                ],
-                "parameters": [
-                    {
-                        "name": "session",
-                        "in": "path",
-                        "required": true,
-                        "description": "The session ID",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "content": {
-                        "multipart/form-data": {
-                            "schema": {
-                                "$ref": "#/components/schemas/SendMessageRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "`MessageResource`",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/components/schemas/MessageResource"
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    }
-                }
-            }
-        },
-        "/messages/{message}/attachment": {
-            "get": {
-                "operationId": "messages.attachment",
-                "description": "Devolve um URL assinado v\u00e1lido por alguns minutos (config longa.chat.attachment_link_minutes).",
-                "summary": "Link tempor\u00e1rio para descarregar o PDF de uma mensagem",
-                "tags": [
-                    "Aulas e chat",
-                    "Session"
-                ],
-                "parameters": [
-                    {
-                        "name": "message",
-                        "in": "path",
-                        "required": true,
-                        "description": "The message ID",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "url": {
-                                                    "type": "string"
-                                                },
-                                                "expires_in": {
-                                                    "type": "integer"
-                                                }
-                                            },
-                                            "required": [
-                                                "url",
-                                                "expires_in"
-                                            ]
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
         "/auth/otp/request": {
             "post": {
                 "operationId": "auth.otp.request",
@@ -1204,7 +718,7 @@
         "/wallet": {
             "get": {
                 "operationId": "wallet.show",
-                "summary": "Saldos: dispon\u00edvel, pendente (aulas pagas por confirmar), total ganho e comiss\u00f5es em d\u00edvida (Kz)",
+                "summary": "Saldos: dispon\u00edvel, pendente (servi\u00e7os pagos por confirmar), total ganho e comiss\u00f5es em d\u00edvida (Kz)",
                 "tags": [
                     "Carteira",
                     "Wallet"
@@ -1225,7 +739,7 @@
                                                 },
                                                 "pending": {
                                                     "type": "integer",
-                                                    "description": "L\u00edquido das aulas pagas ainda por confirmar (retidas em escrow)"
+                                                    "description": "L\u00edquido dos servi\u00e7os pagos ainda por confirmar (retidos em escrow)"
                                                 },
                                                 "total_earned": {
                                                     "type": "integer",
@@ -1374,7 +888,7 @@
         "/me/reports/earnings": {
             "get": {
                 "operationId": "reports.earnings",
-                "summary": "Ganhos por m\u00eas num ano (aulas, creditado, comiss\u00f5es, recebido em m\u00e3o)",
+                "summary": "Ganhos por m\u00eas num ano (servi\u00e7os, creditado, comiss\u00f5es, recebido em m\u00e3o)",
                 "tags": [
                     "Carteira",
                     "Earnings"
@@ -1524,7 +1038,7 @@
         "/categories": {
             "get": {
                 "operationId": "categories",
-                "summary": "\u00c1reas de forma\u00e7\u00e3o",
+                "summary": "\u00c1reas de servi\u00e7o",
                 "tags": [
                     "Cat\u00e1logo",
                     "Catalog"
@@ -1617,8 +1131,8 @@
         "/providers/{provider}": {
             "get": {
                 "operationId": "providers.show",
-                "description": "S\u00f3 formadores verificados e com onboarding conclu\u00eddo. Nunca inclui contactos nem coordenadas.",
-                "summary": "Perfil p\u00fablico de um formador",
+                "description": "S\u00f3 t\u00e9cnicos verificados e com onboarding conclu\u00eddo. Nunca inclui contactos nem coordenadas.",
+                "summary": "Perfil p\u00fablico de um t\u00e9cnico",
                 "tags": [
                     "Cat\u00e1logo",
                     "Catalog"
@@ -1673,7 +1187,7 @@
         "/sessions/{session}/disputes": {
             "get": {
                 "operationId": "sessions.disputes.index",
-                "summary": "Disputas de uma aula",
+                "summary": "Disputas de um servi\u00e7o",
                 "tags": [
                     "Disputas",
                     "Dispute"
@@ -1819,7 +1333,7 @@
         "/dispute-attachments/{attachment}": {
             "get": {
                 "operationId": "disputes.attachment",
-                "summary": "Link tempor\u00e1rio para uma evid\u00eancia (participantes da aula e admin)",
+                "summary": "Link tempor\u00e1rio para uma evid\u00eancia (participantes do servi\u00e7o e admin)",
                 "tags": [
                     "Disputas",
                     "Dispute"
@@ -1900,7 +1414,7 @@
         "/admin/disputes/{dispute}/resolve": {
             "post": {
                 "operationId": "admin.disputes.resolve",
-                "description": "Requer `Idempotency-Key`. `released` liberta tudo ao formador, `refunded` devolve tudo ao aluno,\n`partially_refunded` d\u00e1 `provider_share` Kz ao formador (antes da comiss\u00e3o) e devolve o resto.\nErros: `dispute_already_resolved` (409).",
+                "description": "Requer `Idempotency-Key`. `released` liberta tudo ao t\u00e9cnico, `refunded` devolve tudo ao cliente,\n`partially_refunded` d\u00e1 `provider_share` Kz ao t\u00e9cnico (antes da comiss\u00e3o) e devolve o resto.\nErros: `dispute_already_resolved` (409).",
                 "summary": "Decidir disputa (admin)",
                 "tags": [
                     "Disputas",
@@ -2547,7 +2061,7 @@
         "/companies/{company}/reports/services": {
             "get": {
                 "operationId": "companies.reports.services",
-                "summary": "Forma\u00e7\u00f5es dos colaboradores que autorizaram a empresa (por defeito, m\u00eas atual)",
+                "summary": "Servi\u00e7os dos colaboradores que autorizaram a empresa (por defeito, m\u00eas atual)",
                 "tags": [
                     "Empresas",
                     "CompanyReport"
@@ -2761,7 +2275,7 @@
         "/me/company-links": {
             "get": {
                 "operationId": "me.company-links",
-                "summary": "Pedidos de empresas para acompanhar as minhas forma\u00e7\u00f5es",
+                "summary": "Pedidos de empresas para acompanhar os meus servi\u00e7os",
                 "tags": [
                     "Empresas",
                     "CompanyReport"
@@ -2912,9 +2426,9 @@
         "/sessions/{session}/start": {
             "post": {
                 "operationId": "sessions.start",
-                "summary": "Iniciar aula (formador)",
+                "summary": "Iniciar servi\u00e7o (t\u00e9cnico)",
                 "tags": [
-                    "Execu\u00e7\u00e3o da aula",
+                    "Execu\u00e7\u00e3o do servi\u00e7o",
                     "SessionExecution"
                 ],
                 "parameters": [
@@ -2963,9 +2477,9 @@
             "post": {
                 "operationId": "sessions.finish",
                 "description": "Devolve v\u00e1rios tokens, um por janela de 30 s: a app mostra-os em sequ\u00eancia, mesmo sem rede, e pede\num novo lote antes de acabarem (POST /sessions/{id}/qr). Os tokens s\u00f3 existem nesta resposta.",
-                "summary": "Terminar aula e obter o lote de QR (formador)",
+                "summary": "Terminar servi\u00e7o e obter o lote de QR (t\u00e9cnico)",
                 "tags": [
-                    "Execu\u00e7\u00e3o da aula",
+                    "Execu\u00e7\u00e3o do servi\u00e7o",
                     "SessionExecution"
                 ],
                 "parameters": [
@@ -3061,9 +2575,9 @@
         "/sessions/{session}/qr": {
             "post": {
                 "operationId": "sessions.qr",
-                "summary": "Novo lote de QR (formador), com a aula \u00e0 espera de confirma\u00e7\u00e3o",
+                "summary": "Novo lote de QR (t\u00e9cnico), com o servi\u00e7o \u00e0 espera de confirma\u00e7\u00e3o",
                 "tags": [
-                    "Execu\u00e7\u00e3o da aula",
+                    "Execu\u00e7\u00e3o do servi\u00e7o",
                     "SessionExecution"
                 ],
                 "parameters": [
@@ -3159,10 +2673,10 @@
         "/sessions/{session}/confirm": {
             "post": {
                 "operationId": "sessions.confirm",
-                "description": "Requer `Idempotency-Key`. Liberta o valor retido para o formador (menos a comiss\u00e3o).\nErros: `qr_invalid` (422), `qr_locked` (429), `qr_outside_window` (409), `session_not_confirmable` (409).",
-                "summary": "Confirmar aula com o QR ou o c\u00f3digo de 6 d\u00edgitos (aluno)",
+                "description": "Requer `Idempotency-Key`. Liberta o valor retido para o t\u00e9cnico (menos a comiss\u00e3o).\nErros: `qr_invalid` (422), `qr_locked` (429), `qr_outside_window` (409), `session_not_confirmable` (409).",
+                "summary": "Confirmar servi\u00e7o com o QR ou o c\u00f3digo de 6 d\u00edgitos (cliente)",
                 "tags": [
-                    "Execu\u00e7\u00e3o da aula",
+                    "Execu\u00e7\u00e3o do servi\u00e7o",
                     "SessionExecution"
                 ],
                 "parameters": [
@@ -3216,7 +2730,7 @@
                                                 {
                                                     "type": "string",
                                                     "enum": [
-                                                        "Aula confirmada. Confirme que pagou ao formador em m\u00e3o."
+                                                        "Servi\u00e7o confirmado. Confirme que pagou ao t\u00e9cnico em m\u00e3o."
                                                     ]
                                                 }
                                             ]
@@ -3248,10 +2762,10 @@
         "/sessions/{session}/confirm-without-qr": {
             "post": {
                 "operationId": "sessions.confirm-without-qr",
-                "description": "Requer `Idempotency-Key`. Liberta o valor retido para o formador.",
-                "summary": "Confirmar sem QR (aluno), com a aula \u00e0 espera de confirma\u00e7\u00e3o",
+                "description": "Requer `Idempotency-Key`. Liberta o valor retido para o t\u00e9cnico.",
+                "summary": "Confirmar sem QR (cliente), com o servi\u00e7o \u00e0 espera de confirma\u00e7\u00e3o",
                 "tags": [
-                    "Execu\u00e7\u00e3o da aula",
+                    "Execu\u00e7\u00e3o do servi\u00e7o",
                     "SessionExecution"
                 ],
                 "parameters": [
@@ -3310,10 +2824,10 @@
         "/sessions/{session}/cancel": {
             "post": {
                 "operationId": "sessions.cancel",
-                "description": "Requer `Idempotency-Key`. Reembolso conforme a pol\u00edtica: aluno \u2265 6 h antes \u2192 total; depois \u2192 o formador\nfica com 25%; formador cancela \u2192 total.",
-                "summary": "Cancelar aula agendada (aluno ou formador)",
+                "description": "Requer `Idempotency-Key`. Reembolso conforme a pol\u00edtica: cliente \u2265 6 h antes \u2192 total; depois \u2192 o t\u00e9cnico\nfica com 25%; t\u00e9cnico cancela \u2192 total.",
+                "summary": "Cancelar servi\u00e7o agendado (cliente ou t\u00e9cnico)",
                 "tags": [
-                    "Execu\u00e7\u00e3o da aula",
+                    "Execu\u00e7\u00e3o do servi\u00e7o",
                     "SessionExecution"
                 ],
                 "parameters": [
@@ -3394,9 +2908,9 @@
             "post": {
                 "operationId": "sessions.no-show",
                 "description": "Requer `Idempotency-Key`. A outra parte tem 24 h para contestar (abre disputa); sem contesta\u00e7\u00e3o,\na liquida\u00e7\u00e3o segue a pol\u00edtica.",
-                "summary": "Reportar falta da outra parte (aluno ou formador)",
+                "summary": "Reportar falta da outra parte (cliente ou t\u00e9cnico)",
                 "tags": [
-                    "Execu\u00e7\u00e3o da aula",
+                    "Execu\u00e7\u00e3o do servi\u00e7o",
                     "SessionExecution"
                 ],
                 "parameters": [
@@ -3707,8 +3221,8 @@
         "/sessions/{session}/pay": {
             "post": {
                 "operationId": "sessions.pay",
-                "description": "Requer o cabe\u00e7alho `Idempotency-Key`. O valor fica retido (escrow) at\u00e9 a aula ser confirmada por QR.\nGateway simulado nesta fase. Erros: `payment_failed` (402), `payment_window_expired` (410).",
-                "summary": "Pagar a aula (aluno)",
+                "description": "Requer o cabe\u00e7alho `Idempotency-Key`. O valor fica retido (escrow) at\u00e9 o servi\u00e7o ser confirmado por QR.\nGateway simulado nesta fase. Erros: `payment_failed` (402), `payment_window_expired` (410).",
+                "summary": "Pagar o servi\u00e7o (cliente)",
                 "tags": [
                     "Pagamentos",
                     "Payment"
@@ -3794,8 +3308,8 @@
         "/sessions/{session}/confirm-cash": {
             "post": {
                 "operationId": "sessions.confirm-cash",
-                "description": "Requer `Idempotency-Key`. S\u00f3 depois de a aula estar conclu\u00edda por QR. A comiss\u00e3o do BISCA fica em d\u00edvida\ndo formador (descontada do saldo dispon\u00edvel dele, se houver).",
-                "summary": "Confirmar que pagou ao formador em m\u00e3o (aluno)",
+                "description": "Requer `Idempotency-Key`. S\u00f3 depois de o servi\u00e7o estar conclu\u00eddo por QR. A comiss\u00e3o do BISCA fica em d\u00edvida\ndo t\u00e9cnico (descontada do saldo dispon\u00edvel dele, se houver).",
+                "summary": "Confirmar que pagou ao t\u00e9cnico em m\u00e3o (cliente)",
                 "tags": [
                     "Pagamentos",
                     "Cash"
@@ -3857,7 +3371,7 @@
             "post": {
                 "operationId": "admin.commission-payments",
                 "description": "Requer `Idempotency-Key` (usado tamb\u00e9m como chave da transa\u00e7\u00e3o no ledger).",
-                "summary": "Admin: registar comiss\u00e3o recebida de um formador",
+                "summary": "Admin: registar comiss\u00e3o recebida de um t\u00e9cnico",
                 "tags": [
                     "Pagamentos",
                     "Cash"
@@ -3958,7 +3472,7 @@
                 "operationId": "service-requests.index",
                 "summary": "Os meus pedidos",
                 "tags": [
-                    "Pedidos de aula",
+                    "Pedidos de servi\u00e7o",
                     "ServiceRequest"
                 ],
                 "responses": {
@@ -4108,10 +3622,10 @@
             },
             "post": {
                 "operationId": "service-requests.store",
-                "description": "Passa logo a `searching` (5 min) e envia a 1.\u00aa onda TRIM TRIM. Se n\u00e3o houver formadores eleg\u00edveis,\no pedido volta j\u00e1 como `expired`.",
+                "description": "Passa logo a `searching` (5 min) e envia a 1.\u00aa onda TRIM TRIM. Se n\u00e3o houver t\u00e9cnicos eleg\u00edveis,\no pedido volta j\u00e1 como `expired`.",
                 "summary": "Publicar pedido",
                 "tags": [
-                    "Pedidos de aula",
+                    "Pedidos de servi\u00e7o",
                     "ServiceRequest"
                 ],
                 "requestBody": {
@@ -4157,7 +3671,7 @@
                 "operationId": "service-requests.show",
                 "summary": "Ver pedido",
                 "tags": [
-                    "Pedidos de aula",
+                    "Pedidos de servi\u00e7o",
                     "ServiceRequest"
                 ],
                 "parameters": [
@@ -4205,9 +3719,9 @@
         "/service-requests/{serviceRequest}/cancel": {
             "post": {
                 "operationId": "service-requests.cancel",
-                "summary": "Cancelar pedido (enquanto procura formador)",
+                "summary": "Cancelar pedido (enquanto procura t\u00e9cnico)",
                 "tags": [
-                    "Pedidos de aula",
+                    "Pedidos de servi\u00e7o",
                     "ServiceRequest"
                 ],
                 "parameters": [
@@ -4279,7 +3793,7 @@
                 "description": "Cria um pedido novo, ligado ao original. Pode indicar nova data e novo valor.",
                 "summary": "Republicar pedido expirado ou cancelado",
                 "tags": [
-                    "Pedidos de aula",
+                    "Pedidos de servi\u00e7o",
                     "ServiceRequest"
                 ],
                 "parameters": [
@@ -4395,7 +3909,7 @@
             },
             "delete": {
                 "operationId": "me.photo.destroy",
-                "summary": "Remover a foto (s\u00f3 alunos; os formadores t\u00eam de ter foto)",
+                "summary": "Remover a foto (s\u00f3 clientes; os t\u00e9cnicos t\u00eam de ter foto)",
                 "tags": [
                     "Perfil",
                     "Photo"
@@ -4633,7 +4147,7 @@
         "/onboarding": {
             "post": {
                 "operationId": "onboarding",
-                "description": "Define o nome, os perfis (aluno, formador, empresa) e regista a aceita\u00e7\u00e3o dos termos e da privacidade.",
+                "description": "Define o nome, os perfis (cliente, t\u00e9cnico, empresa) e regista a aceita\u00e7\u00e3o dos termos e da privacidade.",
                 "summary": "Concluir o registo",
                 "tags": [
                     "Perfis",
@@ -4680,7 +4194,7 @@
         "/me/client-profile": {
             "put": {
                 "operationId": "me.client",
-                "summary": "Atualizar o perfil de aluno",
+                "summary": "Atualizar o perfil de cliente",
                 "tags": [
                     "Perfis",
                     "Profile"
@@ -4750,7 +4264,7 @@
         "/me/provider-profile": {
             "get": {
                 "operationId": "me.provider",
-                "summary": "Ver o pr\u00f3prio perfil de formador",
+                "summary": "Ver o pr\u00f3prio perfil de t\u00e9cnico",
                 "tags": [
                     "Perfis",
                     "Profile"
@@ -4793,7 +4307,7 @@
         "/me/provider-profile/details": {
             "put": {
                 "operationId": "me.provider.details",
-                "summary": "Formador: apresenta\u00e7\u00e3o, experi\u00eancia, modalidades e pre\u00e7o",
+                "summary": "T\u00e9cnico: apresenta\u00e7\u00e3o, experi\u00eancia, modalidades e pre\u00e7o",
                 "tags": [
                     "Perfis",
                     "Profile"
@@ -4849,7 +4363,7 @@
         "/me/provider-profile/categories": {
             "put": {
                 "operationId": "me.provider.categories",
-                "summary": "Formador: \u00e1reas de forma\u00e7\u00e3o",
+                "summary": "T\u00e9cnico: \u00e1reas de servi\u00e7o",
                 "tags": [
                     "Perfis",
                     "Profile"
@@ -4905,7 +4419,7 @@
         "/me/provider-profile/location": {
             "put": {
                 "operationId": "me.provider.location",
-                "summary": "Formador: local e raio de atua\u00e7\u00e3o",
+                "summary": "T\u00e9cnico: local e raio de atua\u00e7\u00e3o",
                 "tags": [
                     "Perfis",
                     "Profile"
@@ -4961,8 +4475,8 @@
         "/me/provider-profile/availability": {
             "put": {
                 "operationId": "me.provider.availability",
-                "description": "S\u00f3 formadores verificados e com o perfil completo podem ficar dispon\u00edveis.",
-                "summary": "Formador: Dispon\u00edvel / Indispon\u00edvel para receber pedidos TRIM TRIM",
+                "description": "S\u00f3 t\u00e9cnicos verificados e com o perfil completo podem ficar dispon\u00edveis.",
+                "summary": "T\u00e9cnico: Dispon\u00edvel / Indispon\u00edvel para receber pedidos TRIM TRIM",
                 "tags": [
                     "Perfis",
                     "Availability"
@@ -5024,7 +4538,7 @@
         "/me/score-events": {
             "get": {
                 "operationId": "score-events.mine",
-                "summary": "Os meus eventos de score (formador)",
+                "summary": "Os meus eventos de score (t\u00e9cnico)",
                 "tags": [
                     "Score",
                     "ScoreEvent"
@@ -5097,7 +4611,7 @@
         "/admin/providers/{provider}/score-events": {
             "get": {
                 "operationId": "admin.score-events",
-                "summary": "Admin: eventos de score de um formador",
+                "summary": "Admin: eventos de score de um t\u00e9cnico",
                 "tags": [
                     "Score",
                     "ScoreEvent"
@@ -5181,13 +4695,499 @@
                 }
             }
         },
+        "/sessions": {
+            "get": {
+                "operationId": "sessions.index",
+                "summary": "Os meus servi\u00e7os (como cliente ou t\u00e9cnico)",
+                "tags": [
+                    "Servi\u00e7os e chat",
+                    "Session"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated set of `SessionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/SessionResource"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "from",
+                                                "last_page",
+                                                "links",
+                                                "path",
+                                                "per_page",
+                                                "to",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/sessions/{session}": {
+            "get": {
+                "operationId": "sessions.show",
+                "summary": "Ver servi\u00e7o",
+                "tags": [
+                    "Servi\u00e7os e chat",
+                    "Session"
+                ],
+                "parameters": [
+                    {
+                        "name": "session",
+                        "in": "path",
+                        "required": true,
+                        "description": "The session ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`SessionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/SessionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/sessions/{session}/events": {
+            "get": {
+                "operationId": "sessions.events",
+                "summary": "Linha do tempo do servi\u00e7o (participantes)",
+                "tags": [
+                    "Servi\u00e7os e chat",
+                    "Session"
+                ],
+                "parameters": [
+                    {
+                        "name": "session",
+                        "in": "path",
+                        "required": true,
+                        "description": "The session ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "type": {
+                                                        "type": "string"
+                                                    },
+                                                    "from_state": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "to_state": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "by": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "system",
+                                                            "client",
+                                                            "provider",
+                                                            "admin"
+                                                        ]
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "type",
+                                                    "from_state",
+                                                    "to_state",
+                                                    "by",
+                                                    "created_at"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/sessions/{session}/messages": {
+            "get": {
+                "operationId": "sessions.messages",
+                "description": "Pagina\u00e7\u00e3o por cursor: `before` (mensagens mais antigas) ou `after` (novas desde a \u00faltima recebida).",
+                "summary": "Mensagens do chat",
+                "tags": [
+                    "Servi\u00e7os e chat",
+                    "Session"
+                ],
+                "parameters": [
+                    {
+                        "name": "session",
+                        "in": "path",
+                        "required": true,
+                        "description": "The session ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "after",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "before",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `MessageResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/MessageResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "sessions.messages.send",
+                "summary": "Enviar mensagem (texto e/ou PDF)",
+                "tags": [
+                    "Servi\u00e7os e chat",
+                    "Session"
+                ],
+                "parameters": [
+                    {
+                        "name": "session",
+                        "in": "path",
+                        "required": true,
+                        "description": "The session ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SendMessageRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`MessageResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/MessageResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/messages/{message}/attachment": {
+            "get": {
+                "operationId": "messages.attachment",
+                "description": "Devolve um URL assinado v\u00e1lido por alguns minutos (config longa.chat.attachment_link_minutes).",
+                "summary": "Link tempor\u00e1rio para descarregar o PDF de uma mensagem",
+                "tags": [
+                    "Servi\u00e7os e chat",
+                    "Session"
+                ],
+                "parameters": [
+                    {
+                        "name": "message",
+                        "in": "path",
+                        "required": true,
+                        "description": "The message ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "url": {
+                                                    "type": "string"
+                                                },
+                                                "expires_in": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "url",
+                                                "expires_in"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/offers": {
             "get": {
                 "operationId": "offers.index",
                 "description": "S\u00f3 as que ainda est\u00e3o dentro do prazo, mais recentes primeiro.",
                 "summary": "Ofertas em aberto",
                 "tags": [
-                    "TRIM TRIM (formador)",
+                    "TRIM TRIM (t\u00e9cnico)",
                     "Offer"
                 ],
                 "responses": {
@@ -5223,7 +5223,7 @@
                 "operationId": "offers.show",
                 "summary": "Ver oferta",
                 "tags": [
-                    "TRIM TRIM (formador)",
+                    "TRIM TRIM (t\u00e9cnico)",
                     "Offer"
                 ],
                 "parameters": [
@@ -5273,7 +5273,7 @@
                 "operationId": "offers.view",
                 "summary": "Marcar oferta como vista",
                 "tags": [
-                    "TRIM TRIM (formador)",
+                    "TRIM TRIM (t\u00e9cnico)",
                     "Offer"
                 ],
                 "parameters": [
@@ -5321,10 +5321,10 @@
         "/offers/{offer}/accept": {
             "post": {
                 "operationId": "offers.accept",
-                "description": "At\u00f3mico: s\u00f3 um formador fica com a aula. Repetir o pedido depois de ganhar devolve a mesma aula.\nErros: `request_already_matched` (409, outro formador aceitou primeiro), `offer_expired` (410),\n`request_cancelled` (410), `request_closed` (410).",
+                "description": "At\u00f3mico: s\u00f3 um t\u00e9cnico fica com o servi\u00e7o. Repetir o pedido depois de ganhar devolve o mesmo servi\u00e7o.\nErros: `request_already_matched` (409, outro t\u00e9cnico aceitou primeiro), `offer_expired` (410),\n`request_cancelled` (410), `request_closed` (410).",
                 "summary": "Aceitar oferta",
                 "tags": [
-                    "TRIM TRIM (formador)",
+                    "TRIM TRIM (t\u00e9cnico)",
                     "Offer"
                 ],
                 "parameters": [
@@ -5374,7 +5374,7 @@
                 "operationId": "offers.decline",
                 "summary": "Recusar oferta",
                 "tags": [
-                    "TRIM TRIM (formador)",
+                    "TRIM TRIM (t\u00e9cnico)",
                     "Offer"
                 ],
                 "parameters": [
@@ -5672,7 +5672,7 @@
             },
             "post": {
                 "operationId": "verifications.store",
-                "summary": "Submeter o BI para verifica\u00e7\u00e3o (formador)",
+                "summary": "Submeter o BI para verifica\u00e7\u00e3o (t\u00e9cnico)",
                 "tags": [
                     "Verifica\u00e7\u00e3o",
                     "Verification"
@@ -6019,7 +6019,7 @@
         "/admin/users/{user}/photo/reject": {
             "post": {
                 "operationId": "admin.users.photo.reject",
-                "description": "O utilizador \u00e9 avisado e tem de carregar outra; um formador sem foto deixa de receber pedidos.",
+                "description": "O utilizador \u00e9 avisado e tem de carregar outra; um t\u00e9cnico sem foto deixa de receber pedidos.",
                 "summary": "Remover a foto de um utilizador (admin): impr\u00f3pria ou n\u00e3o corresponde ao BI",
                 "tags": [
                     "Verifica\u00e7\u00e3o",
@@ -6270,7 +6270,7 @@
                     },
                     "open_offers": {
                         "type": "integer",
-                        "description": "Quantos formadores est\u00e3o a ver a oferta agora (sem dizer quem)",
+                        "description": "Quantos t\u00e9cnicos est\u00e3o a ver a oferta agora (sem dizer quem)",
                         "minimum": 0
                     },
                     "session_id": {
@@ -6483,7 +6483,7 @@
                             "number",
                             "null"
                         ],
-                        "description": "Localiza\u00e7\u00e3o do aluno no momento (opcional; s\u00f3 sinal de risco)."
+                        "description": "Localiza\u00e7\u00e3o do cliente no momento (opcional; s\u00f3 sinal de risco)."
                     },
                     "longitude": {
                         "type": [
@@ -6882,7 +6882,7 @@
                 "properties": {
                     "category_ids": {
                         "type": "array",
-                        "description": "\u00c1reas de forma\u00e7\u00e3o (1 a 10). @example [1, 4]",
+                        "description": "\u00c1reas de servi\u00e7o (1 a 10). @example [1, 4]",
                         "items": {
                             "type": "integer"
                         },
@@ -6901,7 +6901,7 @@
                 "properties": {
                     "bio": {
                         "type": "string",
-                        "description": "Apresenta\u00e7\u00e3o do formador.",
+                        "description": "Apresenta\u00e7\u00e3o do t\u00e9cnico.",
                         "minLength": 20,
                         "maxLength": 2000
                     },
@@ -7540,10 +7540,10 @@
                             "Em curso",
                             "A aguardar confirma\u00e7\u00e3o",
                             "Conclu\u00edda",
-                            "Cancelada pelo aluno",
-                            "Cancelada pelo formador",
-                            "Falta do formador",
-                            "Falta do aluno",
+                            "Cancelada pelo cliente",
+                            "Cancelada pelo t\u00e9cnico",
+                            "Falta do t\u00e9cnico",
+                            "Falta do cliente",
                             "Em disputa",
                             "Reembolsada",
                             "Reembolsada parcialmente"
@@ -7795,7 +7795,7 @@
                     },
                     "title": {
                         "type": "string",
-                        "description": "Tema da aula. @example Aula de SGME",
+                        "description": "Tema do servi\u00e7o. @example Servi\u00e7o de SGME",
                         "minLength": 3,
                         "maxLength": 120
                     },
@@ -7819,13 +7819,13 @@
                     },
                     "duration_minutes": {
                         "type": "integer",
-                        "description": "Dura\u00e7\u00e3o da aula em minutos (30 a 480). @example 60",
+                        "description": "Dura\u00e7\u00e3o do servi\u00e7o em minutos (30 a 480). @example 60",
                         "minimum": 30,
                         "maximum": 480
                     },
                     "payment_method": {
                         "type": "string",
-                        "description": "\"electronic\" (Multicaixa, retido em escrow) ou \"cash\" (pago em m\u00e3o ao formador).",
+                        "description": "\"electronic\" (Multicaixa, retido em escrow) ou \"cash\" (pago em m\u00e3o ao t\u00e9cnico).",
                         "enum": [
                             "electronic",
                             "cash"
@@ -8159,9 +8159,9 @@
                     "label": {
                         "type": "string",
                         "enum": [
-                            "Aula confirmada",
-                            "Parte de aula cancelada ou em disputa",
-                            "Comiss\u00e3o de aula paga em m\u00e3o",
+                            "Servi\u00e7o confirmado",
+                            "Parte de servi\u00e7o cancelado ou em disputa",
+                            "Comiss\u00e3o de servi\u00e7o pago em m\u00e3o",
                             "Comiss\u00e3o entregue ao BISCA",
                             "Comiss\u00e3o descontada do saldo",
                             "Estorno",

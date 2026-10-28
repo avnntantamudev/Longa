@@ -28,7 +28,7 @@ use Illuminate\Support\Str;
 use UnitEnum;
 
 /**
- * Comissões de aulas pagas em mão que o formador ainda deve ao BISCA.
+ * Comissões de serviços pagos em mão que o técnico ainda deve ao BISCA.
  * "Marcar recebido" regista o dinheiro entregue ao admin (transação cash_commission_received).
  */
 class CommissionDueResource extends Resource
@@ -64,7 +64,7 @@ class CommissionDueResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('provider')->label('Formador')
+                TextColumn::make('provider')->label('Técnico')
                     ->state(fn (LedgerAccount $record) => self::provider($record)?->user->name ?? '—'),
                 TextColumn::make('phone')->label('Telefone')
                     ->state(fn (LedgerAccount $record) => self::provider($record)?->user->phone ?? '—'),
@@ -77,7 +77,7 @@ class CommissionDueResource extends Resource
                     ->icon(Heroicon::OutlinedCheckCircle)
                     ->color('success')
                     ->modalHeading('Registar comissão recebida em mão')
-                    ->modalDescription('Confirme que recebeu este dinheiro do formador. O registo fica no ledger e não pode ser apagado.')
+                    ->modalDescription('Confirme que recebeu este dinheiro do técnico. O registo fica no ledger e não pode ser apagado.')
                     ->fillForm(fn (LedgerAccount $record) => ['amount' => -($record->balance->balance ?? 0), 'key' => (string) Str::uuid()])
                     ->schema([
                         Hidden::make('key'),

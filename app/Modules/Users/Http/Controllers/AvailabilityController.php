@@ -16,9 +16,9 @@ use Illuminate\Http\Request;
 class AvailabilityController extends Controller
 {
     /**
-     * Formador: Disponível / Indisponível para receber pedidos TRIM TRIM.
+     * Técnico: Disponível / Indisponível para receber pedidos TRIM TRIM.
      *
-     * Só formadores verificados e com o perfil completo podem ficar disponíveis.
+     * Só técnicos verificados e com o perfil completo podem ficar disponíveis.
      */
     public function __invoke(Request $request): JsonResponse
     {
@@ -26,7 +26,7 @@ class AvailabilityController extends Controller
 
         /** @var User $user */
         $user = $request->user();
-        $profile = $user->providerProfile ?? throw new ApiException('profile_missing', 'Ainda não tem o perfil de formador.', 409);
+        $profile = $user->providerProfile ?? throw new ApiException('profile_missing', 'Ainda não tem o perfil de técnico.', 409);
 
         if ($data['is_available'] && (! $profile->isVerified() || $profile->onboarding_completed_at === null)) {
             throw new ApiException('provider_not_ready', 'Complete o perfil e a verificação do BISCA para receber pedidos.', 409);

@@ -12,7 +12,7 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Foi aberta uma disputa sobre a aula. (canal privado da aula: aluno e formador).
+ * Foi aberta uma disputa sobre o serviço. (canal privado do serviço: cliente e técnico).
  */
 class DisputeOpened implements ShouldBroadcast, ShouldDispatchAfterCommit
 {

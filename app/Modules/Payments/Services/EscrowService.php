@@ -20,14 +20,14 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Escrow de uma aula sobre o livro-razão (docs/ledger.md).
+ * Escrow de um serviço sobre o livro-razão (docs/ledger.md).
  *
  *  hold()    entrada externa → escrow (após cobrança confirmada pelo gateway)
- *  settle()  escrow → formador (líquido) + BISCA (comissão sobre a parte do formador) + reembolso ao aluno
+ *  settle()  escrow → técnico (líquido) + BISCA (comissão sobre a parte do técnico) + reembolso ao cliente
  *            Cobre libertação total, reembolso total e reembolso parcial com um único cálculo.
  *
- * Cada operação é idempotente (chave derivada da aula) e bloqueia o hold (SELECT … FOR UPDATE):
- * duas liquidações simultâneas da mesma aula nunca movem o dinheiro duas vezes.
+ * Cada operação é idempotente (chave derivada do serviço) e bloqueia o hold (SELECT … FOR UPDATE):
+ * duas liquidações simultâneas do mesmo serviço nunca movem o dinheiro duas vezes.
  */
 class EscrowService
 {
@@ -70,7 +70,7 @@ class EscrowService
     }
 
     /**
-     * Liquidação: o formador fica com $providerGross (antes da comissão) e o resto volta ao aluno.
+     * Liquidação: o técnico fica com $providerGross (antes da comissão) e o resto volta ao cliente.
      *  - libertar tudo: $providerGross = valor total
      *  - reembolso total: 0
      *  - reembolso parcial: qualquer valor entre 0 e o total
@@ -90,11 +90,11 @@ class EscrowService
                     return $hold;
                 }
 
-                throw new LedgerException("Retenção da aula {$session->id} já liquidada como {$hold->state}.");
+                throw new LedgerException("Retenção do serviço {$session->id} já liquidada como {$hold->state}.");
             }
 
             if ($providerGross < 0 || $providerGross > $hold->amount) {
-                throw new LedgerException("Parte do formador inválida: {$providerGross} Kz de {$hold->amount} Kz.");
+                throw new LedgerException("Parte do técnico inválida: {$providerGross} Kz de {$hold->amount} Kz.");
             }
 
             // Libertação total usa os valores gravados na retenção; partes usam a mesma percentagem

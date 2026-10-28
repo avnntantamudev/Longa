@@ -35,7 +35,7 @@ class CompanyEmployee extends Model
     }
 
     /**
-     * Pode a empresa ver as formações deste colaborador?
+     * Pode a empresa ver os serviços deste colaborador?
      */
     public function hasConsented(): bool
     {

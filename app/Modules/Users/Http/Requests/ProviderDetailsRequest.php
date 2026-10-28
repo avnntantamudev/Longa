@@ -19,7 +19,7 @@ class ProviderDetailsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            /** Apresentação do formador. */
+            /** Apresentação do técnico. */
             'bio' => ['required', 'string', 'min:20', 'max:2000'],
             'years_experience' => ['nullable', 'integer', 'min:0', 'max:60'],
             'modalities' => ['required', 'array', 'min:1'],

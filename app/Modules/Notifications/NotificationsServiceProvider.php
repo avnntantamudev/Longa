@@ -83,10 +83,10 @@ class NotificationsServiceProvider extends ServiceProvider
             $event->request->client->notify(new RequestOutcomeNotification($event->request, RequestOutcomeNotification::EXPIRED));
         });
 
-        // Execução da aula: avisa quem não fez a ação
+        // Execução do serviço: avisa quem não fez a ação
         Event::listen(SessionStarted::class, fn (SessionStarted $e) => $e->session->client->notify(new Update($e->session, Update::STARTED)));
         Event::listen(QrIssued::class, function (QrIssued $e) {
-            // Só no primeiro lote (os seguintes são renovações do QR no ecrã do formador)
+            // Só no primeiro lote (os seguintes são renovações do QR no ecrã do técnico)
             if ($e->session->events()->where('type', 'qr_issued')->count() <= 1) {
                 $e->session->client->notify(new Update($e->session, Update::QR_READY));
             }

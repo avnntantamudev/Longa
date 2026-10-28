@@ -39,7 +39,7 @@ const SCENARIOS = [
 ];
 
 /**
- * Executa um fluxo e devolve a parte bruta esperada do formador (null = sem liquidação no escrow).
+ * Executa um fluxo e devolve a parte bruta esperada do técnico (null = sem liquidação no escrow).
  */
 function runFlow(string $scenario, int $amount, ?int $providerProfileId): array
 {
@@ -168,7 +168,7 @@ function runFlow(string $scenario, int $amount, ?int $providerProfileId): array
             return [$session, $amount];
         case 'dispute':
             $runLesson();
-            app(OpenDispute::class)->handle($refresh(), $client, 'quality', 'A aula ficou aquém do combinado.');
+            app(OpenDispute::class)->handle($refresh(), $client, 'quality', 'O serviço ficou aquém do combinado.');
 
             return [$session, $decide($refresh())];
     }
@@ -193,7 +193,7 @@ function assertMoneyInvariants(string $context): void
 
     $negative = DB::table('ledger_entries as e')->join('ledger_accounts as a', 'a.id', '=', 'e.ledger_account_id')
         ->where('a.type', 'provider_available')->select('a.id')->groupBy('a.id')->havingRaw('SUM(e.amount) < 0')->count();
-    expect($negative)->toBe(0, "{$context}: saldo de formador negativo");
+    expect($negative)->toBe(0, "{$context}: saldo de técnico negativo");
 
     // Reembolsos executados (fila síncrona nos testes): nada fica por pagar
     $refunds = (int) DB::table('ledger_entries as e')->join('ledger_accounts as a', 'a.id', '=', 'e.ledger_account_id')->where('a.code', Accounts::REFUNDS_PAYABLE)->sum('e.amount');
@@ -212,7 +212,7 @@ it('centenas de fluxos aleatórios mantêm as invariantes do dinheiro', function
     for ($i = 0; $i < $flows; $i++) {
         $scenario = SCENARIOS[mt_rand(0, count(SCENARIOS) - 1)];
         $amount = mt_rand(0, 4) === 0 ? $edgeAmounts[mt_rand(0, count($edgeAmounts) - 1)] : mt_rand(1, 500000);
-        // Às vezes o mesmo formador: comissões em mão compensadas em aulas seguintes
+        // Às vezes o mesmo técnico: comissões em mão compensadas em serviços seguintes
         $reuse = $lastProvider !== null && mt_rand(0, 3) === 0 ? $lastProvider : null;
         $context = "semente {$seed}, fluxo {$i} ({$scenario}, {$amount} Kz)";
 

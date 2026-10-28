@@ -15,9 +15,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
- * "Outra área": o formador sugere, o admin decide.
+ * "Outra área": o técnico sugere, o admin decide.
  *
- * Aprovar aplica-se a todas as sugestões pendentes com o mesmo nome normalizado (outros formadores que
+ * Aprovar aplica-se a todas as sugestões pendentes com o mesmo nome normalizado (outros técnicos que
  * escreveram o mesmo) e liga a área a cada um, que passa a receber pedidos dessa área.
  */
 class CategorySuggestions
@@ -68,7 +68,7 @@ class CategorySuggestions
     /**
      * Aprovar criando uma área nova.
      *
-     * @return int sugestões aprovadas (inclui as iguais de outros formadores)
+     * @return int sugestões aprovadas (inclui as iguais de outros técnicos)
      */
     public function approveAsNew(CategorySuggestion $suggestion, User $admin, string $name, string $area): int
     {

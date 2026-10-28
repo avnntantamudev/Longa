@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Operações com dinheiro (pagar uma aula, comprar VIP): exigem o PIN confirmado nos últimos 5 minutos
+ * Operações com dinheiro (pagar um serviço, comprar VIP): exigem o PIN confirmado nos últimos 5 minutos
  * nesta sessão (POST /auth/pin/verify). Responde 423 `pin_required` para a app pedir o PIN e repetir.
  */
 class RequireRecentPin

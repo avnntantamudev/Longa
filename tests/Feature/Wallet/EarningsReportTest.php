@@ -41,7 +41,7 @@ it('ganhos por mês: carteira, em mão e comissões, com exportação', function
     $this->get('/api/v1/me/reports/earnings/export?format=csv&year='.now()->year)->assertOk()->assertDownload('longa-ganhos-'.now()->year.'.csv');
 });
 
-it('cada formador só vê os seus ganhos; alunos não têm', function () {
+it('cada técnico só vê os seus ganhos; clientes não têm', function () {
     $session = paidSession();
     finishByQr($session);
 

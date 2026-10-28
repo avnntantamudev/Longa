@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Área escrita pelo formador que não existe na lista. Fica em análise até o admin a aprovar
+ * Área escrita pelo técnico que não existe na lista. Fica em análise até o admin a aprovar
  * (cria uma área nova ou junta-a a uma existente) ou rejeitar. Não entra na lista sem aprovação.
  *
  * @property int $id

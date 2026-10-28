@@ -1,1 +1,1 @@
-# Wallet — Carteira do formador, saldos e levantamentos.
+# Wallet — Carteira do técnico, saldos e levantamentos.

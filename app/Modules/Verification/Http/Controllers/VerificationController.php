@@ -24,7 +24,7 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 class VerificationController extends Controller
 {
     /**
-     * Submeter o BI para verificação (formador).
+     * Submeter o BI para verificação (técnico).
      */
     public function store(SubmitVerificationRequest $request, SubmitIdentityVerification $action): JsonResponse
     {
@@ -85,7 +85,7 @@ class VerificationController extends Controller
     /**
      * Remover a foto de um utilizador (admin): imprópria ou não corresponde ao BI.
      *
-     * O utilizador é avisado e tem de carregar outra; um formador sem foto deixa de receber pedidos.
+     * O utilizador é avisado e tem de carregar outra; um técnico sem foto deixa de receber pedidos.
      */
     public function rejectPhoto(Request $request, User $user, ProfilePhotos $photos): JsonResponse
     {

@@ -12,7 +12,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Páginas Inertia das aulas e do chat.
+ * Páginas Inertia dos serviços e do chat.
  */
 class PageController extends Controller
 {
@@ -28,7 +28,7 @@ class PageController extends Controller
         return Inertia::render('Sessions/Show', ['sessionId' => $session->id]);
     }
 
-    /** QR de confirmação (formador da aula). */
+    /** QR de confirmação (técnico do serviço). */
     public function qr(ServiceJob $session): Response
     {
         Gate::authorize('actAsProvider', $session);
@@ -36,7 +36,7 @@ class PageController extends Controller
         return Inertia::render('Sessions/Qr', ['sessionId' => $session->id]);
     }
 
-    /** Leitor do QR (aluno da aula). */
+    /** Leitor do QR (cliente do serviço). */
     public function scan(ServiceJob $session): Response
     {
         Gate::authorize('actAsClient', $session);

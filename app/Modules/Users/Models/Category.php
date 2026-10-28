@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
- * Área de formação (ex.: SGME, Primavera, Matemática).
+ * Área de serviço (ex.: SGME, Primavera, Matemática).
  *
  * @property int $id
  * @property string $name

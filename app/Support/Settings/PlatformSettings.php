@@ -13,7 +13,7 @@ use InvalidArgumentException;
 /**
  * Valores de negócio que o admin muda no backoffice (Definições), sem deploy.
  * Sem valor gravado, vale o de config/longa.php. Cada alteração é auditada.
- * Os valores são lidos no momento de cada operação e ficam gravados nela (ex.: a comissão de uma aula
+ * Os valores são lidos no momento de cada operação e ficam gravados nela (ex.: a comissão de um serviço
  * não muda se a definição mudar depois).
  */
 class PlatformSettings
@@ -27,10 +27,10 @@ class PlatformSettings
      */
     public const DEFINITIONS = [
         'commission_percent' => ['config' => 'longa.requests.commission_percent', 'type' => 'int', 'min' => 0, 'max' => 50, 'label' => 'Comissão do BISCA (%)'],
-        'vip_commission_percent' => ['config' => 'longa.vip.commission_percent', 'type' => 'int', 'min' => 0, 'max' => 50, 'label' => 'Comissão para formadores VIP (%)'],
+        'vip_commission_percent' => ['config' => 'longa.vip.commission_percent', 'type' => 'int', 'min' => 0, 'max' => 50, 'label' => 'Comissão para técnicos VIP (%)'],
         'vip_price' => ['config' => 'longa.vip.price', 'type' => 'int', 'min' => 0, 'max' => 10_000_000, 'label' => 'Preço VIP por ano (Kz)'],
         'vip_duration_days' => ['config' => 'longa.vip.duration_days', 'type' => 'int', 'min' => 30, 'max' => 730, 'label' => 'Duração da subscrição VIP (dias)'],
-        'scheduled_request_close_hours' => ['config' => 'longa.scheduled_requests.close_hours_before', 'type' => 'int', 'min' => 1, 'max' => 48, 'label' => 'Pedidos para outro dia: fecham X horas antes da aula'],
+        'scheduled_request_close_hours' => ['config' => 'longa.scheduled_requests.close_hours_before', 'type' => 'int', 'min' => 1, 'max' => 48, 'label' => 'Pedidos para outro dia: fecham X horas antes do serviço'],
     ];
 
     public function __construct(private readonly AuditLogger $audit) {}

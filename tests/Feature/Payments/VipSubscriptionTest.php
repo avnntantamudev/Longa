@@ -26,7 +26,7 @@ function buyVip(ProviderProfile $provider, ?string $key = null): Illuminate\Test
     return test()->postJson('/api/v1/me/vip/purchase', ['method' => 'multicaixa_express', 'accept_terms' => true], ['Idempotency-Key' => $key ?? 'vip-'.uniqid()]);
 }
 
-it('o formador compra o VIP: 50.000 Kz no ledger como receita de subscrições, válido 365 dias', function () {
+it('o técnico compra o VIP: 50.000 Kz no ledger como receita de subscrições, válido 365 dias', function () {
     $provider = ProviderProfile::factory()->verified()->create();
     apiLogin($provider->user);
     $this->getJson('/api/v1/me/vip')->assertJsonPath('data.is_vip', false)->assertJsonPath('data.price', 50000)->assertJsonPath('data.commission_percent', 10);

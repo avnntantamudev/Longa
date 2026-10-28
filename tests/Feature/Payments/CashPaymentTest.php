@@ -14,7 +14,7 @@ use App\Modules\Wallet\Ledger\LedgerService;
 use App\Modules\Wallet\Models\LedgerTransaction;
 
 /**
- * Leva a aula até "concluída por QR" com as Actions (sem HTTP).
+ * Leva o serviço até "concluído por QR" com as Actions (sem HTTP).
  */
 function completeByQr(ServiceJob $session): ServiceJob
 {
@@ -25,7 +25,7 @@ function completeByQr(ServiceJob $session): ServiceJob
     return app(ConfirmSession::class)->handle($session, $session->client, $token, null);
 }
 
-it('aula em dinheiro: o QR conclui sem mexer no ledger; o aluno confirma e fica a comissão em dívida', function () {
+it('serviço em dinheiro: o QR conclui sem mexer no ledger; o cliente confirma e fica a comissão em dívida', function () {
     $session = completeByQr(acceptedSession('cash'));
     $ledger = app(LedgerService::class);
 
@@ -40,7 +40,7 @@ it('aula em dinheiro: o QR conclui sem mexer no ledger; o aluno confirma e fica 
         ->and(LedgerTransaction::query()->where('type', 'cash_commission_due')->count())->toBe(1);
 });
 
-it('não se confirma o pagamento em dinheiro antes de a aula estar concluída', function () {
+it('não se confirma o pagamento em dinheiro antes de o serviço estar concluído', function () {
     $session = acceptedSession('cash');
     apiLogin($session->client);
 
@@ -48,11 +48,11 @@ it('não se confirma o pagamento em dinheiro antes de a aula estar concluída', 
         ->assertStatus(409)->assertJsonPath('error.code', 'session_not_completed');
 });
 
-it('a dívida é descontada automaticamente quando o formador recebe uma aula eletrónica', function () {
+it('a dívida é descontada automaticamente quando o técnico recebe um serviço eletrónica', function () {
     $cash = completeByQr(acceptedSession('cash'));
     app(ConfirmCashPayment::class)->handle($cash, $cash->client);
 
-    // Aula eletrónica do mesmo formador
+    // Serviço eletrónica do mesmo técnico
     $electronic = paidSession(['provider_profile_id' => $cash->provider_profile_id, 'scheduled_at' => now()->addDays(2)]);
     completeByQr($electronic);
 
@@ -81,7 +81,7 @@ it('o admin regista a comissão recebida em dinheiro, sem ultrapassar a dívida'
     $this->postJson($url, ['amount' => 1], ['Idempotency-Key' => 'receive-hack'])->assertForbidden();
 });
 
-it('aula em mão de valor tão baixo que a comissão é 0 Kz confirma sem dívida', function () {
+it('serviço em mão de valor tão baixo que a comissão é 0 Kz confirma sem dívida', function () {
     $session = acceptedSession('cash', ['amount' => 3, 'commission' => 0, 'provider_net' => 3]);
     completeByQr($session);
 

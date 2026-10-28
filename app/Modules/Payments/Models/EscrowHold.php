@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Retenção do pagamento de uma aula. O dinheiro está na conta "escrow" do ledger enquanto o
+ * Retenção do pagamento de um serviço. O dinheiro está na conta "escrow" do ledger enquanto o
  * estado é held ou disputed; a liquidação (libertar / reembolsar) é uma transação do ledger.
  *
  * @property int $id

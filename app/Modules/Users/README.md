@@ -1,1 +1,1 @@
-# Users — Utilizadores, papéis e perfis de aluno e formador.
+# Users — Utilizadores, papéis e perfis de cliente e técnico.

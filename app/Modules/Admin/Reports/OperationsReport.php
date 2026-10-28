@@ -8,7 +8,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Relatório de operação: pedidos (pela data de criação) e aulas (pela data marcada) no período.
+ * Relatório de operação: pedidos (pela data de criação) e serviços (pela data marcada) no período.
  */
 class OperationsReport
 {

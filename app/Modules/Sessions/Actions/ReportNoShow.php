@@ -12,9 +12,9 @@ use App\Support\Api\ApiException;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Reportar falta: o aluno reporta o formador (≥ 15 min após o início) ou o formador reporta o aluno
+ * Reportar falta: o cliente reporta o técnico (≥ 15 min após o início) ou o técnico reporta o cliente
  * (≥ 30 min). O dinheiro fica retido durante o prazo de contestação (24 h); sem contestação, a regra R4
- * liquida conforme a política; com contestação, a aula vai para disputa.
+ * liquida conforme a política; com contestação, o serviço vai para disputa.
  */
 class ReportNoShow
 {
@@ -33,7 +33,7 @@ class ReportNoShow
             }
 
             if ($locked->state !== SessionState::Scheduled) {
-                throw new ApiException('no_show_not_allowed', 'Só pode reportar falta numa aula que ainda não começou.', 409);
+                throw new ApiException('no_show_not_allowed', 'Só pode reportar falta num serviço que ainda não começou.', 409);
             }
 
             $minutes = (int) config($byClient ? 'longa.session_rules.no_show_provider_after_minutes' : 'longa.session_rules.no_show_client_after_minutes');

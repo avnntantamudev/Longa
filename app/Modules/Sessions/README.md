@@ -1,1 +1,1 @@
-# Sessions — Aulas agendadas, check-in/check-out e estado das sessões.
+# Sessions — Serviços agendados, check-in/check-out e estado das sessões.

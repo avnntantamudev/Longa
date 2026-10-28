@@ -8,7 +8,7 @@ use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Users\Models\User;
 
 /**
- * Só o aluno que publicou vê e gere o pedido.
+ * Só o cliente que publicou vê e gere o pedido.
  */
 class ServiceRequestPolicy
 {

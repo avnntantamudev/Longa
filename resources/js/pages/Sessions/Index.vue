@@ -31,19 +31,19 @@ onMounted(async () => {
 </script>
 
 <template>
-    <Head title="Aulas" />
+    <Head title="Serviços" />
 
     <div class="flex items-center justify-between gap-3">
-        <h1 class="text-display">Aulas</h1>
-        <Link v-if="isClient" href="/pedidos/novo" class="btn-primary min-h-10 px-4 text-caption">Pedir aula</Link>
+        <h1 class="text-display">Serviços</h1>
+        <Link v-if="isClient" href="/pedidos/novo" class="btn-primary min-h-10 px-4 text-caption">Pedir serviço</Link>
     </div>
 
     <p v-if="sessions === null" class="mt-6 text-ink-muted">A carregar…</p>
-    <p v-else-if="sessions.length === 0" class="card mt-6 text-ink-muted">Ainda não tem aulas marcadas.</p>
+    <p v-else-if="sessions.length === 0" class="card mt-6 text-ink-muted">Ainda não tem serviços marcados.</p>
 
     <ul v-else class="mt-6 grid gap-3">
         <li v-for="session in sessions" :key="session.id">
-            <Link :href="`/aulas/${session.id}`" class="card flex items-center gap-3">
+            <Link :href="`/servicos/${session.id}`" class="card flex items-center gap-3">
                 <UserAvatar
                     :name="session.role === 'client' ? session.provider?.name : session.client?.name"
                     :src="session.role === 'client' ? session.provider?.photo_thumb_url : session.client?.photo_thumb_url"
@@ -52,7 +52,7 @@ onMounted(async () => {
                     <p class="truncate font-semibold">{{ session.title }}</p>
                     <p class="text-caption text-ink-muted">
                         {{ when(session.scheduled_at) }} · {{ session.neighborhood }} ·
-                        {{ session.role === 'client' ? `com ${session.provider?.name}` : `aluno ${session.client?.name}` }}
+                        {{ session.role === 'client' ? `com ${session.provider?.name}` : `cliente ${session.client?.name}` }}
                     </p>
                 </div>
                 <div class="flex shrink-0 flex-col items-end gap-1">

@@ -13,7 +13,7 @@ use App\Modules\Wallet\Models\LedgerEntry;
 use Illuminate\Contracts\Pagination\CursorPaginator;
 
 /**
- * Carteira do formador (só leitura nesta fase; levantamentos na Fase 5). Tudo derivado do ledger.
+ * Carteira do técnico (só leitura nesta fase; levantamentos na Fase 5). Tudo derivado do ledger.
  */
 class WalletSummary
 {
@@ -28,7 +28,7 @@ class WalletSummary
 
         return [
             'available' => $this->ledger->balance(Accounts::providerAvailable($provider)),
-            // Líquido das aulas pagas ainda por confirmar (retidas em escrow)
+            // Líquido dos serviços pagos ainda por confirmar (retidos em escrow)
             'pending' => (int) EscrowHold::query()->where('provider_profile_id', $provider->id)->whereIn('state', EscrowHold::ACTIVE)->sum('provider_net'),
             // Tudo o que entrou na carteira (antes de compensações de comissão e levantamentos)
             'total_earned' => $availableId === null ? 0 : (int) LedgerEntry::query()->where('ledger_account_id', $availableId)->where('amount', '>', 0)->sum('amount'),

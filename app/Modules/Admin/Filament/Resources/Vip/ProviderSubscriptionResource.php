@@ -51,7 +51,7 @@ class ProviderSubscriptionResource extends Resource
         return $table
             ->defaultSort('id', 'desc')
             ->columns([
-                TextColumn::make('provider.user.name')->label('Formador')->searchable(),
+                TextColumn::make('provider.user.name')->label('Técnico')->searchable(),
                 TextColumn::make('provider.user.phone')->label('Telefone'),
                 TextColumn::make('status')->label('Estado')->badge()
                     ->formatStateUsing(fn (string $state) => ['active' => 'Ativa', 'pending' => 'Pagamento em curso', 'failed' => 'Pagamento falhou'][$state] ?? $state)

@@ -20,18 +20,18 @@ beforeEach(function () {
     $request = ServiceRequest::factory()->create(['client_id' => $this->client->id]);
     $this->session = ServiceJob::query()->create([
         'service_request_id' => $request->id, 'client_id' => $this->client->id, 'provider_profile_id' => $this->provider->id,
-        'category_id' => $request->category_id, 'title' => 'Aula de SGME', 'amount' => 25000, 'commission' => 3750, 'provider_net' => 21250,
+        'category_id' => $request->category_id, 'title' => 'Serviço de SGME', 'amount' => 25000, 'commission' => 3750, 'provider_net' => 21250,
         'scheduled_at' => now()->addDay(), 'modality' => 'in_person', 'municipality' => 'Talatona', 'neighborhood' => 'Talatona',
         'latitude' => -8.9167, 'longitude' => 13.1833,
     ]);
     Conversation::query()->create(['service_job_id' => $this->session->id]);
 });
 
-it('troca mensagens de texto em tempo real entre aluno e formador', function () {
+it('troca mensagens de texto em tempo real entre cliente e técnico', function () {
     Event::fake([MessageSent::class]);
 
     apiLogin($this->client);
-    $this->postJson("/api/v1/sessions/{$this->session->id}/messages", ['body' => 'Olá Carlos! Pronto para a aula?'])->assertCreated();
+    $this->postJson("/api/v1/sessions/{$this->session->id}/messages", ['body' => 'Olá Carlos! Pronto para o serviço?'])->assertCreated();
 
     apiLogin($this->provider->user);
     $this->postJson("/api/v1/sessions/{$this->session->id}/messages", ['body' => 'Bom dia! Sim.'])->assertCreated();
@@ -39,7 +39,7 @@ it('troca mensagens de texto em tempo real entre aluno e formador', function () 
     $this->getJson("/api/v1/sessions/{$this->session->id}/messages")
         ->assertOk()
         ->assertJsonCount(2, 'data')
-        ->assertJsonPath('data.0.body', 'Olá Carlos! Pronto para a aula?')
+        ->assertJsonPath('data.0.body', 'Olá Carlos! Pronto para o serviço?')
         ->assertJsonPath('data.1.sender.id', $this->provider->user_id);
 
     Event::assertDispatchedTimes(MessageSent::class, 2);
@@ -96,7 +96,7 @@ it('esconde telefones e e-mails escritos no chat', function () {
         ->assertJsonPath('data.body', 'Liga-me: [contacto escondido] ou [contacto escondido], ou [contacto escondido]');
 });
 
-it('só os participantes veem a aula e o chat', function () {
+it('só os participantes veem o serviço e o chat', function () {
     apiLogin(ProviderProfile::factory()->create()->user);
 
     $this->getJson("/api/v1/sessions/{$this->session->id}")->assertForbidden();
@@ -104,7 +104,7 @@ it('só os participantes veem a aula e o chat', function () {
     $this->postJson("/api/v1/sessions/{$this->session->id}/messages", ['body' => 'intruso'])->assertForbidden();
 });
 
-it('o aluno vê os dados do formador e o formador vê o local exato e quanto recebe', function () {
+it('o cliente vê os dados do técnico e o técnico vê o local exato e quanto recebe', function () {
     apiLogin($this->client);
     $asClient = $this->getJson("/api/v1/sessions/{$this->session->id}")->assertOk()->json('data');
     expect($asClient['provider']['name'])->toBe($this->provider->user->name)

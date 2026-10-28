@@ -26,7 +26,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class CompanyReportController extends Controller
 {
     /**
-     * Formações dos colaboradores que autorizaram a empresa (por defeito, mês atual).
+     * Serviços dos colaboradores que autorizaram a empresa (por defeito, mês atual).
      */
     public function show(Request $request, Company $company, CompanyServicesReport $report): JsonResponse
     {
@@ -47,13 +47,13 @@ class CompanyReportController extends Controller
         $sections = CompanyServicesReport::sections($report->build($company, $from, $to));
         $period = 'De '.$from->format('d/m/Y').' a '.$to->format('d/m/Y');
         $filename = 'longa-formacoes-'.$from->toDateString().'-'.$to->toDateString();
-        $title = "Formações — {$company->name}";
+        $title = "Serviços — {$company->name}";
 
         return $format === 'pdf' ? $exporter->pdf($filename, $title, $period, $sections) : $exporter->csv($filename, $title, $period, $sections);
     }
 
     /**
-     * Pedidos de empresas para acompanhar as minhas formações.
+     * Pedidos de empresas para acompanhar os meus serviços.
      */
     public function myLinks(Request $request): JsonResponse
     {

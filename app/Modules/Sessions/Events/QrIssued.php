@@ -12,7 +12,7 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * O formador está a mostrar o QR de confirmação. (canal privado da aula: aluno e formador).
+ * O técnico está a mostrar o QR de confirmação. (canal privado do serviço: cliente e técnico).
  */
 class QrIssued implements ShouldBroadcast, ShouldDispatchAfterCommit
 {

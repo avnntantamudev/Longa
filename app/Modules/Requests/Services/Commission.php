@@ -9,10 +9,10 @@ use App\Modules\Users\Models\ProviderProfile;
 use App\Support\Settings\PlatformSettings;
 
 /**
- * Comissão do BISCA, descontada ao formador (decisão do cliente, docs/decisions.md).
+ * Comissão do BISCA, descontada ao técnico (decisão do cliente, docs/decisions.md).
  * Tudo em Kz inteiros; a comissão arredonda ao Kz, meio para cima.
  *
- * Ex.: 25.000 Kz com 15% → comissão 3.750 Kz, formador recebe 21.250 Kz.
+ * Ex.: 25.000 Kz com 15% → comissão 3.750 Kz, técnico recebe 21.250 Kz.
  */
 final class Commission
 {
@@ -28,7 +28,7 @@ final class Commission
     }
 
     /**
-     * Percentagem a aplicar a este formador agora: reduzida enquanto for VIP.
+     * Percentagem a aplicar a este técnico agora: reduzida enquanto for VIP.
      */
     public static function percentFor(ProviderProfile|int $provider): int
     {

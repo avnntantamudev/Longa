@@ -15,7 +15,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * Formador VIP (subscrição anual).
+ * Técnico VIP (subscrição anual).
  *
  * @tags VIP
  */
@@ -62,7 +62,7 @@ class VipController extends Controller
 
         $provider = $this->provider($request);
         if ($provider->verification_status->value !== 'verified') {
-            throw new ApiException('vip_not_allowed', 'Só formadores verificados podem ser VIP.', 409);
+            throw new ApiException('vip_not_allowed', 'Só técnicos verificados podem ser VIP.', 409);
         }
 
         /** @var User $user */
@@ -82,6 +82,6 @@ class VipController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        return $user->providerProfile ?? throw new ApiException('profile_missing', 'Só formadores podem ser VIP.', 409);
+        return $user->providerProfile ?? throw new ApiException('profile_missing', 'Só técnicos podem ser VIP.', 409);
     }
 }

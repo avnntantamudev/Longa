@@ -12,7 +12,7 @@ use App\Support\Api\ApiException;
 use App\Support\StateMachine\InvalidTransition;
 
 /**
- * Formador abre a oferta (viewed) ou recusa-a (declined, conta para o score).
+ * Técnico abre a oferta (viewed) ou recusa-a (declined, conta para o score).
  */
 class RespondToOffer
 {

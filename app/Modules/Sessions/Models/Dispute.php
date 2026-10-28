@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * Disputa sobre uma aula. Só o admin a resolve; toda a decisão financeira gera uma transação no ledger.
+ * Disputa sobre um serviço. Só o admin a resolve; toda a decisão financeira gera uma transação no ledger.
  *
  * @property int $id
  * @property int $service_job_id
@@ -72,8 +72,8 @@ class Dispute extends Model
     public function reasonLabel(): string
     {
         return match ($this->reason) {
-            'lesson_not_happened' => 'A aula não aconteceu',
-            'quality' => 'Problema com a aula',
+            'lesson_not_happened' => 'O serviço não aconteceu',
+            'quality' => 'Problema com o serviço',
             'no_show_contest' => 'Contesta a falta reportada',
             default => 'Outro motivo',
         };

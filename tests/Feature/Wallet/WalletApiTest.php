@@ -21,7 +21,7 @@ function completeWithQr(ServiceJob $session): void
     app(ConfirmSession::class)->handle($session->fresh() ?? $session, $session->client, $token, null);
 }
 
-it('carteira vazia de um formador novo', function () {
+it('carteira vazia de um técnico novo', function () {
     $provider = App\Modules\Users\Models\ProviderProfile::factory()->verified()->create();
     apiLogin($provider->user);
 
@@ -44,12 +44,12 @@ it('pendente enquanto retido, disponível depois da confirmação', function () 
         ->assertJsonPath('data.total_earned', 21250);
     $this->getJson('/api/v1/wallet/movements')->assertOk()
         ->assertJsonPath('data.0.type', 'escrow_release')
-        ->assertJsonPath('data.0.label', 'Aula confirmada')
+        ->assertJsonPath('data.0.label', 'Serviço confirmado')
         ->assertJsonPath('data.0.amount', 21250)
         ->assertJsonPath('data.0.session_id', $session->id);
 });
 
-it('comissão de aula em mão é descontada na aula eletrónica seguinte', function () {
+it('comissão de serviço em mão é descontada no serviço eletrónica seguinte', function () {
     $cash = acceptedSession('cash');
     completeWithQr($cash);
     app(ConfirmCashPayment::class)->handle($cash->fresh() ?? $cash, $cash->client);
@@ -67,7 +67,7 @@ it('comissão de aula em mão é descontada na aula eletrónica seguinte', funct
         ->toContain('commission_offset', 'cash_commission_due', 'escrow_release');
 });
 
-it('só formadores têm carteira e cada um só vê a sua', function () {
+it('só técnicos têm carteira e cada um só vê a sua', function () {
     $session = paidSession();
     completeWithQr($session);
 
@@ -82,7 +82,7 @@ it('a carteira exige autenticação', function () {
     $this->getJson('/api/v1/wallet')->assertUnauthorized();
 });
 
-it('linha do tempo e ações disponíveis da aula', function () {
+it('linha do tempo e ações disponíveis do serviço', function () {
     $session = paidSession();
     apiLogin($session->client);
     $this->getJson("/api/v1/sessions/{$session->id}")->assertJsonPath('data.actions', ['cancel'])

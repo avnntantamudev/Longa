@@ -1,1 +1,1 @@
-# Requests — Pedidos de aula/formação feitos por alunos e empresas.
+# Requests — Pedidos de serviço/serviço feitos por clientes e empresas.

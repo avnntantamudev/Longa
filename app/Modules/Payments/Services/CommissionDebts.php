@@ -13,9 +13,9 @@ use App\Modules\Wallet\Models\LedgerTransaction;
 use App\Support\Audit\AuditLogger;
 
 /**
- * Comissões de aulas pagas em dinheiro (regra do cliente, docs/decisions.md):
- *  - registar: o formador recebeu o valor em mão, logo deve a comissão ao BISCA;
- *  - compensar: se tiver saldo disponível (aulas pagas eletronicamente), a dívida é descontada;
+ * Comissões de serviços pagos em dinheiro (regra do cliente, docs/decisions.md):
+ *  - registar: o técnico recebeu o valor em mão, logo deve a comissão ao BISCA;
+ *  - compensar: se tiver saldo disponível (serviços pagos eletronicamente), a dívida é descontada;
  *  - receber: o admin marca o dinheiro da comissão como recebido.
  */
 class CommissionDebts
@@ -23,7 +23,7 @@ class CommissionDebts
     public function __construct(private readonly LedgerService $ledger, private readonly AuditLogger $audit) {}
 
     /**
-     * Devolve null quando a comissão arredonda para 0 Kz (aulas de 1 a 3 Kz): não há dívida a registar.
+     * Devolve null quando a comissão arredonda para 0 Kz (serviços de 1 a 3 Kz): não há dívida a registar.
      */
     public function register(ServiceJob $session, ?User $actor, string $reason): ?LedgerTransaction
     {
@@ -68,7 +68,7 @@ class CommissionDebts
     }
 
     /**
-     * O admin recebeu do formador (parte de) a comissão em dívida.
+     * O admin recebeu do técnico (parte de) a comissão em dívida.
      */
     public function receive(int $providerProfileId, int $amount, string $idempotencyKey, User $admin, ?string $note): LedgerTransaction
     {

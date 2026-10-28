@@ -12,7 +12,7 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * A oferta terminou sem resposta (prazo de 60 s) ou foi perdida para outro formador / pedido terminado.
+ * A oferta terminou sem resposta (prazo de 60 s) ou foi perdida para outro técnico / pedido terminado.
  */
 class OfferExpired implements ShouldBroadcast, ShouldDispatchAfterCommit
 {

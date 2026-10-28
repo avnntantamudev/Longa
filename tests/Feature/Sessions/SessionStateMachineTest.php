@@ -11,7 +11,7 @@ use App\Modules\Users\Models\ProviderProfile;
 use App\Support\StateMachine\InvalidTransition;
 
 /*
-| Matriz completa da máquina de estados da aula (docs/state-machines.md).
+| Matriz completa da máquina de estados do serviço (docs/state-machines.md).
 */
 
 $allowed = [
@@ -36,7 +36,7 @@ function makeSession(SessionState $state = SessionState::Scheduled): ServiceJob
     $session = ServiceJob::query()->create([
         'service_request_id' => $request->id, 'client_id' => $request->client_id,
         'provider_profile_id' => ProviderProfile::factory()->create()->id, 'category_id' => $request->category_id,
-        'title' => 'Aula', 'amount' => 25000, 'commission' => 3750, 'provider_net' => 21250,
+        'title' => 'Serviço', 'amount' => 25000, 'commission' => 3750, 'provider_net' => 21250,
         'scheduled_at' => now()->addDay(), 'duration_minutes' => 90, 'modality' => 'in_person',
         'municipality' => 'Talatona', 'neighborhood' => 'Talatona', 'latitude' => -8.9167, 'longitude' => 13.1833,
     ]);

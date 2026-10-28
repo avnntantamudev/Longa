@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Token de confirmação de uma aula (o valor em claro nunca é guardado).
+ * Token de confirmação de um serviço (o valor em claro nunca é guardado).
  *
  * @property int $id
  * @property int $service_job_id

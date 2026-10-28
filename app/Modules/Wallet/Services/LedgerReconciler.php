@@ -24,7 +24,7 @@ use Illuminate\Support\Facades\Notification;
  *  2. a soma de todos os lançamentos é 0;
  *  3. o saldo de escrow = soma das retenções ativas (held/disputed);
  *  4. a cache de saldos = soma dos lançamentos de cada conta;
- *  5. nenhuma conta de formador com saldo disponível negativo;
+ *  5. nenhuma conta de técnico com saldo disponível negativo;
  *  6. retenções sem destino depois do prazo máximo (aviso);
  *  7. reembolsos decididos há mais de 1 h e ainda não executados no gateway (aviso).
  */

@@ -22,19 +22,19 @@ use Illuminate\Http\Request;
 class ScoreEventController extends Controller
 {
     /**
-     * Os meus eventos de score (formador).
+     * Os meus eventos de score (técnico).
      */
     public function mine(Request $request): JsonResponse
     {
         /** @var User $user */
         $user = $request->user();
-        $profile = $user->providerProfile ?? throw new ApiException('profile_missing', 'Ainda não tem o perfil de formador.', 409);
+        $profile = $user->providerProfile ?? throw new ApiException('profile_missing', 'Ainda não tem o perfil de técnico.', 409);
 
         return $this->respond($profile);
     }
 
     /**
-     * Admin: eventos de score de um formador.
+     * Admin: eventos de score de um técnico.
      */
     public function forProvider(ProviderProfile $provider): JsonResponse
     {

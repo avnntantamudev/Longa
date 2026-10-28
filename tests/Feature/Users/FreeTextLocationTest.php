@@ -7,7 +7,7 @@ use App\Modules\Users\Models\Category;
 use App\Modules\Users\Models\ProviderProfile;
 use App\Modules\Users\Models\User;
 
-it('o formador escreve um bairro que não está na lista e marca o ponto no mapa', function () {
+it('o técnico escreve um bairro que não está na lista e marca o ponto no mapa', function () {
     $provider = ProviderProfile::factory()->create();
     apiLogin($provider->user);
 
@@ -19,11 +19,11 @@ it('o formador escreve um bairro que não está na lista e marca o ponto no mapa
         ->assertJsonPath('data.latitude', -8.7769);
 });
 
-it('o aluno pede uma aula num bairro escrito à mão', function () {
+it('o cliente pede um serviço num bairro escrito à mão', function () {
     apiLogin(User::factory()->withRole(Role::Client)->create());
 
     $this->postJson('/api/v1/service-requests', [
-        'category_id' => Category::query()->value('id'), 'title' => 'Aula de Excel', 'amount' => 10000,
+        'category_id' => Category::query()->value('id'), 'title' => 'Serviço de Excel', 'amount' => 10000,
         'scheduled_at' => now()->addDay()->setTime(10, 0)->toIso8601String(), 'modality' => 'in_person',
         'municipality' => 'Viana', 'neighborhood' => 'Zango 3, quarteirão 12', 'latitude' => -8.9201, 'longitude' => 13.4302,
     ])->assertCreated()->assertJsonPath('data.neighborhood', 'Zango 3, quarteirão 12');
@@ -49,7 +49,7 @@ it('guarda a província e recusa províncias inexistentes', function () {
     $this->getJson('/api/v1/provinces')->assertOk()->assertJsonCount(21, 'data');
 });
 
-it('a província do pedido passa para a aula', function () {
+it('a província do pedido passa para o serviço', function () {
     $session = acceptedSession('electronic');
 
     expect($session->province)->toBe('Luanda')

@@ -28,7 +28,7 @@ async function approve(item: Verification): Promise<void> {
 }
 
 async function reject(item: Verification): Promise<void> {
-    const reason = prompt('Motivo da rejeição (o formador vai vê-lo):');
+    const reason = prompt('Motivo da rejeição (o técnico vai vê-lo):');
     if (reason && reason.trim().length >= 5) {
         await api.post(`/admin/verifications/${item.id}/reject`, { reason: reason.trim() });
         await load();
@@ -36,7 +36,7 @@ async function reject(item: Verification): Promise<void> {
 }
 
 async function rejectPhoto(item: Verification): Promise<void> {
-    const reason = prompt('Porque remove a foto? (o formador vai ver o motivo)', 'Não se vê bem o rosto');
+    const reason = prompt('Porque remove a foto? (o técnico vai ver o motivo)', 'Não se vê bem o rosto');
     if (item.user && reason && reason.trim().length >= 5) {
         await api.post(`/admin/users/${item.user.id}/photo/reject`, { reason: reason.trim() });
         await load();

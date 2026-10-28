@@ -15,14 +15,14 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 /**
- * Carteira do formador (só leitura).
+ * Carteira do técnico (só leitura).
  *
  * @tags Carteira
  */
 class WalletController extends Controller
 {
     /**
-     * Saldos: disponível, pendente (aulas pagas por confirmar), total ganho e comissões em dívida (Kz).
+     * Saldos: disponível, pendente (serviços pagos por confirmar), total ganho e comissões em dívida (Kz).
      */
     public function show(Request $request, WalletSummary $wallet): JsonResponse
     {
@@ -44,6 +44,6 @@ class WalletController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        return $user->providerProfile ?? throw new ApiException('forbidden', 'Só formadores têm carteira.', 403);
+        return $user->providerProfile ?? throw new ApiException('forbidden', 'Só técnicos têm carteira.', 403);
     }
 }

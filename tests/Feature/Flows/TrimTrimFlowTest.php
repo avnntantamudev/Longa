@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Notification;
 
 /*
 | Fluxo completo da Fase 2, só pela API (como a PWA e a futura app Flutter):
-| aluno publica → 3 formadores recebem a oferta → um aceita → os outros perdem → aula criada → chat funciona.
+| cliente publica → 3 técnicos recebem a oferta → um aceita → os outros perdem → serviço criado → chat funciona.
 */
 
 it('cumpre o fluxo TRIM TRIM de ponta a ponta', function () {
@@ -25,15 +25,15 @@ it('cumpre o fluxo TRIM TRIM de ponta a ponta', function () {
     $farAway = ProviderProfile::factory()->verified()->near($lat, $lng, 9000)->withCategories($sgme)->create();
     $client = User::factory()->withRole(Role::Client)->create();
 
-    // 1. Aluno publica
+    // 1. Cliente publica
     apiLogin($client);
     $requestId = $this->postJson('/api/v1/service-requests', [
-        'category_id' => $sgme->id, 'title' => 'Aula de SGME', 'amount' => 25000,
+        'category_id' => $sgme->id, 'title' => 'Serviço de SGME', 'amount' => 25000,
         'scheduled_at' => now()->addDay()->setTime(14, 0)->toIso8601String(), 'modality' => 'in_person',
         'municipality' => 'Talatona', 'neighborhood' => 'Talatona', 'latitude' => $lat, 'longitude' => $lng,
     ])->assertCreated()->assertJsonPath('data.state', 'searching')->json('data.id');
 
-    // 2. Os 3 formadores do raio recebem a oferta (o que está a 9 km não)
+    // 2. Os 3 técnicos do raio recebem a oferta (o que está a 9 km não)
     foreach ($providers as $provider) {
         Notification::assertSentTo($provider->user, NewOfferNotification::class);
         apiLogin($provider->user);
@@ -41,7 +41,7 @@ it('cumpre o fluxo TRIM TRIM de ponta a ponta', function () {
     }
     Notification::assertNotSentTo($farAway->user, NewOfferNotification::class);
 
-    // 3. O segundo formador aceita; 4. os outros perdem
+    // 3. O segundo técnico aceita; 4. os outros perdem
     $winner = $providers[1];
     apiLogin($winner->user);
     $offerId = $this->getJson('/api/v1/offers')->json('data.0.id');
@@ -54,19 +54,19 @@ it('cumpre o fluxo TRIM TRIM de ponta a ponta', function () {
         expect(App\Modules\Requests\Models\RequestOffer::query()->where('provider_profile_id', $lostOffer)->value('state'))->toBe(OfferState::Lost);
     }
 
-    // 5. Aula criada: o aluno vê-a com os dados do formador e é notificado
+    // 5. Serviço criado: o cliente vê-a com os dados do técnico e é notificado
     apiLogin($client);
     $this->getJson("/api/v1/service-requests/{$requestId}")->assertJsonPath('data.state', 'matched')->assertJsonPath('data.session_id', $sessionId);
     $this->getJson("/api/v1/sessions/{$sessionId}")->assertOk()->assertJsonPath('data.provider.name', $winner->user->name);
     Notification::assertSentTo($client, RequestOutcomeNotification::class, fn ($n) => $n->outcome === 'matched');
 
     // 6. Chat funciona nos dois sentidos
-    $this->postJson("/api/v1/sessions/{$sessionId}/messages", ['body' => 'Olá! Pronto para a aula de SGME?'])->assertCreated();
+    $this->postJson("/api/v1/sessions/{$sessionId}/messages", ['body' => 'Olá! Pronto para o serviço de SGME?'])->assertCreated();
     apiLogin($winner->user);
     $this->postJson("/api/v1/sessions/{$sessionId}/messages", ['body' => 'Bom dia! Sim, estou pronto.'])->assertCreated();
     $this->getJson("/api/v1/sessions/{$sessionId}/messages")->assertJsonCount(2, 'data');
 
-    // Um perdedor não entra na aula
+    // Um perdedor não entra no serviço
     apiLogin($providers[0]->user);
     $this->getJson("/api/v1/sessions/{$sessionId}/messages")->assertForbidden();
 });

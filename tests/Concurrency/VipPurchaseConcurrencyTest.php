@@ -11,7 +11,7 @@ use Symfony\Component\Process\PhpExecutableFinder;
 use Symfony\Component\Process\Process;
 
 /*
-| Concorrência real: 6 processos compram o VIP do mesmo formador ao mesmo tempo — 3 com a mesma chave
+| Concorrência real: 6 processos compram o VIP do mesmo técnico ao mesmo tempo — 3 com a mesma chave
 | (duplo toque) e 3 com chaves diferentes (abas diferentes). A mesma chave cobra uma vez; chaves diferentes
 | em simultâneo ficam bloqueadas (payment_in_progress) enquanto há um pagamento em curso.
 */

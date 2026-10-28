@@ -63,7 +63,7 @@ class DisputeResource extends Resource
             ->defaultSort('created_at', 'desc')
             ->columns([
                 TextColumn::make('id')->label('#'),
-                TextColumn::make('session.title')->label('Aula')->searchable(),
+                TextColumn::make('session.title')->label('Serviço')->searchable(),
                 TextColumn::make('reason')->label('Motivo')->formatStateUsing(fn ($state, Dispute $record) => $record->reasonLabel()),
                 TextColumn::make('session.amount')->label('Valor')->formatStateUsing(fn (int $state) => SessionSections::kz($state)),
                 TextColumn::make('opener.name')->label('Aberta por'),
@@ -94,7 +94,7 @@ class DisputeResource extends Resource
                         ->state(fn (Dispute $record) => self::attachmentLinks($record))
                         ->placeholder('Sem anexos'),
                     TextEntry::make('resolution')->label('Decisão')->badge()->placeholder('Por decidir'),
-                    TextEntry::make('provider_share')->label('Parte do formador (bruto)')->placeholder('—')
+                    TextEntry::make('provider_share')->label('Parte do técnico (bruto)')->placeholder('—')
                         ->formatStateUsing(fn (?int $state) => $state === null ? '—' : SessionSections::kz($state)),
                     TextEntry::make('resolution_note')->label('Nota da decisão')->placeholder('—'),
                 ]),

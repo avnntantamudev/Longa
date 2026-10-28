@@ -33,7 +33,7 @@ function disputedSession(): Dispute
     app(StartSession::class)->handle($session, $session->provider->user);
     app(FinishSession::class)->handle($session, $session->provider->user);
 
-    return app(OpenDispute::class)->handle($session->fresh() ?? $session, $session->client, 'quality', 'A aula ficou muito aquém do combinado.');
+    return app(OpenDispute::class)->handle($session->fresh() ?? $session, $session->client, 'quality', 'O serviço ficou muito aquém do combinado.');
 }
 
 function backofficeAdmin(): User
@@ -54,13 +54,13 @@ it('só administradores entram no backoffice', function () {
     $this->get('/backoffice')->assertOk()->assertSee('Retido em escrow');
 });
 
-it('lista disputas abertas e mostra a linha do tempo da aula', function () {
+it('lista disputas abertas e mostra a linha do tempo do serviço', function () {
     $dispute = disputedSession();
     backofficeAdmin();
 
     Livewire::test(ListDisputes::class)->assertCanSeeTableRecords([$dispute]);
     $this->get("/backoffice/disputas/{$dispute->id}")->assertOk()
-        ->assertSee('A aula ficou muito aquém do combinado.')
+        ->assertSee('O serviço ficou muito aquém do combinado.')
         ->assertSee('dispute_opened')
         ->assertSee('escrow_hold');
 });
@@ -70,12 +70,12 @@ it('decidir exige nota e a palavra CONFIRMAR; depois move o dinheiro uma vez', f
     backofficeAdmin();
 
     Livewire::test(ViewDispute::class, ['record' => $dispute->getRouteKey()])
-        ->callAction('release', data: ['note' => 'Evidências a favor do formador.', 'confirmation' => 'confirmo'])
+        ->callAction('release', data: ['note' => 'Evidências a favor do técnico.', 'confirmation' => 'confirmo'])
         ->assertHasActionErrors(['confirmation']);
     expect($dispute->fresh()?->status)->toBe(Dispute::OPEN);
 
     Livewire::test(ViewDispute::class, ['record' => $dispute->getRouteKey()])
-        ->callAction('release', data: ['note' => 'Evidências a favor do formador.', 'confirmation' => 'CONFIRMAR'])
+        ->callAction('release', data: ['note' => 'Evidências a favor do técnico.', 'confirmation' => 'CONFIRMAR'])
         ->assertHasNoActionErrors();
 
     expect($dispute->fresh()?->resolution)->toBe('released')
@@ -85,16 +85,16 @@ it('decidir exige nota e a palavra CONFIRMAR; depois move o dinheiro uma vez', f
     Livewire::test(ViewDispute::class, ['record' => $dispute->getRouteKey()])->assertActionHidden('refund');
 });
 
-it('reembolso parcial pelo backoffice valida a parte do formador', function () {
+it('reembolso parcial pelo backoffice valida a parte do técnico', function () {
     $dispute = disputedSession();
     backofficeAdmin();
 
     Livewire::test(ViewDispute::class, ['record' => $dispute->getRouteKey()])
-        ->callAction('partial', data: ['provider_share' => 25000, 'note' => 'Metade da aula.', 'confirmation' => 'CONFIRMAR'])
+        ->callAction('partial', data: ['provider_share' => 25000, 'note' => 'Metade do serviço.', 'confirmation' => 'CONFIRMAR'])
         ->assertHasActionErrors(['provider_share']);
 
     Livewire::test(ViewDispute::class, ['record' => $dispute->getRouteKey()])
-        ->callAction('partial', data: ['provider_share' => 12500, 'note' => 'Metade da aula.', 'confirmation' => 'CONFIRMAR'])
+        ->callAction('partial', data: ['provider_share' => 12500, 'note' => 'Metade do serviço.', 'confirmation' => 'CONFIRMAR'])
         ->assertHasNoActionErrors();
 
     expect(balances($dispute->session))->toMatchArray(['provider' => 10625, 'revenue' => 1875, 'escrow' => 0]);

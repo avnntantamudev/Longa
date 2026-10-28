@@ -24,7 +24,7 @@ it('cifra o nº do BI na base de dados e nunca o serializa', function () {
         ->and($verification->document_hash)->toBe(Verification::hashDocument('001234567LA042'));
 });
 
-it('gera a coluna espacial do formador a partir da latitude e longitude', function () {
+it('gera a coluna espacial do técnico a partir da latitude e longitude', function () {
     $profile = ProviderProfile::factory()->create();
 
     $point = DB::selectOne('select ST_Latitude(location) as lat, ST_Longitude(location) as lng from provider_profiles where id = ?', [$profile->id]);

@@ -9,7 +9,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
 /**
- * Áreas de formação iniciais (alinhadas com o kit: SGME, Primavera, Excel, disciplinas escolares).
+ * Áreas de serviço iniciais (alinhadas com o kit: SGME, Primavera, Excel, disciplinas escolares).
  */
 class CategoriesSeeder extends Seeder
 {

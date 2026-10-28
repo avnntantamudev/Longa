@@ -10,7 +10,7 @@ use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Foundation\Events\Dispatchable;
 
 /**
- * A carteira do formador mudou (aula confirmada, reembolso parcial, comissão em dinheiro...).
+ * A carteira do técnico mudou (serviço confirmado, reembolso parcial, comissão em dinheiro...).
  * Só identificadores e o motivo: o cliente pede os saldos à API.
  */
 class WalletUpdated implements ShouldBroadcast, ShouldDispatchAfterCommit

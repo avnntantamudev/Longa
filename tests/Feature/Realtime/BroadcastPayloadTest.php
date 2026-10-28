@@ -13,7 +13,7 @@ use App\Modules\Users\Models\ProviderProfile;
 use Database\Factories\ProviderProfileFactory;
 use Illuminate\Support\Facades\Event;
 
-it('a oferta em tempo real vai só para o formador e sem dados privados do aluno', function () {
+it('a oferta em tempo real vai só para o técnico e sem dados privados do cliente', function () {
     Event::fake([OfferSent::class]);
     $sgme = Category::query()->where('slug', 'sgme-gestao-empresarial')->firstOrFail();
     [$lat, $lng] = ProviderProfileFactory::TALATONA;
@@ -33,7 +33,7 @@ it('a oferta em tempo real vai só para o formador e sem dados privados do aluno
     });
 });
 
-it('o pedido aceite é anunciado ao aluno e aos formadores que perderam', function () {
+it('o pedido aceite é anunciado ao cliente e aos técnicos que perderam', function () {
     $request = ServiceRequest::factory()->create();
     $session = new ServiceJob;
     $session->id = 99;

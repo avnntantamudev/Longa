@@ -13,7 +13,7 @@ use NotificationChannels\WebPush\WebPushChannel;
 use NotificationChannels\WebPush\WebPushMessage;
 
 /**
- * Decisão sobre uma área sugerida pelo formador.
+ * Decisão sobre uma área sugerida pelo técnico.
  */
 class CategorySuggestionReviewedNotification extends Notification implements ShouldQueue
 {

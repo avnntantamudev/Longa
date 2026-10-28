@@ -11,10 +11,10 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * Aula vista por um dos participantes. Depois da aceitação:
- *  - o aluno vê os dados públicos completos do formador (sem contactos: a comunicação é pelo chat);
- *  - o formador vê o nome do aluno e o local exato.
- * Os valores mostram ao formador quanto recebe (valor − comissão).
+ * Serviço vista por um dos participantes. Depois da aceitação:
+ *  - o cliente vê os dados públicos completos do técnico (sem contactos: a comunicação é pelo chat);
+ *  - o técnico vê o nome do cliente e o local exato.
+ * Os valores mostram ao técnico quanto recebe (valor − comissão).
  *
  * @mixin ServiceJob
  */

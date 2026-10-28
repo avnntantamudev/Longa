@@ -13,7 +13,7 @@ use NotificationChannels\WebPush\WebPushChannel;
 use NotificationChannels\WebPush\WebPushMessage;
 
 /**
- * Resultado do pedido para o aluno: formador encontrado ou sem formadores (com opção de republicar).
+ * Resultado do pedido para o cliente: técnico encontrado ou sem técnicos (com opção de republicar).
  * Canais: notificação na app e Web Push (se houver subscrição).
  */
 class RequestOutcomeNotification extends Notification implements ShouldQueue
@@ -67,18 +67,18 @@ class RequestOutcomeNotification extends Notification implements ShouldQueue
 
     private function title(): string
     {
-        return $this->outcome === self::MATCHED ? 'Formador encontrado!' : 'Sem formadores disponíveis';
+        return $this->outcome === self::MATCHED ? 'Técnico encontrado!' : 'Sem técnicos disponíveis';
     }
 
     private function body(): string
     {
         return $this->outcome === self::MATCHED
-            ? "A sua aula \"{$this->request->title}\" está marcada. Veja os dados do formador."
+            ? "O seu serviço \"{$this->request->title}\" está marcado. Veja os dados do técnico."
             : "Ninguém aceitou \"{$this->request->title}\" a tempo. Pode republicar o pedido, com outro valor ou hora.";
     }
 
     private function url(): string
     {
-        return $this->outcome === self::MATCHED && $this->sessionId ? '/aulas/'.$this->sessionId : '/pedidos/'.$this->request->id;
+        return $this->outcome === self::MATCHED && $this->sessionId ? '/servicos/'.$this->sessionId : '/pedidos/'.$this->request->id;
     }
 }

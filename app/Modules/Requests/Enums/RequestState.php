@@ -7,7 +7,7 @@ namespace App\Modules\Requests\Enums;
 use App\Support\StateMachine\StateEnum;
 
 /**
- * Pedido de aula: draft → searching → matched | expired | cancelled.
+ * Pedido de serviço: draft → searching → matched | expired | cancelled.
  */
 enum RequestState: string implements StateEnum
 {
@@ -37,7 +37,7 @@ enum RequestState: string implements StateEnum
     }
 
     /**
-     * Estados que contam para o limite de pedidos ativos do aluno.
+     * Estados que contam para o limite de pedidos ativos do cliente.
      *
      * @return list<self>
      */

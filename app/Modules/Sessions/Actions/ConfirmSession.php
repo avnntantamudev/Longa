@@ -17,10 +17,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 
 /**
- * O aluno lê o QR do formador (ou escreve o código de 6 dígitos) e confirma a aula.
+ * O cliente lê o QR do técnico (ou escreve o código de 6 dígitos) e confirma o serviço.
  *
- * Numa só transação, com a aula bloqueada: valida o token (desta aula, na janela, não usado), marca-o
- * como usado, conclui a aula e liberta o escrow. Confirmar de novo devolve a aula concluída sem libertar
+ * Numa só transação, com o serviço bloqueado: valida o token (deste serviço, na janela, não usado), marca-o
+ * como usado, conclui o serviço e liberta o escrow. Confirmar de novo devolve o serviço concluído sem libertar
  * o dinheiro outra vez. Ver docs/threat-model.md.
  */
 class ConfirmSession
@@ -53,13 +53,13 @@ class ConfirmSession
             }
 
             if (! in_array($locked->state, [SessionState::InProgress, SessionState::AwaitingConfirmation], true)) {
-                return ['session' => $locked, 'error' => new ApiException('session_not_confirmable', 'Esta aula não pode ser confirmada no estado atual ('.$locked->state->label().').', 409)];
+                return ['session' => $locked, 'error' => new ApiException('session_not_confirmable', 'Este serviço não pode ser confirmado no estado atual ('.$locked->state->label().').', 409)];
             }
 
             $windowStart = $locked->scheduled_at;
             $windowEnd = $locked->ends_at?->copy()->addHours((int) config('longa.session_rules.qr_window_hours_after_end'));
             if (now()->lt($windowStart) || ($windowEnd !== null && now()->gt($windowEnd))) {
-                return ['session' => $locked, 'error' => new ApiException('qr_outside_window', 'Fora do período em que a aula pode ser confirmada por QR.', 409)];
+                return ['session' => $locked, 'error' => new ApiException('qr_outside_window', 'Fora do período em que o serviço pode ser confirmado por QR.', 409)];
             }
 
             $qrToken = $this->qr->findValid($locked, $token, $code);
@@ -94,7 +94,7 @@ class ConfirmSession
         if ($result['error'] === 'invalid') {
             RateLimiter::hit($lockKey, (int) config('longa.session_rules.qr_attempt_window_minutes') * 60);
 
-            throw new ApiException('qr_invalid', 'QR ou código inválido ou expirado. Peça ao formador para mostrar o QR atual.', 422);
+            throw new ApiException('qr_invalid', 'QR ou código inválido ou expirado. Peça ao técnico para mostrar o QR atual.', 422);
         }
 
         if ($result['error'] instanceof ApiException) {

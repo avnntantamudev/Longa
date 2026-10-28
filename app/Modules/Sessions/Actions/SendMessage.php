@@ -13,7 +13,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
 
 /**
- * Envia uma mensagem no chat da aula (texto e/ou PDF).
+ * Envia uma mensagem no chat do serviço (texto e/ou PDF).
  *
  *  - Idempotente por `client_id`: o reenvio de uma mensagem que já chegou (ligação lenta, "tentar de novo")
  *    devolve a mensagem existente em vez de a duplicar.

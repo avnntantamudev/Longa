@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
-| Processo independente usado por QrConfirmConcurrencyTest: espera pela barreira e confirma a aula
+| Processo independente usado por QrConfirmConcurrencyTest: espera pela barreira e confirma o serviço
 | com o token indicado. Escreve o resultado em JSON.
 |
 | Uso: php tests/Concurrency/confirm-worker.php <sessionId> <token> <startAtMicrotime>

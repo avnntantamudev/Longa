@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Oferta TRIM TRIM enviada a um formador. O prazo (`expires_at`) é decidido pelo servidor.
+ * Oferta TRIM TRIM enviada a um técnico. O prazo (`expires_at`) é decidido pelo servidor.
  *
  * @property int $id
  * @property int $service_request_id

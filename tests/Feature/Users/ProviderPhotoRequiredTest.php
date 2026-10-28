@@ -24,7 +24,7 @@ function candidatesFor(Category $category): array
     return array_map(fn ($c) => $c->providerProfileId, app(ProviderMatcher::class)->candidates($request, 50));
 }
 
-it('formador sem foto recebe pedidos até à data de transição e depois deixa de receber', function () {
+it('técnico sem foto recebe pedidos até à data de transição e depois deixa de receber', function () {
     $category = Category::query()->firstOrFail();
     $withPhoto = ProviderProfile::factory()->verified()->withCategories($category)->create();
     $withoutPhoto = ProviderProfile::factory()->verified()->withCategories($category)->create();
@@ -37,7 +37,7 @@ it('formador sem foto recebe pedidos até à data de transição e depois deixa 
     expect(candidatesFor($category))->toContain($withPhoto->id)->not->toContain($withoutPhoto->id);
 });
 
-it('a verificação do BI exige foto e o formador não pode apagá-la', function () {
+it('a verificação do BI exige foto e o técnico não pode apagá-la', function () {
     $provider = ProviderProfile::factory()->create();
     $provider->user->forceFill(['photo' => null])->save();
     apiLogin($provider->user);

@@ -27,8 +27,8 @@ use Illuminate\Support\Facades\Auth;
 use UnitEnum;
 
 /**
- * Áreas escritas pelos formadores ("Outra área"). Aprovar cria uma área nova ou junta a uma existente,
- * e aplica-se a todos os formadores que escreveram o mesmo.
+ * Áreas escritas pelos técnicos ("Outra área"). Aprovar cria uma área nova ou junta a uma existente,
+ * e aplica-se a todos os técnicos que escreveram o mesmo.
  */
 class CategorySuggestionResource extends Resource
 {
@@ -69,7 +69,7 @@ class CategorySuggestionResource extends Resource
             ->defaultSort('created_at', 'desc')
             ->columns([
                 TextColumn::make('name')->label('Área escrita')->searchable()->weight('bold'),
-                TextColumn::make('same')->label('Formadores')
+                TextColumn::make('same')->label('Técnicos')
                     ->state(fn (CategorySuggestion $r) => CategorySuggestion::query()->where('normalized', $r->normalized)->where('status', CategorySuggestion::PENDING)->count()),
                 TextColumn::make('provider.user.name')->label('Sugerida por'),
                 TextColumn::make('status')->label('Estado')->badge()
@@ -90,7 +90,7 @@ class CategorySuggestionResource extends Resource
                     ->icon(Heroicon::OutlinedCheck)
                     ->visible(fn (CategorySuggestion $r) => $r->status === CategorySuggestion::PENDING)
                     ->modalHeading(fn (CategorySuggestion $r) => "Aprovar \"{$r->name}\"")
-                    ->modalDescription('Aplica-se a todos os formadores que escreveram o mesmo. Passam a receber pedidos desta área.')
+                    ->modalDescription('Aplica-se a todos os técnicos que escreveram o mesmo. Passam a receber pedidos desta área.')
                     ->fillForm(fn (CategorySuggestion $r) => ['mode' => 'new', 'name' => $r->name])
                     ->schema([
                         Radio::make('mode')->label('Como aprovar')->required()->live()
@@ -120,14 +120,14 @@ class CategorySuggestionResource extends Resource
 
                             return;
                         }
-                        Notification::make()->success()->title("Aprovada para {$count} formador(es)")->send();
+                        Notification::make()->success()->title("Aprovada para {$count} técnico(es)")->send();
                     }),
                 Action::make('reject')
                     ->label('Rejeitar')
                     ->color('danger')
                     ->icon(Heroicon::OutlinedXMark)
                     ->visible(fn (CategorySuggestion $r) => $r->status === CategorySuggestion::PENDING)
-                    ->schema([TextInput::make('reason')->label('Motivo (o formador vai vê-lo)')->required()->minLength(5)->maxLength(255)])
+                    ->schema([TextInput::make('reason')->label('Motivo (o técnico vai vê-lo)')->required()->minLength(5)->maxLength(255)])
                     ->action(function (CategorySuggestion $record, array $data) {
                         /** @var User $admin */
                         $admin = Auth::user();

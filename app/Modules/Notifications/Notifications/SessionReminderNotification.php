@@ -13,7 +13,7 @@ use NotificationChannels\WebPush\WebPushChannel;
 use NotificationChannels\WebPush\WebPushMessage;
 
 /**
- * Lembrete ao aluno: a aula está à espera da sua confirmação (ou disputa) e o prazo está a acabar.
+ * Lembrete ao cliente: o serviço está à espera da sua confirmação (ou disputa) e o prazo está a acabar.
  */
 class SessionReminderNotification extends Notification implements ShouldQueue
 {
@@ -35,11 +35,11 @@ class SessionReminderNotification extends Notification implements ShouldQueue
     public function toWebPush(User $notifiable, Notification $notification): WebPushMessage
     {
         return (new WebPushMessage)
-            ->title('Confirme a sua aula')
+            ->title('Confirme o seu serviço')
             ->body($this->body())
             ->icon('/icons/icon-192.png')
             ->tag('session-reminder-'.$this->session->id)
-            ->data(['url' => '/aulas/'.$this->session->id]);
+            ->data(['url' => '/servicos/'.$this->session->id]);
     }
 
     /**
@@ -47,11 +47,11 @@ class SessionReminderNotification extends Notification implements ShouldQueue
      */
     public function toArray(User $notifiable): array
     {
-        return ['type' => 'session_reminder', 'title' => 'Confirme a sua aula', 'body' => $this->body(), 'session_id' => $this->session->id, 'url' => '/aulas/'.$this->session->id];
+        return ['type' => 'session_reminder', 'title' => 'Confirme o seu serviço', 'body' => $this->body(), 'session_id' => $this->session->id, 'url' => '/servicos/'.$this->session->id];
     }
 
     private function body(): string
     {
-        return "\"{$this->session->title}\": confirme que a aula aconteceu ou abra uma disputa. Faltam cerca de {$this->hoursLeft} h; depois disso a aula é resolvida automaticamente.";
+        return "\"{$this->session->title}\": confirme que o serviço aconteceu ou abra uma disputa. Faltam cerca de {$this->hoursLeft} h; depois disso o serviço é resolvido automaticamente.";
     }
 }

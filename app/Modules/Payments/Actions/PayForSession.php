@@ -19,13 +19,13 @@ use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 
 /**
- * O aluno paga a aula na janela de pagamento (pending_payment, 10 min por defeito).
+ * O cliente paga o serviço na janela de pagamento (pending_payment, 10 min por defeito).
  *
- *  1. regista a cobrança (chave única por aula: nunca há duas cobranças da mesma aula);
+ *  1. regista a cobrança (chave única por serviço: nunca há duas cobranças do mesmo serviço);
  *  2. chama o gateway FORA da transação de BD (chamada de rede), com a mesma chave de idempotência;
- *  3. sucesso: escrow (ledger) + aula → scheduled; falha: aula → payment_failed (formador libertado).
+ *  3. sucesso: escrow (ledger) + serviço → scheduled; falha: serviço → payment_failed (técnico libertado).
  *
- * Repetir depois de pago devolve a aula já agendada, sem nova cobrança.
+ * Repetir depois de pago devolve o serviço já agendado, sem nova cobrança.
  */
 class PayForSession
 {
@@ -39,7 +39,7 @@ class PayForSession
     public function handle(ServiceJob $session, User $client, string $method): ServiceJob
     {
         if ($session->isCash()) {
-            throw new ApiException('cash_session', 'Esta aula é paga em dinheiro ao formador.', 409);
+            throw new ApiException('cash_session', 'Este serviço é pago em dinheiro ao técnico.', 409);
         }
 
         if (EscrowHold::query()->where('service_job_id', $session->id)->exists()) {
@@ -47,7 +47,7 @@ class PayForSession
         }
 
         if ($session->state !== SessionState::PendingPayment) {
-            throw new ApiException('payment_not_expected', 'Esta aula já não está à espera de pagamento.', 409);
+            throw new ApiException('payment_not_expected', 'Este serviço já não está à espera de pagamento.', 409);
         }
 
         if ($session->payment_due_at?->isPast()) {

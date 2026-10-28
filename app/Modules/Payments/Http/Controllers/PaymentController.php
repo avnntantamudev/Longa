@@ -18,9 +18,9 @@ use Illuminate\Support\Facades\Gate;
 class PaymentController extends Controller
 {
     /**
-     * Pagar a aula (aluno).
+     * Pagar o serviço (cliente).
      *
-     * Requer o cabeçalho `Idempotency-Key`. O valor fica retido (escrow) até a aula ser confirmada por QR.
+     * Requer o cabeçalho `Idempotency-Key`. O valor fica retido (escrow) até o serviço ser confirmado por QR.
      * Gateway simulado nesta fase. Erros: `payment_failed` (402), `payment_window_expired` (410).
      */
     public function pay(Request $request, ServiceJob $session, PayForSession $action): SessionResource

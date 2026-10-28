@@ -25,7 +25,7 @@ it('decisões simultâneas de admins diferentes movem o dinheiro uma única vez'
     $session = paidSession(['scheduled_at' => now()->subMinutes(5)]);
     app(StartSession::class)->handle($session, $session->provider->user);
     app(FinishSession::class)->handle($session, $session->provider->user);
-    $dispute = app(OpenDispute::class)->handle($session->fresh() ?? $session, $session->client, 'quality', 'A aula ficou muito aquém do combinado.');
+    $dispute = app(OpenDispute::class)->handle($session->fresh() ?? $session, $session->client, 'quality', 'O serviço ficou muito aquém do combinado.');
 
     $php = (new PhpExecutableFinder)->find() ?: 'php';
     $startAt = microtime(true) + 4;

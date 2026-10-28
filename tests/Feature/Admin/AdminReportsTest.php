@@ -24,7 +24,7 @@ beforeEach(function () {
     Filament::setCurrentPanel('backoffice');
 });
 
-/** Uma aula confirmada por QR, uma cancelada cedo e um VIP pago em mão. */
+/** Um serviço confirmado por QR, uma cancelado cedo e um VIP pago em mão. */
 function reportFixture(): void
 {
     $done = paidSession();
@@ -59,7 +59,7 @@ it('o relatório financeiro bate com o ledger', function () {
     expect(collect($report['months'])->sum('commissions'))->toBe(3750);
 });
 
-it('o relatório de operação conta aulas por estado e formadores ativos', function () {
+it('o relatório de operação conta serviços por estado e técnicos ativos', function () {
     reportFixture();
 
     $report = app(OperationsReport::class)->build(now()->subDays(3), now()->addDays(3));
@@ -75,7 +75,7 @@ it('o admin vê os relatórios e exporta CSV (Excel) e PDF', function () {
 
     $this->get('/backoffice/relatorios?from='.now()->subDays(3)->toDateString().'&to='.now()->addDays(3)->toDateString())
         ->assertOk()->assertSee('Comissões do BISCA')->assertSee('3.750');
-    $this->get('/backoffice/relatorios?tab=operations')->assertOk()->assertSee('Aulas por estado');
+    $this->get('/backoffice/relatorios?tab=operations')->assertOk()->assertSee('Serviços por estado');
 
     $csv = Livewire::test(Reports::class)->call('export', 'csv');
     $csv->assertFileDownloaded();

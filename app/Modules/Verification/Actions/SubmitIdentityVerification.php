@@ -13,7 +13,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 
 /**
- * O formador submete o BI (nº + fotografias/PDF). Os ficheiros vão para o disco privado
+ * O técnico submete o BI (nº + fotografias/PDF). Os ficheiros vão para o disco privado
  * e o nº do BI é cifrado. O mesmo BI não pode ser usado por duas contas.
  */
 class SubmitIdentityVerification
@@ -26,7 +26,7 @@ class SubmitIdentityVerification
     public function handle(User $user, string $documentNumber, array $files): Verification
     {
         $profile = $user->providerProfile
-            ?? throw new ApiException('profile_missing', 'Só formadores podem submeter verificação.', 409);
+            ?? throw new ApiException('profile_missing', 'Só técnicos podem submeter verificação.', 409);
 
         if ($user->photo === null) {
             throw new ApiException('photo_required', 'Carregue a sua foto antes de pedir a verificação: é comparada com o BI.', 409);

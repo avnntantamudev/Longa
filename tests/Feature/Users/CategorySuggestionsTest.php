@@ -23,7 +23,7 @@ function suggestAs(ProviderProfile $provider, string $name): Illuminate\Testing\
     return test()->postJson('/api/v1/me/provider-profile/category-suggestions', ['name' => $name]);
 }
 
-it('o formador sugere uma área: fica em análise e não entra na lista', function () {
+it('o técnico sugere uma área: fica em análise e não entra na lista', function () {
     $provider = ProviderProfile::factory()->create();
 
     suggestAs($provider, '  Contabilidade   no Primavera ')->assertCreated()
@@ -45,7 +45,7 @@ it('se a área já existe na lista, é ligada logo ao perfil', function () {
     expect($provider->categories()->whereKey($category->id)->exists())->toBeTrue();
 });
 
-it('aprovar como área nova liga-a a todos os formadores que escreveram o mesmo e avisa-os', function () {
+it('aprovar como área nova liga-a a todos os técnicos que escreveram o mesmo e avisa-os', function () {
     $a = ProviderProfile::factory()->create(['onboarding_completed_at' => null]);
     $b = ProviderProfile::factory()->create();
     suggestAs($a, 'Contabilidade no Primavera')->assertCreated();
@@ -71,14 +71,14 @@ it('juntar a uma área existente, rejeitar com motivo, e não decidir duas vezes
     [$first, $second] = CategorySuggestion::query()->orderBy('id')->get()->all();
 
     app(CategorySuggestions::class)->approveAsExisting($first, $admin, $excel);
-    app(CategorySuggestions::class)->reject($second, $admin, 'Não é uma área de formação profissional');
+    app(CategorySuggestions::class)->reject($second, $admin, 'Não é uma área de serviço profissional');
 
     expect($provider->categories()->whereKey($excel->id)->exists())->toBeTrue()
         ->and($second->fresh()?->status)->toBe('rejected');
     expect(fn () => app(CategorySuggestions::class)->reject($first, $admin, 'Outra vez'))->toThrow(App\Support\Api\ApiException::class);
 });
 
-it('limite de 5 áreas em análise por formador e só formadores sugerem', function () {
+it('limite de 5 áreas em análise por técnico e só técnicos sugerem', function () {
     $provider = ProviderProfile::factory()->create();
     foreach (['Área um', 'Área dois', 'Área três', 'Área quatro', 'Área cinco'] as $name) {
         suggestAs($provider, $name)->assertCreated();

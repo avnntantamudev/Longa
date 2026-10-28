@@ -12,7 +12,7 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Aula confirmada. (canal privado da aula: aluno e formador).
+ * Serviço confirmado. (canal privado do serviço: cliente e técnico).
  */
 class SessionConfirmed implements ShouldBroadcast, ShouldDispatchAfterCommit
 {

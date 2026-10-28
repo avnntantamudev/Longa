@@ -31,7 +31,7 @@ function sessionBetween(User $client, ProviderProfile $provider): ServiceJob
 
     return ServiceJob::query()->create([
         'service_request_id' => $request->id, 'client_id' => $client->id, 'provider_profile_id' => $provider->id,
-        'category_id' => $request->category_id, 'title' => 'Aula', 'amount' => 25000, 'commission' => 3750, 'provider_net' => 21250,
+        'category_id' => $request->category_id, 'title' => 'Serviço', 'amount' => 25000, 'commission' => 3750, 'provider_net' => 21250,
         'scheduled_at' => now()->addDay(), 'modality' => 'in_person', 'municipality' => 'Talatona', 'neighborhood' => 'Talatona',
         'latitude' => -8.9167, 'longitude' => 13.1833,
     ]);
@@ -48,7 +48,7 @@ it('autoriza só o próprio canal de utilizador', function () {
     authorizeChannel('user.'.($user->id + 1))->assertForbidden();
 });
 
-it('autoriza o canal do pedido só ao aluno que o publicou', function () {
+it('autoriza o canal do pedido só ao cliente que o publicou', function () {
     $request = ServiceRequest::factory()->create();
 
     apiLogin($request->client);
@@ -58,7 +58,7 @@ it('autoriza o canal do pedido só ao aluno que o publicou', function () {
     authorizeChannel("request.{$request->id}")->assertForbidden();
 });
 
-it('autoriza o canal da aula só ao aluno e ao formador da aula', function () {
+it('autoriza o canal do serviço só ao cliente e ao técnico do serviço', function () {
     $client = User::factory()->create();
     $provider = ProviderProfile::factory()->create();
     $session = sessionBetween($client, $provider);

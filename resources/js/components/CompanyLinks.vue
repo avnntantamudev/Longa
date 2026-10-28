@@ -2,7 +2,7 @@
 import { api, ApiError } from '@/lib/api';
 import { onMounted, ref } from 'vue';
 
-/** Pedidos de empresas para acompanhar as formações do utilizador (aceitar, recusar, retirar). */
+/** Pedidos de empresas para acompanhar os serviços do utilizador (aceitar, recusar, retirar). */
 interface Link {
     id: number;
     company: string;
@@ -36,9 +36,9 @@ onMounted(load);
         <div v-for="link in links" :key="link.id" class="grid gap-2 rounded-control bg-navy-50 p-3">
             <p class="text-caption">
                 <strong>{{ link.company }}</strong>
-                <template v-if="link.consent_status === 'pending'"> quer acompanhar as suas formações no BISCA: aulas concluídas, horas e custos (nunca o chat).</template>
-                <template v-else-if="link.consent_status === 'accepted'"> acompanha as suas formações.</template>
-                <template v-else> não tem acesso às suas formações.</template>
+                <template v-if="link.consent_status === 'pending'"> quer acompanhar os seus serviços no BISCA: serviços concluídos, horas e custos (nunca o chat).</template>
+                <template v-else-if="link.consent_status === 'accepted'"> acompanha os seus serviços.</template>
+                <template v-else> não tem acesso aos seus serviços.</template>
             </p>
             <div class="flex gap-2">
                 <template v-if="link.consent_status === 'pending' || link.consent_status === 'declined' || link.consent_status === 'revoked'">

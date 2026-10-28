@@ -79,7 +79,7 @@ it('a cache de saldos coincide com a soma dos lançamentos', function () {
     expect($this->ledger->balance(Accounts::providerAvailable(7)))->toBe(21250);
 });
 
-it('a comissão + o valor do formador = total, em valores difíceis', function (int $amount) {
+it('a comissão + o valor do técnico = total, em valores difíceis', function (int $amount) {
     $split = Commission::split($amount, 15);
 
     expect($split['commission'] + $split['provider_net'])->toBe($amount)

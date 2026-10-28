@@ -24,14 +24,14 @@ function makeVip(ProviderProfile $provider): void
 }
 
 /**
- * Publica um pedido pela API e devolve a oferta do formador indicado.
+ * Publica um pedido pela API e devolve a oferta do técnico indicado.
  */
 function vipOfferFor(ProviderProfile $provider, Category $category, int $amount = 25000): RequestOffer
 {
     [$lat, $lng] = ProviderProfileFactory::TALATONA;
     apiLogin(User::factory()->withRole(Role::Client)->create());
     test()->postJson('/api/v1/service-requests', [
-        'category_id' => $category->id, 'title' => 'Aula', 'amount' => $amount, 'modality' => 'in_person',
+        'category_id' => $category->id, 'title' => 'Serviço', 'amount' => $amount, 'modality' => 'in_person',
         'scheduled_at' => now()->addHours(3)->toIso8601String(),
         'municipality' => 'Talatona', 'neighborhood' => 'Talatona', 'latitude' => $lat, 'longitude' => $lng,
     ])->assertCreated();
@@ -39,7 +39,7 @@ function vipOfferFor(ProviderProfile $provider, Category $category, int $amount 
     return RequestOffer::query()->where('provider_profile_id', $provider->id)->latest('id')->firstOrFail();
 }
 
-it('formador VIP aceita com comissão de 10%: aula, oferta e escrow coerentes', function () {
+it('técnico VIP aceita com comissão de 10%: serviço, oferta e escrow coerentes', function () {
     $category = Category::query()->firstOrFail();
     $provider = ProviderProfile::factory()->verified()->withCategories($category)->create();
     makeVip($provider);
@@ -57,7 +57,7 @@ it('formador VIP aceita com comissão de 10%: aula, oferta e escrow coerentes', 
         ->toBe(['commission' => 2500, 'provider_net' => 22500, 'commission_percent' => 10]);
 });
 
-it('formador normal continua com 15%; a comissão fica fixa mesmo que o VIP comece depois', function () {
+it('técnico normal continua com 15%; a comissão fica fixa mesmo que o VIP comece depois', function () {
     $category = Category::query()->firstOrFail();
     $provider = ProviderProfile::factory()->verified()->withCategories($category)->create();
     $offer = vipOfferFor($provider, $category);
@@ -82,7 +82,7 @@ it('na 1.ª onda os VIP vêm primeiro, mesmo com pontuação mais baixa', functi
     expect(array_slice($ids, 0, 2))->toBe([$vip->id, $top->id]);
 });
 
-it('o selo VIP aparece ao aluno na aula', function () {
+it('o selo VIP aparece ao cliente no serviço', function () {
     $session = paidSession();
     makeVip($session->provider);
 

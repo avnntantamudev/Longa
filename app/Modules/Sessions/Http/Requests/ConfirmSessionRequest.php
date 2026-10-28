@@ -19,7 +19,7 @@ class ConfirmSessionRequest extends FormRequest
             'token' => ['required_without:code', 'nullable', 'string', 'max:64'],
             /** Código de 6 dígitos (alternativa ao QR). @example 482913 */
             'code' => ['required_without:token', 'nullable', 'string', 'digits:6'],
-            /** Localização do aluno no momento (opcional; só sinal de risco). */
+            /** Localização do cliente no momento (opcional; só sinal de risco). */
             'latitude' => ['nullable', 'numeric', 'required_with:longitude', new InAngola],
             'longitude' => ['nullable', 'numeric', 'required_with:latitude'],
         ];

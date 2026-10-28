@@ -64,7 +64,7 @@ async function onFile(event: Event) {
                 {{ busy ? 'A enviar…' : current ? 'Trocar foto' : 'Carregar foto' }}
             </button>
             <p class="text-caption text-ink-muted">
-                {{ required ? 'Obrigatória para formadores: rosto visível, sem óculos escuros.' : 'Uma foto ajuda a criar confiança.' }}
+                {{ required ? 'Obrigatória para técnicos: rosto visível, sem óculos escuros.' : 'Uma foto ajuda a criar confiança.' }}
             </p>
             <p v-if="error" class="text-caption text-danger" role="alert">{{ error }}</p>
         </div>

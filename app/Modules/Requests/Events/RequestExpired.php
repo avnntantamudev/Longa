@@ -12,7 +12,7 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * O pedido terminou sem formador (sem candidatos ou sem aceitação a tempo).
+ * O pedido terminou sem técnico (sem candidatos ou sem aceitação a tempo).
  */
 class RequestExpired implements ShouldBroadcast, ShouldDispatchAfterCommit
 {

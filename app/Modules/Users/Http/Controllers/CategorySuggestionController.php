@@ -14,7 +14,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * Áreas sugeridas pelo formador ("Outra área").
+ * Áreas sugeridas pelo técnico ("Outra área").
  *
  * @tags Perfil
  */
@@ -67,6 +67,6 @@ class CategorySuggestionController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        return $user->providerProfile ?? throw new ApiException('profile_missing', 'Ainda não tem o perfil de formador.', 409);
+        return $user->providerProfile ?? throw new ApiException('profile_missing', 'Ainda não tem o perfil de técnico.', 409);
     }
 }

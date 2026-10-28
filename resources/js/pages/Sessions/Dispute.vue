@@ -5,7 +5,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
 /**
- * Abrir disputa: o aluno durante a confirmação, ou a parte acusada de faltar (contestação).
+ * Abrir disputa: o cliente durante a confirmação, ou a parte acusada de faltar (contestação).
  * Evidências: até 5 imagens ou PDF de 5 MB (validado também no servidor, pelo conteúdo).
  */
 const props = defineProps<{ sessionId: number; contest: boolean }>();
@@ -18,8 +18,8 @@ const reasons = computed(() =>
     props.contest
         ? [{ value: 'no_show_contest', label: 'Eu estive presente / a falta não é verdade' }]
         : [
-              { value: 'lesson_not_happened', label: 'A aula não aconteceu' },
-              { value: 'quality', label: 'Problema com a aula' },
+              { value: 'lesson_not_happened', label: 'O serviço não aconteceu' },
+              { value: 'quality', label: 'Problema com o serviço' },
               { value: 'other', label: 'Outro motivo' },
           ],
 );
@@ -53,7 +53,7 @@ async function submit() {
     saving.value = true;
     try {
         await api.post(`/sessions/${props.sessionId}/disputes`, body, { idempotencyKey: key });
-        router.visit(`/aulas/${props.sessionId}`);
+        router.visit(`/servicos/${props.sessionId}`);
     } catch (e) {
         if (e instanceof ApiError) {
             errors.value = e.fieldErrors();
@@ -71,7 +71,7 @@ async function submit() {
     <Head :title="contest ? 'Contestar falta' : 'Abrir disputa'" />
 
     <h1 class="text-display">{{ contest ? 'Contestar falta' : 'Abrir disputa' }}</h1>
-    <p class="mt-2 text-caption text-ink-muted">O BISCA analisa e decide. Até lá, o valor da aula fica retido e ninguém o recebe.</p>
+    <p class="mt-2 text-caption text-ink-muted">O BISCA analisa e decide. Até lá, o valor do serviço fica retido e ninguém o recebe.</p>
 
     <form class="mt-6 grid gap-4" @submit.prevent="submit">
         <FormField label="Motivo" for="reason" :error="errors.reason">
@@ -96,6 +96,6 @@ async function submit() {
 
         <p v-if="errors.form" class="text-caption text-danger" role="alert">{{ errors.form }}</p>
         <button type="submit" class="btn-primary w-full" :disabled="saving">{{ saving ? 'A enviar…' : 'Enviar' }}</button>
-        <Link :href="`/aulas/${sessionId}`" class="text-center text-caption font-semibold">Voltar</Link>
+        <Link :href="`/servicos/${sessionId}`" class="text-center text-caption font-semibold">Voltar</Link>
     </form>
 </template>

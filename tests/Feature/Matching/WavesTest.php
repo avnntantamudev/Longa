@@ -36,7 +36,7 @@ it('envia ondas sucessivas quando ninguém aceita e regista as expirações no s
     $this->artisan('longa:matching-tick')->assertSuccessful();
     expect($this->request->offers()->count())->toBe(2);
 
-    // Prazo da onda 1 acabou: ofertas expiram e segue a onda 2 (3 formadores seguintes)
+    // Prazo da onda 1 acabou: ofertas expiram e segue a onda 2 (3 técnicos seguintes)
     $this->travel(31)->seconds();
     $this->artisan('longa:matching-tick')->assertSuccessful();
 
@@ -49,7 +49,7 @@ it('envia ondas sucessivas quando ninguém aceita e regista as expirações no s
     Event::assertDispatchedTimes(OfferSent::class, 5);
 });
 
-it('expira o pedido quando acabam os formadores', function () {
+it('expira o pedido quando acabam os técnicos', function () {
     $this->coordinator->start($this->request);
 
     // onda 1 (2) → onda 2 (3) → onda 3 (1) → sem candidatos

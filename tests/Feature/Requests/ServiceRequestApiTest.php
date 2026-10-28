@@ -29,7 +29,7 @@ function payload(array $overrides = []): array
 
     return [
         'category_id' => test()->sgme->id,
-        'title' => 'Aula de SGME',
+        'title' => 'Serviço de SGME',
         'description' => 'Rever controlo e monitorização.',
         'amount' => 25000,
         'scheduled_at' => now()->setTime(14, 0)->toIso8601String(),
@@ -74,7 +74,7 @@ it('publica o pedido, calcula a comissão e envia a 1.ª onda', function () {
     }
 });
 
-it('expira logo quando não há formadores elegíveis', function () {
+it('expira logo quando não há técnicos elegíveis', function () {
     apiLogin($this->client);
 
     $this->postJson('/api/v1/service-requests', payload())->assertCreated()->assertJsonPath('data.state', 'expired');
@@ -92,7 +92,7 @@ it('valida valor mínimo, data futura e local em Angola', function () {
     ]))->assertStatus(422)->assertJsonValidationErrors(['amount', 'scheduled_at', 'latitude'], 'error.details');
 });
 
-it('limita os pedidos ativos por aluno', function () {
+it('limita os pedidos ativos por cliente', function () {
     config(['longa.requests.max_active_per_client' => 1]);
     verifiedProviders(2);
     apiLogin($this->client);
@@ -122,7 +122,7 @@ it('limita a criação de pedidos por hora', function () {
     $this->postJson('/api/v1/service-requests', payload(['title' => 'Mais uma']))->assertStatus(429);
 });
 
-it('só alunos publicam pedidos', function () {
+it('só clientes publicam pedidos', function () {
     apiLogin(ProviderProfile::factory()->create()->user);
 
     $this->postJson('/api/v1/service-requests', payload())->assertForbidden();
@@ -145,7 +145,7 @@ it('cancela enquanto procura e fecha as ofertas abertas', function () {
 
 it('republica um pedido expirado como pedido novo ligado ao original', function () {
     apiLogin($this->client);
-    $id = $this->postJson('/api/v1/service-requests', payload())->json('data.id'); // expira (sem formadores)
+    $id = $this->postJson('/api/v1/service-requests', payload())->json('data.id'); // expira (sem técnicos)
 
     verifiedProviders(1);
 
@@ -160,7 +160,7 @@ it('republica um pedido expirado como pedido novo ligado ao original', function 
     expect(ServiceRequest::query()->count())->toBe(2);
 });
 
-it('não deixa ver nem cancelar pedidos de outros alunos', function () {
+it('não deixa ver nem cancelar pedidos de outros clientes', function () {
     $other = ServiceRequest::factory()->create();
     apiLogin($this->client);
 

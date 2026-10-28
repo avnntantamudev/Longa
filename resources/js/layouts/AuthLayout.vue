@@ -11,8 +11,8 @@ import { Link } from '@inertiajs/vue3';
             <Link href="/" aria-label="Início"><BrandLogo :size="44" /></Link>
             <div>
                 <p class="text-caption font-semibold uppercase tracking-widest text-orange-400">serviços • técnicos</p>
-                <p class="mt-3 text-4xl font-bold leading-tight">A plataforma que formaliza quem ensina em Angola.</p>
-                <p class="mt-3 text-navy-200">Formação perto de si, com formadores verificados.</p>
+                <p class="mt-3 text-4xl font-bold leading-tight">Serviços de confiança, perto de si, em Angola.</p>
+                <p class="mt-3 text-navy-200">Técnicos verificados para a casa, a empresa e aulas.</p>
             </div>
             <p class="text-caption text-navy-300">© BISCA · Luanda, Angola</p>
         </aside>

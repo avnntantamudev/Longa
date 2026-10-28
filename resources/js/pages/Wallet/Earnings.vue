@@ -4,7 +4,7 @@ import { kwanza } from '@/lib/format';
 import { Head, Link } from '@inertiajs/vue3';
 import { onMounted, ref, watch } from 'vue';
 
-/** Relatório de ganhos do formador por mês, com PDF e Excel. */
+/** Relatório de ganhos do técnico por mês, com PDF e Excel. */
 interface Month {
     month: number;
     lessons: number;
@@ -46,7 +46,7 @@ onMounted(load);
     <template v-if="report">
         <div class="mt-4 grid grid-cols-2 gap-3">
             <div class="card">
-                <p class="text-caption text-ink-muted">Aulas dadas</p>
+                <p class="text-caption text-ink-muted">Serviços feitos</p>
                 <p class="text-title">{{ report.totals.lessons }}</p>
                 <p class="text-caption text-ink-muted">{{ report.totals.cash_lessons }} pagas em mão</p>
             </div>
@@ -69,7 +69,7 @@ onMounted(load);
                 <thead class="bg-navy-50 text-left">
                     <tr>
                         <th class="px-3 py-2">Mês</th>
-                        <th class="px-3 py-2 text-right">Aulas</th>
+                        <th class="px-3 py-2 text-right">Serviços</th>
                         <th class="px-3 py-2 text-right">Carteira</th>
                         <th class="px-3 py-2 text-right">Em mão</th>
                         <th class="px-3 py-2 text-right">Comissões</th>

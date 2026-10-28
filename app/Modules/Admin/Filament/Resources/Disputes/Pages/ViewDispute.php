@@ -30,7 +30,7 @@ class ViewDispute extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            $this->decision('release', ResolveDispute::RELEASE, 'Libertar ao formador', 'success'),
+            $this->decision('release', ResolveDispute::RELEASE, 'Libertar ao técnico', 'success'),
             $this->decision('refund', ResolveDispute::REFUND, 'Reembolsar tudo', 'danger'),
             $this->decision('partial', ResolveDispute::PARTIAL, 'Reembolsar parte', 'warning'),
         ];
@@ -47,7 +47,7 @@ class ViewDispute extends ViewRecord
             ->modalSubmitActionLabel('Confirmar decisão')
             ->schema(array_values(array_filter([
                 $decision === ResolveDispute::PARTIAL
-                    ? TextInput::make('provider_share')->label('Parte do formador antes da comissão (Kz)')
+                    ? TextInput::make('provider_share')->label('Parte do técnico antes da comissão (Kz)')
                         ->integer()->required()->minValue(1)->maxValue(fn () => $this->record->session->amount - 1)
                     : null,
                 Textarea::make('note')->label('Fundamentação (fica no histórico)')->required()->minLength(5)->maxLength(1000),
@@ -83,9 +83,9 @@ class ViewDispute extends ViewRecord
         $amount = SessionSections::kz($this->record->session->amount);
 
         return match ($decision) {
-            ResolveDispute::RELEASE => "O formador recebe {$amount} menos a comissão. A aula fica concluída.",
-            ResolveDispute::REFUND => "O aluno é reembolsado em {$amount}. O formador não recebe nada.",
-            default => 'O formador recebe a parte indicada menos a comissão; o resto é reembolsado ao aluno.',
+            ResolveDispute::RELEASE => "O técnico recebe {$amount} menos a comissão. O serviço fica concluído.",
+            ResolveDispute::REFUND => "O cliente é reembolsado em {$amount}. O técnico não recebe nada.",
+            default => 'O técnico recebe a parte indicada menos a comissão; o resto é reembolsado ao cliente.',
         }.' Esta decisão move dinheiro e não pode ser desfeita.';
     }
 }

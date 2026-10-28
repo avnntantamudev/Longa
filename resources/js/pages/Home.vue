@@ -17,17 +17,17 @@ defineProps<{
 
     <section class="rounded-sheet bg-navy-900 px-5 py-8 text-white md:px-8 md:py-10">
         <p class="text-caption font-semibold uppercase tracking-widest text-orange-400">serviços • técnicos</p>
-        <h1 class="mt-2 text-display md:text-4xl md:leading-tight">A plataforma que formaliza quem ensina em Angola</h1>
-        <p class="mt-3 text-navy-100">Formadores verificados perto de si, pagamento seguro e certificado no fim.</p>
+        <h1 class="mt-2 text-display md:text-4xl md:leading-tight">Serviços de confiança, perto de si, em Angola</h1>
+        <p class="mt-3 text-navy-100">Técnicos verificados para a casa, a empresa e aulas, com pagamento seguro.</p>
 
         <div class="mt-6 grid grid-cols-2 gap-3 sm:max-w-md">
             <template v-if="!user">
-                <Link href="/entrar" class="btn-primary rounded-full px-3 whitespace-nowrap">Sou Aluno</Link>
-                <Link href="/entrar" class="btn-navy rounded-full bg-navy-800 px-3 whitespace-nowrap ring-1 ring-white/25">Sou Formador</Link>
+                <Link href="/entrar" class="btn-primary rounded-full px-3 whitespace-nowrap">Sou Cliente</Link>
+                <Link href="/entrar" class="btn-navy rounded-full bg-navy-800 px-3 whitespace-nowrap ring-1 ring-white/25">Sou Técnico</Link>
             </template>
             <template v-else>
-                <Link v-if="user.roles.includes('client')" href="/pedidos/novo" class="btn-primary rounded-full px-3 whitespace-nowrap">Pedir aula</Link>
-                <Link v-if="user.roles.includes('provider')" href="/formador/ofertas" class="btn-navy rounded-full bg-navy-800 px-3 whitespace-nowrap ring-1 ring-white/25">TRIM TRIM</Link>
+                <Link v-if="user.roles.includes('client')" href="/pedidos/novo" class="btn-primary rounded-full px-3 whitespace-nowrap">Pedir serviço</Link>
+                <Link v-if="user.roles.includes('provider')" href="/tecnico/ofertas" class="btn-navy rounded-full bg-navy-800 px-3 whitespace-nowrap ring-1 ring-white/25">TRIM TRIM</Link>
                 <Link v-if="user.roles.length === 0" href="/onboarding" class="btn-primary rounded-full px-3 whitespace-nowrap">Concluir registo</Link>
             </template>
         </div>

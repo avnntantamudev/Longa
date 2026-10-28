@@ -36,13 +36,13 @@ it('exige a aceitação dos termos e não permite escolher o perfil de admin', f
         ->assertJsonValidationErrors(['name', 'profiles.0', 'accept_terms', 'accept_privacy'], 'error.details');
 });
 
-it('conclui o onboarding do formador por passos', function () {
+it('conclui o onboarding do técnico por passos', function () {
     $user = apiLogin(User::factory()->withRole(Role::Provider)->create());
     $user->providerProfile()->create([]);
     $categories = Category::query()->limit(2)->pluck('id')->all();
 
     $this->putJson('/api/v1/me/provider-profile/details', [
-        'bio' => 'Formador de SGME com experiência em empresas de Talatona.',
+        'bio' => 'Técnico de SGME com experiência em empresas de Talatona.',
         'years_experience' => 6,
         'modalities' => ['in_person', 'online'],
         'rate_amount' => 25000,
@@ -93,13 +93,13 @@ it('mostra o perfil público sem telefone nem coordenadas', function () {
     expect($response->getContent())->not->toContain($profile->user->phone);
 });
 
-it('esconde perfis de formadores não verificados', function () {
+it('esconde perfis de técnicos não verificados', function () {
     $profile = ProviderProfile::factory()->create();
 
     $this->getJson("/api/v1/providers/{$profile->id}")->assertNotFound();
 });
 
-it('lista áreas de formação e zonas sem autenticação', function () {
+it('lista áreas de serviço e zonas sem autenticação', function () {
     $this->getJson('/api/v1/categories')->assertOk()->assertJsonFragment(['name' => 'SGME — Gestão Empresarial']);
     $this->getJson('/api/v1/zones')->assertOk()->assertJsonFragment(['neighborhood' => 'Talatona']);
 });

@@ -15,7 +15,7 @@ class SessionsServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
-        // Leituras de QR: por utilizador e por IP (além do bloqueio por aula após tentativas erradas)
+        // Leituras de QR: por utilizador e por IP (além do bloqueio por serviço após tentativas erradas)
         RateLimiter::for('qr-confirm', fn (Request $request) => [
             Limit::perMinute(10)->by('qr-confirm:user:'.($request->user()?->getAuthIdentifier() ?? 'guest')),
             Limit::perMinute(30)->by('qr-confirm:ip:'.$request->ip()),
@@ -30,7 +30,7 @@ class SessionsServiceProvider extends ServiceProvider
                         $this->info("{$rule}: {$count}");
                     }
                 }
-            })->purpose('Aplica as regras automáticas das aulas (pagamento, confirmação, faltas)');
+            })->purpose('Aplica as regras automáticas dos serviços (pagamento, confirmação, faltas)');
         }
     }
 }

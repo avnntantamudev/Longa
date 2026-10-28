@@ -12,7 +12,7 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * O formador iniciou a aula. (canal privado da aula: aluno e formador).
+ * O técnico iniciou o serviço. (canal privado do serviço: cliente e técnico).
  */
 class SessionStarted implements ShouldBroadcast, ShouldDispatchAfterCommit
 {

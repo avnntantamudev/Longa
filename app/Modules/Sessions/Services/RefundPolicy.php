@@ -8,12 +8,12 @@ use App\Modules\Sessions\Models\ServiceJob;
 
 /**
  * Política de reembolso (config/longa.php → session_rules). Devolve a parte do valor que fica para o
- * formador ANTES da comissão; o resto é reembolsado ao aluno. Um só sítio para todas as regras.
+ * técnico ANTES da comissão; o resto é reembolsado ao cliente. Um só sítio para todas as regras.
  */
 class RefundPolicy
 {
     /**
-     * Aluno cancela: ≥ N horas antes → 0 para o formador (reembolso total); depois → X% para o formador.
+     * Cliente cancela: ≥ N horas antes → 0 para o técnico (reembolso total); depois → X% para o técnico.
      */
     public function clientCancellation(ServiceJob $session): int
     {
@@ -21,7 +21,7 @@ class RefundPolicy
     }
 
     /**
-     * Formador cancela ou falta: reembolso total.
+     * Técnico cancela ou falta: reembolso total.
      */
     public function providerFault(ServiceJob $session): int
     {
@@ -29,7 +29,7 @@ class RefundPolicy
     }
 
     /**
-     * Falta do aluno: X% para o formador.
+     * Falta do cliente: X% para o técnico.
      */
     public function clientNoShow(ServiceJob $session): int
     {

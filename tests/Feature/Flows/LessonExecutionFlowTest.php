@@ -18,11 +18,11 @@ use Illuminate\Support\Facades\Notification;
 
 /*
 | Fluxo completo da Fase 3, só pela API:
-| pedido → formador aceita → pagamento (mock) → escrow → iniciar → terminar → QR → leitura → concluída →
-| carteira do formador → evento em tempo real e push. A reconciliação passa no fim.
+| pedido → técnico aceita → pagamento (mock) → escrow → iniciar → terminar → QR → leitura → concluída →
+| carteira do técnico → evento em tempo real e push. A reconciliação passa no fim.
 */
 
-it('executa a aula de ponta a ponta com QR e liberta o dinheiro uma vez', function () {
+it('executa o serviço de ponta a ponta com QR e liberta o dinheiro uma vez', function () {
     Cache::flush();
     Notification::fake();
     Event::fake([SessionStarted::class, QrIssued::class, SessionConfirmed::class, WalletUpdated::class]);
@@ -35,7 +35,7 @@ it('executa a aula de ponta a ponta com QR e liberta o dinheiro uma vez', functi
     // 1. Pedido e aceitação (TRIM TRIM)
     apiLogin($client);
     $requestId = $this->postJson('/api/v1/service-requests', [
-        'category_id' => $sgme->id, 'title' => 'Aula de SGME', 'amount' => 25000, 'duration_minutes' => 90, 'payment_method' => 'electronic',
+        'category_id' => $sgme->id, 'title' => 'Serviço de SGME', 'amount' => 25000, 'duration_minutes' => 90, 'payment_method' => 'electronic',
         'scheduled_at' => now()->addDay()->setTime(14, 0)->toIso8601String(), 'modality' => 'in_person',
         'municipality' => 'Talatona', 'neighborhood' => 'Talatona', 'latitude' => $lat, 'longitude' => $lng,
     ])->assertCreated()->json('data.id');
@@ -55,7 +55,7 @@ it('executa a aula de ponta a ponta com QR e liberta o dinheiro uma vez', functi
     apiLogin($provider->user);
     $this->getJson('/api/v1/wallet')->assertJsonPath('data.pending', 21250)->assertJsonPath('data.available', 0);
 
-    // 3. No dia: iniciar e terminar; o formador recebe o lote de QR
+    // 3. No dia: iniciar e terminar; o técnico recebe o lote de QR
     $session = App\Modules\Sessions\Models\ServiceJob::query()->findOrFail($sessionId);
     $this->travelTo($session->scheduled_at->copy()->subMinutes(5));
     $this->postJson("/api/v1/sessions/{$sessionId}/start")->assertOk()->assertJsonPath('data.state', 'in_progress');
@@ -63,18 +63,18 @@ it('executa a aula de ponta a ponta com QR e liberta o dinheiro uma vez', functi
     $qr = $this->postJson("/api/v1/sessions/{$sessionId}/finish")->assertOk()->assertHeader('Cache-Control', 'no-store, private')->json('qr');
     expect($qr['tokens'])->toHaveCount(10);
 
-    // 4. O aluno lê o QR: aula concluída e dinheiro libertado
+    // 4. O cliente lê o QR: serviço concluído e dinheiro libertado
     apiLogin($client);
     $confirmKey = $key('confirm');
     $this->postJson("/api/v1/sessions/{$sessionId}/confirm", ['token' => $qr['tokens'][0]['token'], 'latitude' => $lat, 'longitude' => $lng], $confirmKey)
         ->assertOk()->assertJsonPath('data.state', 'completed')
-        ->assertJsonPath('message', 'Aula confirmada, Kz 25.000 libertados para o formador.');
+        ->assertJsonPath('message', 'Serviço confirmado, Kz 25.000 libertados para o técnico.');
     // Repetição (rede instável) devolve a mesma resposta; outro token do lote já não serve
     $this->postJson("/api/v1/sessions/{$sessionId}/confirm", ['token' => $qr['tokens'][0]['token'], 'latitude' => $lat, 'longitude' => $lng], $confirmKey)
         ->assertOk()->assertHeader('Idempotent-Replayed', 'true');
     $this->postJson("/api/v1/sessions/{$sessionId}/confirm", ['token' => $qr['tokens'][1]['token']], $key('confirm2'))->assertOk()->assertJsonPath('data.state', 'completed');
 
-    // 5. Carteira do formador
+    // 5. Carteira do técnico
     apiLogin($provider->user);
     $this->getJson('/api/v1/wallet')->assertJsonPath('data.available', 21250)->assertJsonPath('data.pending', 0);
     $this->getJson('/api/v1/wallet/movements')->assertJsonCount(1, 'data')->assertJsonPath('data.0.amount', 21250);

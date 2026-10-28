@@ -12,7 +12,7 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * A aula foi cancelada. (canal privado da aula: aluno e formador).
+ * O serviço foi cancelado. (canal privado do serviço: cliente e técnico).
  */
 class SessionCancelled implements ShouldBroadcast, ShouldDispatchAfterCommit
 {

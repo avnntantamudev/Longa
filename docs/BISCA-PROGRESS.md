@@ -29,7 +29,7 @@ Nomes novos:
 |---|---|---|
 | 1 | Marca Garimpo → BISCA (textos, logótipo provisório, ícones, APP_NAME) | feito |
 | 2 | Renomear o domínio no código e na BD (migração reversível), rotas e ecrãs | feito |
-| 3 | Textos: formador → técnico, aluno → cliente, aula → serviço | por fazer |
+| 3 | Textos: formador → técnico, aluno → cliente, aula → serviço | feito |
 | 4 | Papéis da equipa (admin, operator) | por fazer |
 | 5 | Modelo genérico: árvore de categorias, campos de formulário, zonas, preços, documentos, localização e reputação, parâmetros | por fazer |
 | 6 | Seed das categorias e dos formulários | por fazer |

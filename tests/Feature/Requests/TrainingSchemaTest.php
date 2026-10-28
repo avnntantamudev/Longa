@@ -20,7 +20,7 @@ function offerFor(ServiceRequest $request, ProviderProfile $provider): RequestOf
     ]);
 }
 
-it('calcula a comissão em Kz inteiros, descontada ao formador', function (int $amount, int $commission, int $net) {
+it('calcula a comissão em Kz inteiros, descontada ao técnico', function (int $amount, int $commission, int $net) {
     expect(Commission::split($amount, 15))->toBe(['amount' => $amount, 'commission' => $commission, 'provider_net' => $net]);
 })->with([
     [25000, 3750, 21250],
@@ -40,7 +40,7 @@ it('impede duas ofertas aceites no mesmo pedido ao nível da base de dados', fun
         ->toThrow(UniqueConstraintViolationException::class);
 });
 
-it('impede duas aulas para o mesmo pedido', function () {
+it('impede duas serviços para o mesmo pedido', function () {
     $request = ServiceRequest::factory()->create();
     $provider = ProviderProfile::factory()->create();
     $data = [
@@ -55,7 +55,7 @@ it('impede duas aulas para o mesmo pedido', function () {
     expect(fn () => ServiceJob::query()->create($data))->toThrow(UniqueConstraintViolationException::class);
 });
 
-it('impede a mesma oferta duas vezes ao mesmo formador', function () {
+it('impede a mesma oferta duas vezes ao mesmo técnico', function () {
     $request = ServiceRequest::factory()->create();
     $provider = ProviderProfile::factory()->create();
     offerFor($request, $provider);

@@ -57,7 +57,7 @@ it('rejeita endpoints que não são HTTPS', function () {
         ->assertStatus(422);
 });
 
-it('envia a oferta por push, em fila, quando o formador tem subscrição', function () {
+it('envia a oferta por push, em fila, quando o técnico tem subscrição', function () {
     Notification::fake();
     subscribe($this->provider->user);
 
@@ -93,7 +93,7 @@ it('escreve a oferta em texto curto: "Novo pedido a 1,2 km: SGME 25.000 Kz"', fu
     $sms = $notification->toSms($this->provider->user);
 
     expect($push['title'])->toBe('TRIM TRIM · Novo pedido a 1,2 km: SGME — Gestão Empresarial 25.000 Kz')
-        ->and($push['data']['url'])->toBe("/formador/ofertas/{$offer->id}")
+        ->and($push['data']['url'])->toBe("/tecnico/ofertas/{$offer->id}")
         ->and($sms)->toStartWith('BISCA: Novo pedido a 1,2 km')
         ->and($sms)->not->toContain((string) $this->request->latitude);
 
@@ -126,7 +126,7 @@ it('apaga subscrições inválidas (410) e atualiza o último uso das válidas',
         ->and(PushSubscription::query()->whereKey($gone->id)->exists())->toBeFalse();
 });
 
-it('avisa o aluno quando não há formadores, com ligação para republicar', function () {
+it('avisa o cliente quando não há técnicos, com ligação para republicar', function () {
     Notification::fake();
     $empty = ServiceRequest::factory()->forCategory(Category::query()->where('slug', 'frances')->firstOrFail())->create();
 
@@ -141,7 +141,7 @@ it('lista e marca notificações na app como lidas', function () {
 
     $response = $this->getJson('/api/v1/notifications')->assertOk()->assertJsonPath('unread', 1);
     $id = $response->json('data.0.id');
-    expect($response->json('data.0.title'))->toBe('Sem formadores disponíveis');
+    expect($response->json('data.0.title'))->toBe('Sem técnicos disponíveis');
 
     $this->postJson("/api/v1/notifications/{$id}/read")->assertNoContent();
     $this->getJson('/api/v1/notifications')->assertJsonPath('unread', 0);

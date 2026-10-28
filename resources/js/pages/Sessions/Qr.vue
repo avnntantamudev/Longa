@@ -8,7 +8,7 @@ import QRCode from 'qrcode';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 /**
- * QR de confirmação (formador). Mostra um lote de tokens em sequência, um por janela de 30 s,
+ * QR de confirmação (técnico). Mostra um lote de tokens em sequência, um por janela de 30 s,
  * com o relógio acertado pelo do servidor. Sem rede continua a mostrar o lote que tem e pede um novo
  * quando faltar menos de um minuto. Os tokens nunca são guardados no dispositivo.
  */
@@ -99,7 +99,7 @@ usePolling(() => !confirmed.value && refreshSession().catch(() => undefined), 10
 onMounted(async () => {
     await fetchBatch();
     try {
-        // Manter o ecrã ligado enquanto o aluno lê o QR
+        // Manter o ecrã ligado enquanto o cliente lê o QR
         wakeLock = await (navigator as Navigator & { wakeLock?: { request: (t: 'screen') => Promise<{ release: () => Promise<void> }> } }).wakeLock?.request('screen') ?? null;
     } catch {
         wakeLock = null;
@@ -113,25 +113,25 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <Head title="QR da aula" />
+    <Head title="QR do serviço" />
 
     <!-- Confirmada -->
     <section v-if="confirmed" class="flex flex-col items-center gap-4 py-10 text-center" aria-live="assertive">
         <span class="flex size-24 items-center justify-center rounded-full bg-success text-5xl text-white">✓</span>
-        <h1 class="text-display">Aula confirmada</h1>
-        <p v-if="session?.payment_method === 'cash'" class="text-ink-muted">O aluno confirmou. O pagamento é feito em mão.</p>
+        <h1 class="text-display">Serviço confirmado</h1>
+        <p v-if="session?.payment_method === 'cash'" class="text-ink-muted">O cliente confirmou. O pagamento é feito em mão.</p>
         <p v-else class="text-title">{{ kwanza(session?.provider_net ?? 0) }} <span class="text-ink-muted">na sua carteira</span></p>
         <Link href="/carteira" class="btn-primary w-full max-w-xs">Ver carteira</Link>
-        <Link :href="`/aulas/${sessionId}`" class="text-caption font-semibold">Voltar à aula</Link>
+        <Link :href="`/servicos/${sessionId}`" class="text-caption font-semibold">Voltar ao serviço</Link>
     </section>
 
     <!-- QR -->
     <section v-else class="flex flex-col items-center gap-4 text-center">
-        <h1 class="text-title">Mostre este QR ao aluno</h1>
-        <p class="text-caption text-ink-muted">O aluno abre a aula na app e toca em "Escanear QR para confirmar".</p>
+        <h1 class="text-title">Mostre este QR ao cliente</h1>
+        <p class="text-caption text-ink-muted">O cliente abre o serviço na app e toca em "Escanear QR para confirmar".</p>
 
         <div class="rounded-sheet bg-white p-3 shadow-nav" :class="{ 'opacity-30': !current }">
-            <canvas ref="canvas" aria-label="QR de confirmação da aula" role="img" />
+            <canvas ref="canvas" aria-label="QR de confirmação do serviço" role="img" />
         </div>
 
         <template v-if="current">
@@ -145,7 +145,7 @@ onBeforeUnmount(() => {
         <p v-else class="text-caption text-ink-muted">{{ fetching ? 'A gerar códigos…' : 'Sem códigos válidos. A tentar de novo…' }}</p>
 
         <p v-if="error" class="text-caption text-danger" role="alert">{{ error }}</p>
-        <p class="text-caption text-ink-muted">Aumente o brilho do ecrã se o aluno tiver dificuldade em ler.</p>
-        <Link :href="`/aulas/${sessionId}`" class="text-caption font-semibold">Voltar à aula</Link>
+        <p class="text-caption text-ink-muted">Aumente o brilho do ecrã se o cliente tiver dificuldade em ler.</p>
+        <Link :href="`/servicos/${sessionId}`" class="text-caption font-semibold">Voltar ao serviço</Link>
     </section>
 </template>

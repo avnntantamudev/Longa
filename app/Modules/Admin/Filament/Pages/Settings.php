@@ -23,7 +23,7 @@ use UnitEnum;
 
 /**
  * Definições de negócio (comissões, VIP, pedidos agendados). Cada alteração fica na auditoria.
- * As alterações valem para operações novas; aulas e subscrições já feitas mantêm os seus valores.
+ * As alterações valem para operações novas; serviços e subscrições já feitas mantêm os seus valores.
  *
  * @property-read Schema $form
  */
@@ -57,7 +57,7 @@ class Settings extends Page
 
         return $schema->statePath('data')->components([
             Section::make('Comissões')->columns(2)->schema([$field('commission_percent'), $field('vip_commission_percent')]),
-            Section::make('Formador VIP')->columns(2)->schema([$field('vip_price'), $field('vip_duration_days')]),
+            Section::make('Técnico VIP')->columns(2)->schema([$field('vip_price'), $field('vip_duration_days')]),
             Section::make('Pedidos para outro dia')->schema([$field('scheduled_request_close_hours')]),
         ]);
     }
@@ -70,7 +70,7 @@ class Settings extends Page
                 ->footer([
                     Actions::make([
                         Action::make('save')->label('Guardar')->requiresConfirmation()
-                            ->modalDescription('Os novos valores aplicam-se a pedidos, aulas e subscrições a partir de agora.')
+                            ->modalDescription('Os novos valores aplicam-se a pedidos, serviços e subscrições a partir de agora.')
                             ->action(fn (PlatformSettings $settings) => $this->save($settings)),
                     ]),
                 ]),

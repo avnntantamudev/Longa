@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Queue;
 use Spatie\Permission\Models\Role;
 
 /*
-| Teste de carga simples: 500 formadores elegíveis para o mesmo pedido.
+| Teste de carga simples: 500 técnicos elegíveis para o mesmo pedido.
 | Mede (1) a consulta de matching e (2) o envio: inserir as ofertas e pôr em fila as notificações
 | e os broadcasts. Os limites são folgados para CI; os tempos medidos ficam em storage/logs/performance.log.
 */
@@ -28,7 +28,7 @@ beforeEach(function () {
 
     // Inserção em massa (as factories seriam lentas para 500 + ruído)
     $users = array_map(fn (int $i) => [
-        'phone' => sprintf('+2449%08d', 50_000_000 + $i), 'name' => "Formador {$i}", 'phone_verified_at' => $now,
+        'phone' => sprintf('+2449%08d', 50_000_000 + $i), 'name' => "Técnico {$i}", 'phone_verified_at' => $now,
         'onboarded_at' => $now, 'status' => 'active', 'locale' => 'pt', 'created_at' => $now, 'updated_at' => $now,
     ], range(1, ELIGIBLE + 200));
     foreach (array_chunk($users, 250) as $chunk) {
@@ -62,7 +62,7 @@ beforeEach(function () {
     $this->request = ServiceRequest::factory()->forCategory($this->sgme)->create();
 });
 
-it('encontra e ordena 500 formadores elegíveis em tempo aceitável', function () {
+it('encontra e ordena 500 técnicos elegíveis em tempo aceitável', function () {
     $matcher = app(ProviderMatcher::class);
     $matcher->candidates($this->request, 10); // aquecimento (planos de execução, ligação)
 

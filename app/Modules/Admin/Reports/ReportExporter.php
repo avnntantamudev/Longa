@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * Exporta um relatório em CSV (abre no Excel: separador ";" e BOM UTF-8) ou PDF.
  *
  * Formato comum: secções com título e tabela (cabeçalho + linhas), para os relatórios do admin,
- * do formador e da empresa usarem a mesma exportação.
+ * do técnico e da empresa usarem a mesma exportação.
  */
 class ReportExporter
 {

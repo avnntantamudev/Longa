@@ -44,12 +44,12 @@ class PhotoController extends Controller
     }
 
     /**
-     * Remover a foto (só alunos; os formadores têm de ter foto).
+     * Remover a foto (só clientes; os técnicos têm de ter foto).
      */
     public function destroy(Request $request, ProfilePhotos $photos): UserResource
     {
         if ($this->user($request)->providerProfile !== null) {
-            throw new ApiException('photo_required', 'Os formadores têm de ter foto. Pode trocá-la por outra.', 409);
+            throw new ApiException('photo_required', 'Os técnicos têm de ter foto. Pode trocá-la por outra.', 409);
         }
 
         return new UserResource($photos->remove($this->user($request)));

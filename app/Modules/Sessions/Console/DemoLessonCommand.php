@@ -15,18 +15,18 @@ use App\Modules\Users\Models\User;
 use Illuminate\Console\Command;
 
 /**
- * Cria uma aula de demonstração a começar agora, para testar o fluxo completo com dois telemóveis
+ * Cria um serviço de demonstração a começar agora, para testar o fluxo completo com dois telemóveis
  * (só fora de produção). Os dois utilizadores entram com o número e o código OTP (driver "log": ver o log).
  */
 class DemoLessonCommand extends Command
 {
     protected $signature = 'longa:demo:lesson
-        {--client=+244900000001 : Telefone do aluno}
-        {--provider=+244900000002 : Telefone do formador}
+        {--client=+244900000001 : Telefone do cliente}
+        {--provider=+244900000002 : Telefone do técnico}
         {--amount=25000 : Valor em Kz}
         {--cash : Pagamento em mão em vez de eletrónico}';
 
-    protected $description = 'Cria uma aula de demonstração (aluno + formador) a começar agora, à espera de pagamento';
+    protected $description = 'Cria um serviço de demonstração (cliente + técnico) a começar agora, à espera de pagamento';
 
     public function handle(): int
     {
@@ -37,8 +37,8 @@ class DemoLessonCommand extends Command
         }
 
         $category = Category::query()->firstOrFail();
-        $client = $this->user((string) $this->option('client'), 'Aluno Demo', Role::Client);
-        $providerUser = $this->user((string) $this->option('provider'), 'Formador Demo', Role::Provider);
+        $client = $this->user((string) $this->option('client'), 'Cliente Demo', Role::Client);
+        $providerUser = $this->user((string) $this->option('provider'), 'Técnico Demo', Role::Provider);
         $provider = $providerUser->providerProfile ?? ProviderProfile::factory()->verified()->for($providerUser)->create();
         $cash = (bool) $this->option('cash');
         $split = Commission::split((int) $this->option('amount'));
@@ -49,7 +49,7 @@ class DemoLessonCommand extends Command
         ]);
         $session = ServiceJob::query()->create([
             'service_request_id' => $request->id, 'client_id' => $client->id, 'provider_profile_id' => $provider->id,
-            'category_id' => $category->id, 'title' => 'Aula de demonstração', ...$split,
+            'category_id' => $category->id, 'title' => 'Serviço de demonstração', ...$split,
             'scheduled_at' => now()->addMinutes(5), 'duration_minutes' => 60, 'payment_method' => $cash ? 'cash' : 'electronic',
             'payment_due_at' => $cash ? null : now()->addMinutes((int) config('longa.session_rules.payment_window_minutes')),
             'modality' => 'in_person', 'municipality' => 'Talatona', 'neighborhood' => 'Talatona', 'latitude' => -8.9167, 'longitude' => 13.1833,
@@ -57,12 +57,12 @@ class DemoLessonCommand extends Command
         $session->forceFill(['state' => $cash ? 'scheduled' : 'pending_payment'])->save();
         Conversation::query()->create(['service_job_id' => $session->id]);
 
-        $this->info("Aula #{$session->id} criada (".($cash ? 'em mão' : 'pagar em 10 minutos').').');
+        $this->info("Serviço #{$session->id} criado (".($cash ? 'em mão' : 'pagar em 10 minutos').').');
         $this->table(['Papel', 'Telefone', 'Abrir'], [
-            ['Aluno', $client->phone, url("/aulas/{$session->id}")],
-            ['Formador', $providerUser->phone, url("/aulas/{$session->id}")],
+            ['Cliente', $client->phone, url("/servicos/{$session->id}")],
+            ['Técnico', $providerUser->phone, url("/servicos/{$session->id}")],
         ]);
-        $this->line('Fluxo: aluno paga → formador "Iniciar aula" → "Terminar aula" → aluno "Escanear QR para confirmar".');
+        $this->line('Fluxo: cliente paga → técnico "Iniciar serviço" → "Terminar serviço" → cliente "Escanear QR para confirmar".');
 
         return self::SUCCESS;
     }

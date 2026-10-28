@@ -21,7 +21,7 @@ function act(ServiceJob $session, string $as, string $action, array $body = []):
     return test()->postJson("/api/v1/sessions/{$session->id}/{$action}", $body, ['Idempotency-Key' => "{$action}-{$as}-".uniqid()]);
 }
 
-it('aluno cancela com antecedência: reembolso total', function () {
+it('cliente cancela com antecedência: reembolso total', function () {
     $session = paidSession();
 
     act($session, 'client', 'cancel', ['reason' => 'Imprevisto'])->assertOk()->assertJsonPath('data.state', 'cancelled_by_client');
@@ -31,18 +31,18 @@ it('aluno cancela com antecedência: reembolso total', function () {
         ->and(EscrowHold::query()->sole()->state)->toBe('refunded');
 });
 
-it('aluno cancela em cima da hora: o formador fica com 25% menos comissão', function () {
+it('cliente cancela em cima da hora: o técnico fica com 25% menos comissão', function () {
     $session = paidSession();
     $this->travelTo($session->scheduled_at->copy()->subHours(2));
 
     act($session, 'client', 'cancel')->assertOk();
 
-    // 25% de 25.000 = 6.250 → comissão 938, formador 5.312; reembolso 18.750
+    // 25% de 25.000 = 6.250 → comissão 938, técnico 5.312; reembolso 18.750
     expect(balances($session))->toBe(['escrow' => 0, 'provider' => 5312, 'revenue' => 938, 'refunds' => 0, 'funds_in' => -6250])
         ->and(EscrowHold::query()->sole()->state)->toBe('partially_refunded');
 });
 
-it('formador cancela: reembolso total e evento de score se for tarde', function () {
+it('técnico cancela: reembolso total e evento de score se for tarde', function () {
     $session = paidSession();
     $this->travelTo($session->scheduled_at->copy()->subHours(1));
 
@@ -52,7 +52,7 @@ it('formador cancela: reembolso total e evento de score se for tarde', function 
         ->and(ScoreEvent::query()->where('type', ScoreEvent::LATE_CANCELLATION)->count())->toBe(1);
 });
 
-it('não se cancela uma aula em curso', function () {
+it('não se cancela um serviço em curso', function () {
     $session = paidSession();
     $this->travelTo($session->scheduled_at);
     app(StartSession::class)->handle($session, $session->provider->user);
@@ -60,7 +60,7 @@ it('não se cancela uma aula em curso', function () {
     act($session, 'client', 'cancel')->assertStatus(409)->assertJsonPath('error.code', 'session_not_cancellable');
 });
 
-it('falta do formador sem contestação: reembolso total ao fim de 24 h e evento de score', function () {
+it('falta do técnico sem contestação: reembolso total ao fim de 24 h e evento de score', function () {
     $session = paidSession();
     $this->travelTo($session->scheduled_at->copy()->addMinutes(10));
     act($session, 'client', 'no-show')->assertStatus(409)->assertJsonPath('error.code', 'no_show_too_early');
@@ -78,7 +78,7 @@ it('falta do formador sem contestação: reembolso total ao fim de 24 h e evento
         ->and(ScoreEvent::query()->where('type', ScoreEvent::NO_SHOW)->count())->toBe(1);
 });
 
-it('falta do aluno sem contestação: o formador fica com 50% menos comissão', function () {
+it('falta do cliente sem contestação: o técnico fica com 50% menos comissão', function () {
     $session = paidSession();
     $this->travelTo($session->scheduled_at->copy()->addMinutes(35));
     act($session, 'provider', 'no-show')->assertOk()->assertJsonPath('data.state', 'no_show_client');
@@ -86,11 +86,11 @@ it('falta do aluno sem contestação: o formador fica com 50% menos comissão', 
     $this->travel(25)->hours();
     $this->artisan('longa:sessions:tick');
 
-    // 50% = 12.500 → comissão 1.875, formador 10.625; reembolso 12.500
+    // 50% = 12.500 → comissão 1.875, técnico 10.625; reembolso 12.500
     expect(balances($session))->toBe(['escrow' => 0, 'provider' => 10625, 'revenue' => 1875, 'refunds' => 0, 'funds_in' => -12500]);
 });
 
-it('R1: aula nunca iniciada e sem resposta do aluno → reembolso total', function () {
+it('R1: serviço nunca iniciado e sem resposta do cliente → reembolso total', function () {
     $session = paidSession();
 
     $this->travelTo($session->ends_at?->copy()->addHours(3));
@@ -108,7 +108,7 @@ it('R1: aula nunca iniciada e sem resposta do aluno → reembolso total', functi
         ->and(balances($session)['funds_in'])->toBe(0);
 });
 
-it('R2: aula iniciada sem QR e sem disputa → libertada para o formador', function () {
+it('R2: serviço iniciado sem QR e sem disputa → libertada para o técnico', function () {
     $session = paidSession();
     $this->travelTo($session->scheduled_at);
     app(StartSession::class)->handle($session, $session->provider->user);
@@ -124,7 +124,7 @@ it('R2: aula iniciada sem QR e sem disputa → libertada para o formador', funct
         ->and(balances($session))->toMatchArray(['escrow' => 0, 'provider' => 21250, 'revenue' => 3750]);
 });
 
-it('o aluno pode confirmar sem QR quando a aula espera confirmação', function () {
+it('o cliente pode confirmar sem QR quando o serviço espera confirmação', function () {
     $session = paidSession();
     act($session, 'client', 'confirm-without-qr')->assertStatus(409);
 
@@ -138,7 +138,7 @@ it('o aluno pode confirmar sem QR quando a aula espera confirmação', function 
     expect(balances($session)['provider'])->toBe(21250);
 });
 
-it('R5: aula em dinheiro sem confirmação do aluno → comissão em dívida após 48 h', function () {
+it('R5: serviço em dinheiro sem confirmação do cliente → comissão em dívida após 48 h', function () {
     $session = acceptedSession('cash');
     $this->travelTo($session->scheduled_at);
     app(StartSession::class)->handle($session, $session->provider->user);

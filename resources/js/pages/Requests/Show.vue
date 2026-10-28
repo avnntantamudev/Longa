@@ -38,7 +38,7 @@ async function load(): Promise<void> {
         countdown.start(data.seconds_left);
     }
     if (data.state === 'matched' && data.session_id) {
-        router.visit(`/aulas/${data.session_id}`);
+        router.visit(`/servicos/${data.session_id}`);
     }
 }
 
@@ -86,7 +86,7 @@ async function republish(): Promise<void> {
 </script>
 
 <template>
-    <Head title="Pedido de aula" />
+    <Head title="Pedido de serviço" />
 
     <template v-if="request">
         <!-- À procura -->
@@ -96,19 +96,19 @@ async function republish(): Promise<void> {
                 <span class="absolute inset-3 rounded-full bg-orange-500/20" />
                 <span class="relative inline-flex size-16 items-center justify-center rounded-full bg-orange-500"><AppIcon name="search" :size="30" /></span>
             </div>
-            <h1 class="mt-6 text-title">{{ request.scheduled ? 'Pedido enviado aos formadores' : 'A procurar formadores perto de si…' }}</h1>
+            <h1 class="mt-6 text-title">{{ request.scheduled ? 'Pedido enviado aos técnicos' : 'A procurar técnicos perto de si…' }}</h1>
             <p class="mt-1 text-navy-200">
-                {{ request.open_offers > 0 ? `${request.open_offers} formador(es) a ver o seu pedido agora` : 'A preparar o próximo envio' }}
+                {{ request.open_offers > 0 ? `${request.open_offers} técnico(es) a ver o seu pedido agora` : 'A preparar o próximo envio' }}
             </p>
             <p v-if="request.scheduled" class="mt-4 text-caption text-navy-300">
-                Aula noutro dia: formadores perto de si e formadores VIP da província podem aceitar até {{ request.expires_at ? when(request.expires_at) : '' }}. Avisamos quando alguém aceitar.
+                Serviço noutro dia: técnicos perto de si e técnicos VIP da província podem aceitar até {{ request.expires_at ? when(request.expires_at) : '' }}. Avisamos quando alguém aceitar.
             </p>
             <p v-else class="mt-4 text-caption text-navy-300">Tempo restante {{ minutesLeft }} · envio {{ request.wave }}</p>
         </section>
 
-        <!-- Sem formadores -->
+        <!-- Sem técnicos -->
         <section v-else-if="request.state === 'expired'" class="card text-center">
-            <p class="text-title">Sem formadores disponíveis</p>
+            <p class="text-title">Sem técnicos disponíveis</p>
             <p class="mt-1 text-ink-muted">Ninguém aceitou a tempo. Pode republicar, por exemplo com outro valor ou outra hora.</p>
             <button type="button" class="btn-primary mt-4 w-full" :disabled="busy" @click="republish">Republicar pedido</button>
             <a href="/pedidos/novo" class="btn-secondary mt-2 w-full">Novo pedido com outros dados</a>
@@ -120,8 +120,8 @@ async function republish(): Promise<void> {
         </section>
 
         <section v-else-if="request.state === 'matched'" class="card text-center">
-            <p class="text-title text-success">Formador encontrado!</p>
-            <a v-if="request.session_id" :href="`/aulas/${request.session_id}`" class="btn-primary mt-4 w-full">Ver aula</a>
+            <p class="text-title text-success">Técnico encontrado!</p>
+            <a v-if="request.session_id" :href="`/servicos/${request.session_id}`" class="btn-primary mt-4 w-full">Ver serviço</a>
         </section>
 
         <!-- Resumo -->
@@ -140,7 +140,7 @@ async function republish(): Promise<void> {
         <button v-if="request.state === 'searching'" type="button" class="btn-secondary mt-4 w-full" :disabled="busy" @click="cancel">Cancelar pedido</button>
 
         <div class="mt-4">
-            <PushOptIn title="Quer ser avisado quando um formador aceitar?" description="Receba o aviso mesmo com a app fechada." />
+            <PushOptIn title="Quer ser avisado quando um técnico aceitar?" description="Receba o aviso mesmo com a app fechada." />
         </div>
     </template>
 

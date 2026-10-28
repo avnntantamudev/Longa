@@ -13,11 +13,11 @@ class RequestsServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
-        // Publicar/republicar pedidos: por aluno
+        // Publicar/republicar pedidos: por cliente
         RateLimiter::for('service-requests', fn (Request $request) => Limit::perHour((int) config('longa.requests.create_per_hour'))
             ->by('service-requests:'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
 
-        // Aceitar/recusar ofertas: por formador
+        // Aceitar/recusar ofertas: por técnico
         RateLimiter::for('offer-responses', fn (Request $request) => Limit::perMinute((int) config('longa.matching.accept_per_minute'))
             ->by('offer-responses:'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
     }

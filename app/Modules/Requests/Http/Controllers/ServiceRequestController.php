@@ -19,9 +19,9 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
 
 /**
- * Pedidos de aula do aluno.
+ * Pedidos de serviço do cliente.
  *
- * @tags Pedidos de aula
+ * @tags Pedidos de serviço
  */
 class ServiceRequestController extends Controller
 {
@@ -42,7 +42,7 @@ class ServiceRequestController extends Controller
     /**
      * Publicar pedido.
      *
-     * Passa logo a `searching` (5 min) e envia a 1.ª onda TRIM TRIM. Se não houver formadores elegíveis,
+     * Passa logo a `searching` (5 min) e envia a 1.ª onda TRIM TRIM. Se não houver técnicos elegíveis,
      * o pedido volta já como `expired`.
      */
     public function store(StoreServiceRequestRequest $request, CreateServiceRequest $action): JsonResponse
@@ -66,7 +66,7 @@ class ServiceRequestController extends Controller
     }
 
     /**
-     * Cancelar pedido (enquanto procura formador).
+     * Cancelar pedido (enquanto procura técnico).
      */
     public function cancel(Request $request, ServiceRequest $serviceRequest, CancelServiceRequest $action): ClientRequestResource
     {

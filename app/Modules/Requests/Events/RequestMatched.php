@@ -13,7 +13,7 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Um formador aceitou: avisa o aluno (canal do pedido) e os formadores que perderam a oferta.
+ * Um técnico aceitou: avisa o cliente (canal do pedido) e os técnicos que perderam a oferta.
  */
 class RequestMatched implements ShouldBroadcast, ShouldDispatchAfterCommit
 {
@@ -22,7 +22,7 @@ class RequestMatched implements ShouldBroadcast, ShouldDispatchAfterCommit
     public string $broadcastQueue = 'notifications';
 
     /**
-     * @param  list<int>  $loserUserIds  formadores com oferta aberta que ficaram sem a aula
+     * @param  list<int>  $loserUserIds  técnicos com oferta aberta que ficaram sem o serviço
      */
     public function __construct(
         public readonly ServiceRequest $request,

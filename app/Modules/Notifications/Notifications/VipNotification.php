@@ -64,7 +64,7 @@ class VipNotification extends Notification implements ShouldQueue
         $date = $this->until->format('d/m/Y');
 
         return match ($this->kind) {
-            self::ACTIVATED => ['Agora é VIP', "É formador VIP até {$date}: pedidos de outro dia em toda a província, prioridade e comissão reduzida."],
+            self::ACTIVATED => ['Agora é VIP', "É técnico VIP até {$date}: pedidos de outro dia em toda a província, prioridade e comissão reduzida."],
             self::ENDING => ['O seu VIP está a terminar', "Faltam {$this->daysLeft} dia(s): o VIP termina a {$date}. Renove para não perder as vantagens."],
             default => ['O seu VIP terminou', "Terminou a {$date}. Renove para voltar a ter as vantagens VIP."],
         };

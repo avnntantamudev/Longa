@@ -21,16 +21,16 @@ class StoreServiceRequestRequest extends FormRequest
 
         return [
             'category_id' => ['required', 'integer', Rule::exists('categories', 'id')->where('active', true)],
-            /** Tema da aula. @example Aula de SGME */
+            /** Tema do serviço. @example Serviço de SGME */
             'title' => ['required', 'string', 'min:3', 'max:120'],
             'description' => ['nullable', 'string', 'max:1000'],
             /** Valor oferecido em Kz inteiros. @example 25000 */
             'amount' => ['required', 'integer', "min:{$min}", "max:{$max}"],
             /** Data e hora pretendidas (ISO 8601). @example 2026-10-24T14:00:00+01:00 */
             'scheduled_at' => ['required', 'date', 'after:'.now()->addMinutes($lead)->toDateTimeString()],
-            /** Duração da aula em minutos (30 a 480). @example 60 */
+            /** Duração do serviço em minutos (30 a 480). @example 60 */
             'duration_minutes' => ['sometimes', 'integer', 'min:30', 'max:480', 'multiple_of:15'],
-            /** "electronic" (Multicaixa, retido em escrow) ou "cash" (pago em mão ao formador). */
+            /** "electronic" (Multicaixa, retido em escrow) ou "cash" (pago em mão ao técnico). */
             'payment_method' => ['sometimes', Rule::in(['electronic', 'cash'])],
             'modality' => ['required', Rule::in(['in_person', 'online'])],
             /** Província (lista de 21). Sem valor: Luanda. @example Luanda */
@@ -48,7 +48,7 @@ class StoreServiceRequestRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'scheduled_at.after' => 'A aula tem de ser marcada com pelo menos '.config('longa.requests.min_lead_minutes').' minutos de antecedência.',
+            'scheduled_at.after' => 'O serviço tem de ser marcado com pelo menos '.config('longa.requests.min_lead_minutes').' minutos de antecedência.',
             'amount.min' => 'O valor mínimo é :min Kz.',
         ];
     }
@@ -59,7 +59,7 @@ class StoreServiceRequestRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'category_id' => 'área de formação', 'title' => 'tema', 'description' => 'descrição', 'amount' => 'valor',
+            'category_id' => 'área de serviço', 'title' => 'tema', 'description' => 'descrição', 'amount' => 'valor',
             'scheduled_at' => 'data e hora', 'duration_minutes' => 'duração', 'payment_method' => 'forma de pagamento', 'modality' => 'modalidade', 'municipality' => 'município', 'neighborhood' => 'bairro',
         ];
     }

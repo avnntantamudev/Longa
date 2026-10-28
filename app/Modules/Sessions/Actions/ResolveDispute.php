@@ -16,9 +16,9 @@ use App\Support\Audit\AuditLogger;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Decisão do admin sobre uma disputa: libertar ao formador, reembolsar tudo ou reembolsar parte.
+ * Decisão do admin sobre uma disputa: libertar ao técnico, reembolsar tudo ou reembolsar parte.
  *
- * Bloqueia a disputa e a aula; a decisão financeira é uma transação do ledger com chave única por aula.
+ * Bloqueia a disputa e o serviço; a decisão financeira é uma transação do ledger com chave única por serviço.
  * Duas decisões simultâneas: a segunda encontra a disputa resolvida e não move dinheiro
  * (409 se a decisão for diferente, a mesma resposta se for igual).
  */
@@ -55,12 +55,12 @@ class ResolveDispute
             $gross = match ($decision) {
                 self::RELEASE => $session->amount,
                 self::REFUND => 0,
-                self::PARTIAL => $providerShare ?? throw new ApiException('validation_failed', 'Os dados enviados são inválidos.', 422, ['provider_share' => ['Indique a parte do formador.']]),
+                self::PARTIAL => $providerShare ?? throw new ApiException('validation_failed', 'Os dados enviados são inválidos.', 422, ['provider_share' => ['Indique a parte do técnico.']]),
                 default => throw new ApiException('validation_failed', 'Os dados enviados são inválidos.', 422, ['decision' => ['Decisão inválida.']]),
             };
 
             if ($decision === self::PARTIAL && ($gross <= 0 || $gross >= $session->amount)) {
-                throw new ApiException('validation_failed', 'Os dados enviados são inválidos.', 422, ['provider_share' => ['A parte do formador tem de estar entre 1 e '.($session->amount - 1).' Kz.']]);
+                throw new ApiException('validation_failed', 'Os dados enviados são inválidos.', 422, ['provider_share' => ['A parte do técnico tem de estar entre 1 e '.($session->amount - 1).' Kz.']]);
             }
 
             $target = match ($decision) {

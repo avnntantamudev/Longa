@@ -22,14 +22,14 @@ use Illuminate\Support\Facades\URL;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Aulas e chat da aula.
+ * Serviços e chat do serviço.
  *
- * @tags Aulas e chat
+ * @tags Serviços e chat
  */
 class SessionController extends Controller
 {
     /**
-     * As minhas aulas (como aluno ou formador).
+     * Os meus serviços (como cliente ou técnico).
      */
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -46,7 +46,7 @@ class SessionController extends Controller
     }
 
     /**
-     * Ver aula.
+     * Ver serviço.
      */
     public function show(ServiceJob $session): SessionResource
     {
@@ -99,7 +99,7 @@ class SessionController extends Controller
     }
 
     /**
-     * Linha do tempo da aula (participantes).
+     * Linha do tempo do serviço (participantes).
      */
     public function events(ServiceJob $session): JsonResponse
     {

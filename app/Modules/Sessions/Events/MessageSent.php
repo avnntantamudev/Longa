@@ -12,7 +12,7 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Nova mensagem no chat da aula (canal privado dos participantes).
+ * Nova mensagem no chat do serviço (canal privado dos participantes).
  * Enviado de imediato (sem fila) para o chat parecer instantâneo.
  */
 class MessageSent implements ShouldBroadcastNow

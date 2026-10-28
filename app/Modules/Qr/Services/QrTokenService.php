@@ -14,13 +14,13 @@ use Illuminate\Support\Str;
  * Lotes de tokens de confirmação (docs/threat-model.md).
  *
  *  - token: 128 bits de random_bytes, base64url (22 caracteres), guardado como HMAC-SHA256 com a APP_KEY;
- *  - código de 6 dígitos por janela, guardado como HMAC(aula:código);
- *  - lote: N janelas consecutivas de 30 s (por defeito 10 = 5 min), para o ecrã do formador continuar a
+ *  - código de 6 dígitos por janela, guardado como HMAC(serviço:código);
+ *  - lote: N janelas consecutivas de 30 s (por defeito 10 = 5 min), para o ecrã do técnico continuar a
  *    mostrar QR válidos mesmo com a rede a falhar; cada token só é aceite na sua janela (+ margem) e uma vez.
  */
 class QrTokenService
 {
-    /** Margem para a latência entre o ecrã do formador e o servidor */
+    /** Margem para a latência entre o ecrã do técnico e o servidor */
     private const GRACE_SECONDS = 15;
 
     /**
@@ -61,7 +61,7 @@ class QrTokenService
     }
 
     /**
-     * Encontra o token válido agora para esta aula (pelo QR ou pelo código), com bloqueio da linha.
+     * Encontra o token válido agora para este serviço (pelo QR ou pelo código), com bloqueio da linha.
      * Chamar dentro de uma transação.
      */
     public function findValid(ServiceJob $session, ?string $token, ?string $code, ?Carbon $at = null): ?SessionQrToken
@@ -93,7 +93,7 @@ class QrTokenService
             ->where('status', SessionQrToken::ACTIVE)
             ->update(['status' => SessionQrToken::USED, 'used_at' => now(), 'used_by' => $userId]);
 
-        // Os restantes tokens da aula deixam de valer (capturas de ecrã antigas ou futuras)
+        // Os restantes tokens do serviço deixam de valer (capturas de ecrã antigas ou futuras)
         SessionQrToken::query()
             ->where('service_job_id', $token->service_job_id)
             ->where('status', SessionQrToken::ACTIVE)

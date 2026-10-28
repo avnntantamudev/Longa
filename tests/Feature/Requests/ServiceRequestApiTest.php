@@ -64,8 +64,8 @@ it('publica o pedido, calcula a comissão e envia a 1.ª onda', function () {
         ->assertJsonPath('data.amount', 25000);
 
     $request = ServiceRequest::query()->sole();
-    expect($request->commission)->toBe(3750)
-        ->and($request->provider_net)->toBe(21250)
+    expect($request->commission)->toBe(5000)
+        ->and($request->provider_net)->toBe(20000)
         ->and((int) round(now()->diffInSeconds($request->expires_at)))->toBeBetween(295, 300);
 
     Event::assertDispatchedTimes(OfferSent::class, 3);

@@ -70,7 +70,7 @@ function acceptedSession(string $paymentMethod = 'electronic', array $overrides 
 
     $session = App\Modules\Sessions\Models\ServiceJob::query()->create([
         'service_request_id' => $request->id, 'client_id' => $request->client_id, 'provider_profile_id' => $provider->id,
-        'category_id' => $request->category_id, 'title' => 'Serviço de SGME', 'amount' => 25000, 'commission' => 3750, 'provider_net' => 21250,
+        'category_id' => $request->category_id, 'title' => 'Serviço de SGME', 'amount' => 25000, 'commission' => 3750, 'commission_percent' => 15, 'provider_net' => 21250,
         'scheduled_at' => now()->addDay()->setTime(14, 0), 'duration_minutes' => 60, 'payment_method' => $paymentMethod,
         'payment_due_at' => $electronic ? now()->addMinutes(10) : null,
         'modality' => 'in_person', 'municipality' => 'Talatona', 'neighborhood' => 'Talatona', 'latitude' => -8.9167, 'longitude' => 13.1833,

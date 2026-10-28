@@ -31,7 +31,7 @@ Nomes novos:
 | 2 | Renomear o domínio no código e na BD (migração reversível), rotas e ecrãs | feito |
 | 3 | Textos: formador → técnico, aluno → cliente, aula → serviço | feito |
 | 4 | Papéis da equipa (admin, operator) | feito |
-| 5 | Modelo genérico: árvore de categorias, campos de formulário, zonas, preços, documentos, localização e reputação, parâmetros | por fazer |
+| 5 | Modelo genérico: árvore de categorias, campos de formulário, zonas, preços, documentos, localização e reputação, parâmetros | feito |
 | 6 | Seed das categorias e dos formulários | por fazer |
 | 7 | Termos e Política: duas caixas, textos versionados na app, nova aceitação quando a versão muda | por fazer |
 | 8 | Suite, CI e resumo da fase | por fazer |
@@ -51,3 +51,19 @@ Nomes novos:
 - **admin:** é o único com acesso a dinheiro, definições, relatórios e decisões de disputa (trait `AdminOnly` e
   `role:admin` nas rotas).
 - **Dar ou tirar papéis:** `php artisan longa:team <telefone> [admin|operator] [--remove]`. Fica registado na auditoria.
+
+### Notas do passo 5
+
+Migração `2026_10_28_000002_create_generic_service_model` (reversível):
+- **`categories`:** árvore (`parent_id`), `pricing_mode` (fixed | quote | hourly_package), `modalities`,
+  `required_documents`, `description`, `icon` e `sort_order`.
+- **`category_fields`:** formulário dinâmico (text | number | choice | photos | video). A subcategoria herda os
+  campos da linha toda e pode substituir um campo com a mesma `key`.
+- **`category_prices`:** preço fixo, intervalo de referência, limites por hora e taxa de visita, em Kz inteiros.
+- **`provider_zones`:** zonas de atuação do técnico.
+- **`verification_documents`:** documentos exigidos por categoria, revistos pela equipa.
+- **`provider_profiles`:** última localização (`last_latitude`, `last_longitude`, `last_location_at`) e reputação
+  (`rating_average`, `rating_count`).
+- **Estados de verificação:** passam a incluir `suspended` e `removed`.
+- **Já existiam:** a ligação técnico ↔ categorias (`category_provider_profile`) e os parâmetros (`platform_settings`).
+- **Comissão:** 20% por omissão.

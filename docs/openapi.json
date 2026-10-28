@@ -6160,7 +6160,10 @@
                         "type": "string"
                     },
                     "area": {
-                        "type": "string"
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     }
                 },
                 "required": [

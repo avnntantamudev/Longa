@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Users\Models;
 
 use App\Modules\Users\Enums\VerificationStatus;
+use App\Modules\Verification\Models\VerificationDocument;
 use Database\Factories\ProviderProfileFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -13,6 +14,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property int $id
@@ -33,6 +35,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property list<string>|null $badges
  * @property bool $is_available
  * @property \Illuminate\Support\Carbon|null $onboarding_completed_at
+ * @property float|null $last_latitude
+ * @property float|null $last_longitude
+ * @property \Illuminate\Support\Carbon|null $last_location_at
+ * @property float $rating_average
+ * @property int $rating_count
  * @property-read User $user
  */
 #[Fillable([
@@ -64,6 +71,11 @@ class ProviderProfile extends Model
             'is_available' => 'boolean',
             'verification_status' => VerificationStatus::class,
             'onboarding_completed_at' => 'datetime',
+            'last_latitude' => 'float',
+            'last_longitude' => 'float',
+            'last_location_at' => 'datetime',
+            'rating_average' => 'float',
+            'rating_count' => 'integer',
         ];
     }
 
@@ -81,6 +93,28 @@ class ProviderProfile extends Model
     public function categories(): BelongsToMany
     {
         return $this->belongsToMany(Category::class);
+    }
+
+    /**
+     * @return HasMany<ProviderZone, $this>
+     */
+    public function zones(): HasMany
+    {
+        return $this->hasMany(ProviderZone::class);
+    }
+
+    /**
+     * @return HasMany<VerificationDocument, $this>
+     */
+    public function documents(): HasMany
+    {
+        return $this->hasMany(VerificationDocument::class);
+    }
+
+    /** Guarda a última posição conhecida do técnico (enviada pela app enquanto está online). */
+    public function recordLocation(float $latitude, float $longitude): void
+    {
+        $this->forceFill(['last_latitude' => round($latitude, 7), 'last_longitude' => round($longitude, 7), 'last_location_at' => now()])->save();
     }
 
     public function isVerified(): bool

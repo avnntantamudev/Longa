@@ -66,7 +66,7 @@ it('técnico normal continua com 15%; a comissão fica fixa mesmo que o VIP come
     $sessionId = $this->postJson("/api/v1/offers/{$offer->id}/accept")->assertOk()->json('data.id');
     makeVip($provider);
 
-    expect(ServiceJob::query()->findOrFail($sessionId)->only(['commission', 'commission_percent']))->toBe(['commission' => 3750, 'commission_percent' => 15]);
+    expect(ServiceJob::query()->findOrFail($sessionId)->only(['commission', 'commission_percent']))->toBe(['commission' => 5000, 'commission_percent' => 20]);
 });
 
 it('na 1.ª onda os VIP vêm primeiro, mesmo com pontuação mais baixa', function () {

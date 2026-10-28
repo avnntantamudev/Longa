@@ -47,7 +47,7 @@ function runFlow(string $scenario, int $amount, ?int $providerProfileId): array
     Cache::flush();
     $split = Commission::split($amount);
     $cash = str_starts_with($scenario, 'cash');
-    $overrides = ['amount' => $amount, 'commission' => $split['commission'], 'provider_net' => $split['provider_net']];
+    $overrides = ['amount' => $amount, 'commission' => $split['commission'], 'commission_percent' => app(App\Support\Settings\PlatformSettings::class)->int('commission_percent'), 'provider_net' => $split['provider_net']];
     if ($providerProfileId !== null) {
         $overrides['provider_profile_id'] = $providerProfileId;
     }

@@ -47,7 +47,7 @@ return [
 
     // Pedidos de serviço e matching TRIM TRIM (Fase 2). Valores [AJUSTAR] com o cliente.
     'requests' => [
-        'commission_percent' => (int) env('LONGA_COMMISSION_PERCENT', 15),
+        'commission_percent' => (int) env('LONGA_COMMISSION_PERCENT', 20),
         'min_amount' => (int) env('LONGA_REQUEST_MIN_AMOUNT', 2000),
         'max_amount' => (int) env('LONGA_REQUEST_MAX_AMOUNT', 5000000),
         'max_active_per_client' => (int) env('LONGA_REQUEST_MAX_ACTIVE', 2),

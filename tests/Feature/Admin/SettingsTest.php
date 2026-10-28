@@ -13,12 +13,12 @@ use Livewire\Livewire;
 
 beforeEach(fn () => Filament::setCurrentPanel('backoffice'));
 
-it('sem valores gravados usa os de config (VIP 50.000 Kz, 10%)', function () {
+it('sem valores gravados usa os de config (comissão 20%, VIP 50.000 Kz e 10%)', function () {
     $settings = app(PlatformSettings::class);
 
     expect($settings->int('vip_price'))->toBe(50000)
         ->and($settings->int('vip_commission_percent'))->toBe(10)
-        ->and($settings->int('commission_percent'))->toBe(15);
+        ->and($settings->int('commission_percent'))->toBe(20);
 });
 
 it('o admin muda as definições no backoffice; fica auditado e vale para novas operações', function () {
@@ -36,14 +36,14 @@ it('o admin muda as definições no backoffice; fica auditado e vale para novas 
         ->and(Commission::split(10000)['commission'])->toBe(1200);
 
     $log = AuditLog::query()->where('action', 'settings.updated')->sole();
-    expect($log->metadata)->toMatchArray(['vip_price' => ['from' => 50000, 'to' => 60000], 'commission_percent' => ['from' => 15, 'to' => 12]]);
+    expect($log->metadata)->toMatchArray(['vip_price' => ['from' => 50000, 'to' => 60000], 'commission_percent' => ['from' => 20, 'to' => 12]]);
 });
 
 it('recusa valores fora dos limites', function () {
     $admin = User::factory()->withRole(Role::Admin)->create();
 
     expect(fn () => app(PlatformSettings::class)->update(['commission_percent' => 80], $admin))->toThrow(InvalidArgumentException::class)
-        ->and(app(PlatformSettings::class)->int('commission_percent'))->toBe(15);
+        ->and(app(PlatformSettings::class)->int('commission_percent'))->toBe(20);
 });
 
 it('só administradores abrem as definições', function () {

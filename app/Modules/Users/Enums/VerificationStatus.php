@@ -13,4 +13,19 @@ enum VerificationStatus: string
     case Pending = 'pending';
     case Verified = 'verified';
     case Rejected = 'rejected';
+    // Decididos pela equipa depois de aprovado: deixam de receber pedidos (suspenso pode voltar; removido não)
+    case Suspended = 'suspended';
+    case Removed = 'removed';
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::Unverified => 'Por verificar',
+            self::Pending => 'Pendente',
+            self::Verified => 'Aprovado',
+            self::Rejected => 'Rejeitado',
+            self::Suspended => 'Suspenso',
+            self::Removed => 'Removido',
+        };
+    }
 }

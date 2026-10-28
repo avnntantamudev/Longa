@@ -42,7 +42,7 @@ it('mostra ao técnico só os dados permitidos antes de aceitar', function () {
     expect($offer)->toHaveKeys(['title', 'amount', 'provider_net', 'neighborhood', 'distance_m', 'seconds_left'])
         ->not->toHaveKeys(['latitude', 'longitude', 'client', 'phone'])
         ->and($offer['distance_m'] % 100)->toBe(0)
-        ->and($offer['provider_net'])->toBe(21250);
+        ->and($offer['provider_net'])->toBe(20000);
     expect($response->getContent())->not->toContain($this->request->client->phone);
 });
 
@@ -56,7 +56,7 @@ it('aceita: cria o serviço, as outras ofertas perdem e o pedido fica matched', 
 
     $response->assertJsonPath('data.state', 'pending_payment')
         ->assertJsonPath('data.role', 'provider')
-        ->assertJsonPath('data.provider_net', 21250)
+        ->assertJsonPath('data.provider_net', 20000)
         ->assertJsonPath('data.latitude', ProviderProfileFactory::TALATONA[0]);
 
     $session = ServiceJob::query()->sole();

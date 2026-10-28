@@ -53,7 +53,7 @@ it('executa o serviço de ponta a ponta com QR e liberta o dinheiro uma vez', fu
     $this->postJson("/api/v1/sessions/{$sessionId}/pay", ['method' => 'multicaixa_express'], $payKey)->assertOk()->assertHeader('Idempotent-Replayed', 'true');
 
     apiLogin($provider->user);
-    $this->getJson('/api/v1/wallet')->assertJsonPath('data.pending', 21250)->assertJsonPath('data.available', 0);
+    $this->getJson('/api/v1/wallet')->assertJsonPath('data.pending', 20000)->assertJsonPath('data.available', 0);
 
     // 3. No dia: iniciar e terminar; o técnico recebe o lote de QR
     $session = App\Modules\Sessions\Models\ServiceJob::query()->findOrFail($sessionId);
@@ -76,8 +76,8 @@ it('executa o serviço de ponta a ponta com QR e liberta o dinheiro uma vez', fu
 
     // 5. Carteira do técnico
     apiLogin($provider->user);
-    $this->getJson('/api/v1/wallet')->assertJsonPath('data.available', 21250)->assertJsonPath('data.pending', 0);
-    $this->getJson('/api/v1/wallet/movements')->assertJsonCount(1, 'data')->assertJsonPath('data.0.amount', 21250);
+    $this->getJson('/api/v1/wallet')->assertJsonPath('data.available', 20000)->assertJsonPath('data.pending', 0);
+    $this->getJson('/api/v1/wallet/movements')->assertJsonCount(1, 'data')->assertJsonPath('data.0.amount', 20000);
 
     // 6. Tempo real (canais privados) e push
     Event::assertDispatched(SessionStarted::class, fn ($e) => $e->session->id === $sessionId);
@@ -87,7 +87,7 @@ it('executa o serviço de ponta a ponta com QR e liberta o dinheiro uma vez', fu
     Event::assertDispatchedTimes(WalletUpdated::class, 1);
 
     // 7. O ledger está consistente
-    expect(balances($session))->toBe(['escrow' => 0, 'provider' => 21250, 'revenue' => 3750, 'refunds' => 0, 'funds_in' => -25000]);
+    expect(balances($session))->toBe(['escrow' => 0, 'provider' => 20000, 'revenue' => 5000, 'refunds' => 0, 'funds_in' => -25000]);
     $this->travelBack();
     $this->artisan('longa:ledger:reconcile')->assertSuccessful();
 

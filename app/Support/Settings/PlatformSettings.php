@@ -26,7 +26,7 @@ class PlatformSettings
      * @var array<string, array{config: string, type: 'int', min: int, max: int, label: string}>
      */
     public const DEFINITIONS = [
-        'commission_percent' => ['config' => 'longa.requests.commission_percent', 'type' => 'int', 'min' => 0, 'max' => 50, 'label' => 'Comissão do Garimpo (%)'],
+        'commission_percent' => ['config' => 'longa.requests.commission_percent', 'type' => 'int', 'min' => 0, 'max' => 50, 'label' => 'Comissão do BISCA (%)'],
         'vip_commission_percent' => ['config' => 'longa.vip.commission_percent', 'type' => 'int', 'min' => 0, 'max' => 50, 'label' => 'Comissão para formadores VIP (%)'],
         'vip_price' => ['config' => 'longa.vip.price', 'type' => 'int', 'min' => 0, 'max' => 10_000_000, 'label' => 'Preço VIP por ano (Kz)'],
         'vip_duration_days' => ['config' => 'longa.vip.duration_days', 'type' => 'int', 'min' => 30, 'max' => 730, 'label' => 'Duração da subscrição VIP (dias)'],

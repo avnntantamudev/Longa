@@ -53,7 +53,7 @@ const chips = ['Disciplina: Matemática', 'Distância: 5 km', 'Preço'];
 
     <h2 class="mt-8 text-title">Selos</h2>
     <div class="mt-3 flex flex-wrap gap-2">
-        <span class="badge badge-success"><AppIcon name="check-badge" :size="14" /> Verificado Garimpo</span>
+        <span class="badge badge-success"><AppIcon name="check-badge" :size="14" /> Verificado BISCA</span>
         <span class="badge badge-warning">Pendente</span>
         <span class="badge badge-neutral">Concluído</span>
         <span class="badge badge-brand">Instrutor · SGME</span>

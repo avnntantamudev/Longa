@@ -27,7 +27,7 @@ class CashController extends Controller
     /**
      * Confirmar que pagou ao formador em mão (aluno).
      *
-     * Requer `Idempotency-Key`. Só depois de a aula estar concluída por QR. A comissão do Garimpo fica em dívida
+     * Requer `Idempotency-Key`. Só depois de a aula estar concluída por QR. A comissão do BISCA fica em dívida
      * do formador (descontada do saldo disponível dele, se houver).
      */
     public function confirm(Request $request, TrainingSession $session, ConfirmCashPayment $action): SessionResource

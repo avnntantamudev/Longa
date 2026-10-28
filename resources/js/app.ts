@@ -6,7 +6,7 @@ import { createInertiaApp } from '@inertiajs/vue3';
 import type { DefineComponent } from 'vue';
 import { createApp, h } from 'vue';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Garimpo';
+const appName = import.meta.env.VITE_APP_NAME || 'BISCA';
 
 createInertiaApp({
     title: (title) => (title ? `${title} · ${appName}` : appName),

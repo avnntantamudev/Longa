@@ -9,7 +9,7 @@ it('mostra a página inicial com os três perfis', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Home')
-            ->where('appName', 'Garimpo')
+            ->where('appName', 'BISCA')
             ->where('auth.user', null)
             ->has('profiles', 3)
             ->where('profiles.0.key', 'student')

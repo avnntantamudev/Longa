@@ -1,7 +1,7 @@
 """Gera os ícones PNG da PWA (192, 512, maskable, apple-touch) e o favicon, sem dependências externas.
 
-Desenho: marca Garimpo — pino de localização laranja (#ED731D) com um "G", sobre fundo branco
-(resources/brand/garimpo-logo.jpg). A mesma geometria existe em SVG em resources/js/components/BrandLogo.vue
+Desenho (provisório até chegar o logótipo oficial do BISCA): pino de localização laranja (#ED731D) com um "B"
+branco, sobre fundo branco. A mesma geometria existe em SVG em resources/js/components/BrandLogo.vue
 (viewBox 0 0 78.6 100).
 
 Uso: python scripts/generate-icons.py
@@ -15,13 +15,12 @@ ORANGE = (0xED, 0x73, 0x1D, 255)
 CLEAR = (0, 0, 0, 0)
 OUT = os.path.join(os.path.dirname(__file__), "..", "public", "icons")
 
-# Geometria do SVG (viewBox 0 0 78.6 100): pino = círculo + ponta; furo, abertura em diagonal e barra do G
+# Geometria do SVG (viewBox 0 0 78.6 100): pino = círculo + ponta; o "B" são dois "D" (retângulo + meio disco
+# à direita) com um furo em "D" cada um: (x0, x1, y0, y1)
 PIN_CIRCLE = (39.3, 39.3, 39.3)
 PIN_TIP = [(9.3, 64.7), (69.3, 64.7), (39.3, 100.0)]
-HOLE = (39.3, 39.3, 21.5)
-OPENING = [(51.3, 34.6), (80.0, 34.6), (80.0, 6.1)]
-BAR_END = (37.5, 40.7, 6.1)
-BAR = (37.5, 34.6, 78.6, 46.8)  # x0, y0, x1, y1
+B_OUTER = [(27.0, 41.0, 22.0, 40.0), (27.0, 43.0, 38.0, 57.0)]
+B_HOLES = [(33.5, 41.0, 28.0, 34.0), (33.5, 43.0, 44.5, 50.5)]
 MARK_RATIO = 0.786  # largura / altura
 
 SUPERSAMPLE = 4  # antialiasing
@@ -69,15 +68,19 @@ def in_circle(x, y, c):
     return (x - cx) ** 2 + (y - cy) ** 2 <= r * r
 
 
+def in_d(x, y, d):
+    x0, x1, y0, y1 = d
+    r = (y1 - y0) / 2
+    return y0 <= y <= y1 and (x0 <= x <= x1 or (x > x1 and (x - x1) ** 2 + (y - y0 - r) ** 2 <= r * r))
+
+
 def in_mark(u, v):
     # (u, v) no quadrado unitário; a marca ocupa a altura toda, centrada na horizontal
     x = (u - (1 - MARK_RATIO) / 2) * 100
     y = v * 100
     pin = in_circle(x, y, PIN_CIRCLE) or in_polygon(x, y, PIN_TIP)
-    cut = in_circle(x, y, HOLE) or in_polygon(x, y, OPENING)
-    x0, y0, x1, y1 = BAR
-    bar = in_circle(x, y, PIN_CIRCLE) and (in_circle(x, y, BAR_END) or (x0 <= x <= x1 and y0 <= y <= y1))
-    return (pin and not cut) or bar
+    letter = any(in_d(x, y, d) for d in B_OUTER) and not any(in_d(x, y, d) for d in B_HOLES)
+    return pin and not letter
 
 
 def in_rounded_rect(u, v, radius):

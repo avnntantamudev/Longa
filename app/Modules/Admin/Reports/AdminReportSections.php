@@ -28,7 +28,7 @@ class AdminReportSections
         return [
             ['title' => 'Resumo do período', 'headers' => ['Indicador', 'Kz'], 'rows' => [
                 ['Pago pelos alunos na app (entrou em escrow)', $t['paid_in']],
-                ['Comissões do Garimpo', $t['commissions']],
+                ['Comissões do BISCA', $t['commissions']],
                 ['Receita VIP', $t['vip']],
                 ['Creditado aos formadores', $t['to_trainers']],
                 ['Reembolsos decididos', $t['refunds_decided']],

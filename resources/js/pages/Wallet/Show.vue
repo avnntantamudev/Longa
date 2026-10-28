@@ -82,7 +82,7 @@ onMounted(load);
         </div>
         <p v-if="summary.commission_due > 0" class="card mt-3 text-caption">
             Comissões de aulas pagas em mão por entregar: <strong>{{ kwanza(summary.commission_due) }}</strong>.
-            São descontadas automaticamente dos próximos pagamentos pelo Garimpo.
+            São descontadas automaticamente dos próximos pagamentos pelo BISCA.
         </p>
 
         <h2 class="mt-6 text-title">Movimentos</h2>

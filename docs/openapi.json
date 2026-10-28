@@ -1,9 +1,9 @@
 {
     "openapi": "3.1.2",
     "info": {
-        "title": "Garimpo API",
+        "title": "BISCA API",
         "version": "1.0.0",
-        "description": "API do Garimpo (PWA e app Flutter). Autentica\u00e7\u00e3o: cookie de sess\u00e3o Sanctum (PWA) ou Bearer token obtido em /auth/otp/verify. Erros no formato {error: {code, message, details}, request_id}."
+        "description": "API do BISCA (PWA e app Flutter). Autentica\u00e7\u00e3o: cookie de sess\u00e3o Sanctum (PWA) ou Bearer token obtido em /auth/otp/verify. Erros no formato {error: {code, message, details}, request_id}."
     },
     "servers": [
         {
@@ -3794,7 +3794,7 @@
         "/sessions/{session}/confirm-cash": {
             "post": {
                 "operationId": "sessions.confirm-cash",
-                "description": "Requer `Idempotency-Key`. S\u00f3 depois de a aula estar conclu\u00edda por QR. A comiss\u00e3o do Garimpo fica em d\u00edvida\ndo formador (descontada do saldo dispon\u00edvel dele, se houver).",
+                "description": "Requer `Idempotency-Key`. S\u00f3 depois de a aula estar conclu\u00edda por QR. A comiss\u00e3o do BISCA fica em d\u00edvida\ndo formador (descontada do saldo dispon\u00edvel dele, se houver).",
                 "summary": "Confirmar que pagou ao formador em m\u00e3o (aluno)",
                 "tags": [
                     "Pagamentos",
@@ -4508,7 +4508,7 @@
             },
             "post": {
                 "operationId": "me.trainer.skill-suggestions.store",
-                "description": "Fica em an\u00e1lise at\u00e9 o Garimpo decidir. Se j\u00e1 existir uma \u00e1rea com esse nome, \u00e9 ligada logo ao perfil.\nErros: `too_many_suggestions` (409).",
+                "description": "Fica em an\u00e1lise at\u00e9 o BISCA decidir. Se j\u00e1 existir uma \u00e1rea com esse nome, \u00e9 ligada logo ao perfil.\nErros: `too_many_suggestions` (409).",
                 "summary": "Sugerir uma \u00e1rea que n\u00e3o est\u00e1 na lista",
                 "tags": [
                     "Perfil",
@@ -8162,7 +8162,7 @@
                             "Aula confirmada",
                             "Parte de aula cancelada ou em disputa",
                             "Comiss\u00e3o de aula paga em m\u00e3o",
-                            "Comiss\u00e3o entregue ao Garimpo",
+                            "Comiss\u00e3o entregue ao BISCA",
                             "Comiss\u00e3o descontada do saldo",
                             "Estorno",
                             "Movimento"

@@ -12,7 +12,7 @@ use App\Modules\Users\Models\TrainerProfile;
  * Convenção de sinal (a soma de todas as contas é sempre 0):
  *  - funds_in              contrapartida do dinheiro que entra pelo gateway (negativa quando entra dinheiro)
  *  - escrow                dinheiro dos alunos retido (positiva; = soma dos holds "held")
- *  - platform_revenue      comissões do Garimpo (positiva)
+ *  - platform_revenue      comissões do BISCA (positiva)
  *  - refunds_payable       reembolsos decididos à espera do gateway (positiva enquanto por pagar)
  *  - cash_settlement       contrapartida das comissões recebidas em dinheiro (negativa quando recebe)
  *  - trainer_available:{id}       saldo disponível do formador (positivo)

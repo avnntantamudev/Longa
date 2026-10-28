@@ -25,7 +25,7 @@ const roleLabels: Record<RoleName, string> = { student: 'Aluno', trainer: 'Forma
 const verificationLabels: Record<string, string> = {
     unverified: 'Por verificar',
     pending: 'Verificação em análise',
-    verified: 'Verificado Garimpo',
+    verified: 'Verificado BISCA',
     rejected: 'Verificação rejeitada',
 };
 

@@ -59,7 +59,7 @@ onMounted(load);
                 <p class="font-semibold">{{ kwanza(report.totals.cash_received) }}</p>
             </div>
             <div class="card">
-                <p class="text-caption text-ink-muted">Comissões do Garimpo</p>
+                <p class="text-caption text-ink-muted">Comissões do BISCA</p>
                 <p class="font-semibold">{{ kwanza(report.totals.commissions) }}</p>
             </div>
         </div>

@@ -4,13 +4,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#0B1F3A">
-    <meta name="description" content="Garimpo — formação perto de si: alunos, formadores e empresas.">
+    <meta name="description" content="BISCA — serviços perto de si: técnicos verificados para a casa, a empresa e aulas.">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Garimpo">
+    <meta name="apple-mobile-web-app-title" content="BISCA">
 
-    <title inertia>{{ config('app.name', 'Garimpo') }}</title>
+    <title inertia>{{ config('app.name', 'BISCA') }}</title>
 
     <link rel="manifest" href="/manifest.webmanifest">
     <link rel="icon" href="/favicon.ico" sizes="any">

@@ -73,7 +73,7 @@ async function scan() {
     if (raw) {
         const parsed = parseQrPayload(raw);
         if (!parsed) {
-            error.value = 'Este QR não é de uma aula do Garimpo.';
+            error.value = 'Este QR não é de uma aula do BISCA.';
         } else if (parsed.sessionId !== props.sessionId) {
             error.value = 'Este QR é de outra aula.';
         } else {
@@ -135,7 +135,7 @@ onBeforeUnmount(stopCamera);
         <span class="flex size-24 items-center justify-center rounded-full bg-success text-5xl text-white">✓</span>
         <h1 class="text-display">Aula confirmada</h1>
         <p class="text-ink-muted">{{ message }}</p>
-        <p v-if="session && session.payment_method === 'electronic'" class="text-caption text-ink-muted">Pagou {{ kwanza(session.amount) }} pelo Garimpo.</p>
+        <p v-if="session && session.payment_method === 'electronic'" class="text-caption text-ink-muted">Pagou {{ kwanza(session.amount) }} pelo BISCA.</p>
         <Link :href="`/aulas/${sessionId}`" class="btn-primary w-full max-w-xs">Voltar à aula</Link>
     </section>
 

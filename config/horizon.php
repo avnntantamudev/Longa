@@ -200,7 +200,7 @@ return [
     |
     */
 
-    // Filas do Garimpo:
+    // Filas do BISCA:
     //  - payments: operações de dinheiro; supervisor dedicado, pouca concorrência, mais tentativas
     //  - notifications: SMS, e-mail, push; muitas tarefas curtas
     //  - default: restante trabalho em segundo plano

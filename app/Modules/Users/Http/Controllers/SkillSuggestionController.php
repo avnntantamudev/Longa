@@ -33,7 +33,7 @@ class SkillSuggestionController extends Controller
     /**
      * Sugerir uma área que não está na lista.
      *
-     * Fica em análise até o Garimpo decidir. Se já existir uma área com esse nome, é ligada logo ao perfil.
+     * Fica em análise até o BISCA decidir. Se já existir uma área com esse nome, é ligada logo ao perfil.
      * Erros: `too_many_suggestions` (409).
      */
     public function store(Request $request, SkillSuggestions $suggestions): JsonResponse

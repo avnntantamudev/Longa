@@ -6,7 +6,7 @@ it('tem um manifest válido com ícones 192, 512 e maskable', function () {
     $manifest = json_decode((string) file_get_contents(__DIR__.'/../../public/manifest.webmanifest'), true, flags: JSON_THROW_ON_ERROR);
 
     expect($manifest)
-        ->name->toBe('Garimpo')
+        ->name->toBe('BISCA')
         ->display->toBe('standalone')
         ->theme_color->toBe('#0B1F3A')
         ->scope->toBe('/');

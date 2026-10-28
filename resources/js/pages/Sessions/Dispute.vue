@@ -71,7 +71,7 @@ async function submit() {
     <Head :title="contest ? 'Contestar falta' : 'Abrir disputa'" />
 
     <h1 class="text-display">{{ contest ? 'Contestar falta' : 'Abrir disputa' }}</h1>
-    <p class="mt-2 text-caption text-ink-muted">O Garimpo analisa e decide. Até lá, o valor da aula fica retido e ninguém o recebe.</p>
+    <p class="mt-2 text-caption text-ink-muted">O BISCA analisa e decide. Até lá, o valor da aula fica retido e ninguém o recebe.</p>
 
     <form class="mt-6 grid gap-4" @submit.prevent="submit">
         <FormField label="Motivo" for="reason" :error="errors.reason">

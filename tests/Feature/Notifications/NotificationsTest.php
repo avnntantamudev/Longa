@@ -94,7 +94,7 @@ it('escreve a oferta em texto curto: "Novo pedido a 1,2 km: SGME 25.000 Kz"', fu
 
     expect($push['title'])->toBe('TRIM TRIM · Novo pedido a 1,2 km: SGME — Gestão Empresarial 25.000 Kz')
         ->and($push['data']['url'])->toBe("/formador/ofertas/{$offer->id}")
-        ->and($sms)->toStartWith('Garimpo: Novo pedido a 1,2 km')
+        ->and($sms)->toStartWith('BISCA: Novo pedido a 1,2 km')
         ->and($sms)->not->toContain((string) $this->request->latitude);
 
     // O push não deve chegar depois de a oferta expirar

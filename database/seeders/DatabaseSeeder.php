@@ -18,7 +18,7 @@ class DatabaseSeeder extends Seeder
         if (app()->isLocal()) {
             $admin = User::query()->firstOrCreate(
                 ['phone' => '+244900000001'],
-                ['name' => 'Admin Garimpo', 'phone_verified_at' => now(), 'onboarded_at' => now()],
+                ['name' => 'Admin BISCA', 'phone_verified_at' => now(), 'onboarded_at' => now()],
             );
             $admin->assignRole(Role::Admin->value);
         }

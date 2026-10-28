@@ -1,4 +1,4 @@
-# Garimpo
+# BISCA
 
 Plataforma de formação que liga **alunos**, **formadores** e **empresas (RH)** em Angola.
 PWA mobile-first e API-first (a mesma API `/api/v1` servirá a futura app Flutter).

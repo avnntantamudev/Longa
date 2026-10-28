@@ -19,7 +19,7 @@ it('regista a empresa e torna o utilizador gestor RH', function () {
     $this->getJson('/api/v1/companies')->assertOk()->assertJsonCount(1, 'data');
 });
 
-it('gere funcionários com telefone normalizado e liga contas Garimpo', function () {
+it('gere funcionários com telefone normalizado e liga contas BISCA', function () {
     apiLogin(User::factory()->create());
     $companyId = $this->postJson('/api/v1/companies', ['name' => 'Empresa X'])->json('data.id');
     $existing = User::factory()->create(['phone' => '+244923111222']);

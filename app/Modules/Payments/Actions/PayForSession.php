@@ -58,7 +58,7 @@ class PayForSession
         $charge = $this->registerCharge($session, $student, $method, $key);
 
         if ($charge->status !== ProviderResult::SUCCEEDED) {
-            $result = $this->provider->charge($session->amount, $student->phone, $method, $key, "Garimpo · {$session->title}");
+            $result = $this->provider->charge($session->amount, $student->phone, $method, $key, "BISCA · {$session->title}");
             $charge->forceFill([
                 'status' => $result->status,
                 'external_reference' => $result->reference,

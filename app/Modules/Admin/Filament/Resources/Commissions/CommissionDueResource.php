@@ -28,7 +28,7 @@ use Illuminate\Support\Str;
 use UnitEnum;
 
 /**
- * Comissões de aulas pagas em mão que o formador ainda deve ao Garimpo.
+ * Comissões de aulas pagas em mão que o formador ainda deve ao BISCA.
  * "Marcar recebido" regista o dinheiro entregue ao admin (transação cash_commission_received).
  */
 class CommissionDueResource extends Resource

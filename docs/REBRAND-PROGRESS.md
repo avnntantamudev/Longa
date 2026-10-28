@@ -1,7 +1,7 @@
 # Mudança de nome LONGA → Garimpo — progresso
 
 Pedido do utilizador (2026-10-27): o sistema chama-se agora **Garimpo**; logótipo em `resources/brand/garimpo-logo.jpg`
-(pino laranja #ED731D com um "G"; "GARIMPO" e "marketplace • formadores" a escuro). A app mobile fica em pausa;
+(pino laranja #ED731D com um "G"; "GARIMPO" e "serviços • técnicos" a escuro). A app mobile fica em pausa;
 continuar só com a PWA.
 
 Regras:
@@ -9,7 +9,7 @@ Regras:
   backoffice, documentação.
 - Manter nomes internos: `config/longa.php`, variáveis `LONGA_*`, comandos `longa:*`, base de dados, pastas, e o
   prefixo interno do conteúdo do QR (`LONGA:` — o utilizador não o vê e mantém QR antigos válidos).
-- Slogans antigos ("Kulonga = Ensinar", "De Longi para Longi") saem; usar "marketplace • formadores".
+- Slogans antigos ("Kulonga = Ensinar", "De Longi para Longi") saem; usar "serviços • técnicos".
 
 Estado: CONCLUÍDO (CI verde em dd1920f)
 

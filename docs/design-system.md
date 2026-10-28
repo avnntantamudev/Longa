@@ -1,17 +1,17 @@
-# Design system do Garimpo
+# Design system do BISCA
 
 Fonte: kit de telas enviado a 23/10/2026 (16 imagens, algumas repetidas). Os tokens vivem em
 `resources/css/app.css` (`@theme`); a referência visual dos componentes está em `/_kit` (só em ambiente local).
 
 ## Marca
 
-- **Nome:** Garimpo (antes LONGA; mudou a 2026-10-27). Nomes internos (`config/longa.php`, `LONGA_*`, `longa:*`,
+- **Nome:** BISCA (antes LONGA e, por um dia, Garimpo; mudou a 2026-10-28). Nomes internos (`config/longa.php`, `LONGA_*`, `longa:*`,
   prefixo `LONGA:` do QR) mantêm-se.
-- **Logótipo:** pino de localização laranja `#ED731D` com um "G" + "GARIMPO" em negrito; original em
-  `resources/brand/garimpo-logo.jpg`.
+- **Logótipo (provisório):** pino de localização laranja `#ED731D` com um "B" branco + "BISCA" em negrito, até
+  chegar o logótipo oficial.
   Componente `BrandLogo.vue` (variante `light` para fundos escuros, `dark` para claros). Ícones PWA gerados
   com a mesma geometria por `scripts/generate-icons.py`.
-- **Assinatura:** "marketplace • formadores" (do logótipo). Ícones da PWA: marca laranja sobre fundo branco.
+- **Assinatura:** "serviços • técnicos" (do logótipo). Ícones da PWA: marca laranja sobre fundo branco.
 - **Cores:** marinho `#0B1F3A` (cabeçalhos, barra lateral, botão alternativo) e laranja `#FF7A00` (ação principal,
   filtro ativo, destaques). As amostras das imagens dão ≈ `#101838` e ≈ `#F86800`: a diferença vem da compressão
   das imagens, por isso mantêm-se os valores do briefing.

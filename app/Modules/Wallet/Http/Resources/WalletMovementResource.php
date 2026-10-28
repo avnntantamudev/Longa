@@ -40,7 +40,7 @@ class WalletMovementResource extends JsonResource
             'escrow_release' => 'Aula confirmada',
             'refund_partial' => 'Parte de aula cancelada ou em disputa',
             'cash_commission_due' => 'Comissão de aula paga em mão',
-            'cash_commission_received' => 'Comissão entregue ao Garimpo',
+            'cash_commission_received' => 'Comissão entregue ao BISCA',
             'commission_offset' => 'Comissão descontada do saldo',
             'reversal' => 'Estorno',
             default => 'Movimento',

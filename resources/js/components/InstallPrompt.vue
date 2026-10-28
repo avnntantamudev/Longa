@@ -13,7 +13,7 @@ const { visible, canPrompt, showIosHint, install, dismiss } = useInstallPrompt()
     >
         <img src="/icons/icon-192.png" alt="" class="size-11 rounded-control" />
         <div class="flex-1">
-            <p class="font-semibold">Adicionar o Garimpo ao ecrã inicial</p>
+            <p class="font-semibold">Adicionar o BISCA ao ecrã inicial</p>
             <p v-if="canPrompt" class="text-caption text-ink-muted">Abre mais depressa e funciona com pouca rede.</p>
             <p v-else-if="showIosHint" class="text-caption text-ink-muted">
                 Toque em <AppIcon name="share" :size="14" class="inline align-text-bottom" /> Partilhar e depois em

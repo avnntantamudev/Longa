@@ -122,7 +122,7 @@ async function save(action: () => Promise<unknown>): Promise<boolean> {
 
 async function next(): Promise<void> {
     if (step.value === 0 && !photo.value) {
-        errors.value = { photo: 'Carregue a sua foto: os alunos veem-na e o Garimpo compara-a com o BI.' };
+        errors.value = { photo: 'Carregue a sua foto: os alunos veem-na e o BISCA compara-a com o BI.' };
         return;
     }
     const actions = [
@@ -229,7 +229,7 @@ function submitVerification(): Promise<unknown> {
 
             <section class="card grid gap-2">
                 <h2 class="font-semibold">Não encontra a sua área?</h2>
-                <p class="text-caption text-ink-muted">Escreva-a. O Garimpo analisa e, se aprovar, passa a receber pedidos dessa área.</p>
+                <p class="text-caption text-ink-muted">Escreva-a. O BISCA analisa e, se aprovar, passa a receber pedidos dessa área.</p>
                 <div class="flex gap-2">
                     <input v-model="otherSkill" class="input flex-1" maxlength="80" placeholder="Ex.: Contabilidade no Primavera" @keydown.enter.prevent="suggestSkill" />
                     <button type="button" class="btn-secondary min-h-12 px-4" :disabled="suggesting" @click="suggestSkill">Sugerir</button>
@@ -263,14 +263,14 @@ function submitVerification(): Promise<unknown> {
 
             <label class="flex items-start gap-3 text-caption">
                 <input v-model="location.accept_location" type="checkbox" class="mt-0.5 size-5 accent-orange-500" />
-                <span>Autorizo o Garimpo a usar a minha localização para encontrar alunos perto de mim.</span>
+                <span>Autorizo o BISCA a usar a minha localização para encontrar alunos perto de mim.</span>
             </label>
             <p v-if="errors.accept_location" class="text-caption text-danger">{{ errors.accept_location }}</p>
         </template>
 
         <!-- 4. Verificação -->
         <template v-else>
-            <h1 class="text-title">Verificação Garimpo</h1>
+            <h1 class="text-title">Verificação BISCA</h1>
             <p class="-mt-3 text-caption text-ink-muted">
                 Só formadores verificados aparecem na pesquisa e recebem pedidos. O seu BI fica cifrado e só a equipa de verificação o vê.
             </p>

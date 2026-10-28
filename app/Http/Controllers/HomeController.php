@@ -19,7 +19,7 @@ class HomeController extends Controller
             ],
             'highlights' => [
                 ['icon' => 'map-pin', 'title' => 'Formadores perto de si', 'description' => 'Veja quem ensina no seu bairro e a que distância está.'],
-                ['icon' => 'check-badge', 'title' => 'Verificados pelo Garimpo', 'description' => 'Identidade e competências confirmadas antes de aparecerem na pesquisa.'],
+                ['icon' => 'check-badge', 'title' => 'Verificados pelo BISCA', 'description' => 'Identidade e competências confirmadas antes de aparecerem na pesquisa.'],
                 ['icon' => 'wallet', 'title' => 'Pagamento seguro, recibo legal', 'description' => 'O pagamento só é libertado depois de a aula ser confirmada com QR.'],
             ],
         ]);

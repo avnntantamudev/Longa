@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Funcionário de uma empresa: pode estar ligado a um utilizador do Garimpo ou ser só um registo do RH.
+ * Funcionário de uma empresa: pode estar ligado a um utilizador do BISCA ou ser só um registo do RH.
  *
  * @property int $id
  * @property int $company_id

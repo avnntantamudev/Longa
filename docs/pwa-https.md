@@ -69,4 +69,4 @@ principal**. Para testar, use a opção B (túnel HTTPS), porque o `adb reverse`
 - [ ] `/sw.js` responde 200 e é servido sem cache (ver `docker/nginx/default.conf`)
 - [ ] DevTools → Application → Manifest sem erros de instalabilidade
 - [ ] Offline: navegar mostra a página de aviso; a faixa "Sem ligação" aparece nas páginas abertas
-- [ ] Após novo `npm run build`, aparece o aviso "Há uma nova versão do Garimpo disponível"
+- [ ] Após novo `npm run build`, aparece o aviso "Há uma nova versão do BISCA disponível"

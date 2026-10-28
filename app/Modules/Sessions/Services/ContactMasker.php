@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Sessions\Services;
 
 /**
- * Esconde telefones e e-mails escritos no chat, para a comunicação ficar no Garimpo nesta fase
+ * Esconde telefones e e-mails escritos no chat, para a comunicação ficar no BISCA nesta fase
  * ("sem partilha de contactos além do chat"). Desligável em config longa.chat.mask_contacts.
  */
 class ContactMasker

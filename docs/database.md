@@ -1,4 +1,4 @@
-# Base de dados do Garimpo
+# Base de dados do BISCA
 
 MySQL 8.4, `utf8mb4_unicode_ci`, fuso `Africa/Luanda`. Montantes em **Kz inteiros** (`unsigned int/bigint`).
 Localizações: `latitude`/`longitude` (`decimal(10,7)`) como fonte de verdade e uma coluna `location`

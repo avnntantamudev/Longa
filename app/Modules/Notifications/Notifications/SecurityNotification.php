@@ -63,7 +63,7 @@ class SecurityNotification extends Notification implements ShouldQueue
         $device = $this->deviceName ?? 'um aparelho';
 
         return match ($this->kind) {
-            self::NEW_DEVICE => ['Novo aparelho na sua conta', "Entrou no Garimpo em {$device}. Se não foi você, remova-o em Perfil → Aparelhos e troque o PIN."],
+            self::NEW_DEVICE => ['Novo aparelho na sua conta', "Entrou no BISCA em {$device}. Se não foi você, remova-o em Perfil → Aparelhos e troque o PIN."],
             self::PIN_CHANGED => ['PIN alterado', 'O seu PIN foi alterado e os outros aparelhos saíram da conta. Se não foi você, entre com o código SMS e crie um PIN novo.'],
             default => ['Aparelho bloqueado', "O PIN foi errado muitas vezes em {$device}. Por segurança, esse aparelho precisa do código SMS para voltar a entrar."],
         };

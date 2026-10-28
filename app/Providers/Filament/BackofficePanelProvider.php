@@ -32,7 +32,7 @@ class BackofficePanelProvider extends PanelProvider
             ->default()
             ->id('backoffice')
             ->path('backoffice')
-            ->brandName('Garimpo Backoffice')
+            ->brandName('BISCA Backoffice')
             ->authGuard('web')
             ->colors(['primary' => Color::hex('#ED731D')])
             ->discoverResources(in: app_path('Modules/Admin/Filament/Resources'), for: 'App\Modules\Admin\Filament\Resources')

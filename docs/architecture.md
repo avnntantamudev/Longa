@@ -1,4 +1,4 @@
-# Arquitetura do Garimpo
+# Arquitetura do BISCA
 
 ## Módulos
 

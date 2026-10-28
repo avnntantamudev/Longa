@@ -9,6 +9,7 @@ use App\Http\Middleware\HandleInertiaRequests;
 use App\Modules\Auth\Http\Middleware\EnsureAuthSessionIsActive;
 use App\Modules\Auth\Http\Middleware\EnsurePinUnlocked;
 use App\Modules\Auth\Http\Middleware\RequireRecentPin;
+use App\Modules\Users\Http\Middleware\EnsureLegalAccepted;
 use App\Modules\Users\Http\Middleware\EnsureOnboarded;
 use App\Support\Api\ApiExceptionRenderer;
 use Illuminate\Foundation\Application;
@@ -35,12 +36,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             HandleInertiaRequests::class,
             EnsurePinUnlocked::class,
+            EnsureLegalAccepted::class,
         ]);
 
         // A PWA chama /api/v1 com o cookie de sessão (Sanctum SPA); a app Flutter usa Bearer tokens
         $middleware->statefulApi();
         // Pedidos da PWA à API também respeitam o bloqueio por PIN (os tokens Bearer não)
-        $middleware->api(append: [EnsurePinUnlocked::class]);
+        $middleware->api(append: [EnsurePinUnlocked::class, EnsureLegalAccepted::class]);
 
         $middleware->alias([
             'audit' => AuditAction::class,

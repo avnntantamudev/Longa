@@ -33,7 +33,7 @@ Nomes novos:
 | 4 | Papéis da equipa (admin, operator) | feito |
 | 5 | Modelo genérico: árvore de categorias, campos de formulário, zonas, preços, documentos, localização e reputação, parâmetros | feito |
 | 6 | Seed das categorias e dos formulários | feito |
-| 7 | Termos e Política: duas caixas, textos versionados na app, nova aceitação quando a versão muda | por fazer |
+| 7 | Termos e Política: duas caixas, textos versionados na app, nova aceitação quando a versão muda | feito |
 | 8 | Suite, CI e resumo da fase | por fazer |
 
 ### Notas do passo 2
@@ -86,3 +86,16 @@ Migração `2026_10_28_000002_create_generic_service_model` (reversível):
 - **Backoffice → Catálogo → Categorias (só admin):** árvore, preços, campos e documentos exigidos, com auditoria.
   Recusa ciclos; não se apagam categorias, desativam-se.
 - **Sugestões "Outra área":** ao aprovar como nova, escolhe-se a categoria-pai.
+
+### Notas do passo 7
+
+- **Textos:** `resources/legal/{terms,privacy}/<versão>.md` (versão 2026-10, marcadores de posição). A versão em
+  vigor é o ficheiro mais recente; para publicar o texto final, junta-se um ficheiro novo (ex.: `2026-11.md`).
+- **Aceitações:** ficam na tabela `consents` (documento, versão, data e hora, IP e user agent), que corresponde a
+  `aceitacoes_legais`.
+- **Registo:** duas caixas desmarcadas. Os nomes abrem o texto numa janela dentro da app e "Criar conta" só fica
+  ativo com as duas marcadas.
+- **Versão nova:** quem já tem conta é levado para `/termos/aceitar`; a API responde 403
+  `legal_acceptance_required`.
+- **Rotas:** `/legal/termos` e `/legal/privacidade` são páginas públicas; `GET /api/v1/legal/{terms|privacy}`,
+  `GET /api/v1/me/legal` e `POST /api/v1/me/legal/accept`.

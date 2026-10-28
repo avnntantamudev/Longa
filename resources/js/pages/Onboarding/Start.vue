@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import LegalDialog from '@/components/LegalDialog.vue';
 import AppIcon, { type IconName } from '@/components/AppIcon.vue';
 import FormField from '@/components/FormField.vue';
 import { api, ApiError } from '@/lib/api';
@@ -23,6 +24,8 @@ const form = reactive({
 });
 const errors = ref<Record<string, string>>({});
 const submitting = ref(false);
+// Documento aberto na janela de leitura (os nomes das caixas são links)
+const reading = ref<'terms' | 'privacy' | null>(null);
 
 function toggle(key: ProfileKey): void {
     form.profiles = form.profiles.includes(key) ? form.profiles.filter((p) => p !== key) : [...form.profiles, key];
@@ -86,17 +89,20 @@ async function submit(): Promise<void> {
         <div class="grid gap-3">
             <label class="flex items-start gap-3 text-caption">
                 <input v-model="form.accept_terms" type="checkbox" class="mt-0.5 size-5 accent-orange-500" />
-                <span>Li e aceito os Termos de Utilização do BISCA.</span>
+                <span>Li e aceito os <button type="button" class="font-semibold text-orange-600 underline" @click.prevent="reading = 'terms'">Termos de Utilização do BISCA</button>.</span>
             </label>
             <p v-if="errors.accept_terms" class="text-caption text-danger">{{ errors.accept_terms }}</p>
             <label class="flex items-start gap-3 text-caption">
                 <input v-model="form.accept_privacy" type="checkbox" class="mt-0.5 size-5 accent-orange-500" />
-                <span>Li e aceito a Política de Privacidade (tratamento dos meus dados pessoais).</span>
+                <span>Li e aceito a <button type="button" class="font-semibold text-orange-600 underline" @click.prevent="reading = 'privacy'">Política de Privacidade</button> (tratamento dos meus dados pessoais).</span>
             </label>
             <p v-if="errors.accept_privacy" class="text-caption text-danger">{{ errors.accept_privacy }}</p>
         </div>
 
         <p v-if="errors.general" class="text-caption text-danger" role="alert">{{ errors.general }}</p>
-        <button type="submit" class="btn-primary w-full" :disabled="submitting">{{ submitting ? 'A guardar…' : 'Continuar' }}</button>
+        <button type="submit" class="btn-primary w-full" :disabled="submitting || !form.accept_terms || !form.accept_privacy">{{ submitting ? 'A guardar…' : 'Criar conta' }}</button>
+        <p v-if="!form.accept_terms || !form.accept_privacy" class="text-center text-caption text-ink-muted">Marque as duas caixas para criar a conta.</p>
     </form>
+
+    <LegalDialog :document="reading" @close="reading = null" /> 
 </template>

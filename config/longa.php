@@ -36,10 +36,14 @@ return [
         'max_sends_per_ip_per_hour' => (int) env('OTP_MAX_SENDS_PER_IP_PER_HOUR', 20),
     ],
 
-    // Versões em vigor dos documentos que o utilizador aceita (muda a versão para pedir nova aceitação)
+    // Termos e Política de Privacidade: versionados em ficheiros (resources/legal/{terms,privacy}/<versão>.md);
+    // a versão em vigor é o ficheiro mais recente. Juntar um ficheiro novo pede nova aceitação a todos.
+    'legal' => [
+        'path' => env('LONGA_LEGAL_PATH', resource_path('legal')),
+    ],
+
+    // Versões em vigor dos outros consentimentos (muda a versão para pedir nova autorização)
     'consents' => [
-        'terms' => env('LONGA_TERMS_VERSION', '2026-10'),
-        'privacy' => env('LONGA_PRIVACY_VERSION', '2026-10'),
         'location' => env('LONGA_LOCATION_CONSENT_VERSION', '2026-10'),
         // Autorização para a empresa (RH) ver os serviços do colaborador
         'company_reports' => env('LONGA_COMPANY_REPORTS_CONSENT_VERSION', '2026-10'),

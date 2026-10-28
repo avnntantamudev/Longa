@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Users\Http\Controllers\LegalController;
 use App\Modules\Users\Http\Controllers\PageController;
 use App\Modules\Users\Http\Controllers\PhotoController;
 use Illuminate\Support\Facades\Route;
@@ -10,6 +11,13 @@ use Illuminate\Support\Facades\Route;
 Route::get('/fotos/{name}-{size}.webp', [PhotoController::class, 'show'])
     ->where(['name' => '[a-z0-9]{32}', 'size' => '[0-9]+'])
     ->name('photos.show');
+
+// Termos e Política de Privacidade: leitura pública; nova aceitação quando a versão muda
+Route::get('/legal/{slug}', [LegalController::class, 'page'])->whereIn('slug', ['termos', 'privacidade'])->name('legal.show');
+Route::middleware(['auth', 'auth.session'])->group(function () {
+    Route::get('/termos/aceitar', [LegalController::class, 'acceptPage'])->name('legal.accept');
+    Route::post('/termos/aceitar', [LegalController::class, 'acceptFromPage'])->name('legal.accept.store');
+});
 
 // Páginas da PWA: os formulários chamam a API /api/v1 com o cookie de sessão (Sanctum SPA)
 Route::middleware(['auth', 'auth.session'])->group(function () {

@@ -6,7 +6,9 @@ namespace Database\Factories;
 
 use App\Modules\Users\Enums\Role;
 use App\Modules\Users\Enums\UserStatus;
+use App\Modules\Users\Models\Consent;
 use App\Modules\Users\Models\User;
+use App\Modules\Users\Services\LegalDocuments;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -36,6 +38,22 @@ class UserFactory extends Factory
     /**
      * Com foto registada (só o nome; os ficheiros não existem nos testes).
      */
+    /**
+     * Quem concluiu o registo aceitou os Termos e a Política em vigor (como no onboarding real).
+     */
+    public function configure(): static
+    {
+        return $this->afterCreating(function (User $user) {
+            if ($user->onboarded_at === null) {
+                return;
+            }
+            $legal = app(LegalDocuments::class);
+            foreach (array_keys(LegalDocuments::DOCUMENTS) as $document) {
+                Consent::query()->forceCreate(['user_id' => $user->id, 'type' => $document, 'version' => $legal->currentVersion($document), 'accepted_at' => now()]);
+            }
+        });
+    }
+
     public function withPhoto(): static
     {
         return $this->state(fn () => ['photo' => strtolower(Str::random(32)), 'photo_updated_at' => now()]);

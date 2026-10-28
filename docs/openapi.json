@@ -5497,6 +5497,140 @@
                 }
             }
         },
+        "/legal/{document}": {
+            "get": {
+                "operationId": "legal.show",
+                "summary": "Texto completo em vigor (HTML), para abrir dentro da app antes de aceitar",
+                "tags": [
+                    "Termos e privacidade",
+                    "Legal"
+                ],
+                "parameters": [
+                    {
+                        "name": "document",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "document": {
+                                                    "type": "string"
+                                                },
+                                                "title": {
+                                                    "type": "string"
+                                                },
+                                                "version": {
+                                                    "type": "null"
+                                                },
+                                                "html": {
+                                                    "type": "string",
+                                                    "description": "Ficheiros do pr\u00f3prio projeto; mesmo assim, HTML embutido \u00e9 removido"
+                                                }
+                                            },
+                                            "required": [
+                                                "document",
+                                                "title",
+                                                "version",
+                                                "html"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": []
+            }
+        },
+        "/me/legal": {
+            "get": {
+                "operationId": "me.legal",
+                "summary": "Documentos que o utilizador ainda tem de aceitar (vers\u00e3o nova publicada)",
+                "tags": [
+                    "Termos e privacidade",
+                    "Legal"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {}
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/me/legal/accept": {
+            "post": {
+                "operationId": "me.legal.accept",
+                "summary": "Aceitar a vers\u00e3o em vigor dos documentos pendentes. T\u00eam de vir todos",
+                "tags": [
+                    "Termos e privacidade",
+                    "Legal"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            },
+                                            "minItems": 0,
+                                            "maxItems": 0
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/me/vip": {
             "get": {
                 "operationId": "vip.show",

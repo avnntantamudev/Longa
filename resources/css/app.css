@@ -171,3 +171,10 @@
 .pt-safe {
     padding-top: env(safe-area-inset-top);
 }
+
+/* Termos e Política de Privacidade (HTML gerado a partir de Markdown) */
+.legal-text h1 { @apply text-title; }
+.legal-text h2 { @apply mt-5 font-semibold; }
+.legal-text p, .legal-text ul, .legal-text ol { @apply mt-2 text-ink-muted; }
+.legal-text ul { @apply list-disc pl-5; }
+.legal-text blockquote { @apply mt-3 rounded-card border-l-4 border-orange-400 bg-orange-50 px-4 py-3 text-caption; }

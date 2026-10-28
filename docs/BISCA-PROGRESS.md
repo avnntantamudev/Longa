@@ -23,7 +23,7 @@ Nomes novos:
 - skill → category;
 - papéis da equipa: admin e operator.
 
-## Fase 1 — Estado: EM CURSO
+## Fase 1 — Estado: CONCLUÍDA (à espera de validação para a Fase 2)
 
 | # | Passo | Estado |
 |---|---|---|
@@ -34,7 +34,7 @@ Nomes novos:
 | 5 | Modelo genérico: árvore de categorias, campos de formulário, zonas, preços, documentos, localização e reputação, parâmetros | feito |
 | 6 | Seed das categorias e dos formulários | feito |
 | 7 | Termos e Política: duas caixas, textos versionados na app, nova aceitação quando a versão muda | feito |
-| 8 | Suite, CI e resumo da fase | por fazer |
+| 8 | Suite, CI e resumo da fase | feito (docs/BISCA-FASE1-RELATORIO.md) |
 
 ### Notas do passo 2
 

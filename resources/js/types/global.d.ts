@@ -39,7 +39,13 @@ export interface Category {
     id: number;
     name: string;
     slug: string;
-    area: string;
+    parent_id: number | null;
+    /** Caminho completo na árvore, ex.: "Casa › Climatização › Manutenção de ar condicionado" */
+    path: string;
+    /** Caminho do pai, para agrupar listas */
+    group: string | null;
+    pricing_mode: 'fixed' | 'quote' | 'hourly_package';
+    modalities: Array<'in_person' | 'online'>;
 }
 
 export interface Zone {

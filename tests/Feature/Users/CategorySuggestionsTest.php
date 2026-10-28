@@ -51,7 +51,7 @@ it('aprovar como área nova liga-a a todos os técnicos que escreveram o mesmo e
     suggestAs($a, 'Contabilidade no Primavera')->assertCreated();
     suggestAs($b, 'contabilidade no primavera!')->assertCreated();
 
-    $count = app(CategorySuggestions::class)->approveAsNew(CategorySuggestion::query()->firstOrFail(), User::factory()->withRole(Role::Admin)->create(), 'Primavera — Contabilidade', 'Gestão');
+    $count = app(CategorySuggestions::class)->approveAsNew(CategorySuggestion::query()->firstOrFail(), User::factory()->withRole(Role::Admin)->create(), 'Primavera — Contabilidade', Category::query()->where('slug', 'gestao-e-contabilidade')->firstOrFail());
 
     $category = Category::query()->where('name', 'Primavera — Contabilidade')->sole();
     expect($count)->toBe(2)
@@ -98,9 +98,9 @@ it('o admin aprova no backoffice criando a área', function () {
 
     Livewire::test(ListCategorySuggestions::class)
         ->assertCanSeeTableRecords([$suggestion])
-        ->callTableAction('approve', $suggestion, data: ['mode' => 'new', 'name' => 'Primavera — Contabilidade', 'area' => $area = Category::query()->value('area')])
+        ->callTableAction('approve', $suggestion, data: ['mode' => 'new', 'name' => 'Primavera — Contabilidade', 'parent_id' => $parentId = Category::query()->where('slug', 'gestao-e-contabilidade')->value('id')])
         ->assertHasNoTableActionErrors();
 
     expect($suggestion->fresh()?->status)->toBe('approved')
-        ->and(Category::query()->where('name', 'Primavera — Contabilidade')->value('area'))->toBe($area);
+        ->and(Category::query()->where('name', 'Primavera — Contabilidade')->value('parent_id'))->toBe($parentId);
 });

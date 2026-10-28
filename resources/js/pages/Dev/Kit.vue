@@ -35,7 +35,7 @@ const chips = ['Disciplina: Matemática', 'Distância: 5 km', 'Preço'];
     <div class="mt-3 rounded-card bg-navy-900 p-4">
         <label class="search-pill">
             <AppIcon name="search" :size="20" />
-            <input type="search" placeholder="O que quer aprender?" class="w-full bg-transparent text-ink outline-none placeholder:text-ink-muted" />
+            <input type="search" placeholder="De que serviço precisa?" class="w-full bg-transparent text-ink outline-none placeholder:text-ink-muted" />
         </label>
     </div>
     <div class="mt-3 flex flex-wrap gap-2">

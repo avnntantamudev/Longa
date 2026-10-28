@@ -16,8 +16,9 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * Categoria de serviço numa árvore (ex.: Casa › Climatização › Manutenção de ar condicionado).
- * Os pedidos e os técnicos ligam-se às folhas; o modo de preço, as modalidades e os documentos exigidos
- * são herdados do antepassado mais próximo que os defina, e o formulário junta os campos de toda a linha.
+ * Os pedidos e os técnicos ligam-se às folhas. O modo de preço é de cada categoria (uma subcategoria nova
+ * começa com o do pai); as modalidades e os preços vêm do antepassado mais próximo que os defina; os documentos
+ * exigidos e o formulário juntam os de toda a linha.
  *
  * @property int $id
  * @property int|null $parent_id
@@ -107,6 +108,16 @@ class Category extends Model
     public function scopeRoots(Builder $query): void
     {
         $query->whereNull('parent_id');
+    }
+
+    /**
+     * Folhas: categorias sem subcategorias ativas (as únicas que se pedem e que os técnicos escolhem).
+     *
+     * @param  Builder<self>  $query
+     */
+    public function scopeLeaves(Builder $query): void
+    {
+        $query->whereDoesntHave('children', fn (Builder $q) => $q->where('active', true));
     }
 
     /**

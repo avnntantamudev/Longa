@@ -14,7 +14,7 @@ class HomeController extends Controller
         return Inertia::render('Home', [
             'profiles' => [
                 ['key' => 'client', 'icon' => 'search', 'title' => 'Para Clientes', 'description' => 'Encontre técnicos verificados, presenciais ou online, por especialidade, preço e localização.'],
-                ['key' => 'provider', 'icon' => 'user', 'title' => 'Para Técnicos', 'description' => 'Formalize o seu ensino, receba pagamentos seguros e chegue a mais clientes.'],
+                ['key' => 'provider', 'icon' => 'user', 'title' => 'Para Técnicos', 'description' => 'Formalize o seu trabalho, receba pagamentos seguros e chegue a mais clientes.'],
                 ['key' => 'company', 'icon' => 'calendar', 'title' => 'Para Empresas', 'description' => 'Contrate técnicos verificados para a empresa e acompanhe os serviços e os custos.'],
             ],
             'highlights' => [

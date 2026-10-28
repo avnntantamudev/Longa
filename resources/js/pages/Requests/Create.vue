@@ -34,6 +34,14 @@ const saving = ref(false);
 const minDate = toLocalInput(new Date(Date.now() + props.minLeadMinutes * 60_000));
 const hasLocation = computed(() => form.latitude !== null && form.neighborhood !== '');
 
+const categoriesByGroup = computed(() => {
+    const groups: Record<string, Category[]> = {};
+    for (const category of props.categories) {
+        (groups[category.group ?? 'Outros'] ??= []).push(category);
+    }
+    return groups;
+});
+
 function onCategory(): void {
     const category = props.categories.find((s) => s.id === form.category_id);
     if (category && form.title === '') {
@@ -68,10 +76,12 @@ async function submit(): Promise<void> {
     <p class="mt-1 text-ink-muted">Enviamos o pedido aos técnicos verificados num raio de 5 km. O primeiro que aceitar fica com o serviço.</p>
 
     <form class="mt-6 grid gap-4" novalidate @submit.prevent="submit">
-        <FormField label="O que quer aprender?" for="category" :error="errors.category_id">
+        <FormField label="Que serviço precisa?" for="category" :error="errors.category_id">
             <select id="category" v-model.number="form.category_id" class="input" @change="onCategory">
-                <option :value="null" disabled>Escolha a área</option>
-                <option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option>
+                <option :value="null" disabled>Escolha o serviço</option>
+                <optgroup v-for="(group, groupName) in categoriesByGroup" :key="groupName" :label="groupName">
+                    <option v-for="category in group" :key="category.id" :value="category.id">{{ category.name }}</option>
+                </optgroup>
             </select>
         </FormField>
 

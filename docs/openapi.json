@@ -1038,7 +1038,7 @@
         "/categories": {
             "get": {
                 "operationId": "categories",
-                "summary": "\u00c1reas de servi\u00e7o",
+                "summary": "Categorias que se podem pedir (folhas da \u00e1rvore), com o caminho e o grupo para listas",
                 "tags": [
                     "Cat\u00e1logo",
                     "Catalog"
@@ -1064,6 +1064,84 @@
                                 }
                             }
                         }
+                    }
+                },
+                "security": []
+            }
+        },
+        "/categories/tree": {
+            "get": {
+                "operationId": "categories.tree",
+                "summary": "\u00c1rvore completa de categorias ativas",
+                "tags": [
+                    "Cat\u00e1logo",
+                    "Catalog"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `CategoryNodeResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/CategoryNodeResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": []
+            }
+        },
+        "/categories/{category}/form": {
+            "get": {
+                "operationId": "categories.form",
+                "summary": "Formul\u00e1rio de uma categoria: campos (incluindo os herdados), modalidades, modo de pre\u00e7o e pre\u00e7os",
+                "tags": [
+                    "Cat\u00e1logo",
+                    "Catalog"
+                ],
+                "parameters": [
+                    {
+                        "name": "category",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`CategoryFormResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/CategoryFormResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
                     }
                 },
                 "security": []
@@ -6147,6 +6225,121 @@
                 ],
                 "title": "AuthSessionResource"
             },
+            "CategoryFormResource": {
+                "type": "object",
+                "properties": {
+                    "category": {
+                        "$ref": "#/components/schemas/CategoryResource"
+                    },
+                    "fields": {
+                        "type": "array",
+                        "items": {}
+                    },
+                    "price": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "properties": {
+                            "fixed_price": {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ]
+                            },
+                            "reference_min": {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ]
+                            },
+                            "reference_max": {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ]
+                            },
+                            "hourly_min": {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ]
+                            },
+                            "hourly_max": {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ]
+                            },
+                            "visit_fee": {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "fixed_price",
+                            "reference_min",
+                            "reference_max",
+                            "hourly_min",
+                            "hourly_max",
+                            "visit_fee"
+                        ]
+                    }
+                },
+                "required": [
+                    "category",
+                    "fields",
+                    "price"
+                ],
+                "title": "CategoryFormResource"
+            },
+            "CategoryNodeResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "slug": {
+                        "type": "string"
+                    },
+                    "icon": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "pricing_mode": {
+                        "type": "string"
+                    },
+                    "children": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CategoryNodeResource"
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "slug",
+                    "icon",
+                    "description",
+                    "pricing_mode",
+                    "children"
+                ],
+                "title": "CategoryNodeResource"
+            },
             "CategoryResource": {
                 "type": "object",
                 "properties": {
@@ -6159,18 +6352,42 @@
                     "slug": {
                         "type": "string"
                     },
-                    "area": {
+                    "parent_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "path": {
+                        "type": "string",
+                        "description": "Caminho completo, ex.: \"Casa \u203a Climatiza\u00e7\u00e3o \u203a Manuten\u00e7\u00e3o de ar condicionado\""
+                    },
+                    "group": {
                         "type": [
                             "string",
                             "null"
-                        ]
+                        ],
+                        "description": "Caminho do pai, para agrupar listas (null nas ra\u00edzes)"
+                    },
+                    "pricing_mode": {
+                        "type": "string"
+                    },
+                    "modalities": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
                     }
                 },
                 "required": [
                     "id",
                     "name",
                     "slug",
-                    "area"
+                    "parent_id",
+                    "path",
+                    "group",
+                    "pricing_mode",
+                    "modalities"
                 ],
                 "title": "CategoryResource"
             },

@@ -8,7 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Requests\Models\RequestOffer;
 use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Users\Http\Resources\CategoryResource;
-use App\Modules\Users\Models\Category;
+use App\Modules\Users\Services\CategoryTree;
 use App\Support\Settings\PlatformSettings;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -22,7 +22,7 @@ class PageController extends Controller
     public function createRequest(): Response
     {
         return Inertia::render('Requests/Create', [
-            'categories' => CategoryResource::collection(Category::query()->active()->orderBy('area')->orderBy('name')->get())->resolve(),
+            'categories' => CategoryResource::collection(app(CategoryTree::class)->leaves())->resolve(),
             'zones' => config('locations.zones'),
             'provinces' => config('locations.provinces'),
             'minAmount' => (int) config('longa.requests.min_amount'),

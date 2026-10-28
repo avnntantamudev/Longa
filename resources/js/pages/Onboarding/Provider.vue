@@ -76,10 +76,10 @@ const page = usePage();
 const photo = ref<string | null>(page.props.auth.user?.photo_url ?? null);
 
 
-const categoriesByCategory = computed(() => {
+const categoriesByGroup = computed(() => {
     const groups: Record<string, Category[]> = {};
     for (const category of props.categories) {
-        (groups[category.area] ??= []).push(category);
+        (groups[category.group ?? 'Outras'] ??= []).push(category);
     }
     return groups;
 });
@@ -209,8 +209,8 @@ function submitVerification(): Promise<unknown> {
         <template v-else-if="step === 1">
             <h1 class="text-title">Que serviços faz?</h1>
             <p class="-mt-3 text-caption text-ink-muted">Escolha até 10 áreas. Só recebe pedidos destas áreas.</p>
-            <section v-for="(group, area) in categoriesByCategory" :key="area">
-                <h2 class="mb-2 text-caption font-semibold text-ink-muted">{{ area }}</h2>
+            <section v-for="(group, groupName) in categoriesByGroup" :key="groupName">
+                <h2 class="mb-2 text-caption font-semibold text-ink-muted">{{ groupName }}</h2>
                 <div class="flex flex-wrap gap-2">
                     <button
                         v-for="category in group"

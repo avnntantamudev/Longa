@@ -66,19 +66,22 @@ class CategorySuggestions
     }
 
     /**
-     * Aprovar criando uma área nova.
+     * Aprovar criando uma categoria nova debaixo de $parent (herda o modo de preço do pai).
      *
      * @return int sugestões aprovadas (inclui as iguais de outros técnicos)
      */
-    public function approveAsNew(CategorySuggestion $suggestion, User $admin, string $name, string $area): int
+    public function approveAsNew(CategorySuggestion $suggestion, User $admin, string $name, Category $parent): int
     {
         $slug = Str::slug($name);
         if (Category::query()->where('slug', $slug)->exists()) {
             throw new ApiException('category_exists', "Já existe a área \"{$name}\". Junte a sugestão a essa área.", 409);
         }
 
-        return DB::transaction(function () use ($suggestion, $admin, $name, $area, $slug) {
-            $category = Category::query()->create(['name' => Str::squish($name), 'slug' => $slug, 'area' => Str::squish($area), 'active' => true]);
+        return DB::transaction(function () use ($suggestion, $admin, $name, $parent, $slug) {
+            $category = Category::query()->create([
+                'name' => Str::squish($name), 'slug' => $slug, 'parent_id' => $parent->id, 'pricing_mode' => $parent->pricing_mode,
+                'sort_order' => (int) $parent->children()->max('sort_order') + 1, 'active' => true,
+            ]);
             $this->audit->record('categories.created', $category, ['from_suggestion' => $suggestion->id], $admin->id);
 
             return $this->approve($suggestion, $admin, $category, "Nova área: {$category->name}");

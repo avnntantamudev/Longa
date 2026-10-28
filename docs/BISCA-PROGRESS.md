@@ -32,7 +32,7 @@ Nomes novos:
 | 3 | Textos: formador → técnico, aluno → cliente, aula → serviço | feito |
 | 4 | Papéis da equipa (admin, operator) | feito |
 | 5 | Modelo genérico: árvore de categorias, campos de formulário, zonas, preços, documentos, localização e reputação, parâmetros | feito |
-| 6 | Seed das categorias e dos formulários | por fazer |
+| 6 | Seed das categorias e dos formulários | feito |
 | 7 | Termos e Política: duas caixas, textos versionados na app, nova aceitação quando a versão muda | por fazer |
 | 8 | Suite, CI e resumo da fase | por fazer |
 
@@ -67,3 +67,22 @@ Migração `2026_10_28_000002_create_generic_service_model` (reversível):
 - **Estados de verificação:** passam a incluir `suspended` e `removed`.
 - **Já existiam:** a ligação técnico ↔ categorias (`category_provider_profile`) e os parâmetros (`platform_settings`).
 - **Comissão:** 20% por omissão.
+
+### Notas do passo 6
+
+- **Seed (`CategoriesSeeder`, idempotente):**
+  - Educação › Aulas e explicações: por hora/pacote, presencial e online. Campos: disciplina, nível e horário
+    preferido.
+  - Casa › Climatização › Manutenção de ar condicionado, Casa › Electricidade e Casa › Canalização: por orçamento,
+    com taxa de visita de 5.000 Kz.
+  - Casa › Limpeza: preço fixo de 20.000 Kz.
+  - As áreas antigas (SGME, Excel, disciplinas escolares, línguas) ficam dentro de Educação › Aulas e explicações,
+    com os mesmos slugs.
+- **API:**
+  - `GET /api/v1/categories`: as folhas, com o caminho e o grupo;
+  - `GET /api/v1/categories/tree`: a árvore;
+  - `GET /api/v1/categories/{id}/form`: os campos (com os herdados) e os preços.
+- **PWA:** o registo do técnico e o pedido agrupam as categorias pelo caminho na árvore.
+- **Backoffice → Catálogo → Categorias (só admin):** árvore, preços, campos e documentos exigidos, com auditoria.
+  Recusa ciclos; não se apagam categorias, desativam-se.
+- **Sugestões "Outra área":** ao aprovar como nova, escolhe-se a categoria-pai.

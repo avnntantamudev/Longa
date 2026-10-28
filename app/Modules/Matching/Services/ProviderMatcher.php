@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
  *
  * Elegível:
  *  - conta ativa e não apagada; perfil verificado, com onboarding concluído e "Disponível";
- *  - ensina a área do pedido e aceita a modalidade (presencial/online);
+ *  - trabalha na categoria do pedido e aceita a modalidade (presencial/online);
  *  - presencial: a ≤ raio do matching (5 km) do local do pedido E o pedido dentro do raio de atuação do técnico;
  *  - sem serviço ativa que se sobreponha ao horário pedido (com folga configurável);
  *  - não é o próprio cliente e ainda não recebeu oferta deste pedido.

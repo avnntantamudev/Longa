@@ -17,7 +17,7 @@ use Illuminate\Database\QueryException;
 
 function categoryNode(string $name, ?Category $parent = null, array $attributes = []): Category
 {
-    return Category::query()->create(['name' => $name, 'slug' => Str::slug(($parent?->slug ?? '').' '.$name), 'parent_id' => $parent?->id, 'active' => true, ...$attributes]);
+    return Category::query()->create(['name' => $name, 'slug' => Str::slug($parent?->slug ?? 'teste').'-'.Str::slug($name), 'parent_id' => $parent?->id, 'active' => true, ...$attributes]);
 }
 
 it('monta a árvore e o caminho de uma folha', function () {

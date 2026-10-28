@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Modules\Users\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Users\Http\Resources\CategoryFormResource;
+use App\Modules\Users\Http\Resources\CategoryNodeResource;
 use App\Modules\Users\Http\Resources\CategoryResource;
 use App\Modules\Users\Http\Resources\PublicProviderResource;
-use App\Modules\Users\Models\Category;
 use App\Modules\Users\Models\ProviderProfile;
+use App\Modules\Users\Services\CategoryTree;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -20,13 +22,36 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 class CatalogController extends Controller
 {
     /**
-     * Áreas de serviço.
+     * Categorias que se podem pedir (folhas da árvore), com o caminho e o grupo para listas.
      *
      * @unauthenticated
      */
-    public function categories(): AnonymousResourceCollection
+    public function categories(CategoryTree $tree): AnonymousResourceCollection
     {
-        return CategoryResource::collection(Category::query()->active()->orderBy('area')->orderBy('name')->get());
+        return CategoryResource::collection($tree->leaves());
+    }
+
+    /**
+     * Árvore completa de categorias ativas.
+     *
+     * @unauthenticated
+     */
+    public function categoryTree(CategoryTree $tree): AnonymousResourceCollection
+    {
+        return CategoryNodeResource::collection($tree->roots());
+    }
+
+    /**
+     * Formulário de uma categoria: campos (incluindo os herdados), modalidades, modo de preço e preços.
+     *
+     * @unauthenticated
+     */
+    public function categoryForm(CategoryTree $tree, int $category): CategoryFormResource
+    {
+        $node = $tree->find($category);
+        abort_if($node === null || $node->children->isNotEmpty(), 404);
+
+        return new CategoryFormResource($node);
     }
 
     /**

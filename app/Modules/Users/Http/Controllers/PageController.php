@@ -6,8 +6,8 @@ namespace App\Modules\Users\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Users\Http\Resources\CategoryResource;
-use App\Modules\Users\Models\Category;
 use App\Modules\Users\Models\User;
+use App\Modules\Users\Services\CategoryTree;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -29,7 +29,7 @@ class PageController extends Controller
         abort_unless($user->providerProfile !== null, 404);
 
         return Inertia::render('Onboarding/Provider', [
-            'categories' => CategoryResource::collection(Category::query()->active()->orderBy('area')->orderBy('name')->get())->resolve(),
+            'categories' => CategoryResource::collection(app(CategoryTree::class)->leaves())->resolve(),
             'zones' => config('locations.zones'),
             'provinces' => config('locations.provinces'),
         ]);

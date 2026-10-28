@@ -9,6 +9,7 @@ use App\Modules\Users\Actions\CategorySuggestions;
 use App\Modules\Users\Models\Category;
 use App\Modules\Users\Models\CategorySuggestion;
 use App\Modules\Users\Models\User;
+use App\Modules\Users\Services\CategoryTree;
 use App\Support\Api\ApiException;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -97,14 +98,12 @@ class CategorySuggestionResource extends Resource
                             ->options(['new' => 'Criar área nova', 'existing' => 'Juntar a uma área existente']),
                         TextInput::make('name')->label('Nome da área (como aparece na lista)')->maxLength(120)
                             ->visible(fn (Get $get) => $get('mode') === 'new')->required(fn (Get $get) => $get('mode') === 'new'),
-                        Select::make('area')->label('Categoria')
-                            ->options(fn () => Category::query()->distinct()->orderBy('area')->pluck('area', 'area')->all())
+                        Select::make('parent_id')->label('Dentro de (categoria-pai)')
+                            ->options(fn () => app(CategoryTree::class)->nodes()->mapWithKeys(fn (Category $c) => [$c->id => $c->path()])->sort()->all())
                             ->searchable()
-                            ->createOptionForm([TextInput::make('area')->label('Nova categoria')->required()->maxLength(60)])
-                            ->createOptionUsing(fn (array $data) => $data['area'])
                             ->visible(fn (Get $get) => $get('mode') === 'new')->required(fn (Get $get) => $get('mode') === 'new'),
                         Select::make('category_id')->label('Área existente')
-                            ->options(fn () => Category::query()->active()->orderBy('name')->pluck('name', 'id')->all())
+                            ->options(fn () => app(CategoryTree::class)->leaves()->mapWithKeys(fn (Category $c) => [$c->id => $c->path()])->all())
                             ->searchable()
                             ->visible(fn (Get $get) => $get('mode') === 'existing')->required(fn (Get $get) => $get('mode') === 'existing'),
                     ])
@@ -114,7 +113,7 @@ class CategorySuggestionResource extends Resource
                         try {
                             $count = $data['mode'] === 'existing'
                                 ? app(CategorySuggestions::class)->approveAsExisting($record, $admin, Category::query()->findOrFail($data['category_id']))
-                                : app(CategorySuggestions::class)->approveAsNew($record, $admin, (string) $data['name'], (string) $data['area']);
+                                : app(CategorySuggestions::class)->approveAsNew($record, $admin, (string) $data['name'], Category::query()->findOrFail($data['parent_id']));
                         } catch (ApiException $e) {
                             Notification::make()->danger()->title('Não aprovada')->body($e->getMessage())->send();
 

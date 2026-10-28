@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Route;
 
 // Prefixo /api/v1 (ModuleServiceProvider)
 Route::get('categories', [CatalogController::class, 'categories'])->name('api.categories');
+Route::get('categories/tree', [CatalogController::class, 'categoryTree'])->name('api.categories.tree');
+Route::get('categories/{category}/form', [CatalogController::class, 'categoryForm'])->whereNumber('category')->name('api.categories.form');
 Route::get('zones', [CatalogController::class, 'zones'])->name('api.zones');
 Route::get('provinces', [CatalogController::class, 'provinces'])->name('api.provinces');
 Route::get('providers/{provider}', [CatalogController::class, 'provider'])->name('api.providers.show');

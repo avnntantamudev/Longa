@@ -13,8 +13,10 @@ const dots = computed(() => Array.from({ length: 6 }, (_, i) => i < model.value.
 
 function press(digit: string) {
     if (props.disabled || model.value.length >= 6) return;
-    model.value += digit;
-    if (model.value.length === 6) emit('complete', model.value);
+    // Com v-model no pai, model.value só reflete a escrita depois do próximo render: usar o valor novo local
+    const next = model.value + digit;
+    model.value = next;
+    if (next.length === 6) emit('complete', next);
 }
 
 function back() {

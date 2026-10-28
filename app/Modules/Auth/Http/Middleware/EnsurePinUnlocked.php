@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Modules\Auth\Http\Middleware;
 
-use App\Modules\Users\Enums\Role;
 use App\Modules\Users\Models\User;
 use App\Support\Api\ApiException;
 use Closure;
@@ -51,7 +50,7 @@ class EnsurePinUnlocked
         $locked = $unlockedAt === null
             || $lastSeen === null
             || Carbon::createFromTimestamp((int) $lastSeen)->addMinutes($idle)->isPast()
-            || ($user->hasRole(Role::Admin->value) && Carbon::createFromTimestamp((int) $unlockedAt)->addHours($adminHours)->isPast());
+            || ($user->isTeam() && Carbon::createFromTimestamp((int) $unlockedAt)->addHours($adminHours)->isPast());
 
         if ($locked) {
             return $this->deny($request, 'pin_unlock_required', 'Introduza o seu PIN para continuar.', route('pin.unlock'));

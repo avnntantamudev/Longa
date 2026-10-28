@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Admin\Filament\Resources\Reconciliations;
 
+use App\Modules\Admin\Filament\Concerns\AdminOnly;
 use App\Modules\Admin\Filament\Resources\Reconciliations\Pages\ListLedgerReconciliations;
 use App\Modules\Admin\Filament\Resources\Reconciliations\Pages\ViewLedgerReconciliation;
 use App\Modules\Wallet\Models\LedgerReconciliation;
@@ -22,6 +23,8 @@ use UnitEnum;
 
 class LedgerReconciliationResource extends Resource
 {
+    use AdminOnly;
+
     protected static ?string $model = LedgerReconciliation::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedShieldCheck;

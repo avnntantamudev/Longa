@@ -12,7 +12,7 @@ Route::middleware(['auth:sanctum', 'auth.session'])->group(function () {
         ->middleware(['role:provider', 'throttle:10,60'])
         ->name('api.verifications.store');
 
-    Route::prefix('admin')->middleware(['role:admin', 'audit:admin.access'])->name('api.admin.')->group(function () {
+    Route::prefix('admin')->middleware(['role:admin|operator', 'audit:admin.access'])->name('api.admin.')->group(function () {
         Route::get('verifications', [VerificationController::class, 'index'])->name('verifications.index');
         Route::post('verifications/{verification}/approve', [VerificationController::class, 'approve'])->name('verifications.approve');
         Route::post('verifications/{verification}/reject', [VerificationController::class, 'reject'])->name('verifications.reject');

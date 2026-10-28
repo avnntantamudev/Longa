@@ -9,6 +9,6 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth:sanctum', 'auth.session'])->group(function () {
     Route::get('me/score-events', [ScoreEventController::class, 'mine'])->middleware('role:provider')->name('api.score-events.mine');
     Route::get('admin/providers/{provider}/score-events', [ScoreEventController::class, 'forProvider'])
-        ->middleware(['role:admin', 'audit:admin.access'])
+        ->middleware(['role:admin|operator', 'audit:admin.access'])
         ->name('api.admin.score-events');
 });

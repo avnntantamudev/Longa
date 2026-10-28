@@ -30,7 +30,7 @@ Nomes novos:
 | 1 | Marca Garimpo → BISCA (textos, logótipo provisório, ícones, APP_NAME) | feito |
 | 2 | Renomear o domínio no código e na BD (migração reversível), rotas e ecrãs | feito |
 | 3 | Textos: formador → técnico, aluno → cliente, aula → serviço | feito |
-| 4 | Papéis da equipa (admin, operator) | por fazer |
+| 4 | Papéis da equipa (admin, operator) | feito |
 | 5 | Modelo genérico: árvore de categorias, campos de formulário, zonas, preços, documentos, localização e reputação, parâmetros | por fazer |
 | 6 | Seed das categorias e dos formulários | por fazer |
 | 7 | Termos e Política: duas caixas, textos versionados na app, nova aceitação quando a versão muda | por fazer |
@@ -43,3 +43,11 @@ Nomes novos:
 - A coluna gerada `request_offers.accepted_request_id` (uma só oferta aceite por pedido) é apagada e criada de novo à
   volta da renomeação.
 - As URLs em português (`/formador`, `/aulas`) mudam no passo 3, com os textos.
+
+### Notas do passo 4
+
+- **operator (Operador):** entra no backoffice para verificações de técnicos, sugestões de categoria, serviços e
+  disputas (só para ver).
+- **admin:** é o único com acesso a dinheiro, definições, relatórios e decisões de disputa (trait `AdminOnly` e
+  `role:admin` nas rotas).
+- **Dar ou tirar papéis:** `php artisan longa:team <telefone> [admin|operator] [--remove]`. Fica registado na auditoria.

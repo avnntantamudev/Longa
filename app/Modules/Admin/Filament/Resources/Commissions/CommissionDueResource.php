@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Admin\Filament\Resources\Commissions;
 
+use App\Modules\Admin\Filament\Concerns\AdminOnly;
 use App\Modules\Admin\Filament\Resources\Commissions\Pages\ListCommissionsDue;
 use App\Modules\Admin\Filament\Support\SessionSections;
 use App\Modules\Payments\Services\CommissionDebts;
@@ -33,6 +34,8 @@ use UnitEnum;
  */
 class CommissionDueResource extends Resource
 {
+    use AdminOnly;
+
     protected static ?string $model = LedgerAccount::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBanknotes;

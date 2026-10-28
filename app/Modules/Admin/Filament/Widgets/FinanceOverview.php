@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Admin\Filament\Widgets;
 
+use App\Modules\Admin\Filament\Concerns\AdminOnly;
 use App\Modules\Admin\Filament\Support\SessionSections;
 use App\Modules\Sessions\Models\Dispute;
 use App\Modules\Wallet\Ledger\Accounts;
@@ -15,6 +16,14 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class FinanceOverview extends StatsOverviewWidget
 {
+    /** Saldos e receita: só o admin. */
+    public static function canView(): bool
+    {
+        return static::canAccess();
+    }
+
+    use AdminOnly;
+
     protected static bool $isLazy = false;
 
     protected function getStats(): array

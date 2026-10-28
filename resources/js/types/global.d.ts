@@ -2,7 +2,7 @@ import type { PageProps as InertiaPageProps } from '@inertiajs/core';
 import type Echo from 'laravel-echo';
 import type Pusher from 'pusher-js';
 
-export type RoleName = 'client' | 'provider' | 'company_rh' | 'admin';
+export type RoleName = 'client' | 'provider' | 'company_rh' | 'admin' | 'operator';
 
 export interface AuthUser {
     id: number;

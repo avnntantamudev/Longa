@@ -21,7 +21,7 @@ const user = computed(() => page.props.auth.user);
 const sessions = ref<Session[]>([]);
 const providerStatus = ref<{ completed: boolean; verification: string } | null>(null);
 
-const roleLabels: Record<RoleName, string> = { client: 'Cliente', provider: 'Técnico', company_rh: 'Empresa (RH)', admin: 'Administrador' };
+const roleLabels: Record<RoleName, string> = { client: 'Cliente', provider: 'Técnico', company_rh: 'Empresa (RH)', admin: 'Administrador', operator: 'Operador' };
 const verificationLabels: Record<string, string> = {
     unverified: 'Por verificar',
     pending: 'Verificação em análise',
@@ -90,7 +90,7 @@ onMounted(async () => {
         <Link href="/onboarding/tecnico" class="btn-secondary mt-3 w-full">Editar perfil de técnico</Link>
     </section>
 
-    <section v-if="user?.roles.includes('admin')" class="card mt-4">
+    <section v-if="user?.roles.includes('admin') || user?.roles.includes('operator')" class="card mt-4">
         <p class="font-semibold">Administração</p>
         <Link href="/admin/verificacoes" class="btn-secondary mt-3 w-full">Verificações pendentes</Link>
     </section>

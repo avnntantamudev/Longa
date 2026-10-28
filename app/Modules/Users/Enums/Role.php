@@ -13,6 +13,7 @@ enum Role: string
     case Provider = 'provider';
     case CompanyRh = 'company_rh';
     case Admin = 'admin';
+    case Operator = 'operator';
 
     public function label(): string
     {
@@ -21,6 +22,7 @@ enum Role: string
             self::Provider => 'Técnico',
             self::CompanyRh => 'Empresa (RH)',
             self::Admin => 'Administrador',
+            self::Operator => 'Operador',
         };
     }
 
@@ -32,5 +34,16 @@ enum Role: string
     public static function selfAssignable(): array
     {
         return [self::Client, self::Provider, self::CompanyRh];
+    }
+
+    /**
+     * Equipa do BISCA: entra no backoffice. O admin gere dinheiro e definições; o operador trata da operação
+     * (verificações, sugestões de categoria, serviços e disputas só para ver).
+     *
+     * @return list<self>
+     */
+    public static function team(): array
+    {
+        return [self::Admin, self::Operator];
     }
 }

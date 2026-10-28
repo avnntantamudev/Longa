@@ -67,7 +67,7 @@ class DisputeController extends Controller
         $user = $this->user($request);
         /** @var Dispute $dispute */
         $dispute = Dispute::query()->with('session.provider')->findOrFail($attachment->dispute_id);
-        abort_unless($user->hasRole('admin') || $dispute->session->involves($user), 403);
+        abort_unless($user->isTeam() || $dispute->session->involves($user), 403);
 
         $minutes = (int) config('longa.disputes.attachment_link_minutes');
         $url = URL::temporarySignedRoute('disputes.attachment', now()->addMinutes($minutes), ['attachment' => $attachment->id], absolute: false);

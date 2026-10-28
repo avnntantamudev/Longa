@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Admin\Filament\Pages;
 
+use App\Modules\Admin\Filament\Concerns\AdminOnly;
 use App\Modules\Admin\Reports\AdminReportSections;
 use App\Modules\Admin\Reports\FinancialReport;
 use App\Modules\Admin\Reports\OperationsReport;
@@ -23,6 +24,8 @@ use UnitEnum;
  */
 class Reports extends Page
 {
+    use AdminOnly;
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedChartBar;
 
     protected static string|UnitEnum|null $navigationGroup = 'Finanças';

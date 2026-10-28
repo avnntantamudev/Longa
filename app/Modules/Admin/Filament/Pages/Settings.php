@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Admin\Filament\Pages;
 
+use App\Modules\Admin\Filament\Concerns\AdminOnly;
 use App\Modules\Users\Models\User;
 use App\Support\Settings\PlatformSettings;
 use BackedEnum;
@@ -29,6 +30,8 @@ use UnitEnum;
  */
 class Settings extends Page
 {
+    use AdminOnly;
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCog6Tooth;
 
     protected static string|UnitEnum|null $navigationGroup = 'Finanças';

@@ -24,7 +24,7 @@ beforeEach(function () {
     Filament::setCurrentPanel('backoffice');
 });
 
-/** Um serviço confirmado por QR, uma cancelado cedo e um VIP pago em mão. */
+/** Um serviço confirmado por QR, um cancelado cedo e um VIP pago em mão. */
 function reportFixture(): void
 {
     $done = paidSession();

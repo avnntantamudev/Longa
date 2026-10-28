@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Admin\Filament\Resources\Vip;
 
+use App\Modules\Admin\Filament\Concerns\AdminOnly;
 use App\Modules\Admin\Filament\Resources\Vip\Pages\ListProviderSubscriptions;
 use App\Modules\Admin\Filament\Support\SessionSections;
 use App\Modules\Payments\Models\ProviderSubscription;
@@ -22,6 +23,8 @@ use UnitEnum;
  */
 class ProviderSubscriptionResource extends Resource
 {
+    use AdminOnly;
+
     protected static ?string $model = ProviderSubscription::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedStar;

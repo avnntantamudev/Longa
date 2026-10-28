@@ -108,6 +108,18 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasName
      */
     public function canAccessPanel(Panel $panel): bool
     {
+        return $this->isTeam();
+    }
+
+    /** Membro ativo da equipa (admin ou operador). */
+    public function isTeam(): bool
+    {
+        return $this->status === UserStatus::Active && $this->hasAnyRole(array_map(fn (Role $r) => $r->value, Role::team()));
+    }
+
+    /** Administrador ativo: o único que mexe em dinheiro, definições e papéis. */
+    public function isAdmin(): bool
+    {
         return $this->status === UserStatus::Active && $this->hasRole(Role::Admin->value);
     }
 

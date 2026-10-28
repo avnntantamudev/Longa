@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Admin\Filament\Resources\Ledger;
 
+use App\Modules\Admin\Filament\Concerns\AdminOnly;
 use App\Modules\Admin\Filament\Resources\Ledger\Pages\ListLedgerTransactions;
 use App\Modules\Admin\Filament\Resources\Ledger\Pages\ViewLedgerTransaction;
 use App\Modules\Admin\Filament\Support\SessionSections;
@@ -29,6 +30,8 @@ use UnitEnum;
  */
 class LedgerTransactionResource extends Resource
 {
+    use AdminOnly;
+
     protected static ?string $model = LedgerTransaction::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBookOpen;

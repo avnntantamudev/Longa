@@ -6,7 +6,7 @@ namespace App\Modules\Payments\Actions;
 
 use App\Modules\Payments\Services\CommissionDebts;
 use App\Modules\Sessions\Enums\SessionState;
-use App\Modules\Sessions\Models\TrainingSession;
+use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Sessions\Services\SessionLifecycle;
 use App\Modules\Users\Models\User;
 use App\Modules\Wallet\Events\WalletUpdated;
@@ -25,11 +25,11 @@ class ConfirmCashPayment
         private readonly SessionLifecycle $lifecycle,
     ) {}
 
-    public function handle(TrainingSession $session, ?User $student, string $reason = 'student_confirmed'): TrainingSession
+    public function handle(ServiceJob $session, ?User $client, string $reason = 'client_confirmed'): ServiceJob
     {
-        $result = DB::transaction(function () use ($session, $student, $reason) {
-            /** @var TrainingSession $locked */
-            $locked = TrainingSession::query()->lockForUpdate()->findOrFail($session->id);
+        $result = DB::transaction(function () use ($session, $client, $reason) {
+            /** @var ServiceJob $locked */
+            $locked = ServiceJob::query()->lockForUpdate()->findOrFail($session->id);
 
             if (! $locked->isCash()) {
                 throw new ApiException('not_cash_session', 'Esta aula não é paga em dinheiro.', 409);
@@ -43,16 +43,16 @@ class ConfirmCashPayment
                 throw new ApiException('session_not_completed', 'Confirme primeiro a aula com o QR do formador.', 409);
             }
 
-            $this->debts->register($locked, $student, $reason);
+            $this->debts->register($locked, $client, $reason);
             $locked->forceFill(['cash_confirmed_at' => now()])->save();
-            $this->lifecycle->record($locked, 'cash_confirmed', $student, ['reason' => $reason, 'commission_due' => $locked->commission]);
+            $this->lifecycle->record($locked, 'cash_confirmed', $client, ['reason' => $reason, 'commission_due' => $locked->commission]);
 
             return ['session' => $locked, 'new' => true];
         });
 
         if ($result['new']) {
-            $this->debts->offset($session->trainer_profile_id, "session:{$session->id}");
-            WalletUpdated::dispatch($session->trainer->user_id, 'cash_commission_due', $session->id);
+            $this->debts->offset($session->provider_profile_id, "session:{$session->id}");
+            WalletUpdated::dispatch($session->provider->user_id, 'cash_commission_due', $session->id);
         }
 
         return $result['session'];

@@ -7,7 +7,7 @@ namespace App\Modules\Sessions\Actions;
 use App\Modules\Qr\Services\QrTokenService;
 use App\Modules\Sessions\Enums\SessionState;
 use App\Modules\Sessions\Events\QrIssued;
-use App\Modules\Sessions\Models\TrainingSession;
+use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Sessions\Services\SessionLifecycle;
 use App\Modules\Users\Models\User;
 use App\Support\Api\ApiException;
@@ -22,16 +22,16 @@ class FinishSession
     public function __construct(private readonly SessionLifecycle $lifecycle, private readonly QrTokenService $qr) {}
 
     /**
-     * @return array{session: TrainingSession, qr: array{batch_id: string, rotation_seconds: int, tokens: list<array{token: string, code: string, valid_from: string, expires_at: string}>}}
+     * @return array{session: ServiceJob, qr: array{batch_id: string, rotation_seconds: int, tokens: list<array{token: string, code: string, valid_from: string, expires_at: string}>}}
      */
-    public function handle(TrainingSession $session, User $trainer): array
+    public function handle(ServiceJob $session, User $provider): array
     {
-        return DB::transaction(function () use ($session, $trainer) {
-            /** @var TrainingSession $locked */
-            $locked = TrainingSession::query()->lockForUpdate()->findOrFail($session->id);
+        return DB::transaction(function () use ($session, $provider) {
+            /** @var ServiceJob $locked */
+            $locked = ServiceJob::query()->lockForUpdate()->findOrFail($session->id);
 
             if ($locked->state === SessionState::InProgress) {
-                $this->lifecycle->transition($locked, SessionState::AwaitingConfirmation, 'finished', $trainer, [], [
+                $this->lifecycle->transition($locked, SessionState::AwaitingConfirmation, 'finished', $provider, [], [
                     'ended_at' => now(),
                     'awaiting_since' => now(),
                 ]);
@@ -45,7 +45,7 @@ class FinishSession
             }
 
             $batch = $this->qr->issueBatch($locked);
-            $this->lifecycle->record($locked, 'qr_issued', $trainer, ['batch_id' => $batch['batch_id'], 'tokens' => count($batch['tokens'])]);
+            $this->lifecycle->record($locked, 'qr_issued', $provider, ['batch_id' => $batch['batch_id'], 'tokens' => count($batch['tokens'])]);
             QrIssued::dispatch($locked);
 
             return ['session' => $locked, 'qr' => $batch];

@@ -19,7 +19,7 @@ class FinancialReport
      * @return array{
      *     from: string, to: string,
      *     totals: array<string, int>,
-     *     months: list<array{month: string, paid_in: int, commissions: int, vip: int, refunds: int, to_trainers: int}>
+     *     months: list<array{month: string, paid_in: int, commissions: int, vip: int, refunds: int, to_providers: int}>
      * }
      */
     public function build(Carbon $from, Carbon $to): array
@@ -33,7 +33,7 @@ class FinancialReport
             ->when($types !== [], fn ($q) => $q->whereIn('t.type', $types))
             ->sum('e.amount');
 
-        $trainerNet = (int) $this->entries($from, $to)->where('a.type', 'trainer_available')->whereIn('t.type', ['escrow_release', 'refund_partial'])->sum('e.amount');
+        $providerNet = (int) $this->entries($from, $to)->where('a.type', 'provider_available')->whereIn('t.type', ['escrow_release', 'refund_partial'])->sum('e.amount');
 
         return [
             'from' => $from->toDateString(),
@@ -43,7 +43,7 @@ class FinancialReport
                 'paid_in' => $moved(Accounts::ESCROW, '+', ['escrow_hold']),
                 'commissions' => (int) $this->entries($from, $to)->where('a.code', Accounts::PLATFORM_REVENUE)->sum('e.amount'),
                 'vip' => (int) $this->entries($from, $to)->where('a.code', Accounts::SUBSCRIPTION_REVENUE)->sum('e.amount'),
-                'to_trainers' => $trainerNet,
+                'to_providers' => $providerNet,
                 'refunds_decided' => $moved(Accounts::REFUNDS_PAYABLE, '+'),
                 'refunds_paid' => -$moved(Accounts::REFUNDS_PAYABLE, '-'),
                 'cash_commissions_received' => -$moved(Accounts::CASH_SETTLEMENT, '-', ['cash_commission_received']),
@@ -52,17 +52,17 @@ class FinancialReport
                 'refunds_pending_at_end' => $this->balanceAt(Accounts::REFUNDS_PAYABLE, $to),
                 'cash_commissions_due_at_end' => -(int) DB::table('ledger_entries as e')
                     ->join('ledger_accounts as a', 'a.id', '=', 'e.ledger_account_id')
-                    ->where('a.type', 'trainer_commission_due')->where('e.created_at', '<=', $to)->sum('e.amount'),
-                'trainers_available_at_end' => (int) DB::table('ledger_entries as e')
+                    ->where('a.type', 'provider_commission_due')->where('e.created_at', '<=', $to)->sum('e.amount'),
+                'providers_available_at_end' => (int) DB::table('ledger_entries as e')
                     ->join('ledger_accounts as a', 'a.id', '=', 'e.ledger_account_id')
-                    ->where('a.type', 'trainer_available')->where('e.created_at', '<=', $to)->sum('e.amount'),
+                    ->where('a.type', 'provider_available')->where('e.created_at', '<=', $to)->sum('e.amount'),
             ],
             'months' => $this->months($from, $to),
         ];
     }
 
     /**
-     * @return list<array{month: string, paid_in: int, commissions: int, vip: int, refunds: int, to_trainers: int}>
+     * @return list<array{month: string, paid_in: int, commissions: int, vip: int, refunds: int, to_providers: int}>
      */
     private function months(Carbon $from, Carbon $to): array
     {
@@ -72,7 +72,7 @@ class FinancialReport
             ->selectRaw('SUM(CASE WHEN a.code = ? THEN e.amount ELSE 0 END) as commissions', [Accounts::PLATFORM_REVENUE])
             ->selectRaw('SUM(CASE WHEN a.code = ? THEN e.amount ELSE 0 END) as vip', [Accounts::SUBSCRIPTION_REVENUE])
             ->selectRaw('SUM(CASE WHEN a.code = ? AND e.amount > 0 THEN e.amount ELSE 0 END) as refunds', [Accounts::REFUNDS_PAYABLE])
-            ->selectRaw("SUM(CASE WHEN a.type = 'trainer_available' AND t.type IN ('escrow_release', 'refund_partial') THEN e.amount ELSE 0 END) as to_trainers")
+            ->selectRaw("SUM(CASE WHEN a.type = 'provider_available' AND t.type IN ('escrow_release', 'refund_partial') THEN e.amount ELSE 0 END) as to_providers")
             ->groupBy('month')
             ->orderBy('month')
             ->get();
@@ -83,7 +83,7 @@ class FinancialReport
             'commissions' => (int) $r->commissions,
             'vip' => (int) $r->vip,
             'refunds' => (int) $r->refunds,
-            'to_trainers' => (int) $r->to_trainers,
+            'to_providers' => (int) $r->to_providers,
         ])->values()->all();
     }
 

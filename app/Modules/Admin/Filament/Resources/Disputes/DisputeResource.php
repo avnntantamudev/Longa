@@ -49,7 +49,7 @@ class DisputeResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->with(['session.student', 'session.trainer.user', 'opener']);
+        return parent::getEloquentQuery()->with(['session.client', 'session.provider.user', 'opener']);
     }
 
     public static function canCreate(): bool
@@ -94,7 +94,7 @@ class DisputeResource extends Resource
                         ->state(fn (Dispute $record) => self::attachmentLinks($record))
                         ->placeholder('Sem anexos'),
                     TextEntry::make('resolution')->label('Decisão')->badge()->placeholder('Por decidir'),
-                    TextEntry::make('trainer_share')->label('Parte do formador (bruto)')->placeholder('—')
+                    TextEntry::make('provider_share')->label('Parte do formador (bruto)')->placeholder('—')
                         ->formatStateUsing(fn (?int $state) => $state === null ? '—' : SessionSections::kz($state)),
                     TextEntry::make('resolution_note')->label('Nota da decisão')->placeholder('—'),
                 ]),

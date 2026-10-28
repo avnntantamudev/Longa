@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Wallet\Http\Resources;
 
-use App\Modules\Sessions\Models\TrainingSession;
+use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Wallet\Models\LedgerEntry;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -25,11 +25,11 @@ class WalletMovementResource extends JsonResource
 
         return [
             'id' => $this->id,
-            'bucket' => $this->account->type === 'trainer_available' ? 'available' : 'commission_due',
+            'bucket' => $this->account->type === 'provider_available' ? 'available' : 'commission_due',
             'type' => $tx->type,
             'label' => self::label($tx->type),
             'amount' => $this->amount,
-            'session_id' => $tx->reference_type === TrainingSession::class ? $tx->reference_id : null,
+            'session_id' => $tx->reference_type === ServiceJob::class ? $tx->reference_id : null,
             'created_at' => $this->created_at->toIso8601String(),
         ];
     }

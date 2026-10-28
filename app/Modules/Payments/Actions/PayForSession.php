@@ -10,7 +10,7 @@ use App\Modules\Payments\Models\PaymentCharge;
 use App\Modules\Payments\Services\EscrowService;
 use App\Modules\Payments\Support\ProviderResult;
 use App\Modules\Sessions\Enums\SessionState;
-use App\Modules\Sessions\Models\TrainingSession;
+use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Sessions\Services\SessionLifecycle;
 use App\Modules\Users\Models\User;
 use App\Support\Api\ApiException;
@@ -30,19 +30,19 @@ use Illuminate\Support\Facades\DB;
 class PayForSession
 {
     public function __construct(
-        private readonly PaymentProvider $provider,
+        private readonly PaymentProvider $gateway,
         private readonly EscrowService $escrow,
         private readonly SessionLifecycle $lifecycle,
         private readonly AuditLogger $audit,
     ) {}
 
-    public function handle(TrainingSession $session, User $student, string $method): TrainingSession
+    public function handle(ServiceJob $session, User $client, string $method): ServiceJob
     {
         if ($session->isCash()) {
             throw new ApiException('cash_session', 'Esta aula é paga em dinheiro ao formador.', 409);
         }
 
-        if (EscrowHold::query()->where('training_session_id', $session->id)->exists()) {
+        if (EscrowHold::query()->where('service_job_id', $session->id)->exists()) {
             return $session->refresh();
         }
 
@@ -55,25 +55,25 @@ class PayForSession
         }
 
         $key = "charge:session:{$session->id}";
-        $charge = $this->registerCharge($session, $student, $method, $key);
+        $charge = $this->registerCharge($session, $client, $method, $key);
 
         if ($charge->status !== ProviderResult::SUCCEEDED) {
-            $result = $this->provider->charge($session->amount, $student->phone, $method, $key, "BISCA · {$session->title}");
+            $result = $this->gateway->charge($session->amount, $client->phone, $method, $key, "BISCA · {$session->title}");
             $charge->forceFill([
                 'status' => $result->status,
                 'external_reference' => $result->reference,
                 'failure_reason' => $result->failureReason,
-                'provider_payload' => $result->payload ?: null,
+                'gateway_payload' => $result->payload ?: null,
             ])->save();
         }
 
-        $locked = DB::transaction(function () use ($session, $student, $charge) {
-            /** @var TrainingSession $locked */
-            $locked = TrainingSession::query()->lockForUpdate()->findOrFail($session->id);
+        $locked = DB::transaction(function () use ($session, $client, $charge) {
+            /** @var ServiceJob $locked */
+            $locked = ServiceJob::query()->lockForUpdate()->findOrFail($session->id);
 
             if ($charge->status === ProviderResult::FAILED) {
                 if ($locked->state === SessionState::PendingPayment) {
-                    $this->lifecycle->transition($locked, SessionState::PaymentFailed, 'payment_failed', $student, ['reason' => $charge->failure_reason]);
+                    $this->lifecycle->transition($locked, SessionState::PaymentFailed, 'payment_failed', $client, ['reason' => $charge->failure_reason]);
                 }
 
                 return $locked;
@@ -87,12 +87,12 @@ class PayForSession
             $this->escrow->hold($locked, $charge);
 
             if ($locked->state === SessionState::PendingPayment) {
-                $this->lifecycle->transition($locked, SessionState::Scheduled, 'payment_confirmed', $student, [
+                $this->lifecycle->transition($locked, SessionState::Scheduled, 'payment_confirmed', $client, [
                     'charge_id' => $charge->id, 'amount' => $charge->amount, 'method' => $charge->method,
                 ]);
             }
 
-            $this->audit->record('payments.charged', $charge, ['amount' => $charge->amount], $student->id);
+            $this->audit->record('payments.charged', $charge, ['amount' => $charge->amount], $client->id);
 
             return $locked;
         });
@@ -105,7 +105,7 @@ class PayForSession
         return $locked;
     }
 
-    private function registerCharge(TrainingSession $session, User $student, string $method, string $key): PaymentCharge
+    private function registerCharge(ServiceJob $session, User $client, string $method, string $key): PaymentCharge
     {
         $existing = PaymentCharge::query()->where('idempotency_key', $key)->first();
 
@@ -121,9 +121,9 @@ class PayForSession
 
         try {
             return PaymentCharge::query()->create([
-                'training_session_id' => $session->id,
-                'student_id' => $student->id,
-                'provider' => $this->provider->name(),
+                'service_job_id' => $session->id,
+                'client_id' => $client->id,
+                'gateway' => $this->gateway->name(),
                 'method' => $method,
                 'kind' => 'charge',
                 'amount' => $session->amount,

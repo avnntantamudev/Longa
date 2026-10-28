@@ -16,10 +16,10 @@ export interface NavItem {
 export function navigationFor(roles: RoleName[] = []): NavItem[] {
     const items: NavItem[] = [{ label: 'Início', href: '/', icon: 'home', available: true }];
 
-    if (roles.includes('student')) {
+    if (roles.includes('client')) {
         items.push({ label: 'Pedir aula', href: '/pedidos/novo', icon: 'search', available: true });
     }
-    if (roles.includes('trainer')) {
+    if (roles.includes('provider')) {
         items.push({ label: 'TRIM TRIM', href: '/formador/ofertas', icon: 'bell', available: true });
         items.push({ label: 'Carteira', href: '/carteira', icon: 'wallet', available: true });
     }

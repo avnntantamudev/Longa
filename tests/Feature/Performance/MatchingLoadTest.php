@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 use App\Modules\Matching\Services\MatchingCoordinator;
-use App\Modules\Matching\Services\TrainerMatcher;
+use App\Modules\Matching\Services\ProviderMatcher;
 use App\Modules\Requests\Models\RequestOffer;
-use App\Modules\Requests\Models\TrainingRequest;
-use App\Modules\Users\Models\Skill;
-use Database\Factories\TrainerProfileFactory;
+use App\Modules\Requests\Models\ServiceRequest;
+use App\Modules\Users\Models\Category;
+use Database\Factories\ProviderProfileFactory;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
 use Spatie\Permission\Models\Role;
@@ -21,10 +21,10 @@ use Spatie\Permission\Models\Role;
 const ELIGIBLE = 500;
 
 beforeEach(function () {
-    $this->sgme = Skill::query()->where('slug', 'sgme-gestao-empresarial')->firstOrFail();
-    [$lat, $lng] = TrainerProfileFactory::TALATONA;
+    $this->sgme = Category::query()->where('slug', 'sgme-gestao-empresarial')->firstOrFail();
+    [$lat, $lng] = ProviderProfileFactory::TALATONA;
     $now = now();
-    $trainerRole = Role::findByName('trainer', 'web')->id;
+    $providerRole = Role::findByName('provider', 'web')->id;
 
     // Inserção em massa (as factories seriam lentas para 500 + ruído)
     $users = array_map(fn (int $i) => [
@@ -36,7 +36,7 @@ beforeEach(function () {
     }
     $userIds = DB::table('users')->where('phone', 'like', '+24495%')->orderBy('id')->pluck('id')->all();
 
-    DB::table('model_has_roles')->insert(array_map(fn ($id) => ['role_id' => $trainerRole, 'model_type' => App\Modules\Users\Models\User::class, 'model_id' => $id], $userIds));
+    DB::table('model_has_roles')->insert(array_map(fn ($id) => ['role_id' => $providerRole, 'model_type' => App\Modules\Users\Models\User::class, 'model_id' => $id], $userIds));
 
     // 500 elegíveis espalhados até 4,5 km + 200 fora do raio (6 a 10 km) para a consulta ter de filtrar
     $profiles = [];
@@ -54,16 +54,16 @@ beforeEach(function () {
         ];
     }
     foreach (array_chunk($profiles, 250) as $chunk) {
-        DB::table('trainer_profiles')->insert($chunk);
+        DB::table('provider_profiles')->insert($chunk);
     }
-    $profileIds = DB::table('trainer_profiles')->whereIn('user_id', $userIds)->pluck('id')->all();
-    DB::table('skill_trainer_profile')->insert(array_map(fn ($id) => ['trainer_profile_id' => $id, 'skill_id' => $this->sgme->id], $profileIds));
+    $profileIds = DB::table('provider_profiles')->whereIn('user_id', $userIds)->pluck('id')->all();
+    DB::table('category_provider_profile')->insert(array_map(fn ($id) => ['provider_profile_id' => $id, 'category_id' => $this->sgme->id], $profileIds));
 
-    $this->request = TrainingRequest::factory()->forSkill($this->sgme)->create();
+    $this->request = ServiceRequest::factory()->forCategory($this->sgme)->create();
 });
 
 it('encontra e ordena 500 formadores elegíveis em tempo aceitável', function () {
-    $matcher = app(TrainerMatcher::class);
+    $matcher = app(ProviderMatcher::class);
     $matcher->candidates($this->request, 10); // aquecimento (planos de execução, ligação)
 
     $start = hrtime(true);
@@ -96,7 +96,7 @@ it('envia uma onda para os 500 (pior caso: todos ao mesmo tempo) em tempo aceit�
     logPerformance('dispatch', ['offers' => $sent, 'queued_jobs' => $queued, 'total_ms' => round($ms, 1), 'per_offer_ms' => round($ms / max(1, $sent), 2)]);
 
     expect($sent)->toBe(ELIGIBLE)
-        ->and(RequestOffer::query()->where('training_request_id', $this->request->id)->count())->toBe(ELIGIBLE)
+        ->and(RequestOffer::query()->where('service_request_id', $this->request->id)->count())->toBe(ELIGIBLE)
         // Por oferta: 1 notificação + 1 broadcast; mais o job de avanço da onda
         ->and($queued)->toBeGreaterThanOrEqual(ELIGIBLE * 2)
         ->and($ms)->toBeLessThan(15000);

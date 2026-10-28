@@ -47,7 +47,7 @@ class ViewDispute extends ViewRecord
             ->modalSubmitActionLabel('Confirmar decisão')
             ->schema(array_values(array_filter([
                 $decision === ResolveDispute::PARTIAL
-                    ? TextInput::make('trainer_share')->label('Parte do formador antes da comissão (Kz)')
+                    ? TextInput::make('provider_share')->label('Parte do formador antes da comissão (Kz)')
                         ->integer()->required()->minValue(1)->maxValue(fn () => $this->record->session->amount - 1)
                     : null,
                 Textarea::make('note')->label('Fundamentação (fica no histórico)')->required()->minLength(5)->maxLength(1000),
@@ -63,7 +63,7 @@ class ViewDispute extends ViewRecord
                         $this->record,
                         $admin,
                         $decision,
-                        isset($data['trainer_share']) ? (int) $data['trainer_share'] : null,
+                        isset($data['provider_share']) ? (int) $data['provider_share'] : null,
                         (string) $data['note'],
                     );
                 } catch (ApiException $e) {

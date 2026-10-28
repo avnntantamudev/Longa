@@ -11,19 +11,19 @@ interface Session {
     title: string;
     state: string;
     state_label: string;
-    skill: string;
+    category: string;
     scheduled_at: string;
     neighborhood: string;
     amount: number;
-    trainer_net?: number;
-    role: 'student' | 'trainer';
-    trainer?: { name: string; photo_thumb_url: string | null };
-    student?: { name: string; photo_thumb_url: string | null };
+    provider_net?: number;
+    role: 'client' | 'provider';
+    provider?: { name: string; photo_thumb_url: string | null };
+    client?: { name: string; photo_thumb_url: string | null };
 }
 
 const page = usePage();
 const sessions = ref<Session[] | null>(null);
-const isStudent = computed(() => page.props.auth.user?.roles.includes('student'));
+const isClient = computed(() => page.props.auth.user?.roles.includes('client'));
 
 onMounted(async () => {
     sessions.value = (await api.get<{ data: Session[] }>('/sessions')).data;
@@ -35,7 +35,7 @@ onMounted(async () => {
 
     <div class="flex items-center justify-between gap-3">
         <h1 class="text-display">Aulas</h1>
-        <Link v-if="isStudent" href="/pedidos/novo" class="btn-primary min-h-10 px-4 text-caption">Pedir aula</Link>
+        <Link v-if="isClient" href="/pedidos/novo" class="btn-primary min-h-10 px-4 text-caption">Pedir aula</Link>
     </div>
 
     <p v-if="sessions === null" class="mt-6 text-ink-muted">A carregar…</p>
@@ -45,19 +45,19 @@ onMounted(async () => {
         <li v-for="session in sessions" :key="session.id">
             <Link :href="`/aulas/${session.id}`" class="card flex items-center gap-3">
                 <UserAvatar
-                    :name="session.role === 'student' ? session.trainer?.name : session.student?.name"
-                    :src="session.role === 'student' ? session.trainer?.photo_thumb_url : session.student?.photo_thumb_url"
+                    :name="session.role === 'client' ? session.provider?.name : session.client?.name"
+                    :src="session.role === 'client' ? session.provider?.photo_thumb_url : session.client?.photo_thumb_url"
                 />
                 <div class="min-w-0 flex-1">
                     <p class="truncate font-semibold">{{ session.title }}</p>
                     <p class="text-caption text-ink-muted">
                         {{ when(session.scheduled_at) }} · {{ session.neighborhood }} ·
-                        {{ session.role === 'student' ? `com ${session.trainer?.name}` : `aluno ${session.student?.name}` }}
+                        {{ session.role === 'client' ? `com ${session.provider?.name}` : `aluno ${session.client?.name}` }}
                     </p>
                 </div>
                 <div class="flex shrink-0 flex-col items-end gap-1">
                     <span class="badge" :class="stateBadge(session.state)">{{ session.state_label }}</span>
-                    <span class="text-caption font-semibold">{{ kwanza(session.role === 'trainer' ? (session.trainer_net ?? session.amount) : session.amount) }}</span>
+                    <span class="text-caption font-semibold">{{ kwanza(session.role === 'provider' ? (session.provider_net ?? session.amount) : session.amount) }}</span>
                 </div>
             </Link>
         </li>

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Sessions\Http\Resources;
 
 use App\Modules\Payments\Services\VipSubscriptions;
-use App\Modules\Sessions\Models\TrainingSession;
+use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Sessions\Services\AvailableActions;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -16,7 +16,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  *  - o formador vê o nome do aluno e o local exato.
  * Os valores mostram ao formador quanto recebe (valor − comissão).
  *
- * @mixin TrainingSession
+ * @mixin ServiceJob
  */
 class SessionResource extends JsonResource
 {
@@ -26,16 +26,16 @@ class SessionResource extends JsonResource
     public function toArray(Request $request): array
     {
         $viewerId = $request->user()?->getAuthIdentifier();
-        $isTrainer = $this->trainer->user_id === $viewerId;
+        $isProvider = $this->provider->user_id === $viewerId;
 
         return [
             'id' => $this->id,
             'state' => $this->state->value,
             'state_label' => $this->state->label(),
-            'actions' => app(AvailableActions::class)->for($this->resource, $isTrainer),
-            'request_id' => $this->training_request_id,
+            'actions' => app(AvailableActions::class)->for($this->resource, $isProvider),
+            'request_id' => $this->service_request_id,
             'title' => $this->title,
-            'skill' => $this->skill->name,
+            'category' => $this->category->name,
             'scheduled_at' => $this->scheduled_at->toIso8601String(),
             'modality' => $this->modality,
             'province' => $this->province,
@@ -54,22 +54,22 @@ class SessionResource extends JsonResource
             'no_show_contest_until' => $this->no_show_contest_until?->toIso8601String(),
             'cash_confirmed_at' => $this->cash_confirmed_at?->toIso8601String(),
             'amount' => $this->amount,
-            'commission' => $this->when($isTrainer, $this->commission),
-            'trainer_net' => $this->when($isTrainer, $this->trainer_net),
-            'commission_percent' => $this->when($isTrainer, $this->commission_percent),
-            'role' => $isTrainer ? 'trainer' : 'student',
+            'commission' => $this->when($isProvider, $this->commission),
+            'provider_net' => $this->when($isProvider, $this->provider_net),
+            'commission_percent' => $this->when($isProvider, $this->commission_percent),
+            'role' => $isProvider ? 'provider' : 'client',
             'conversation_id' => $this->conversation?->id,
-            'student' => $this->when($isTrainer, fn () => ['name' => $this->student->name, ...$this->student->photoUrls()]),
-            'trainer' => $this->when(! $isTrainer, fn () => [
-                'id' => $this->trainer->id,
-                'name' => $this->trainer->user->name,
-                ...$this->trainer->user->photoUrls(),
-                'bio' => $this->trainer->bio,
-                'years_experience' => $this->trainer->years_experience,
-                'neighborhood' => $this->trainer->neighborhood,
-                'verified' => $this->trainer->isVerified(),
-                'vip' => app(VipSubscriptions::class)->isVip($this->trainer),
-                'score' => $this->trainer->score,
+            'client' => $this->when($isProvider, fn () => ['name' => $this->client->name, ...$this->client->photoUrls()]),
+            'provider' => $this->when(! $isProvider, fn () => [
+                'id' => $this->provider->id,
+                'name' => $this->provider->user->name,
+                ...$this->provider->user->photoUrls(),
+                'bio' => $this->provider->bio,
+                'years_experience' => $this->provider->years_experience,
+                'neighborhood' => $this->provider->neighborhood,
+                'verified' => $this->provider->isVerified(),
+                'vip' => app(VipSubscriptions::class)->isVip($this->provider),
+                'score' => $this->provider->score,
             ]),
             'created_at' => $this->created_at->toIso8601String(),
         ];

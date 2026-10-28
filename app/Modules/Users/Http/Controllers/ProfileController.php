@@ -6,14 +6,14 @@ namespace App\Modules\Users\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Users\Actions\CompleteOnboarding;
-use App\Modules\Users\Actions\UpdateTrainerProfile;
+use App\Modules\Users\Actions\UpdateProviderProfile;
+use App\Modules\Users\Http\Requests\ClientProfileRequest;
 use App\Modules\Users\Http\Requests\OnboardingRequest;
-use App\Modules\Users\Http\Requests\StudentProfileRequest;
-use App\Modules\Users\Http\Requests\TrainerDetailsRequest;
-use App\Modules\Users\Http\Requests\TrainerLocationRequest;
-use App\Modules\Users\Http\Requests\TrainerSkillsRequest;
+use App\Modules\Users\Http\Requests\ProviderCategoriesRequest;
+use App\Modules\Users\Http\Requests\ProviderDetailsRequest;
+use App\Modules\Users\Http\Requests\ProviderLocationRequest;
 use App\Modules\Users\Http\Requests\UpdateMeRequest;
-use App\Modules\Users\Http\Resources\TrainerProfileResource;
+use App\Modules\Users\Http\Resources\ProviderProfileResource;
 use App\Modules\Users\Http\Resources\UserResource;
 use App\Modules\Users\Models\User;
 use App\Support\Api\ApiException;
@@ -51,9 +51,9 @@ class ProfileController extends Controller
     /**
      * Atualizar o perfil de aluno.
      */
-    public function updateStudent(StudentProfileRequest $request): JsonResponse
+    public function updateClient(ClientProfileRequest $request): JsonResponse
     {
-        $profile = $this->user($request)->studentProfile
+        $profile = $this->user($request)->clientProfile
             ?? throw new ApiException('profile_missing', 'Ainda não tem o perfil de aluno.', 409);
 
         $profile->fill($request->validated())->save();
@@ -64,39 +64,39 @@ class ProfileController extends Controller
     /**
      * Ver o próprio perfil de formador.
      */
-    public function showTrainer(Request $request): TrainerProfileResource
+    public function showProvider(Request $request): ProviderProfileResource
     {
-        $profile = $this->user($request)->trainerProfile
+        $profile = $this->user($request)->providerProfile
             ?? throw new ApiException('profile_missing', 'Ainda não tem o perfil de formador.', 409);
 
-        return new TrainerProfileResource($profile->load('skills'));
+        return new ProviderProfileResource($profile->load('categories'));
     }
 
     /**
      * Formador: apresentação, experiência, modalidades e preço.
      */
-    public function trainerDetails(TrainerDetailsRequest $request, UpdateTrainerProfile $action): TrainerProfileResource
+    public function providerDetails(ProviderDetailsRequest $request, UpdateProviderProfile $action): ProviderProfileResource
     {
         /** @var array{bio?: string|null, years_experience?: int|null, modalities?: list<string>, rate_amount?: int|null, rate_unit?: string|null} $data */
         $data = $request->validated();
 
-        return new TrainerProfileResource($action->details($this->user($request), $data));
+        return new ProviderProfileResource($action->details($this->user($request), $data));
     }
 
     /**
      * Formador: áreas de formação.
      */
-    public function trainerSkills(TrainerSkillsRequest $request, UpdateTrainerProfile $action): TrainerProfileResource
+    public function providerCategories(ProviderCategoriesRequest $request, UpdateProviderProfile $action): ProviderProfileResource
     {
-        return new TrainerProfileResource($action->skills($this->user($request), $request->skillIds()));
+        return new ProviderProfileResource($action->categories($this->user($request), $request->categoryIds()));
     }
 
     /**
      * Formador: local e raio de atuação.
      */
-    public function trainerLocation(TrainerLocationRequest $request, UpdateTrainerProfile $action): TrainerProfileResource
+    public function providerLocation(ProviderLocationRequest $request, UpdateProviderProfile $action): ProviderProfileResource
     {
-        return new TrainerProfileResource($action->location($this->user($request), $request->locationData()));
+        return new ProviderProfileResource($action->location($this->user($request), $request->locationData()));
     }
 
     private function user(Request $request): User

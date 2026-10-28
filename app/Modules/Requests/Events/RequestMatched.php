@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Requests\Events;
 
-use App\Modules\Requests\Models\TrainingRequest;
-use App\Modules\Sessions\Models\TrainingSession;
+use App\Modules\Requests\Models\ServiceRequest;
+use App\Modules\Sessions\Models\ServiceJob;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
@@ -25,8 +25,8 @@ class RequestMatched implements ShouldBroadcast, ShouldDispatchAfterCommit
      * @param  list<int>  $loserUserIds  formadores com oferta aberta que ficaram sem a aula
      */
     public function __construct(
-        public readonly TrainingRequest $request,
-        public readonly TrainingSession $session,
+        public readonly ServiceRequest $request,
+        public readonly ServiceJob $session,
         public readonly array $loserUserIds = [],
     ) {}
 

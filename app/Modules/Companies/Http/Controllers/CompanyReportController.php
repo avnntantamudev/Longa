@@ -9,7 +9,7 @@ use App\Modules\Admin\Reports\ReportExporter;
 use App\Modules\Companies\Actions\EmployeeConsent;
 use App\Modules\Companies\Models\Company;
 use App\Modules\Companies\Models\CompanyEmployee;
-use App\Modules\Companies\Reports\CompanyTrainingReport;
+use App\Modules\Companies\Reports\CompanyServicesReport;
 use App\Modules\Users\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -28,7 +28,7 @@ class CompanyReportController extends Controller
     /**
      * Formações dos colaboradores que autorizaram a empresa (por defeito, mês atual).
      */
-    public function show(Request $request, Company $company, CompanyTrainingReport $report): JsonResponse
+    public function show(Request $request, Company $company, CompanyServicesReport $report): JsonResponse
     {
         Gate::authorize('view', $company);
         [$from, $to] = $this->period($request);
@@ -39,12 +39,12 @@ class CompanyReportController extends Controller
     /**
      * Exportar o relatório RH (`format`: pdf ou csv).
      */
-    public function export(Request $request, Company $company, CompanyTrainingReport $report, ReportExporter $exporter): StreamedResponse
+    public function export(Request $request, Company $company, CompanyServicesReport $report, ReportExporter $exporter): StreamedResponse
     {
         Gate::authorize('view', $company);
         $format = $request->validate(['format' => ['required', 'in:pdf,csv']])['format'];
         [$from, $to] = $this->period($request);
-        $sections = CompanyTrainingReport::sections($report->build($company, $from, $to));
+        $sections = CompanyServicesReport::sections($report->build($company, $from, $to));
         $period = 'De '.$from->format('d/m/Y').' a '.$to->format('d/m/Y');
         $filename = 'longa-formacoes-'.$from->toDateString().'-'.$to->toDateString();
         $title = "Formações — {$company->name}";

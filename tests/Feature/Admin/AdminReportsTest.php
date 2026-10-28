@@ -29,15 +29,15 @@ function reportFixture(): void
 {
     $done = paidSession();
     test()->travelTo($done->scheduled_at);
-    app(StartSession::class)->handle($done, $done->trainer->user);
-    $token = app(FinishSession::class)->handle($done, $done->trainer->user)['qr']['tokens'][0]['token'];
-    app(ConfirmSession::class)->handle($done->fresh() ?? $done, $done->student, $token, null);
+    app(StartSession::class)->handle($done, $done->provider->user);
+    $token = app(FinishSession::class)->handle($done, $done->provider->user)['qr']['tokens'][0]['token'];
+    app(ConfirmSession::class)->handle($done->fresh() ?? $done, $done->client, $token, null);
     test()->travelBack();
 
     $cancelled = paidSession();
-    app(CancelSession::class)->handle($cancelled, $cancelled->student, null);
+    app(CancelSession::class)->handle($cancelled, $cancelled->client, null);
 
-    app(VipSubscriptions::class)->grant($done->trainer, User::factory()->withRole(Role::Admin)->create(), 'cash', 'Pagou em mão');
+    app(VipSubscriptions::class)->grant($done->provider, User::factory()->withRole(Role::Admin)->create(), 'cash', 'Pagou em mão');
 }
 
 it('o relatório financeiro bate com o ledger', function () {
@@ -49,12 +49,12 @@ it('o relatório financeiro bate com o ledger', function () {
         'paid_in' => 50000,
         'commissions' => 3750,
         'vip' => 50000,
-        'to_trainers' => 21250,
+        'to_providers' => 21250,
         'refunds_decided' => 25000,
         'refunds_paid' => 25000,
         'escrow_at_end' => 0,
         'refunds_pending_at_end' => 0,
-        'trainers_available_at_end' => 21250,
+        'providers_available_at_end' => 21250,
     ]);
     expect(collect($report['months'])->sum('commissions'))->toBe(3750);
 });
@@ -64,9 +64,9 @@ it('o relatório de operação conta aulas por estado e formadores ativos', func
 
     $report = app(OperationsReport::class)->build(now()->subDays(3), now()->addDays(3));
 
-    expect($report['sessions']['by_state'])->toMatchArray(['completed' => 1, 'cancelled_by_student' => 1])
-        ->and($report['top_trainers'][0]['lessons'])->toBe(1)
-        ->and($report['top_trainers'][0]['net'])->toBe(21250);
+    expect($report['sessions']['by_state'])->toMatchArray(['completed' => 1, 'cancelled_by_client' => 1])
+        ->and($report['top_providers'][0]['lessons'])->toBe(1)
+        ->and($report['top_providers'][0]['net'])->toBe(21250);
 });
 
 it('o admin vê os relatórios e exporta CSV (Excel) e PDF', function () {
@@ -94,5 +94,5 @@ it('o admin vê os relatórios e exporta CSV (Excel) e PDF', function () {
 });
 
 it('só administradores', function () {
-    $this->actingAs(User::factory()->withRole(Role::Trainer)->create())->get('/backoffice/relatorios')->assertForbidden();
+    $this->actingAs(User::factory()->withRole(Role::Provider)->create())->get('/backoffice/relatorios')->assertForbidden();
 });

@@ -10,11 +10,11 @@ import { computed, onMounted, ref } from 'vue';
 
 const props = defineProps<{ requestId: number }>();
 
-interface TrainingRequest {
+interface ServiceRequest {
     id: number;
     state: 'draft' | 'searching' | 'matched' | 'expired' | 'cancelled';
     title: string;
-    skill: { name: string };
+    category: { name: string };
     amount: number;
     scheduled_at: string;
     neighborhood: string;
@@ -26,13 +26,13 @@ interface TrainingRequest {
     session_id: number | null;
 }
 
-const request = ref<TrainingRequest | null>(null);
+const request = ref<ServiceRequest | null>(null);
 const busy = ref(false);
 const error = ref<string | null>(null);
 const countdown = useCountdown();
 
 async function load(): Promise<void> {
-    const { data } = await api.get<{ data: TrainingRequest }>(`/training-requests/${props.requestId}`);
+    const { data } = await api.get<{ data: ServiceRequest }>(`/service-requests/${props.requestId}`);
     request.value = data;
     if (data.state === 'searching' && data.seconds_left !== null) {
         countdown.start(data.seconds_left);
@@ -59,7 +59,7 @@ async function cancel(): Promise<void> {
     }
     busy.value = true;
     try {
-        await api.post(`/training-requests/${props.requestId}/cancel`);
+        await api.post(`/service-requests/${props.requestId}/cancel`);
         await load();
     } catch (e) {
         error.value = e instanceof ApiError ? e.message : 'Não foi possível cancelar.';
@@ -73,7 +73,7 @@ async function republish(): Promise<void> {
     busy.value = true;
     error.value = null;
     try {
-        const { data } = await api.post<{ data: { id: number } }>(`/training-requests/${props.requestId}/republish`);
+        const { data } = await api.post<{ data: { id: number } }>(`/service-requests/${props.requestId}/republish`);
         router.visit(`/pedidos/${data.id}`);
     } catch (e) {
         if (e instanceof ApiError) {
@@ -127,7 +127,7 @@ async function republish(): Promise<void> {
         <!-- Resumo -->
         <section class="card mt-4">
             <p class="font-semibold">{{ request.title }}</p>
-            <p class="text-caption text-ink-muted">{{ request.skill.name }}</p>
+            <p class="text-caption text-ink-muted">{{ request.category.name }}</p>
             <dl class="mt-3 grid grid-cols-2 gap-2 text-caption">
                 <div><dt class="text-ink-muted">Quando</dt><dd class="font-semibold">{{ when(request.scheduled_at) }}</dd></div>
                 <div><dt class="text-ink-muted">Valor</dt><dd class="font-semibold">{{ kwanza(request.amount) }}</dd></div>

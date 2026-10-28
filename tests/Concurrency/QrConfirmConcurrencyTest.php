@@ -20,8 +20,8 @@ use Symfony\Component\Process\Process;
 it('duas ou mais leituras simultâneas do mesmo QR libertam o dinheiro uma única vez', function () {
     // Aula a decorrer agora (tempo real: os processos filhos não partilham o relógio dos testes)
     $session = paidSession(['scheduled_at' => now()->subMinutes(5)]);
-    app(StartSession::class)->handle($session, $session->trainer->user);
-    $token = app(FinishSession::class)->handle($session, $session->trainer->user)['qr']['tokens'][0]['token'];
+    app(StartSession::class)->handle($session, $session->provider->user);
+    $token = app(FinishSession::class)->handle($session, $session->provider->user)['qr']['tokens'][0]['token'];
 
     $php = (new PhpExecutableFinder)->find() ?: 'php';
     $startAt = microtime(true) + 4;
@@ -43,7 +43,7 @@ it('duas ou mais leituras simultâneas do mesmo QR libertam o dinheiro uma únic
         ->and(array_unique(array_column($results, 'state')))->toBe(['completed']);
 
     expect(LedgerTransaction::query()->where('type', 'escrow_release')->count())->toBe(1)
-        ->and(app(LedgerService::class)->balanceFromEntries(Accounts::trainerAvailable($session->trainer_profile_id)))->toBe(21250)
+        ->and(app(LedgerService::class)->balanceFromEntries(Accounts::providerAvailable($session->provider_profile_id)))->toBe(21250)
         ->and(app(LedgerService::class)->balanceFromEntries(Accounts::ESCROW))->toBe(0)
         ->and(EscrowHold::query()->sole()->state)->toBe('released')
         ->and($session->fresh()?->state)->toBe(SessionState::Completed);

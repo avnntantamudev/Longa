@@ -13,7 +13,7 @@ use App\Modules\Sessions\Actions\ReportNoShow;
 use App\Modules\Sessions\Actions\StartSession;
 use App\Modules\Sessions\Http\Requests\ConfirmSessionRequest;
 use App\Modules\Sessions\Http\Resources\SessionResource;
-use App\Modules\Sessions\Models\TrainingSession;
+use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Users\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -29,9 +29,9 @@ class SessionExecutionController extends Controller
     /**
      * Iniciar aula (formador).
      */
-    public function start(Request $request, TrainingSession $session, StartSession $action): SessionResource
+    public function start(Request $request, ServiceJob $session, StartSession $action): SessionResource
     {
-        Gate::authorize('actAsTrainer', $session);
+        Gate::authorize('actAsProvider', $session);
 
         return $this->resource($action->handle($session, $this->user($request)));
     }
@@ -42,9 +42,9 @@ class SessionExecutionController extends Controller
      * Devolve vários tokens, um por janela de 30 s: a app mostra-os em sequência, mesmo sem rede, e pede
      * um novo lote antes de acabarem (POST /sessions/{id}/qr). Os tokens só existem nesta resposta.
      */
-    public function finish(Request $request, TrainingSession $session, FinishSession $action): JsonResponse
+    public function finish(Request $request, ServiceJob $session, FinishSession $action): JsonResponse
     {
-        Gate::authorize('actAsTrainer', $session);
+        Gate::authorize('actAsProvider', $session);
 
         return $this->qrResponse($action->handle($session, $this->user($request)));
     }
@@ -52,9 +52,9 @@ class SessionExecutionController extends Controller
     /**
      * Novo lote de QR (formador), com a aula à espera de confirmação.
      */
-    public function qr(Request $request, TrainingSession $session, FinishSession $action): JsonResponse
+    public function qr(Request $request, ServiceJob $session, FinishSession $action): JsonResponse
     {
-        Gate::authorize('actAsTrainer', $session);
+        Gate::authorize('actAsProvider', $session);
 
         return $this->qrResponse($action->handle($session, $this->user($request)));
     }
@@ -65,9 +65,9 @@ class SessionExecutionController extends Controller
      * Requer `Idempotency-Key`. Liberta o valor retido para o formador (menos a comissão).
      * Erros: `qr_invalid` (422), `qr_locked` (429), `qr_outside_window` (409), `session_not_confirmable` (409).
      */
-    public function confirm(ConfirmSessionRequest $request, TrainingSession $session, ConfirmSession $action): JsonResponse
+    public function confirm(ConfirmSessionRequest $request, ServiceJob $session, ConfirmSession $action): JsonResponse
     {
-        Gate::authorize('actAsStudent', $session);
+        Gate::authorize('actAsClient', $session);
 
         $confirmed = $action->handle(
             $session,
@@ -91,9 +91,9 @@ class SessionExecutionController extends Controller
      *
      * Requer `Idempotency-Key`. Liberta o valor retido para o formador.
      */
-    public function confirmWithoutQr(Request $request, TrainingSession $session, ConfirmWithoutQr $action): SessionResource
+    public function confirmWithoutQr(Request $request, ServiceJob $session, ConfirmWithoutQr $action): SessionResource
     {
-        Gate::authorize('actAsStudent', $session);
+        Gate::authorize('actAsClient', $session);
 
         return $this->resource($action->handle($session, $this->user($request)));
     }
@@ -104,7 +104,7 @@ class SessionExecutionController extends Controller
      * Requer `Idempotency-Key`. Reembolso conforme a política: aluno ≥ 6 h antes → total; depois → o formador
      * fica com 25%; formador cancela → total.
      */
-    public function cancel(Request $request, TrainingSession $session, CancelSession $action): SessionResource
+    public function cancel(Request $request, ServiceJob $session, CancelSession $action): SessionResource
     {
         Gate::authorize('view', $session);
         $data = $request->validate(['reason' => ['nullable', 'string', 'max:255']]);
@@ -118,7 +118,7 @@ class SessionExecutionController extends Controller
      * Requer `Idempotency-Key`. A outra parte tem 24 h para contestar (abre disputa); sem contestação,
      * a liquidação segue a política.
      */
-    public function noShow(Request $request, TrainingSession $session, ReportNoShow $action): SessionResource
+    public function noShow(Request $request, ServiceJob $session, ReportNoShow $action): SessionResource
     {
         Gate::authorize('view', $session);
         $data = $request->validate(['note' => ['nullable', 'string', 'max:500']]);
@@ -127,7 +127,7 @@ class SessionExecutionController extends Controller
     }
 
     /**
-     * @param  array{session: TrainingSession, qr: array{batch_id: string, rotation_seconds: int, tokens: list<array{token: string, code: string, valid_from: string, expires_at: string}>}}  $result
+     * @param  array{session: ServiceJob, qr: array{batch_id: string, rotation_seconds: int, tokens: list<array{token: string, code: string, valid_from: string, expires_at: string}>}}  $result
      */
     private function qrResponse(array $result): JsonResponse
     {
@@ -137,9 +137,9 @@ class SessionExecutionController extends Controller
         ])->header('Cache-Control', 'no-store');
     }
 
-    private function resource(TrainingSession $session): SessionResource
+    private function resource(ServiceJob $session): SessionResource
     {
-        return new SessionResource($session->load(['trainer.user', 'student', 'skill', 'conversation']));
+        return new SessionResource($session->load(['provider.user', 'client', 'category', 'conversation']));
     }
 
     private function user(Request $request): User

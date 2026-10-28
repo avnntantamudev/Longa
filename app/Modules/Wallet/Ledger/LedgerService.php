@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Wallet\Ledger;
 
-use App\Modules\Users\Models\TrainerProfile;
+use App\Modules\Users\Models\ProviderProfile;
 use App\Modules\Wallet\Models\LedgerAccount;
 use App\Modules\Wallet\Models\LedgerAccountBalance;
 use App\Modules\Wallet\Models\LedgerEntry;
@@ -148,9 +148,9 @@ class LedgerService
             ->sum('amount');
     }
 
-    public function trainerAvailable(TrainerProfile $trainer): int
+    public function providerAvailable(ProviderProfile $provider): int
     {
-        return $this->balance(Accounts::trainerAvailable($trainer));
+        return $this->balance(Accounts::providerAvailable($provider));
     }
 
     /**
@@ -223,7 +223,7 @@ class LedgerService
             LedgerAccount::query()->insertOrIgnore([
                 'code' => $code,
                 'type' => $type,
-                'owner_type' => $ownerId === null ? null : (new TrainerProfile)->getMorphClass(),
+                'owner_type' => $ownerId === null ? null : (new ProviderProfile)->getMorphClass(),
                 'owner_id' => $ownerId,
                 'currency' => 'AOA',
                 'created_at' => now(),

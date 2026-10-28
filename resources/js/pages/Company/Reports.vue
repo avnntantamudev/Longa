@@ -26,7 +26,7 @@ const hours = (h: number) => `${h.toLocaleString('pt-AO', { maximumFractionDigit
 
 async function load() {
     if (!companyId.value) return;
-    report.value = (await api.get<{ data: Report }>(`/companies/${companyId.value}/reports/training?${query.value}`)).data;
+    report.value = (await api.get<{ data: Report }>(`/companies/${companyId.value}/reports/services?${query.value}`)).data;
 }
 
 watch([companyId, from, to], load);
@@ -88,8 +88,8 @@ onMounted(async () => {
             </div>
 
             <div class="mt-4 grid grid-cols-2 gap-3">
-                <a :href="`/api/v1/companies/${companyId}/reports/training/export?format=pdf&${query}`" class="btn-secondary">Descarregar PDF</a>
-                <a :href="`/api/v1/companies/${companyId}/reports/training/export?format=csv&${query}`" class="btn-outline">Excel (CSV)</a>
+                <a :href="`/api/v1/companies/${companyId}/reports/services/export?format=pdf&${query}`" class="btn-secondary">Descarregar PDF</a>
+                <a :href="`/api/v1/companies/${companyId}/reports/services/export?format=csv&${query}`" class="btn-outline">Excel (CSV)</a>
             </div>
         </template>
     </template>

@@ -62,22 +62,22 @@ pest()->extend(TestCase::class)
  *
  * @param  array<string, mixed>  $overrides
  */
-function acceptedSession(string $paymentMethod = 'electronic', array $overrides = []): App\Modules\Sessions\Models\TrainingSession
+function acceptedSession(string $paymentMethod = 'electronic', array $overrides = []): App\Modules\Sessions\Models\ServiceJob
 {
-    $request = App\Modules\Requests\Models\TrainingRequest::factory()->create(['payment_method' => $paymentMethod]);
-    $trainer = App\Modules\Users\Models\TrainerProfile::factory()->verified()->create();
+    $request = App\Modules\Requests\Models\ServiceRequest::factory()->create(['payment_method' => $paymentMethod]);
+    $provider = App\Modules\Users\Models\ProviderProfile::factory()->verified()->create();
     $electronic = $paymentMethod === 'electronic';
 
-    $session = App\Modules\Sessions\Models\TrainingSession::query()->create([
-        'training_request_id' => $request->id, 'student_id' => $request->student_id, 'trainer_profile_id' => $trainer->id,
-        'skill_id' => $request->skill_id, 'title' => 'Aula de SGME', 'amount' => 25000, 'commission' => 3750, 'trainer_net' => 21250,
+    $session = App\Modules\Sessions\Models\ServiceJob::query()->create([
+        'service_request_id' => $request->id, 'client_id' => $request->client_id, 'provider_profile_id' => $provider->id,
+        'category_id' => $request->category_id, 'title' => 'Aula de SGME', 'amount' => 25000, 'commission' => 3750, 'provider_net' => 21250,
         'scheduled_at' => now()->addDay()->setTime(14, 0), 'duration_minutes' => 60, 'payment_method' => $paymentMethod,
         'payment_due_at' => $electronic ? now()->addMinutes(10) : null,
         'modality' => 'in_person', 'municipality' => 'Talatona', 'neighborhood' => 'Talatona', 'latitude' => -8.9167, 'longitude' => 13.1833,
         ...$overrides,
     ]);
     $session->forceFill(['state' => $electronic ? 'pending_payment' : 'scheduled'])->save();
-    App\Modules\Sessions\Models\Conversation::query()->create(['training_session_id' => $session->id]);
+    App\Modules\Sessions\Models\Conversation::query()->create(['service_job_id' => $session->id]);
 
     return $session->fresh() ?? $session;
 }
@@ -87,10 +87,10 @@ function acceptedSession(string $paymentMethod = 'electronic', array $overrides 
  *
  * @param  array<string, mixed>  $overrides
  */
-function paidSession(array $overrides = []): App\Modules\Sessions\Models\TrainingSession
+function paidSession(array $overrides = []): App\Modules\Sessions\Models\ServiceJob
 {
     $session = acceptedSession('electronic', $overrides);
-    app(App\Modules\Payments\Actions\PayForSession::class)->handle($session, $session->student, 'multicaixa_express');
+    app(App\Modules\Payments\Actions\PayForSession::class)->handle($session, $session->client, 'multicaixa_express');
 
     return $session->fresh() ?? $session;
 }
@@ -98,14 +98,14 @@ function paidSession(array $overrides = []): App\Modules\Sessions\Models\Trainin
 /**
  * Saldos do ledger relevantes para uma aula (cache e fonte de verdade têm de coincidir).
  *
- * @return array{escrow: int, trainer: int, revenue: int, refunds: int, funds_in: int}
+ * @return array{escrow: int, provider: int, revenue: int, refunds: int, funds_in: int}
  */
-function balances(App\Modules\Sessions\Models\TrainingSession $session): array
+function balances(App\Modules\Sessions\Models\ServiceJob $session): array
 {
     $ledger = app(App\Modules\Wallet\Ledger\LedgerService::class);
     $codes = [
         'escrow' => App\Modules\Wallet\Ledger\Accounts::ESCROW,
-        'trainer' => App\Modules\Wallet\Ledger\Accounts::trainerAvailable($session->trainer_profile_id),
+        'provider' => App\Modules\Wallet\Ledger\Accounts::providerAvailable($session->provider_profile_id),
         'revenue' => App\Modules\Wallet\Ledger\Accounts::PLATFORM_REVENUE,
         'refunds' => App\Modules\Wallet\Ledger\Accounts::REFUNDS_PAYABLE,
         'funds_in' => App\Modules\Wallet\Ledger\Accounts::FUNDS_IN,

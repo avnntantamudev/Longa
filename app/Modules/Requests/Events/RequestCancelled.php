@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Requests\Events;
 
-use App\Modules\Requests\Models\TrainingRequest;
+use App\Modules\Requests\Models\ServiceRequest;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
@@ -21,9 +21,9 @@ class RequestCancelled implements ShouldBroadcast, ShouldDispatchAfterCommit
     public string $broadcastQueue = 'notifications';
 
     /**
-     * @param  list<int>  $trainerUserIds  formadores com oferta aberta
+     * @param  list<int>  $providerUserIds  formadores com oferta aberta
      */
-    public function __construct(public readonly TrainingRequest $request, public readonly array $trainerUserIds = []) {}
+    public function __construct(public readonly ServiceRequest $request, public readonly array $providerUserIds = []) {}
 
     /**
      * @return list<PrivateChannel>
@@ -32,7 +32,7 @@ class RequestCancelled implements ShouldBroadcast, ShouldDispatchAfterCommit
     {
         return [
             new PrivateChannel('request.'.$this->request->id),
-            ...array_map(fn (int $id) => new PrivateChannel('user.'.$id), $this->trainerUserIds),
+            ...array_map(fn (int $id) => new PrivateChannel('user.'.$id), $this->providerUserIds),
         ];
     }
 

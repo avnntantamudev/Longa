@@ -271,8 +271,8 @@
                                                         "type": "string",
                                                         "enum": [
                                                             "system",
-                                                            "student",
-                                                            "trainer",
+                                                            "client",
+                                                            "provider",
                                                             "admin"
                                                         ]
                                                     },
@@ -1521,9 +1521,9 @@
                 }
             }
         },
-        "/skills": {
+        "/categories": {
             "get": {
-                "operationId": "skills",
+                "operationId": "categories",
                 "summary": "\u00c1reas de forma\u00e7\u00e3o",
                 "tags": [
                     "Cat\u00e1logo",
@@ -1531,7 +1531,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Array of `SkillResource`",
+                        "description": "Array of `CategoryResource`",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1540,7 +1540,7 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/components/schemas/SkillResource"
+                                                "$ref": "#/components/schemas/CategoryResource"
                                             }
                                         }
                                     },
@@ -1614,9 +1614,9 @@
                 }
             }
         },
-        "/trainers/{trainer}": {
+        "/providers/{provider}": {
             "get": {
-                "operationId": "trainers.show",
+                "operationId": "providers.show",
                 "description": "S\u00f3 formadores verificados e com onboarding conclu\u00eddo. Nunca inclui contactos nem coordenadas.",
                 "summary": "Perfil p\u00fablico de um formador",
                 "tags": [
@@ -1625,10 +1625,10 @@
                 ],
                 "parameters": [
                     {
-                        "name": "trainer",
+                        "name": "provider",
                         "in": "path",
                         "required": true,
-                        "description": "The trainer ID",
+                        "description": "The provider ID",
                         "schema": {
                             "type": "integer"
                         }
@@ -1636,7 +1636,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "`PublicTrainerResource`",
+                        "description": "`PublicProviderResource`",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1645,12 +1645,12 @@
                                         "data": {
                                             "allOf": [
                                                 {
-                                                    "$ref": "#/components/schemas/PublicTrainerResource"
+                                                    "$ref": "#/components/schemas/PublicProviderResource"
                                                 },
                                                 {
                                                     "type": "object",
                                                     "required": [
-                                                        "skills"
+                                                        "categories"
                                                     ]
                                                 }
                                             ]
@@ -1900,7 +1900,7 @@
         "/admin/disputes/{dispute}/resolve": {
             "post": {
                 "operationId": "admin.disputes.resolve",
-                "description": "Requer `Idempotency-Key`. `released` liberta tudo ao formador, `refunded` devolve tudo ao aluno,\n`partially_refunded` d\u00e1 `trainer_share` Kz ao formador (antes da comiss\u00e3o) e devolve o resto.\nErros: `dispute_already_resolved` (409).",
+                "description": "Requer `Idempotency-Key`. `released` liberta tudo ao formador, `refunded` devolve tudo ao aluno,\n`partially_refunded` d\u00e1 `provider_share` Kz ao formador (antes da comiss\u00e3o) e devolve o resto.\nErros: `dispute_already_resolved` (409).",
                 "summary": "Decidir disputa (admin)",
                 "tags": [
                     "Disputas",
@@ -1943,7 +1943,7 @@
                                             "partially_refunded"
                                         ]
                                     },
-                                    "trainer_share": {
+                                    "provider_share": {
                                         "type": [
                                             "integer",
                                             "null"
@@ -2544,9 +2544,9 @@
                 }
             }
         },
-        "/companies/{company}/reports/training": {
+        "/companies/{company}/reports/services": {
             "get": {
-                "operationId": "companies.reports.training",
+                "operationId": "companies.reports.services",
                 "summary": "Forma\u00e7\u00f5es dos colaboradores que autorizaram a empresa (por defeito, m\u00eas atual)",
                 "tags": [
                     "Empresas",
@@ -2629,10 +2629,10 @@
                                                             "department": {
                                                                 "type": "string"
                                                             },
-                                                            "skill": {
+                                                            "category": {
                                                                 "type": "string"
                                                             },
-                                                            "trainer": {
+                                                            "provider": {
                                                                 "type": "string"
                                                             },
                                                             "hours": {
@@ -2646,8 +2646,8 @@
                                                             "date",
                                                             "employee",
                                                             "department",
-                                                            "skill",
-                                                            "trainer",
+                                                            "category",
+                                                            "provider",
                                                             "hours",
                                                             "cost"
                                                         ]
@@ -2683,9 +2683,9 @@
                 }
             }
         },
-        "/companies/{company}/reports/training/export": {
+        "/companies/{company}/reports/services/export": {
             "get": {
-                "operationId": "companies.reports.training.export",
+                "operationId": "companies.reports.services.export",
                 "summary": "Exportar o relat\u00f3rio RH (`format`: pdf ou csv)",
                 "tags": [
                     "Empresas",
@@ -3853,7 +3853,7 @@
                 }
             }
         },
-        "/admin/trainers/{trainer}/commission-payments": {
+        "/admin/providers/{provider}/commission-payments": {
             "post": {
                 "operationId": "admin.commission-payments",
                 "description": "Requer `Idempotency-Key` (usado tamb\u00e9m como chave da transa\u00e7\u00e3o no ledger).",
@@ -3864,10 +3864,10 @@
                 ],
                 "parameters": [
                     {
-                        "name": "trainer",
+                        "name": "provider",
                         "in": "path",
                         "required": true,
-                        "description": "The trainer ID",
+                        "description": "The provider ID",
                         "schema": {
                             "type": "integer"
                         }
@@ -3953,17 +3953,17 @@
                 }
             }
         },
-        "/training-requests": {
+        "/service-requests": {
             "get": {
-                "operationId": "training-requests.index",
+                "operationId": "service-requests.index",
                 "summary": "Os meus pedidos",
                 "tags": [
                     "Pedidos de aula",
-                    "TrainingRequest"
+                    "ServiceRequest"
                 ],
                 "responses": {
                     "200": {
-                        "description": "Paginated set of `StudentRequestResource`",
+                        "description": "Paginated set of `ClientRequestResource`",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -3972,7 +3972,7 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/components/schemas/StudentRequestResource"
+                                                "$ref": "#/components/schemas/ClientRequestResource"
                                             }
                                         },
                                         "links": {
@@ -4107,33 +4107,33 @@
                 }
             },
             "post": {
-                "operationId": "training-requests.store",
+                "operationId": "service-requests.store",
                 "description": "Passa logo a `searching` (5 min) e envia a 1.\u00aa onda TRIM TRIM. Se n\u00e3o houver formadores eleg\u00edveis,\no pedido volta j\u00e1 como `expired`.",
                 "summary": "Publicar pedido",
                 "tags": [
                     "Pedidos de aula",
-                    "TrainingRequest"
+                    "ServiceRequest"
                 ],
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/StoreTrainingRequestRequest"
+                                "$ref": "#/components/schemas/StoreServiceRequestRequest"
                             }
                         }
                     }
                 },
                 "responses": {
                     "201": {
-                        "description": "`StudentRequestResource`",
+                        "description": "`ClientRequestResource`",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/components/schemas/StudentRequestResource"
+                                            "$ref": "#/components/schemas/ClientRequestResource"
                                         }
                                     },
                                     "required": [
@@ -4152,20 +4152,20 @@
                 }
             }
         },
-        "/training-requests/{trainingRequest}": {
+        "/service-requests/{serviceRequest}": {
             "get": {
-                "operationId": "training-requests.show",
+                "operationId": "service-requests.show",
                 "summary": "Ver pedido",
                 "tags": [
                     "Pedidos de aula",
-                    "TrainingRequest"
+                    "ServiceRequest"
                 ],
                 "parameters": [
                     {
-                        "name": "trainingRequest",
+                        "name": "serviceRequest",
                         "in": "path",
                         "required": true,
-                        "description": "The training request ID",
+                        "description": "The service request ID",
                         "schema": {
                             "type": "integer"
                         }
@@ -4173,14 +4173,14 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "`StudentRequestResource`",
+                        "description": "`ClientRequestResource`",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/components/schemas/StudentRequestResource"
+                                            "$ref": "#/components/schemas/ClientRequestResource"
                                         }
                                     },
                                     "required": [
@@ -4202,20 +4202,20 @@
                 }
             }
         },
-        "/training-requests/{trainingRequest}/cancel": {
+        "/service-requests/{serviceRequest}/cancel": {
             "post": {
-                "operationId": "training-requests.cancel",
+                "operationId": "service-requests.cancel",
                 "summary": "Cancelar pedido (enquanto procura formador)",
                 "tags": [
                     "Pedidos de aula",
-                    "TrainingRequest"
+                    "ServiceRequest"
                 ],
                 "parameters": [
                     {
-                        "name": "trainingRequest",
+                        "name": "serviceRequest",
                         "in": "path",
                         "required": true,
-                        "description": "The training request ID",
+                        "description": "The service request ID",
                         "schema": {
                             "type": "integer"
                         }
@@ -4241,14 +4241,14 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "`StudentRequestResource`",
+                        "description": "`ClientRequestResource`",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/components/schemas/StudentRequestResource"
+                                            "$ref": "#/components/schemas/ClientRequestResource"
                                         }
                                     },
                                     "required": [
@@ -4273,21 +4273,21 @@
                 }
             }
         },
-        "/training-requests/{trainingRequest}/republish": {
+        "/service-requests/{serviceRequest}/republish": {
             "post": {
-                "operationId": "training-requests.republish",
+                "operationId": "service-requests.republish",
                 "description": "Cria um pedido novo, ligado ao original. Pode indicar nova data e novo valor.",
                 "summary": "Republicar pedido expirado ou cancelado",
                 "tags": [
                     "Pedidos de aula",
-                    "TrainingRequest"
+                    "ServiceRequest"
                 ],
                 "parameters": [
                     {
-                        "name": "trainingRequest",
+                        "name": "serviceRequest",
                         "in": "path",
                         "required": true,
-                        "description": "The training request ID",
+                        "description": "The service request ID",
                         "schema": {
                             "type": "integer"
                         }
@@ -4297,21 +4297,21 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/RepublishTrainingRequestRequest"
+                                "$ref": "#/components/schemas/RepublishServiceRequestRequest"
                             }
                         }
                     }
                 },
                 "responses": {
                     "201": {
-                        "description": "`StudentRequestResource`",
+                        "description": "`ClientRequestResource`",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/components/schemas/StudentRequestResource"
+                                            "$ref": "#/components/schemas/ClientRequestResource"
                                         }
                                     },
                                     "required": [
@@ -4425,13 +4425,13 @@
                 }
             }
         },
-        "/me/trainer-profile/skill-suggestions": {
+        "/me/provider-profile/category-suggestions": {
             "get": {
-                "operationId": "me.trainer.skill-suggestions",
+                "operationId": "me.provider.category-suggestions",
                 "summary": "As minhas \u00e1reas sugeridas e o estado de cada uma",
                 "tags": [
                     "Perfil",
-                    "SkillSuggestion"
+                    "CategorySuggestion"
                 ],
                 "responses": {
                     "200": {
@@ -4455,7 +4455,7 @@
                                                     "status": {
                                                         "type": "string"
                                                     },
-                                                    "skill": {
+                                                    "category": {
                                                         "type": [
                                                             "object",
                                                             "null"
@@ -4487,7 +4487,7 @@
                                                     "id",
                                                     "name",
                                                     "status",
-                                                    "skill",
+                                                    "category",
                                                     "review_note",
                                                     "created_at"
                                                 ]
@@ -4507,12 +4507,12 @@
                 }
             },
             "post": {
-                "operationId": "me.trainer.skill-suggestions.store",
+                "operationId": "me.provider.category-suggestions.store",
                 "description": "Fica em an\u00e1lise at\u00e9 o BISCA decidir. Se j\u00e1 existir uma \u00e1rea com esse nome, \u00e9 ligada logo ao perfil.\nErros: `too_many_suggestions` (409).",
                 "summary": "Sugerir uma \u00e1rea que n\u00e3o est\u00e1 na lista",
                 "tags": [
                     "Perfil",
-                    "SkillSuggestion"
+                    "CategorySuggestion"
                 ],
                 "requestBody": {
                     "required": true,
@@ -4677,9 +4677,9 @@
                 }
             }
         },
-        "/me/student-profile": {
+        "/me/client-profile": {
             "put": {
-                "operationId": "me.student",
+                "operationId": "me.client",
                 "summary": "Atualizar o perfil de aluno",
                 "tags": [
                     "Perfis",
@@ -4689,7 +4689,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/StudentProfileRequest"
+                                "$ref": "#/components/schemas/ClientProfileRequest"
                             }
                         }
                     }
@@ -4747,9 +4747,9 @@
                 }
             }
         },
-        "/me/trainer-profile": {
+        "/me/provider-profile": {
             "get": {
-                "operationId": "me.trainer",
+                "operationId": "me.provider",
                 "summary": "Ver o pr\u00f3prio perfil de formador",
                 "tags": [
                     "Perfis",
@@ -4757,7 +4757,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "`TrainerProfileResource`",
+                        "description": "`ProviderProfileResource`",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -4766,12 +4766,12 @@
                                         "data": {
                                             "allOf": [
                                                 {
-                                                    "$ref": "#/components/schemas/TrainerProfileResource"
+                                                    "$ref": "#/components/schemas/ProviderProfileResource"
                                                 },
                                                 {
                                                     "type": "object",
                                                     "required": [
-                                                        "skills"
+                                                        "categories"
                                                     ]
                                                 }
                                             ]
@@ -4790,9 +4790,9 @@
                 }
             }
         },
-        "/me/trainer-profile/details": {
+        "/me/provider-profile/details": {
             "put": {
-                "operationId": "me.trainer.details",
+                "operationId": "me.provider.details",
                 "summary": "Formador: apresenta\u00e7\u00e3o, experi\u00eancia, modalidades e pre\u00e7o",
                 "tags": [
                     "Perfis",
@@ -4803,14 +4803,14 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/TrainerDetailsRequest"
+                                "$ref": "#/components/schemas/ProviderDetailsRequest"
                             }
                         }
                     }
                 },
                 "responses": {
                     "200": {
-                        "description": "`TrainerProfileResource`",
+                        "description": "`ProviderProfileResource`",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -4819,12 +4819,12 @@
                                         "data": {
                                             "allOf": [
                                                 {
-                                                    "$ref": "#/components/schemas/TrainerProfileResource"
+                                                    "$ref": "#/components/schemas/ProviderProfileResource"
                                                 },
                                                 {
                                                     "type": "object",
                                                     "required": [
-                                                        "skills"
+                                                        "categories"
                                                     ]
                                                 }
                                             ]
@@ -4846,9 +4846,9 @@
                 }
             }
         },
-        "/me/trainer-profile/skills": {
+        "/me/provider-profile/categories": {
             "put": {
-                "operationId": "me.trainer.skills",
+                "operationId": "me.provider.categories",
                 "summary": "Formador: \u00e1reas de forma\u00e7\u00e3o",
                 "tags": [
                     "Perfis",
@@ -4859,14 +4859,14 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/TrainerSkillsRequest"
+                                "$ref": "#/components/schemas/ProviderCategoriesRequest"
                             }
                         }
                     }
                 },
                 "responses": {
                     "200": {
-                        "description": "`TrainerProfileResource`",
+                        "description": "`ProviderProfileResource`",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -4875,12 +4875,12 @@
                                         "data": {
                                             "allOf": [
                                                 {
-                                                    "$ref": "#/components/schemas/TrainerProfileResource"
+                                                    "$ref": "#/components/schemas/ProviderProfileResource"
                                                 },
                                                 {
                                                     "type": "object",
                                                     "required": [
-                                                        "skills"
+                                                        "categories"
                                                     ]
                                                 }
                                             ]
@@ -4902,9 +4902,9 @@
                 }
             }
         },
-        "/me/trainer-profile/location": {
+        "/me/provider-profile/location": {
             "put": {
-                "operationId": "me.trainer.location",
+                "operationId": "me.provider.location",
                 "summary": "Formador: local e raio de atua\u00e7\u00e3o",
                 "tags": [
                     "Perfis",
@@ -4915,14 +4915,14 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/TrainerLocationRequest"
+                                "$ref": "#/components/schemas/ProviderLocationRequest"
                             }
                         }
                     }
                 },
                 "responses": {
                     "200": {
-                        "description": "`TrainerProfileResource`",
+                        "description": "`ProviderProfileResource`",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -4931,12 +4931,12 @@
                                         "data": {
                                             "allOf": [
                                                 {
-                                                    "$ref": "#/components/schemas/TrainerProfileResource"
+                                                    "$ref": "#/components/schemas/ProviderProfileResource"
                                                 },
                                                 {
                                                     "type": "object",
                                                     "required": [
-                                                        "skills"
+                                                        "categories"
                                                     ]
                                                 }
                                             ]
@@ -4958,9 +4958,9 @@
                 }
             }
         },
-        "/me/trainer-profile/availability": {
+        "/me/provider-profile/availability": {
             "put": {
-                "operationId": "me.trainer.availability",
+                "operationId": "me.provider.availability",
                 "description": "S\u00f3 formadores verificados e com o perfil completo podem ficar dispon\u00edveis.",
                 "summary": "Formador: Dispon\u00edvel / Indispon\u00edvel para receber pedidos TRIM TRIM",
                 "tags": [
@@ -5094,7 +5094,7 @@
                 }
             }
         },
-        "/admin/trainers/{trainer}/score-events": {
+        "/admin/providers/{provider}/score-events": {
             "get": {
                 "operationId": "admin.score-events",
                 "summary": "Admin: eventos de score de um formador",
@@ -5104,10 +5104,10 @@
                 ],
                 "parameters": [
                     {
-                        "name": "trainer",
+                        "name": "provider",
                         "in": "path",
                         "required": true,
-                        "description": "The trainer ID",
+                        "description": "The provider ID",
                         "schema": {
                             "type": "integer"
                         }
@@ -5192,7 +5192,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Array of `TrainerOfferResource`",
+                        "description": "Array of `ProviderOfferResource`",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -5201,7 +5201,7 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/components/schemas/TrainerOfferResource"
+                                                "$ref": "#/components/schemas/ProviderOfferResource"
                                             }
                                         }
                                     },
@@ -5239,14 +5239,14 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "`TrainerOfferResource`",
+                        "description": "`ProviderOfferResource`",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/components/schemas/TrainerOfferResource"
+                                            "$ref": "#/components/schemas/ProviderOfferResource"
                                         }
                                     },
                                     "required": [
@@ -5289,14 +5289,14 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "`TrainerOfferResource`",
+                        "description": "`ProviderOfferResource`",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/components/schemas/TrainerOfferResource"
+                                            "$ref": "#/components/schemas/ProviderOfferResource"
                                         }
                                     },
                                     "required": [
@@ -5390,14 +5390,14 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "`TrainerOfferResource`",
+                        "description": "`ProviderOfferResource`",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/components/schemas/TrainerOfferResource"
+                                            "$ref": "#/components/schemas/ProviderOfferResource"
                                         }
                                     },
                                     "required": [
@@ -6147,6 +6147,180 @@
                 ],
                 "title": "AuthSessionResource"
             },
+            "CategoryResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "slug": {
+                        "type": "string"
+                    },
+                    "area": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "slug",
+                    "area"
+                ],
+                "title": "CategoryResource"
+            },
+            "ClientProfileRequest": {
+                "type": "object",
+                "properties": {
+                    "municipality": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 80
+                    },
+                    "neighborhood": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 80
+                    },
+                    "education_level": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 60
+                    }
+                },
+                "title": "ClientProfileRequest"
+            },
+            "ClientRequestResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "state": {
+                        "type": "string"
+                    },
+                    "category": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "name": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "name"
+                        ]
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "amount": {
+                        "type": "integer"
+                    },
+                    "scheduled_at": {
+                        "type": "string"
+                    },
+                    "modality": {
+                        "type": "string"
+                    },
+                    "province": {
+                        "type": "string"
+                    },
+                    "municipality": {
+                        "type": "string"
+                    },
+                    "neighborhood": {
+                        "type": "string"
+                    },
+                    "latitude": {
+                        "type": "number"
+                    },
+                    "longitude": {
+                        "type": "number"
+                    },
+                    "scheduled": {
+                        "type": "boolean"
+                    },
+                    "expires_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "seconds_left": {},
+                    "wave": {
+                        "type": "integer"
+                    },
+                    "open_offers": {
+                        "type": "integer",
+                        "description": "Quantos formadores est\u00e3o a ver a oferta agora (sem dizer quem)",
+                        "minimum": 0
+                    },
+                    "session_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "cancel_reason": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "republished_from_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "state",
+                    "category",
+                    "title",
+                    "description",
+                    "amount",
+                    "scheduled_at",
+                    "modality",
+                    "province",
+                    "municipality",
+                    "neighborhood",
+                    "latitude",
+                    "longitude",
+                    "scheduled",
+                    "expires_at",
+                    "seconds_left",
+                    "wave",
+                    "open_offers",
+                    "session_id",
+                    "cancel_reason",
+                    "republished_from_id",
+                    "created_at"
+                ],
+                "title": "ClientRequestResource"
+            },
             "CompanyRequest": {
                 "type": "object",
                 "properties": {
@@ -6350,7 +6524,7 @@
                             "null"
                         ]
                     },
-                    "trainer_share": {
+                    "provider_share": {
                         "type": [
                             "integer",
                             "null"
@@ -6407,7 +6581,7 @@
                     "description",
                     "status",
                     "resolution",
-                    "trainer_share",
+                    "provider_share",
                     "resolution_note",
                     "resolved_at",
                     "created_at"
@@ -6614,12 +6788,12 @@
                     },
                     "profiles": {
                         "type": "array",
-                        "description": "Um ou mais perfis. @example [\"student\"]",
+                        "description": "Um ou mais perfis. @example [\"client\"]",
                         "items": {
                             "type": "string",
                             "enum": [
-                                "student",
-                                "trainer",
+                                "client",
+                                "provider",
                                 "company_rh"
                             ]
                         },
@@ -6703,7 +6877,395 @@
                 ],
                 "title": "OtpChannel"
             },
-            "PublicTrainerResource": {
+            "ProviderCategoriesRequest": {
+                "type": "object",
+                "properties": {
+                    "category_ids": {
+                        "type": "array",
+                        "description": "\u00c1reas de forma\u00e7\u00e3o (1 a 10). @example [1, 4]",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "minItems": 1,
+                        "maxItems": 10,
+                        "uniqueItems": true
+                    }
+                },
+                "required": [
+                    "category_ids"
+                ],
+                "title": "ProviderCategoriesRequest"
+            },
+            "ProviderDetailsRequest": {
+                "type": "object",
+                "properties": {
+                    "bio": {
+                        "type": "string",
+                        "description": "Apresenta\u00e7\u00e3o do formador.",
+                        "minLength": 20,
+                        "maxLength": 2000
+                    },
+                    "years_experience": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 0,
+                        "maximum": 60
+                    },
+                    "modalities": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "in_person",
+                                "online"
+                            ]
+                        },
+                        "minItems": 1,
+                        "uniqueItems": true
+                    },
+                    "rate_amount": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "Pre\u00e7o de refer\u00eancia em Kz inteiros. @example 5000",
+                        "minimum": 500,
+                        "maximum": 10000000
+                    },
+                    "rate_unit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "enum": [
+                            "hour",
+                            "two_hours",
+                            "day",
+                            "session",
+                            null
+                        ]
+                    }
+                },
+                "required": [
+                    "bio",
+                    "modalities"
+                ],
+                "title": "ProviderDetailsRequest"
+            },
+            "ProviderLocationRequest": {
+                "type": "object",
+                "properties": {
+                    "province": {
+                        "type": "string",
+                        "description": "Prov\u00edncia (lista de 21). Sem valor: Luanda. @example Luanda",
+                        "enum": [
+                            "Bengo",
+                            "Benguela",
+                            "Bi\u00e9",
+                            "Cabinda",
+                            "Cuando",
+                            "Cuanza Norte",
+                            "Cuanza Sul",
+                            "Cubango",
+                            "Cunene",
+                            "Huambo",
+                            "Hu\u00edla",
+                            "Icolo e Bengo",
+                            "Luanda",
+                            "Lunda Norte",
+                            "Lunda Sul",
+                            "Malanje",
+                            "Moxico",
+                            "Moxico Leste",
+                            "Namibe",
+                            "U\u00edge",
+                            "Zaire"
+                        ]
+                    },
+                    "municipality": {
+                        "type": "string",
+                        "maxLength": 80
+                    },
+                    "neighborhood": {
+                        "type": "string",
+                        "maxLength": 80
+                    },
+                    "latitude": {
+                        "type": "number"
+                    },
+                    "longitude": {
+                        "type": "number"
+                    },
+                    "service_radius_m": {
+                        "type": "integer",
+                        "description": "Raio de atua\u00e7\u00e3o em metros (1 a 20 km). @example 5000",
+                        "minimum": 1000,
+                        "maximum": 20000
+                    },
+                    "accept_location": {
+                        "enum": [
+                            "yes",
+                            "on",
+                            "1",
+                            1,
+                            "true",
+                            true
+                        ]
+                    }
+                },
+                "required": [
+                    "municipality",
+                    "neighborhood",
+                    "latitude",
+                    "longitude",
+                    "service_radius_m"
+                ],
+                "title": "ProviderLocationRequest"
+            },
+            "ProviderOfferResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "state": {
+                        "type": "string"
+                    },
+                    "request_id": {
+                        "type": "integer"
+                    },
+                    "scheduled": {
+                        "type": "boolean"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "category": {
+                        "type": "string"
+                    },
+                    "amount": {
+                        "type": "integer"
+                    },
+                    "commission": {
+                        "type": "integer"
+                    },
+                    "commission_percent": {
+                        "type": "integer"
+                    },
+                    "provider_net": {
+                        "type": "integer"
+                    },
+                    "scheduled_at": {
+                        "type": "string"
+                    },
+                    "modality": {
+                        "type": "string"
+                    },
+                    "province": {
+                        "type": "string"
+                    },
+                    "municipality": {
+                        "type": "string"
+                    },
+                    "neighborhood": {
+                        "type": "string"
+                    },
+                    "distance_m": {
+                        "type": "integer",
+                        "description": "Arredondada aos 100 m para n\u00e3o permitir triangular a morada"
+                    },
+                    "sent_at": {
+                        "type": "string"
+                    },
+                    "expires_at": {
+                        "type": "string"
+                    },
+                    "seconds_left": {
+                        "type": "integer"
+                    },
+                    "session_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "state",
+                    "request_id",
+                    "scheduled",
+                    "title",
+                    "description",
+                    "category",
+                    "amount",
+                    "commission",
+                    "commission_percent",
+                    "provider_net",
+                    "scheduled_at",
+                    "modality",
+                    "province",
+                    "municipality",
+                    "neighborhood",
+                    "distance_m",
+                    "sent_at",
+                    "expires_at",
+                    "seconds_left"
+                ],
+                "title": "ProviderOfferResource"
+            },
+            "ProviderProfileResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "bio": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "years_experience": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "modalities": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "rate_amount": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "rate_unit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "province": {
+                        "type": "string"
+                    },
+                    "municipality": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "neighborhood": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "latitude": {
+                        "type": [
+                            "number",
+                            "null"
+                        ]
+                    },
+                    "longitude": {
+                        "type": [
+                            "number",
+                            "null"
+                        ]
+                    },
+                    "service_radius_m": {
+                        "type": "integer"
+                    },
+                    "verification_status": {
+                        "type": "string"
+                    },
+                    "vip": {
+                        "type": "string"
+                    },
+                    "score": {
+                        "type": "integer"
+                    },
+                    "badges": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "is_available": {
+                        "type": "boolean"
+                    },
+                    "categories": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CategoryResource"
+                        }
+                    },
+                    "onboarding": {
+                        "type": "object",
+                        "properties": {
+                            "photo": {
+                                "type": "boolean"
+                            },
+                            "details": {
+                                "type": "boolean"
+                            },
+                            "categories": {
+                                "type": [
+                                    "boolean",
+                                    "null"
+                                ]
+                            },
+                            "location": {
+                                "type": "boolean"
+                            },
+                            "completed": {
+                                "type": "boolean"
+                            }
+                        },
+                        "required": [
+                            "photo",
+                            "details",
+                            "categories",
+                            "location",
+                            "completed"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "bio",
+                    "years_experience",
+                    "modalities",
+                    "rate_amount",
+                    "rate_unit",
+                    "province",
+                    "municipality",
+                    "neighborhood",
+                    "latitude",
+                    "longitude",
+                    "service_radius_m",
+                    "verification_status",
+                    "vip",
+                    "score",
+                    "badges",
+                    "is_available",
+                    "onboarding"
+                ],
+                "title": "ProviderProfileResource"
+            },
+            "PublicProviderResource": {
                 "type": "object",
                 "properties": {
                     "id": {
@@ -6790,10 +7352,10 @@
                             "type": "string"
                         }
                     },
-                    "skills": {
+                    "categories": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/SkillResource"
+                            "$ref": "#/components/schemas/CategoryResource"
                         }
                     }
                 },
@@ -6816,7 +7378,7 @@
                     "score",
                     "badges"
                 ],
-                "title": "PublicTrainerResource"
+                "title": "PublicProviderResource"
             },
             "PushSubscriptionRequest": {
                 "type": "object",
@@ -6882,7 +7444,7 @@
                 ],
                 "title": "RefreshTokenRequest"
             },
-            "RepublishTrainingRequestRequest": {
+            "RepublishServiceRequestRequest": {
                 "type": "object",
                 "properties": {
                     "scheduled_at": {
@@ -6903,7 +7465,7 @@
                         "maximum": 5000000
                     }
                 },
-                "title": "RepublishTrainingRequestRequest"
+                "title": "RepublishServiceRequestRequest"
             },
             "RequestOtpRequest": {
                 "type": "object",
@@ -6996,7 +7558,7 @@
                     "title": {
                         "type": "string"
                     },
-                    "skill": {
+                    "category": {
                         "type": "string"
                     },
                     "scheduled_at": {
@@ -7077,7 +7639,7 @@
                     "commission": {
                         "type": "integer"
                     },
-                    "trainer_net": {
+                    "provider_net": {
                         "type": "integer"
                     },
                     "commission_percent": {
@@ -7086,8 +7648,8 @@
                     "role": {
                         "type": "string",
                         "enum": [
-                            "trainer",
-                            "student"
+                            "provider",
+                            "client"
                         ]
                     },
                     "conversation_id": {
@@ -7096,7 +7658,7 @@
                             "null"
                         ]
                     },
-                    "student": {
+                    "client": {
                         "type": "object",
                         "properties": {
                             "name": {
@@ -7124,7 +7686,7 @@
                             "photo_thumb_url"
                         ]
                     },
-                    "trainer": {
+                    "provider": {
                         "type": "object",
                         "properties": {
                             "id": {
@@ -7200,7 +7762,7 @@
                     "actions",
                     "request_id",
                     "title",
-                    "skill",
+                    "category",
                     "scheduled_at",
                     "modality",
                     "province",
@@ -7225,34 +7787,10 @@
                 ],
                 "title": "SessionResource"
             },
-            "SkillResource": {
+            "StoreServiceRequestRequest": {
                 "type": "object",
                 "properties": {
-                    "id": {
-                        "type": "integer"
-                    },
-                    "name": {
-                        "type": "string"
-                    },
-                    "slug": {
-                        "type": "string"
-                    },
-                    "category": {
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "id",
-                    "name",
-                    "slug",
-                    "category"
-                ],
-                "title": "SkillResource"
-            },
-            "StoreTrainingRequestRequest": {
-                "type": "object",
-                "properties": {
-                    "skill_id": {
+                    "category_id": {
                         "type": "integer"
                     },
                     "title": {
@@ -7343,7 +7881,7 @@
                     }
                 },
                 "required": [
-                    "skill_id",
+                    "category_id",
                     "title",
                     "amount",
                     "scheduled_at",
@@ -7353,157 +7891,7 @@
                     "latitude",
                     "longitude"
                 ],
-                "title": "StoreTrainingRequestRequest"
-            },
-            "StudentProfileRequest": {
-                "type": "object",
-                "properties": {
-                    "municipality": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "maxLength": 80
-                    },
-                    "neighborhood": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "maxLength": 80
-                    },
-                    "education_level": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "maxLength": 60
-                    }
-                },
-                "title": "StudentProfileRequest"
-            },
-            "StudentRequestResource": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "integer"
-                    },
-                    "state": {
-                        "type": "string"
-                    },
-                    "skill": {
-                        "type": "object",
-                        "properties": {
-                            "id": {
-                                "type": "integer"
-                            },
-                            "name": {
-                                "type": "string"
-                            }
-                        },
-                        "required": [
-                            "id",
-                            "name"
-                        ]
-                    },
-                    "title": {
-                        "type": "string"
-                    },
-                    "description": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "amount": {
-                        "type": "integer"
-                    },
-                    "scheduled_at": {
-                        "type": "string"
-                    },
-                    "modality": {
-                        "type": "string"
-                    },
-                    "province": {
-                        "type": "string"
-                    },
-                    "municipality": {
-                        "type": "string"
-                    },
-                    "neighborhood": {
-                        "type": "string"
-                    },
-                    "latitude": {
-                        "type": "number"
-                    },
-                    "longitude": {
-                        "type": "number"
-                    },
-                    "scheduled": {
-                        "type": "boolean"
-                    },
-                    "expires_at": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "seconds_left": {},
-                    "wave": {
-                        "type": "integer"
-                    },
-                    "open_offers": {
-                        "type": "integer",
-                        "description": "Quantos formadores est\u00e3o a ver a oferta agora (sem dizer quem)",
-                        "minimum": 0
-                    },
-                    "session_id": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ]
-                    },
-                    "cancel_reason": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "republished_from_id": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ]
-                    },
-                    "created_at": {
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "id",
-                    "state",
-                    "skill",
-                    "title",
-                    "description",
-                    "amount",
-                    "scheduled_at",
-                    "modality",
-                    "province",
-                    "municipality",
-                    "neighborhood",
-                    "latitude",
-                    "longitude",
-                    "scheduled",
-                    "expires_at",
-                    "seconds_left",
-                    "wave",
-                    "open_offers",
-                    "session_id",
-                    "cancel_reason",
-                    "republished_from_id",
-                    "created_at"
-                ],
-                "title": "StudentRequestResource"
+                "title": "StoreServiceRequestRequest"
             },
             "SubmitVerificationRequest": {
                 "type": "object",
@@ -7531,394 +7919,6 @@
                     "files"
                 ],
                 "title": "SubmitVerificationRequest"
-            },
-            "TrainerDetailsRequest": {
-                "type": "object",
-                "properties": {
-                    "bio": {
-                        "type": "string",
-                        "description": "Apresenta\u00e7\u00e3o do formador.",
-                        "minLength": 20,
-                        "maxLength": 2000
-                    },
-                    "years_experience": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ],
-                        "minimum": 0,
-                        "maximum": 60
-                    },
-                    "modalities": {
-                        "type": "array",
-                        "items": {
-                            "type": "string",
-                            "enum": [
-                                "in_person",
-                                "online"
-                            ]
-                        },
-                        "minItems": 1,
-                        "uniqueItems": true
-                    },
-                    "rate_amount": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ],
-                        "description": "Pre\u00e7o de refer\u00eancia em Kz inteiros. @example 5000",
-                        "minimum": 500,
-                        "maximum": 10000000
-                    },
-                    "rate_unit": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "enum": [
-                            "hour",
-                            "two_hours",
-                            "day",
-                            "session",
-                            null
-                        ]
-                    }
-                },
-                "required": [
-                    "bio",
-                    "modalities"
-                ],
-                "title": "TrainerDetailsRequest"
-            },
-            "TrainerLocationRequest": {
-                "type": "object",
-                "properties": {
-                    "province": {
-                        "type": "string",
-                        "description": "Prov\u00edncia (lista de 21). Sem valor: Luanda. @example Luanda",
-                        "enum": [
-                            "Bengo",
-                            "Benguela",
-                            "Bi\u00e9",
-                            "Cabinda",
-                            "Cuando",
-                            "Cuanza Norte",
-                            "Cuanza Sul",
-                            "Cubango",
-                            "Cunene",
-                            "Huambo",
-                            "Hu\u00edla",
-                            "Icolo e Bengo",
-                            "Luanda",
-                            "Lunda Norte",
-                            "Lunda Sul",
-                            "Malanje",
-                            "Moxico",
-                            "Moxico Leste",
-                            "Namibe",
-                            "U\u00edge",
-                            "Zaire"
-                        ]
-                    },
-                    "municipality": {
-                        "type": "string",
-                        "maxLength": 80
-                    },
-                    "neighborhood": {
-                        "type": "string",
-                        "maxLength": 80
-                    },
-                    "latitude": {
-                        "type": "number"
-                    },
-                    "longitude": {
-                        "type": "number"
-                    },
-                    "service_radius_m": {
-                        "type": "integer",
-                        "description": "Raio de atua\u00e7\u00e3o em metros (1 a 20 km). @example 5000",
-                        "minimum": 1000,
-                        "maximum": 20000
-                    },
-                    "accept_location": {
-                        "enum": [
-                            "yes",
-                            "on",
-                            "1",
-                            1,
-                            "true",
-                            true
-                        ]
-                    }
-                },
-                "required": [
-                    "municipality",
-                    "neighborhood",
-                    "latitude",
-                    "longitude",
-                    "service_radius_m"
-                ],
-                "title": "TrainerLocationRequest"
-            },
-            "TrainerOfferResource": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "integer"
-                    },
-                    "state": {
-                        "type": "string"
-                    },
-                    "request_id": {
-                        "type": "integer"
-                    },
-                    "scheduled": {
-                        "type": "boolean"
-                    },
-                    "title": {
-                        "type": "string"
-                    },
-                    "description": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "skill": {
-                        "type": "string"
-                    },
-                    "amount": {
-                        "type": "integer"
-                    },
-                    "commission": {
-                        "type": "integer"
-                    },
-                    "commission_percent": {
-                        "type": "integer"
-                    },
-                    "trainer_net": {
-                        "type": "integer"
-                    },
-                    "scheduled_at": {
-                        "type": "string"
-                    },
-                    "modality": {
-                        "type": "string"
-                    },
-                    "province": {
-                        "type": "string"
-                    },
-                    "municipality": {
-                        "type": "string"
-                    },
-                    "neighborhood": {
-                        "type": "string"
-                    },
-                    "distance_m": {
-                        "type": "integer",
-                        "description": "Arredondada aos 100 m para n\u00e3o permitir triangular a morada"
-                    },
-                    "sent_at": {
-                        "type": "string"
-                    },
-                    "expires_at": {
-                        "type": "string"
-                    },
-                    "seconds_left": {
-                        "type": "integer"
-                    },
-                    "session_id": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ]
-                    }
-                },
-                "required": [
-                    "id",
-                    "state",
-                    "request_id",
-                    "scheduled",
-                    "title",
-                    "description",
-                    "skill",
-                    "amount",
-                    "commission",
-                    "commission_percent",
-                    "trainer_net",
-                    "scheduled_at",
-                    "modality",
-                    "province",
-                    "municipality",
-                    "neighborhood",
-                    "distance_m",
-                    "sent_at",
-                    "expires_at",
-                    "seconds_left"
-                ],
-                "title": "TrainerOfferResource"
-            },
-            "TrainerProfileResource": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "integer"
-                    },
-                    "bio": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "years_experience": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ]
-                    },
-                    "modalities": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    },
-                    "rate_amount": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ]
-                    },
-                    "rate_unit": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "province": {
-                        "type": "string"
-                    },
-                    "municipality": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "neighborhood": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "latitude": {
-                        "type": [
-                            "number",
-                            "null"
-                        ]
-                    },
-                    "longitude": {
-                        "type": [
-                            "number",
-                            "null"
-                        ]
-                    },
-                    "service_radius_m": {
-                        "type": "integer"
-                    },
-                    "verification_status": {
-                        "type": "string"
-                    },
-                    "vip": {
-                        "type": "string"
-                    },
-                    "score": {
-                        "type": "integer"
-                    },
-                    "badges": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    },
-                    "is_available": {
-                        "type": "boolean"
-                    },
-                    "skills": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/SkillResource"
-                        }
-                    },
-                    "onboarding": {
-                        "type": "object",
-                        "properties": {
-                            "photo": {
-                                "type": "boolean"
-                            },
-                            "details": {
-                                "type": "boolean"
-                            },
-                            "skills": {
-                                "type": [
-                                    "boolean",
-                                    "null"
-                                ]
-                            },
-                            "location": {
-                                "type": "boolean"
-                            },
-                            "completed": {
-                                "type": "boolean"
-                            }
-                        },
-                        "required": [
-                            "photo",
-                            "details",
-                            "skills",
-                            "location",
-                            "completed"
-                        ]
-                    }
-                },
-                "required": [
-                    "id",
-                    "bio",
-                    "years_experience",
-                    "modalities",
-                    "rate_amount",
-                    "rate_unit",
-                    "province",
-                    "municipality",
-                    "neighborhood",
-                    "latitude",
-                    "longitude",
-                    "service_radius_m",
-                    "verification_status",
-                    "vip",
-                    "score",
-                    "badges",
-                    "is_available",
-                    "onboarding"
-                ],
-                "title": "TrainerProfileResource"
-            },
-            "TrainerSkillsRequest": {
-                "type": "object",
-                "properties": {
-                    "skill_ids": {
-                        "type": "array",
-                        "description": "\u00c1reas de forma\u00e7\u00e3o (1 a 10). @example [1, 4]",
-                        "items": {
-                            "type": "integer"
-                        },
-                        "minItems": 1,
-                        "maxItems": 10,
-                        "uniqueItems": true
-                    }
-                },
-                "required": [
-                    "skill_ids"
-                ],
-                "title": "TrainerSkillsRequest"
             },
             "UpdateMeRequest": {
                 "type": "object",
@@ -7987,10 +7987,10 @@
                     "profiles": {
                         "type": "object",
                         "properties": {
-                            "student": {
+                            "client": {
                                 "type": "boolean"
                             },
-                            "trainer": {
+                            "provider": {
                                 "type": "boolean"
                             },
                             "company_rh": {
@@ -7998,8 +7998,8 @@
                             }
                         },
                         "required": [
-                            "student",
-                            "trainer",
+                            "client",
+                            "provider",
                             "company_rh"
                         ]
                     },

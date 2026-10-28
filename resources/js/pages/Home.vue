@@ -26,8 +26,8 @@ defineProps<{
                 <Link href="/entrar" class="btn-navy rounded-full bg-navy-800 px-3 whitespace-nowrap ring-1 ring-white/25">Sou Formador</Link>
             </template>
             <template v-else>
-                <Link v-if="user.roles.includes('student')" href="/pedidos/novo" class="btn-primary rounded-full px-3 whitespace-nowrap">Pedir aula</Link>
-                <Link v-if="user.roles.includes('trainer')" href="/formador/ofertas" class="btn-navy rounded-full bg-navy-800 px-3 whitespace-nowrap ring-1 ring-white/25">TRIM TRIM</Link>
+                <Link v-if="user.roles.includes('client')" href="/pedidos/novo" class="btn-primary rounded-full px-3 whitespace-nowrap">Pedir aula</Link>
+                <Link v-if="user.roles.includes('provider')" href="/formador/ofertas" class="btn-navy rounded-full bg-navy-800 px-3 whitespace-nowrap ring-1 ring-white/25">TRIM TRIM</Link>
                 <Link v-if="user.roles.length === 0" href="/onboarding" class="btn-primary rounded-full px-3 whitespace-nowrap">Concluir registo</Link>
             </template>
         </div>

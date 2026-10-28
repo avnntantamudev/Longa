@@ -19,11 +19,11 @@ class WalletUpdated implements ShouldBroadcast, ShouldDispatchAfterCommit
 
     public string $broadcastQueue = 'notifications';
 
-    public function __construct(public readonly int $trainerUserId, public readonly string $reason, public readonly ?int $sessionId = null) {}
+    public function __construct(public readonly int $providerUserId, public readonly string $reason, public readonly ?int $sessionId = null) {}
 
     public function broadcastOn(): PrivateChannel
     {
-        return new PrivateChannel('user.'.$this->trainerUserId);
+        return new PrivateChannel('user.'.$this->providerUserId);
     }
 
     public function broadcastAs(): string

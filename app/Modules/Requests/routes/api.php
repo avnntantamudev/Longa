@@ -3,22 +3,22 @@
 declare(strict_types=1);
 
 use App\Modules\Requests\Http\Controllers\OfferController;
-use App\Modules\Requests\Http\Controllers\TrainingRequestController;
+use App\Modules\Requests\Http\Controllers\ServiceRequestController;
 use Illuminate\Support\Facades\Route;
 
 // Prefixo /api/v1 (ModuleServiceProvider)
-Route::middleware(['auth:sanctum', 'auth.session', 'onboarded', 'role:student'])
-    ->prefix('training-requests')
-    ->name('api.training-requests.')
+Route::middleware(['auth:sanctum', 'auth.session', 'onboarded', 'role:client'])
+    ->prefix('service-requests')
+    ->name('api.service-requests.')
     ->group(function () {
-        Route::get('/', [TrainingRequestController::class, 'index'])->name('index');
-        Route::post('/', [TrainingRequestController::class, 'store'])->middleware('throttle:training-requests')->name('store');
-        Route::get('{trainingRequest}', [TrainingRequestController::class, 'show'])->name('show');
-        Route::post('{trainingRequest}/cancel', [TrainingRequestController::class, 'cancel'])->name('cancel');
-        Route::post('{trainingRequest}/republish', [TrainingRequestController::class, 'republish'])->middleware('throttle:training-requests')->name('republish');
+        Route::get('/', [ServiceRequestController::class, 'index'])->name('index');
+        Route::post('/', [ServiceRequestController::class, 'store'])->middleware('throttle:service-requests')->name('store');
+        Route::get('{serviceRequest}', [ServiceRequestController::class, 'show'])->name('show');
+        Route::post('{serviceRequest}/cancel', [ServiceRequestController::class, 'cancel'])->name('cancel');
+        Route::post('{serviceRequest}/republish', [ServiceRequestController::class, 'republish'])->middleware('throttle:service-requests')->name('republish');
     });
 
-Route::middleware(['auth:sanctum', 'auth.session', 'onboarded', 'role:trainer'])
+Route::middleware(['auth:sanctum', 'auth.session', 'onboarded', 'role:provider'])
     ->prefix('offers')
     ->name('api.offers.')
     ->group(function () {

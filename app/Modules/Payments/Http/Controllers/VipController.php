@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Modules\Payments\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Payments\Models\TrainerSubscription;
+use App\Modules\Payments\Models\ProviderSubscription;
 use App\Modules\Payments\Services\VipSubscriptions;
-use App\Modules\Users\Models\TrainerProfile;
+use App\Modules\Users\Models\ProviderProfile;
 use App\Modules\Users\Models\User;
 use App\Support\Api\ApiException;
 use App\Support\Settings\PlatformSettings;
@@ -26,8 +26,8 @@ class VipController extends Controller
      */
     public function show(Request $request, VipSubscriptions $vip, PlatformSettings $settings): JsonResponse
     {
-        $trainer = $this->trainer($request);
-        $until = $vip->activeUntil($trainer);
+        $provider = $this->provider($request);
+        $until = $vip->activeUntil($provider);
 
         return response()->json(['data' => [
             'is_vip' => $until !== null,
@@ -37,9 +37,9 @@ class VipController extends Controller
             'commission_percent' => $settings->int('vip_commission_percent'),
             'standard_commission_percent' => $settings->int('commission_percent'),
             'refundable' => false,
-            'history' => TrainerSubscription::query()->where('trainer_profile_id', $trainer->id)->where('status', TrainerSubscription::ACTIVE)
+            'history' => ProviderSubscription::query()->where('provider_profile_id', $provider->id)->where('status', ProviderSubscription::ACTIVE)
                 ->latest('id')->limit(10)->get()
-                ->map(fn (TrainerSubscription $s) => [
+                ->map(fn (ProviderSubscription $s) => [
                     'id' => $s->id, 'source' => $s->source, 'amount' => $s->amount,
                     'starts_at' => $s->starts_at?->toIso8601String(), 'ends_at' => $s->ends_at?->toIso8601String(),
                 ]),
@@ -60,14 +60,14 @@ class VipController extends Controller
             'accept_terms' => ['accepted'],
         ], ['accept_terms.accepted' => 'Confirme que leu as condições (sem reembolso a meio do período).']);
 
-        $trainer = $this->trainer($request);
-        if ($trainer->verification_status->value !== 'verified') {
+        $provider = $this->provider($request);
+        if ($provider->verification_status->value !== 'verified') {
             throw new ApiException('vip_not_allowed', 'Só formadores verificados podem ser VIP.', 409);
         }
 
         /** @var User $user */
         $user = $request->user();
-        $subscription = $vip->purchase($trainer, $user, $data['method'], (string) $request->header('Idempotency-Key'));
+        $subscription = $vip->purchase($provider, $user, $data['method'], (string) $request->header('Idempotency-Key'));
 
         return response()->json(['data' => [
             'status' => $subscription->status,
@@ -77,11 +77,11 @@ class VipController extends Controller
         ]]);
     }
 
-    private function trainer(Request $request): TrainerProfile
+    private function provider(Request $request): ProviderProfile
     {
         /** @var User $user */
         $user = $request->user();
 
-        return $user->trainerProfile ?? throw new ApiException('profile_missing', 'Só formadores podem ser VIP.', 409);
+        return $user->providerProfile ?? throw new ApiException('profile_missing', 'Só formadores podem ser VIP.', 409);
     }
 }

@@ -8,8 +8,8 @@ use App\Http\Controllers\Controller;
 use App\Modules\Payments\Actions\ConfirmCashPayment;
 use App\Modules\Payments\Services\CommissionDebts;
 use App\Modules\Sessions\Http\Resources\SessionResource;
-use App\Modules\Sessions\Models\TrainingSession;
-use App\Modules\Users\Models\TrainerProfile;
+use App\Modules\Sessions\Models\ServiceJob;
+use App\Modules\Users\Models\ProviderProfile;
 use App\Modules\Users\Models\User;
 use App\Modules\Wallet\Ledger\LedgerException;
 use App\Support\Api\ApiException;
@@ -30,14 +30,14 @@ class CashController extends Controller
      * Requer `Idempotency-Key`. Só depois de a aula estar concluída por QR. A comissão do BISCA fica em dívida
      * do formador (descontada do saldo disponível dele, se houver).
      */
-    public function confirm(Request $request, TrainingSession $session, ConfirmCashPayment $action): SessionResource
+    public function confirm(Request $request, ServiceJob $session, ConfirmCashPayment $action): SessionResource
     {
-        Gate::authorize('actAsStudent', $session);
+        Gate::authorize('actAsClient', $session);
 
         /** @var User $user */
         $user = $request->user();
 
-        return new SessionResource($action->handle($session, $user)->load(['trainer.user', 'student', 'skill', 'conversation']));
+        return new SessionResource($action->handle($session, $user)->load(['provider.user', 'client', 'category', 'conversation']));
     }
 
     /**
@@ -45,7 +45,7 @@ class CashController extends Controller
      *
      * Requer `Idempotency-Key` (usado também como chave da transação no ledger).
      */
-    public function receive(Request $request, TrainerProfile $trainer, CommissionDebts $debts): JsonResponse
+    public function receive(Request $request, ProviderProfile $provider, CommissionDebts $debts): JsonResponse
     {
         $data = $request->validate([
             'amount' => ['required', 'integer', 'min:1'],
@@ -56,14 +56,14 @@ class CashController extends Controller
         $admin = $request->user();
 
         try {
-            $transaction = $debts->receive($trainer->id, (int) $data['amount'], 'admin:'.$admin->id.':'.$request->header('Idempotency-Key'), $admin, $data['note'] ?? null);
+            $transaction = $debts->receive($provider->id, (int) $data['amount'], 'admin:'.$admin->id.':'.$request->header('Idempotency-Key'), $admin, $data['note'] ?? null);
         } catch (LedgerException $e) {
             throw new ApiException('invalid_amount', $e->getMessage(), 422);
         }
 
         return response()->json(['data' => [
             'transaction_id' => $transaction->id,
-            'outstanding' => $debts->outstanding($trainer->id),
+            'outstanding' => $debts->outstanding($provider->id),
         ]], 201);
     }
 }

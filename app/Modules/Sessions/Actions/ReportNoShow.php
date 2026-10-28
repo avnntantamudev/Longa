@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Sessions\Actions;
 
 use App\Modules\Sessions\Enums\SessionState;
-use App\Modules\Sessions\Models\TrainingSession;
+use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Sessions\Services\SessionLifecycle;
 use App\Modules\Users\Models\User;
 use App\Support\Api\ApiException;
@@ -20,13 +20,13 @@ class ReportNoShow
 {
     public function __construct(private readonly SessionLifecycle $lifecycle) {}
 
-    public function handle(TrainingSession $session, User $reporter, ?string $note): TrainingSession
+    public function handle(ServiceJob $session, User $reporter, ?string $note): ServiceJob
     {
         return DB::transaction(function () use ($session, $reporter, $note) {
-            /** @var TrainingSession $locked */
-            $locked = TrainingSession::query()->lockForUpdate()->findOrFail($session->id);
-            $byStudent = $locked->student_id === $reporter->id;
-            $target = $byStudent ? SessionState::NoShowTrainer : SessionState::NoShowStudent;
+            /** @var ServiceJob $locked */
+            $locked = ServiceJob::query()->lockForUpdate()->findOrFail($session->id);
+            $byClient = $locked->client_id === $reporter->id;
+            $target = $byClient ? SessionState::NoShowProvider : SessionState::NoShowClient;
 
             if ($locked->state === $target) {
                 return $locked;
@@ -36,7 +36,7 @@ class ReportNoShow
                 throw new ApiException('no_show_not_allowed', 'Só pode reportar falta numa aula que ainda não começou.', 409);
             }
 
-            $minutes = (int) config($byStudent ? 'longa.session_rules.no_show_trainer_after_minutes' : 'longa.session_rules.no_show_student_after_minutes');
+            $minutes = (int) config($byClient ? 'longa.session_rules.no_show_provider_after_minutes' : 'longa.session_rules.no_show_client_after_minutes');
             $from = $locked->scheduled_at->copy()->addMinutes($minutes);
             if (now()->lt($from)) {
                 throw new ApiException('no_show_too_early', 'Só pode reportar a falta a partir das '.$from->format('H:i').'.', 409);

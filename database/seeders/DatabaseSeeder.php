@@ -12,7 +12,7 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $this->call([RolesSeeder::class, SkillsSeeder::class]);
+        $this->call([RolesSeeder::class, CategoriesSeeder::class]);
 
         // Administrador de desenvolvimento: entra por OTP com este telefone (o código aparece em storage/logs)
         if (app()->isLocal()) {

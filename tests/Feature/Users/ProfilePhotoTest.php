@@ -31,7 +31,7 @@ function photoWithGps(int $width = 800, int $height = 600): UploadedFile
 }
 
 it('carrega a foto: quadrada, WebP, sem metadados, em dois tamanhos', function () {
-    $user = apiLogin(User::factory()->withRole(Role::Trainer)->create());
+    $user = apiLogin(User::factory()->withRole(Role::Provider)->create());
 
     $response = $this->post('/api/v1/me/photo', ['photo' => photoWithGps()], ['Accept' => 'application/json'])->assertOk();
 
@@ -84,12 +84,12 @@ it('exige sessão para carregar e só serve nomes válidos', function () {
 
 it('o aluno vê a foto do formador na aula e o formador a do aluno', function () {
     $session = paidSession();
-    $session->trainer->user->forceFill(['photo' => str_repeat('b', 32)])->save();
+    $session->provider->user->forceFill(['photo' => str_repeat('b', 32)])->save();
 
-    apiLogin($session->student);
+    apiLogin($session->client);
     $this->getJson("/api/v1/sessions/{$session->id}")
-        ->assertJsonPath('data.trainer.photo_thumb_url', '/fotos/'.str_repeat('b', 32).'-128.webp');
+        ->assertJsonPath('data.provider.photo_thumb_url', '/fotos/'.str_repeat('b', 32).'-128.webp');
 
-    apiLogin($session->trainer->user);
-    $this->getJson("/api/v1/sessions/{$session->id}")->assertJsonPath('data.student.photo_url', null);
+    apiLogin($session->provider->user);
+    $this->getJson("/api/v1/sessions/{$session->id}")->assertJsonPath('data.client.photo_url', null);
 });

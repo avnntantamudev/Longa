@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Payments\Services;
 
-use App\Modules\Sessions\Models\TrainingSession;
+use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Users\Models\User;
 use App\Modules\Wallet\Ledger\Accounts;
 use App\Modules\Wallet\Ledger\LedgerException;
@@ -25,7 +25,7 @@ class CommissionDebts
     /**
      * Devolve null quando a comissão arredonda para 0 Kz (aulas de 1 a 3 Kz): não há dívida a registar.
      */
-    public function register(TrainingSession $session, ?User $actor, string $reason): ?LedgerTransaction
+    public function register(ServiceJob $session, ?User $actor, string $reason): ?LedgerTransaction
     {
         if ($session->commission === 0) {
             return null;
@@ -33,32 +33,32 @@ class CommissionDebts
 
         return $this->ledger->post('cash_commission_due', "cash:due:session:{$session->id}", [
             Accounts::PLATFORM_REVENUE => $session->commission,
-            Accounts::trainerCommissionDue($session->trainer_profile_id) => -$session->commission,
+            Accounts::providerCommissionDue($session->provider_profile_id) => -$session->commission,
         ], $session, ['reason' => $reason, 'amount_paid_in_cash' => $session->amount], $actor?->id);
     }
 
     /**
      * Desconta a dívida do saldo disponível (até onde der). Devolve o valor compensado.
      */
-    public function offset(int $trainerProfileId, string $trigger): int
+    public function offset(int $providerProfileId, string $trigger): int
     {
         // Já compensado por este evento (os saldos podem ter mudado desde então)
-        if (LedgerTransaction::query()->where('idempotency_key', "cash:offset:{$trainerProfileId}:{$trigger}")->exists()) {
+        if (LedgerTransaction::query()->where('idempotency_key', "cash:offset:{$providerProfileId}:{$trigger}")->exists()) {
             return 0;
         }
 
-        $dueCode = Accounts::trainerCommissionDue($trainerProfileId);
-        $availableCode = Accounts::trainerAvailable($trainerProfileId);
+        $dueCode = Accounts::providerCommissionDue($providerProfileId);
+        $availableCode = Accounts::providerAvailable($providerProfileId);
 
         // Saldos lidos com as contas bloqueadas: duas compensações em paralelo nunca descontam a mais
-        return $this->ledger->withLockedAccounts([$availableCode, $dueCode], function () use ($dueCode, $availableCode, $trainerProfileId, $trigger) {
+        return $this->ledger->withLockedAccounts([$availableCode, $dueCode], function () use ($dueCode, $availableCode, $providerProfileId, $trigger) {
             $amount = min(-$this->ledger->balance($dueCode), $this->ledger->balance($availableCode));
 
             if ($amount <= 0) {
                 return 0;
             }
 
-            $this->ledger->post('commission_offset', "cash:offset:{$trainerProfileId}:{$trigger}", [
+            $this->ledger->post('commission_offset', "cash:offset:{$providerProfileId}:{$trigger}", [
                 $availableCode => -$amount,
                 $dueCode => $amount,
             ], null, ['trigger' => $trigger]);
@@ -70,9 +70,9 @@ class CommissionDebts
     /**
      * O admin recebeu do formador (parte de) a comissão em dívida.
      */
-    public function receive(int $trainerProfileId, int $amount, string $idempotencyKey, User $admin, ?string $note): LedgerTransaction
+    public function receive(int $providerProfileId, int $amount, string $idempotencyKey, User $admin, ?string $note): LedgerTransaction
     {
-        $due = -$this->ledger->balance(Accounts::trainerCommissionDue($trainerProfileId));
+        $due = -$this->ledger->balance(Accounts::providerCommissionDue($providerProfileId));
 
         $existing = LedgerTransaction::query()->where('idempotency_key', "cash:received:{$idempotencyKey}")->first();
         if ($existing === null && ($amount <= 0 || $amount > $due)) {
@@ -81,16 +81,16 @@ class CommissionDebts
 
         $transaction = $this->ledger->post('cash_commission_received', "cash:received:{$idempotencyKey}", [
             Accounts::CASH_SETTLEMENT => -$amount,
-            Accounts::trainerCommissionDue($trainerProfileId) => $amount,
-        ], null, ['note' => $note, 'trainer_profile_id' => $trainerProfileId], $admin->id);
+            Accounts::providerCommissionDue($providerProfileId) => $amount,
+        ], null, ['note' => $note, 'provider_profile_id' => $providerProfileId], $admin->id);
 
-        $this->audit->record('payments.cash_commission_received', $transaction, ['amount' => $amount, 'trainer_profile_id' => $trainerProfileId], $admin->id);
+        $this->audit->record('payments.cash_commission_received', $transaction, ['amount' => $amount, 'provider_profile_id' => $providerProfileId], $admin->id);
 
         return $transaction;
     }
 
-    public function outstanding(int $trainerProfileId): int
+    public function outstanding(int $providerProfileId): int
     {
-        return -$this->ledger->balance(Accounts::trainerCommissionDue($trainerProfileId));
+        return -$this->ledger->balance(Accounts::providerCommissionDue($providerProfileId));
     }
 }

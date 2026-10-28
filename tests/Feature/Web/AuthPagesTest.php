@@ -5,7 +5,7 @@ declare(strict_types=1);
 use App\Modules\Auth\Models\AuthSession;
 use App\Modules\Notifications\Sms\ArraySmsProvider;
 use App\Modules\Notifications\Sms\SmsProvider;
-use App\Modules\Users\Models\TrainerProfile;
+use App\Modules\Users\Models\ProviderProfile;
 use App\Modules\Users\Models\User;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -69,12 +69,12 @@ it('protege as páginas autenticadas e exige o registo concluído', function () 
 });
 
 it('mostra o onboarding do formador com áreas e zonas', function () {
-    $profile = TrainerProfile::factory()->create();
+    $profile = ProviderProfile::factory()->create();
     loginWeb($profile->user);
 
     $this->get('/onboarding/formador')->assertOk()->assertInertia(fn (Assert $page) => $page
-        ->component('Onboarding/Trainer')
-        ->has('skills')
+        ->component('Onboarding/Provider')
+        ->has('categories')
         ->has('zones'));
 });
 

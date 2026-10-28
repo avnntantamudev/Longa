@@ -63,9 +63,9 @@ php artisan reverb:start --port=8081                             # tempo real
 Simular vários formadores (verificados, disponíveis, perto de Talatona):
 
 ```bash
-php artisan longa:simulate-trainers 8                    # cria/atualiza +244 910 000 001…008 (entram por OTP)
-php artisan longa:simulate-trainers 8 --auto-accept      # e aceitam ofertas com atraso aleatório (2–15 s)
-php artisan longa:simulate-trainers 8 --zone=Kilamba --skill=matematica --auto-accept --duration=300
+php artisan longa:simulate-providers 8                    # cria/atualiza +244 910 000 001…008 (entram por OTP)
+php artisan longa:simulate-providers 8 --auto-accept      # e aceitam ofertas com atraso aleatório (2–15 s)
+php artisan longa:simulate-providers 8 --zone=Kilamba --category=matematica --auto-accept --duration=300
 ```
 
 Fluxo em dois telemóveis/janelas: entre como formador simulado (`910 000 001`) e abra **TRIM TRIM**;

@@ -3,18 +3,18 @@ import LocationPicker from '@/components/LocationPicker.vue';
 import FormField from '@/components/FormField.vue';
 import { api, ApiError } from '@/lib/api';
 import { kwanza, toLocalInput } from '@/lib/format';
-import type { Skill, Zone } from '@/types/global';
+import type { Category, Zone } from '@/types/global';
 import { Head, router } from '@inertiajs/vue3';
 import { computed, reactive, ref } from 'vue';
 
-const props = defineProps<{ skills: Skill[]; zones: Zone[]; minAmount: number; minLeadMinutes: number; commissionPercent: number; provinces: string[] }>();
+const props = defineProps<{ categories: Category[]; zones: Zone[]; minAmount: number; minLeadMinutes: number; commissionPercent: number; provinces: string[] }>();
 
 // Sugestão: daqui a duas horas, arredondado à hora
 const suggested = new Date(Date.now() + 2 * 3600_000);
 suggested.setMinutes(0, 0, 0);
 
 const form = reactive({
-    skill_id: null as number | null,
+    category_id: null as number | null,
     title: '',
     description: '',
     amount: null as number | null,
@@ -34,10 +34,10 @@ const saving = ref(false);
 const minDate = toLocalInput(new Date(Date.now() + props.minLeadMinutes * 60_000));
 const hasLocation = computed(() => form.latitude !== null && form.neighborhood !== '');
 
-function onSkill(): void {
-    const skill = props.skills.find((s) => s.id === form.skill_id);
-    if (skill && form.title === '') {
-        form.title = `Aula de ${skill.name.split(' — ')[0]}`;
+function onCategory(): void {
+    const category = props.categories.find((s) => s.id === form.category_id);
+    if (category && form.title === '') {
+        form.title = `Aula de ${category.name.split(' — ')[0]}`;
     }
 }
 
@@ -45,7 +45,7 @@ async function submit(): Promise<void> {
     saving.value = true;
     errors.value = {};
     try {
-        const { data } = await api.post<{ data: { id: number } }>('/training-requests', {
+        const { data } = await api.post<{ data: { id: number } }>('/service-requests', {
             ...form,
             scheduled_at: new Date(form.scheduled_at).toISOString(),
         });
@@ -68,10 +68,10 @@ async function submit(): Promise<void> {
     <p class="mt-1 text-ink-muted">Enviamos o pedido aos formadores verificados num raio de 5 km. O primeiro que aceitar fica com a aula.</p>
 
     <form class="mt-6 grid gap-4" novalidate @submit.prevent="submit">
-        <FormField label="O que quer aprender?" for="skill" :error="errors.skill_id">
-            <select id="skill" v-model.number="form.skill_id" class="input" @change="onSkill">
+        <FormField label="O que quer aprender?" for="category" :error="errors.category_id">
+            <select id="category" v-model.number="form.category_id" class="input" @change="onCategory">
                 <option :value="null" disabled>Escolha a área</option>
-                <option v-for="skill in skills" :key="skill.id" :value="skill.id">{{ skill.name }}</option>
+                <option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option>
             </select>
         </FormField>
 
@@ -131,7 +131,7 @@ async function submit(): Promise<void> {
         </p>
 
         <p v-if="errors.general" class="text-caption text-danger" role="alert">{{ errors.general }}</p>
-        <button type="submit" class="btn-primary w-full" :disabled="saving || !hasLocation || !form.skill_id">
+        <button type="submit" class="btn-primary w-full" :disabled="saving || !hasLocation || !form.category_id">
             {{ saving ? 'A publicar…' : 'Procurar formador' }}
         </button>
     </form>

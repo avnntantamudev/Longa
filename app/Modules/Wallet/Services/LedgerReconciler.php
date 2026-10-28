@@ -54,11 +54,11 @@ class LedgerReconciler
             $issues[] = $this->issue('balance_cache_mismatch', 'critical', "Cache de saldo da conta {$row->code} ({$row->cached} Kz) difere dos lançamentos ({$row->actual} Kz).", (array) $row);
         }
 
-        foreach ($this->negativeTrainerBalances() as $row) {
-            $issues[] = $this->issue('negative_trainer_balance', 'critical', "Conta {$row->code} com saldo negativo ({$row->balance} Kz).", (array) $row);
+        foreach ($this->negativeProviderBalances() as $row) {
+            $issues[] = $this->issue('negative_provider_balance', 'critical', "Conta {$row->code} com saldo negativo ({$row->balance} Kz).", (array) $row);
         }
 
-        $overdue = EscrowHold::query()->whereIn('state', EscrowHold::ACTIVE)->where('expires_at', '<', now())->pluck('training_session_id');
+        $overdue = EscrowHold::query()->whereIn('state', EscrowHold::ACTIVE)->where('expires_at', '<', now())->pluck('service_job_id');
         if ($overdue->isNotEmpty()) {
             $issues[] = $this->issue('holds_overdue', 'warning', $overdue->count().' retenção(ões) sem destino depois do prazo máximo.', ['session_ids' => $overdue->all()]);
         }
@@ -162,11 +162,11 @@ class LedgerReconciler
     /**
      * @return list<object{code: string, balance: int}>
      */
-    private function negativeTrainerBalances(): array
+    private function negativeProviderBalances(): array
     {
         return DB::table('ledger_accounts as a')
             ->join('ledger_entries as e', 'e.ledger_account_id', '=', 'a.id')
-            ->where('a.type', 'trainer_available')
+            ->where('a.type', 'provider_available')
             ->groupBy('a.code')
             ->selectRaw('a.code, SUM(e.amount) AS balance')
             ->havingRaw('SUM(e.amount) < 0')

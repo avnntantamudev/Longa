@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Sessions\Events;
 
 use App\Modules\Sessions\Models\Dispute;
-use App\Modules\Sessions\Models\TrainingSession;
+use App\Modules\Sessions\Models\ServiceJob;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
@@ -21,7 +21,7 @@ class DisputeResolved implements ShouldBroadcast, ShouldDispatchAfterCommit
 
     public string $broadcastQueue = 'notifications';
 
-    public function __construct(public readonly TrainingSession $session, public readonly Dispute $dispute) {}
+    public function __construct(public readonly ServiceJob $session, public readonly Dispute $dispute) {}
 
     public function broadcastOn(): PrivateChannel
     {

@@ -70,19 +70,19 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasName
     }
 
     /**
-     * @return HasOne<StudentProfile, $this>
+     * @return HasOne<ClientProfile, $this>
      */
-    public function studentProfile(): HasOne
+    public function clientProfile(): HasOne
     {
-        return $this->hasOne(StudentProfile::class);
+        return $this->hasOne(ClientProfile::class);
     }
 
     /**
-     * @return HasOne<TrainerProfile, $this>
+     * @return HasOne<ProviderProfile, $this>
      */
-    public function trainerProfile(): HasOne
+    public function providerProfile(): HasOne
     {
-        return $this->hasOne(TrainerProfile::class);
+        return $this->hasOne(ProviderProfile::class);
     }
 
     public function isSuspended(): bool

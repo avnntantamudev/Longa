@@ -18,7 +18,7 @@ class OnboardingRequest extends FormRequest
         return [
             /** @example Maria Silva */
             'name' => ['required', 'string', 'min:2', 'max:120'],
-            /** Um ou mais perfis. @example ["student"] */
+            /** Um ou mais perfis. @example ["client"] */
             'profiles' => ['required', 'array', 'min:1', 'max:3'],
             'profiles.*' => ['string', 'distinct', Rule::in(array_map(fn (Role $r) => $r->value, Role::selfAssignable()))],
             'accept_terms' => ['accepted'],

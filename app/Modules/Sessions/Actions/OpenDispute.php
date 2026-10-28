@@ -9,7 +9,7 @@ use App\Modules\Sessions\Enums\SessionState;
 use App\Modules\Sessions\Events\DisputeOpened;
 use App\Modules\Sessions\Models\Dispute;
 use App\Modules\Sessions\Models\DisputeAttachment;
-use App\Modules\Sessions\Models\TrainingSession;
+use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Sessions\Services\SessionLifecycle;
 use App\Modules\Users\Models\User;
 use App\Support\Api\ApiException;
@@ -34,7 +34,7 @@ class OpenDispute
     /**
      * @param  list<UploadedFile>  $files
      */
-    public function handle(TrainingSession $session, User $user, string $reason, string $description, array $files = []): Dispute
+    public function handle(ServiceJob $session, User $user, string $reason, string $description, array $files = []): Dispute
     {
         $paths = [];
         foreach ($files as $file) {
@@ -47,8 +47,8 @@ class OpenDispute
         }
 
         return DB::transaction(function () use ($session, $user, $reason, $description, $paths) {
-            /** @var TrainingSession $locked */
-            $locked = TrainingSession::query()->lockForUpdate()->findOrFail($session->id);
+            /** @var ServiceJob $locked */
+            $locked = ServiceJob::query()->lockForUpdate()->findOrFail($session->id);
 
             $existing = $locked->disputes()->where('status', Dispute::OPEN)->first();
             if ($existing !== null) {
@@ -58,7 +58,7 @@ class OpenDispute
             $this->ensureAllowed($locked, $user);
 
             $dispute = Dispute::query()->create([
-                'training_session_id' => $locked->id,
+                'service_job_id' => $locked->id,
                 'opened_by' => $user->id,
                 'reason' => $reason,
                 'description' => $description,
@@ -78,16 +78,16 @@ class OpenDispute
         });
     }
 
-    private function ensureAllowed(TrainingSession $session, User $user): void
+    private function ensureAllowed(ServiceJob $session, User $user): void
     {
-        $isStudent = $session->student_id === $user->id;
-        $isTrainer = $session->trainer->user_id === $user->id;
+        $isClient = $session->client_id === $user->id;
+        $isProvider = $session->provider->user_id === $user->id;
 
         $allowed = match ($session->state) {
-            SessionState::AwaitingConfirmation => $isStudent,
+            SessionState::AwaitingConfirmation => $isClient,
             // Contestar a falta: a parte acusada, dentro do prazo
-            SessionState::NoShowTrainer => $isTrainer && $session->no_show_contest_until?->isFuture(),
-            SessionState::NoShowStudent => $isStudent && $session->no_show_contest_until?->isFuture(),
+            SessionState::NoShowProvider => $isProvider && $session->no_show_contest_until?->isFuture(),
+            SessionState::NoShowClient => $isClient && $session->no_show_contest_until?->isFuture(),
             default => false,
         };
 

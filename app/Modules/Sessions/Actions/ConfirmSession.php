@@ -8,7 +8,7 @@ use App\Modules\Payments\Services\SessionSettlement;
 use App\Modules\Qr\Services\QrTokenService;
 use App\Modules\Sessions\Enums\SessionState;
 use App\Modules\Sessions\Events\SessionConfirmed;
-use App\Modules\Sessions\Models\TrainingSession;
+use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Sessions\Services\SessionLifecycle;
 use App\Modules\Users\Models\User;
 use App\Support\Api\ApiException;
@@ -32,7 +32,7 @@ class ConfirmSession
         private readonly AuditLogger $audit,
     ) {}
 
-    public function handle(TrainingSession $session, User $student, ?string $token, ?string $code, ?float $latitude = null, ?float $longitude = null): TrainingSession
+    public function handle(ServiceJob $session, User $client, ?string $token, ?string $code, ?float $latitude = null, ?float $longitude = null): ServiceJob
     {
         $lockKey = "qr-failures:session:{$session->id}";
         $maxFailures = (int) config('longa.session_rules.qr_max_failed_attempts');
@@ -43,9 +43,9 @@ class ConfirmSession
             ]);
         }
 
-        $result = DB::transaction(function () use ($session, $student, $token, $code, $latitude, $longitude) {
-            /** @var TrainingSession $locked */
-            $locked = TrainingSession::query()->lockForUpdate()->findOrFail($session->id);
+        $result = DB::transaction(function () use ($session, $client, $token, $code, $latitude, $longitude) {
+            /** @var ServiceJob $locked */
+            $locked = ServiceJob::query()->lockForUpdate()->findOrFail($session->id);
 
             // Idempotência: já confirmada (por esta ou por uma leitura simultânea)
             if ($locked->state === SessionState::Completed) {
@@ -63,7 +63,7 @@ class ConfirmSession
             }
 
             $qrToken = $this->qr->findValid($locked, $token, $code);
-            if ($qrToken === null || ! $this->qr->markUsed($qrToken, $student->id)) {
+            if ($qrToken === null || ! $this->qr->markUsed($qrToken, $client->id)) {
                 $this->qr->recordFailedAttempt($locked);
 
                 return ['session' => $locked, 'error' => 'invalid'];
@@ -75,18 +75,18 @@ class ConfirmSession
                 $metadata['distance_m'] = $distance;
             }
 
-            $this->lifecycle->record($locked, 'qr_scanned', $student, $metadata);
+            $this->lifecycle->record($locked, 'qr_scanned', $client, $metadata);
 
             if ($distance !== null && $distance > (int) config('longa.session_rules.presence_risk_meters') && $locked->modality === 'in_person') {
                 // Sinal de risco para o backoffice (nunca bloqueia a confirmação)
-                $this->lifecycle->record($locked, 'risk_flagged', $student, ['reason' => 'far_from_location', 'distance_m' => $distance]);
+                $this->lifecycle->record($locked, 'risk_flagged', $client, ['reason' => 'far_from_location', 'distance_m' => $distance]);
             }
 
-            $this->lifecycle->transition($locked, SessionState::Completed, 'confirmed', $student, $metadata, ['confirmed_at' => now()]);
-            $this->settlement->complete($locked, $student, 'qr_confirmed');
+            $this->lifecycle->transition($locked, SessionState::Completed, 'confirmed', $client, $metadata, ['confirmed_at' => now()]);
+            $this->settlement->complete($locked, $client, 'qr_confirmed');
 
             SessionConfirmed::dispatch($locked);
-            $this->audit->record('sessions.confirmed', $locked, $metadata, $student->id);
+            $this->audit->record('sessions.confirmed', $locked, $metadata, $client->id);
 
             return ['session' => $locked, 'error' => null];
         });
@@ -106,7 +106,7 @@ class ConfirmSession
         return $result['session'];
     }
 
-    private function distance(TrainingSession $session, ?float $latitude, ?float $longitude): ?int
+    private function distance(ServiceJob $session, ?float $latitude, ?float $longitude): ?int
     {
         if ($latitude === null || $longitude === null) {
             return null;

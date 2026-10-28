@@ -26,10 +26,10 @@ class AvailabilityController extends Controller
 
         /** @var User $user */
         $user = $request->user();
-        $profile = $user->trainerProfile ?? throw new ApiException('profile_missing', 'Ainda não tem o perfil de formador.', 409);
+        $profile = $user->providerProfile ?? throw new ApiException('profile_missing', 'Ainda não tem o perfil de formador.', 409);
 
         if ($data['is_available'] && (! $profile->isVerified() || $profile->onboarding_completed_at === null)) {
-            throw new ApiException('trainer_not_ready', 'Complete o perfil e a verificação do BISCA para receber pedidos.', 409);
+            throw new ApiException('provider_not_ready', 'Complete o perfil e a verificação do BISCA para receber pedidos.', 409);
         }
 
         $profile->is_available = (bool) $data['is_available'];

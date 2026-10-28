@@ -6,7 +6,7 @@ namespace App\Modules\Sessions\Actions;
 
 use App\Modules\Sessions\Enums\SessionState;
 use App\Modules\Sessions\Events\SessionStarted;
-use App\Modules\Sessions\Models\TrainingSession;
+use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Sessions\Services\SessionLifecycle;
 use App\Modules\Users\Models\User;
 use App\Support\Api\ApiException;
@@ -20,11 +20,11 @@ class StartSession
 {
     public function __construct(private readonly SessionLifecycle $lifecycle) {}
 
-    public function handle(TrainingSession $session, User $trainer): TrainingSession
+    public function handle(ServiceJob $session, User $provider): ServiceJob
     {
-        return DB::transaction(function () use ($session, $trainer) {
-            /** @var TrainingSession $locked */
-            $locked = TrainingSession::query()->lockForUpdate()->findOrFail($session->id);
+        return DB::transaction(function () use ($session, $provider) {
+            /** @var ServiceJob $locked */
+            $locked = ServiceJob::query()->lockForUpdate()->findOrFail($session->id);
 
             if ($locked->state === SessionState::InProgress) {
                 return $locked;
@@ -43,7 +43,7 @@ class StartSession
                 throw new ApiException('session_too_late', 'A hora prevista da aula já terminou.', 409);
             }
 
-            $this->lifecycle->transition($locked, SessionState::InProgress, 'started', $trainer, [], ['started_at' => now()]);
+            $this->lifecycle->transition($locked, SessionState::InProgress, 'started', $provider, [], ['started_at' => now()]);
             SessionStarted::dispatch($locked);
 
             return $locked;

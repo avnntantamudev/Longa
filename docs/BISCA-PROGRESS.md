@@ -28,10 +28,18 @@ Nomes novos:
 | # | Passo | Estado |
 |---|---|---|
 | 1 | Marca Garimpo → BISCA (textos, logótipo provisório, ícones, APP_NAME) | feito |
-| 2 | Renomear o domínio no código e na BD (migração reversível), rotas e ecrãs | por fazer |
+| 2 | Renomear o domínio no código e na BD (migração reversível), rotas e ecrãs | feito |
 | 3 | Textos: formador → técnico, aluno → cliente, aula → serviço | por fazer |
 | 4 | Papéis da equipa (admin, operator) | por fazer |
 | 5 | Modelo genérico: árvore de categorias, campos de formulário, zonas, preços, documentos, localização e reputação, parâmetros | por fazer |
 | 6 | Seed das categorias e dos formulários | por fazer |
 | 7 | Termos e Política: duas caixas, textos versionados na app, nova aceitação quando a versão muda | por fazer |
 | 8 | Suite, CI e resumo da fase | por fazer |
+
+### Notas do passo 2
+
+- A migração `2026_10_28_000001_rename_domain_to_services` só renomeia: tabelas, colunas, papéis, códigos das contas do
+  livro-razão e nomes de classe guardados em morphs. Foi testada a subir, a reverter e a subir de novo.
+- A coluna gerada `request_offers.accepted_request_id` (uma só oferta aceite por pedido) é apagada e criada de novo à
+  volta da renomeação.
+- As URLs em português (`/formador`, `/aulas`) mudam no passo 3, com os textos.

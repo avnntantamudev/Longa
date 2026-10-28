@@ -21,7 +21,7 @@ beforeEach(fn () => Notification::fake());
 it('um ledger saudável passa e fica registado', function () {
     paidSession();
     $other = paidSession();
-    app(CancelSession::class)->handle($other, $other->student, null);
+    app(CancelSession::class)->handle($other, $other->client, null);
 
     $this->artisan('longa:ledger:reconcile')->assertSuccessful();
 
@@ -89,7 +89,7 @@ it('retenção sem destino depois do prazo máximo gera aviso', function () {
 it('reembolso decidido e não executado no gateway gera aviso', function () {
     Illuminate\Support\Facades\Queue::fake(); // o job ExecuteRefund não corre
     $session = paidSession();
-    app(CancelSession::class)->handle($session, $session->student, null);
+    app(CancelSession::class)->handle($session, $session->client, null);
 
     $this->travel(2)->hours();
     $report = app(App\Modules\Wallet\Services\LedgerReconciler::class)->run();

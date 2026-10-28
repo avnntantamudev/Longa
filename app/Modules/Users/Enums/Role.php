@@ -9,16 +9,16 @@ namespace App\Modules\Users\Enums;
  */
 enum Role: string
 {
-    case Student = 'student';
-    case Trainer = 'trainer';
+    case Client = 'client';
+    case Provider = 'provider';
     case CompanyRh = 'company_rh';
     case Admin = 'admin';
 
     public function label(): string
     {
         return match ($this) {
-            self::Student => 'Aluno',
-            self::Trainer => 'Formador',
+            self::Client => 'Aluno',
+            self::Provider => 'Formador',
             self::CompanyRh => 'Empresa (RH)',
             self::Admin => 'Administrador',
         };
@@ -31,6 +31,6 @@ enum Role: string
      */
     public static function selfAssignable(): array
     {
-        return [self::Student, self::Trainer, self::CompanyRh];
+        return [self::Client, self::Provider, self::CompanyRh];
     }
 }

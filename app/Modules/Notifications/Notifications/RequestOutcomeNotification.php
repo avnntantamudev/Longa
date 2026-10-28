@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Notifications\Notifications;
 
-use App\Modules\Requests\Models\TrainingRequest;
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Users\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -27,7 +27,7 @@ class RequestOutcomeNotification extends Notification implements ShouldQueue
     /**
      * @param  self::MATCHED|self::EXPIRED  $outcome
      */
-    public function __construct(public readonly TrainingRequest $request, public readonly string $outcome, public readonly ?int $sessionId = null)
+    public function __construct(public readonly ServiceRequest $request, public readonly string $outcome, public readonly ?int $sessionId = null)
     {
         $this->onQueue('notifications');
     }

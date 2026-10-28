@@ -47,7 +47,7 @@ class RespondToOffer
             throw new ApiException('offer_closed', 'Esta oferta já não está disponível.', 410);
         }
 
-        $this->score->record($offer->trainer_profile_id, ScoreEvent::OFFER_DECLINED, $offer, [
+        $this->score->record($offer->provider_profile_id, ScoreEvent::OFFER_DECLINED, $offer, [
             'seconds_to_respond' => (int) $offer->sent_at->diffInSeconds(now()),
         ]);
 

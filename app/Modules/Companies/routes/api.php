@@ -19,8 +19,8 @@ Route::middleware(['auth:sanctum', 'auth.session'])->prefix('companies')->name('
     Route::delete('{company}/employees/{employee}', [CompanyController::class, 'removeEmployee'])->name('employees.destroy');
 
     // Relatório RH (só colaboradores que autorizaram)
-    Route::get('{company}/reports/training', [CompanyReportController::class, 'show'])->name('reports.training');
-    Route::get('{company}/reports/training/export', [CompanyReportController::class, 'export'])->middleware('throttle:20,1')->name('reports.training.export');
+    Route::get('{company}/reports/services', [CompanyReportController::class, 'show'])->name('reports.services');
+    Route::get('{company}/reports/services/export', [CompanyReportController::class, 'export'])->middleware('throttle:20,1')->name('reports.services.export');
 });
 
 // O colaborador decide se a empresa vê as suas formações

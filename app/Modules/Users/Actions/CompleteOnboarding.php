@@ -30,8 +30,8 @@ class CompleteOnboarding
                 $user->assignRole($role->value);
 
                 match ($role) {
-                    Role::Student => $user->studentProfile()->firstOrCreate([]),
-                    Role::Trainer => $user->trainerProfile()->firstOrCreate([]),
+                    Role::Client => $user->clientProfile()->firstOrCreate([]),
+                    Role::Provider => $user->providerProfile()->firstOrCreate([]),
                     // A empresa é criada no passo seguinte (dados da empresa)
                     default => null,
                 };

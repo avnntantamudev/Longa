@@ -8,7 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Requests\Actions\AcceptOffer;
 use App\Modules\Requests\Actions\RespondToOffer;
 use App\Modules\Requests\Enums\OfferState;
-use App\Modules\Requests\Http\Resources\TrainerOfferResource;
+use App\Modules\Requests\Http\Resources\ProviderOfferResource;
 use App\Modules\Requests\Models\RequestOffer;
 use App\Modules\Sessions\Http\Resources\SessionResource;
 use App\Modules\Users\Models\User;
@@ -32,34 +32,34 @@ class OfferController extends Controller
     public function index(Request $request): AnonymousResourceCollection
     {
         $offers = RequestOffer::query()
-            ->where('trainer_profile_id', $this->trainer($request)->trainerProfile?->id)
+            ->where('provider_profile_id', $this->provider($request)->providerProfile?->id)
             ->whereIn('state', OfferState::open())
             ->where('expires_at', '>', now())
-            ->with(['request.skill', 'request.session'])
+            ->with(['request.category', 'request.session'])
             ->latest('sent_at')
             ->get();
 
-        return TrainerOfferResource::collection($offers);
+        return ProviderOfferResource::collection($offers);
     }
 
     /**
      * Ver oferta.
      */
-    public function show(RequestOffer $offer): TrainerOfferResource
+    public function show(RequestOffer $offer): ProviderOfferResource
     {
         Gate::authorize('respond', $offer);
 
-        return new TrainerOfferResource($offer->load(['request.skill', 'request.session']));
+        return new ProviderOfferResource($offer->load(['request.category', 'request.session']));
     }
 
     /**
      * Marcar oferta como vista.
      */
-    public function view(RequestOffer $offer, RespondToOffer $action): TrainerOfferResource
+    public function view(RequestOffer $offer, RespondToOffer $action): ProviderOfferResource
     {
         Gate::authorize('respond', $offer);
 
-        return new TrainerOfferResource($action->view($offer)->load(['request.skill', 'request.session']));
+        return new ProviderOfferResource($action->view($offer)->load(['request.category', 'request.session']));
     }
 
     /**
@@ -73,7 +73,7 @@ class OfferController extends Controller
     {
         Gate::authorize('respond', $offer);
 
-        $session = $action->handle($offer)->load(['trainer.user', 'student', 'skill', 'conversation']);
+        $session = $action->handle($offer)->load(['provider.user', 'client', 'category', 'conversation']);
 
         return (new SessionResource($session))->response()->setStatusCode(200);
     }
@@ -81,14 +81,14 @@ class OfferController extends Controller
     /**
      * Recusar oferta.
      */
-    public function decline(RequestOffer $offer, RespondToOffer $action): TrainerOfferResource
+    public function decline(RequestOffer $offer, RespondToOffer $action): ProviderOfferResource
     {
         Gate::authorize('respond', $offer);
 
-        return new TrainerOfferResource($action->decline($offer)->load(['request.skill', 'request.session']));
+        return new ProviderOfferResource($action->decline($offer)->load(['request.category', 'request.session']));
     }
 
-    private function trainer(Request $request): User
+    private function provider(Request $request): User
     {
         /** @var User */
         return $request->user();

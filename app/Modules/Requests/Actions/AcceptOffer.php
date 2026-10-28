@@ -8,11 +8,11 @@ use App\Modules\Requests\Enums\OfferState;
 use App\Modules\Requests\Enums\RequestState;
 use App\Modules\Requests\Events\RequestMatched;
 use App\Modules\Requests\Models\RequestOffer;
-use App\Modules\Requests\Models\TrainingRequest;
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Requests\Services\Commission;
 use App\Modules\Sessions\Enums\SessionState;
 use App\Modules\Sessions\Models\Conversation;
-use App\Modules\Sessions\Models\TrainingSession;
+use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Sessions\Services\SessionLifecycle;
 use App\Support\Api\ApiException;
 use App\Support\Audit\AuditLogger;
@@ -41,43 +41,43 @@ class AcceptOffer
 
     public function __construct(private readonly SessionLifecycle $lifecycle, private readonly AuditLogger $audit) {}
 
-    public function handle(RequestOffer $offer): TrainingSession
+    public function handle(RequestOffer $offer): ServiceJob
     {
         try {
-            return Cache::lock('accept:request:'.$offer->training_request_id, self::LOCK_SECONDS)
+            return Cache::lock('accept:request:'.$offer->service_request_id, self::LOCK_SECONDS)
                 ->block(self::LOCK_WAIT_SECONDS, fn () => $this->accept($offer));
         } catch (LockTimeoutException) {
             throw new ApiException('try_again', 'Muitos pedidos ao mesmo tempo. Tente novamente.', 503);
         }
     }
 
-    private function accept(RequestOffer $offer): TrainingSession
+    private function accept(RequestOffer $offer): ServiceJob
     {
         $result = DB::transaction(function () use ($offer): array {
-            /** @var TrainingRequest $request */
-            $request = TrainingRequest::query()->lockForUpdate()->findOrFail($offer->training_request_id);
+            /** @var ServiceRequest $request */
+            $request = ServiceRequest::query()->lockForUpdate()->findOrFail($offer->service_request_id);
             /** @var RequestOffer $offer */
             $offer = RequestOffer::query()->lockForUpdate()->findOrFail($offer->id);
 
             // Idempotência: este formador já ganhou esta aula
             if ($offer->state === OfferState::Accepted) {
-                return ['session' => TrainingSession::query()->where('training_request_id', $request->id)->firstOrFail(), 'new' => false];
+                return ['session' => ServiceJob::query()->where('service_request_id', $request->id)->firstOrFail(), 'new' => false];
             }
 
             $this->ensureCanAccept($request, $offer);
 
             // Comissão do formador que aceita (reduzida se for VIP), fixada nesta aula
-            $split = Commission::splitFor($request->amount, $offer->trainer_profile_id);
+            $split = Commission::splitFor($request->amount, $offer->provider_profile_id);
 
-            $session = TrainingSession::query()->create([
-                'training_request_id' => $request->id,
-                'student_id' => $request->student_id,
-                'trainer_profile_id' => $offer->trainer_profile_id,
-                'skill_id' => $request->skill_id,
+            $session = ServiceJob::query()->create([
+                'service_request_id' => $request->id,
+                'client_id' => $request->client_id,
+                'provider_profile_id' => $offer->provider_profile_id,
+                'category_id' => $request->category_id,
                 'title' => $request->title,
                 'amount' => $request->amount,
                 'commission' => $split['commission'],
-                'trainer_net' => $split['trainer_net'],
+                'provider_net' => $split['provider_net'],
                 'commission_percent' => $split['percent'],
                 'scheduled_at' => $request->scheduled_at,
                 'duration_minutes' => $request->duration_minutes,
@@ -90,14 +90,14 @@ class AcceptOffer
                 'latitude' => $request->latitude,
                 'longitude' => $request->longitude,
             ]);
-            Conversation::query()->create(['training_session_id' => $session->id]);
+            Conversation::query()->create(['service_job_id' => $session->id]);
 
             $offer->transitionTo(OfferState::Accepted, ['responded_at' => now()]);
 
             $losers = $request->offers()
                 ->whereKeyNot($offer->id)
                 ->whereIn('state', OfferState::open())
-                ->with('trainer')
+                ->with('provider')
                 ->get();
             foreach ($losers as $loser) {
                 $loser->transitionTo(OfferState::Lost, ['responded_at' => now()]);
@@ -105,7 +105,7 @@ class AcceptOffer
 
             $request->transitionTo(RequestState::Matched, [
                 'matched_at' => now(),
-                'assigned_trainer_profile_id' => $offer->trainer_profile_id,
+                'assigned_provider_profile_id' => $offer->provider_profile_id,
                 'next_wave_at' => null,
             ]);
 
@@ -119,7 +119,7 @@ class AcceptOffer
                 $this->lifecycle->record($session, 'payment_requested', null, ['amount' => $session->amount, 'due_at' => $session->payment_due_at?->toIso8601String()], null, SessionState::PendingPayment);
             }
 
-            RequestMatched::dispatch($request, $session, $losers->map(fn (RequestOffer $o) => $o->trainer->user_id)->values()->all());
+            RequestMatched::dispatch($request, $session, $losers->map(fn (RequestOffer $o) => $o->provider->user_id)->values()->all());
 
             return ['session' => $session, 'new' => true];
         });
@@ -131,7 +131,7 @@ class AcceptOffer
         return $result['session'];
     }
 
-    private function ensureCanAccept(TrainingRequest $request, RequestOffer $offer): void
+    private function ensureCanAccept(ServiceRequest $request, RequestOffer $offer): void
     {
         if ($request->state === RequestState::Matched) {
             throw new ApiException('request_already_matched', 'Outro formador aceitou este pedido primeiro.', 409);

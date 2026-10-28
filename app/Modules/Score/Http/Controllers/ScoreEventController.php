@@ -6,7 +6,7 @@ namespace App\Modules\Score\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Score\Models\ScoreEvent;
-use App\Modules\Users\Models\TrainerProfile;
+use App\Modules\Users\Models\ProviderProfile;
 use App\Modules\Users\Models\User;
 use App\Support\Api\ApiException;
 use Illuminate\Database\Eloquent\Builder;
@@ -28,7 +28,7 @@ class ScoreEventController extends Controller
     {
         /** @var User $user */
         $user = $request->user();
-        $profile = $user->trainerProfile ?? throw new ApiException('profile_missing', 'Ainda não tem o perfil de formador.', 409);
+        $profile = $user->providerProfile ?? throw new ApiException('profile_missing', 'Ainda não tem o perfil de formador.', 409);
 
         return $this->respond($profile);
     }
@@ -36,14 +36,14 @@ class ScoreEventController extends Controller
     /**
      * Admin: eventos de score de um formador.
      */
-    public function forTrainer(TrainerProfile $trainer): JsonResponse
+    public function forProvider(ProviderProfile $provider): JsonResponse
     {
-        return $this->respond($trainer);
+        return $this->respond($provider);
     }
 
-    private function respond(TrainerProfile $profile): JsonResponse
+    private function respond(ProviderProfile $profile): JsonResponse
     {
-        $query = fn (): Builder => ScoreEvent::query()->where('trainer_profile_id', $profile->id);
+        $query = fn (): Builder => ScoreEvent::query()->where('provider_profile_id', $profile->id);
 
         $since = now()->subDays(30);
         $summary = $query()->where('created_at', '>=', $since)

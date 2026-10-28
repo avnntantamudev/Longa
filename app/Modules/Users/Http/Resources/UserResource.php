@@ -35,8 +35,8 @@ class UserResource extends JsonResource
             'locale' => $this->locale,
             'roles' => $roles,
             'profiles' => [
-                'student' => in_array(Role::Student->value, $roles, true),
-                'trainer' => in_array(Role::Trainer->value, $roles, true),
+                'client' => in_array(Role::Client->value, $roles, true),
+                'provider' => in_array(Role::Provider->value, $roles, true),
                 'company_rh' => in_array(Role::CompanyRh->value, $roles, true),
             ],
             'needs_onboarding' => $this->onboarded_at === null,

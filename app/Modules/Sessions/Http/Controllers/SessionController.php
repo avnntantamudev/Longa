@@ -10,8 +10,8 @@ use App\Modules\Sessions\Http\Requests\SendMessageRequest;
 use App\Modules\Sessions\Http\Resources\MessageResource;
 use App\Modules\Sessions\Http\Resources\SessionResource;
 use App\Modules\Sessions\Models\Message;
+use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Sessions\Models\SessionEvent;
-use App\Modules\Sessions\Models\TrainingSession;
 use App\Modules\Users\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -36,9 +36,9 @@ class SessionController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        $sessions = TrainingSession::query()
-            ->where(fn ($q) => $q->where('student_id', $user->id)->orWhere('trainer_profile_id', $user->trainerProfile->id ?? 0))
-            ->with(['trainer.user', 'student', 'skill', 'conversation'])
+        $sessions = ServiceJob::query()
+            ->where(fn ($q) => $q->where('client_id', $user->id)->orWhere('provider_profile_id', $user->providerProfile->id ?? 0))
+            ->with(['provider.user', 'client', 'category', 'conversation'])
             ->orderBy('scheduled_at')
             ->paginate(20);
 
@@ -48,11 +48,11 @@ class SessionController extends Controller
     /**
      * Ver aula.
      */
-    public function show(TrainingSession $session): SessionResource
+    public function show(ServiceJob $session): SessionResource
     {
         Gate::authorize('view', $session);
 
-        return new SessionResource($session->load(['trainer.user', 'student', 'skill', 'conversation']));
+        return new SessionResource($session->load(['provider.user', 'client', 'category', 'conversation']));
     }
 
     /**
@@ -60,12 +60,12 @@ class SessionController extends Controller
      *
      * Paginação por cursor: `before` (mensagens mais antigas) ou `after` (novas desde a última recebida).
      */
-    public function messages(Request $request, TrainingSession $session): AnonymousResourceCollection
+    public function messages(Request $request, ServiceJob $session): AnonymousResourceCollection
     {
         Gate::authorize('chat', $session);
 
         $query = Message::query()
-            ->whereHas('conversation', fn ($q) => $q->where('training_session_id', $session->id))
+            ->whereHas('conversation', fn ($q) => $q->where('service_job_id', $session->id))
             ->with('sender');
 
         if ($request->filled('after')) {
@@ -86,7 +86,7 @@ class SessionController extends Controller
     /**
      * Enviar mensagem (texto e/ou PDF).
      */
-    public function send(SendMessageRequest $request, TrainingSession $session, SendMessage $action): JsonResponse
+    public function send(SendMessageRequest $request, ServiceJob $session, SendMessage $action): JsonResponse
     {
         Gate::authorize('chat', $session);
 
@@ -101,7 +101,7 @@ class SessionController extends Controller
     /**
      * Linha do tempo da aula (participantes).
      */
-    public function events(TrainingSession $session): JsonResponse
+    public function events(ServiceJob $session): JsonResponse
     {
         Gate::authorize('view', $session);
 
@@ -111,8 +111,8 @@ class SessionController extends Controller
             'to_state' => $e->to_state,
             'by' => match ($e->actor_id) {
                 null => 'system',
-                $session->student_id => 'student',
-                $session->trainer->user_id => 'trainer',
+                $session->client_id => 'client',
+                $session->provider->user_id => 'provider',
                 default => 'admin',
             },
             'created_at' => $e->created_at->toIso8601String(),

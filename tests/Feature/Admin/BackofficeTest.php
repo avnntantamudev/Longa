@@ -30,10 +30,10 @@ function disputedSession(): Dispute
 {
     $session = paidSession();
     test()->travelTo($session->scheduled_at);
-    app(StartSession::class)->handle($session, $session->trainer->user);
-    app(FinishSession::class)->handle($session, $session->trainer->user);
+    app(StartSession::class)->handle($session, $session->provider->user);
+    app(FinishSession::class)->handle($session, $session->provider->user);
 
-    return app(OpenDispute::class)->handle($session->fresh() ?? $session, $session->student, 'quality', 'A aula ficou muito aquém do combinado.');
+    return app(OpenDispute::class)->handle($session->fresh() ?? $session, $session->client, 'quality', 'A aula ficou muito aquém do combinado.');
 }
 
 function backofficeAdmin(): User
@@ -47,7 +47,7 @@ function backofficeAdmin(): User
 it('só administradores entram no backoffice', function () {
     $this->get('/backoffice')->assertRedirect('/entrar');
 
-    $this->actingAs(User::factory()->withRole(Role::Student)->create())->get('/backoffice')->assertForbidden();
+    $this->actingAs(User::factory()->withRole(Role::Client)->create())->get('/backoffice')->assertForbidden();
     $this->actingAs(User::factory()->withRole(Role::Admin)->suspended()->create())->get('/backoffice')->assertForbidden();
 
     backofficeAdmin();
@@ -80,7 +80,7 @@ it('decidir exige nota e a palavra CONFIRMAR; depois move o dinheiro uma vez', f
 
     expect($dispute->fresh()?->resolution)->toBe('released')
         ->and($dispute->session->fresh()?->state)->toBe(SessionState::Completed)
-        ->and(balances($dispute->session)['trainer'])->toBe(21250);
+        ->and(balances($dispute->session)['provider'])->toBe(21250);
 
     Livewire::test(ViewDispute::class, ['record' => $dispute->getRouteKey()])->assertActionHidden('refund');
 });
@@ -90,20 +90,20 @@ it('reembolso parcial pelo backoffice valida a parte do formador', function () {
     backofficeAdmin();
 
     Livewire::test(ViewDispute::class, ['record' => $dispute->getRouteKey()])
-        ->callAction('partial', data: ['trainer_share' => 25000, 'note' => 'Metade da aula.', 'confirmation' => 'CONFIRMAR'])
-        ->assertHasActionErrors(['trainer_share']);
+        ->callAction('partial', data: ['provider_share' => 25000, 'note' => 'Metade da aula.', 'confirmation' => 'CONFIRMAR'])
+        ->assertHasActionErrors(['provider_share']);
 
     Livewire::test(ViewDispute::class, ['record' => $dispute->getRouteKey()])
-        ->callAction('partial', data: ['trainer_share' => 12500, 'note' => 'Metade da aula.', 'confirmation' => 'CONFIRMAR'])
+        ->callAction('partial', data: ['provider_share' => 12500, 'note' => 'Metade da aula.', 'confirmation' => 'CONFIRMAR'])
         ->assertHasNoActionErrors();
 
-    expect(balances($dispute->session))->toMatchArray(['trainer' => 10625, 'revenue' => 1875, 'escrow' => 0]);
+    expect(balances($dispute->session))->toMatchArray(['provider' => 10625, 'revenue' => 1875, 'escrow' => 0]);
 });
 
 it('marcar comissão em mão como recebida', function () {
     $session = acceptedSession('cash');
     app(CommissionDebts::class)->register($session, null, 'test');
-    $account = LedgerAccount::query()->where('code', Accounts::trainerCommissionDue($session->trainer_profile_id))->sole();
+    $account = LedgerAccount::query()->where('code', Accounts::providerCommissionDue($session->provider_profile_id))->sole();
     backofficeAdmin();
 
     Livewire::test(ListCommissionsDue::class)
@@ -115,7 +115,7 @@ it('marcar comissão em mão como recebida', function () {
         ->callTableAction('receive', $account, data: ['amount' => 3750, 'key' => 'k2'])
         ->assertHasNoTableActionErrors();
 
-    expect(app(CommissionDebts::class)->outstanding($session->trainer_profile_id))->toBe(0);
+    expect(app(CommissionDebts::class)->outstanding($session->provider_profile_id))->toBe(0);
     Livewire::test(ListCommissionsDue::class)->assertCanNotSeeTableRecords([$account]);
 });
 

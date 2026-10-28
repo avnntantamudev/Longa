@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Score\Models;
 
-use App\Modules\Users\Models\TrainerProfile;
+use App\Modules\Users\Models\ProviderProfile;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * o cálculo fica para a Fase 6.
  *
  * @property int $id
- * @property int $trainer_profile_id
+ * @property int $provider_profile_id
  * @property string $type
  * @property int $points
  * @property string|null $subject_type
@@ -22,7 +22,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property array<string, mixed>|null $metadata
  * @property \Illuminate\Support\Carbon $created_at
  */
-#[Fillable(['trainer_profile_id', 'type', 'points', 'subject_type', 'subject_id', 'metadata'])]
+#[Fillable(['provider_profile_id', 'type', 'points', 'subject_type', 'subject_id', 'metadata'])]
 class ScoreEvent extends Model
 {
     public const UPDATED_AT = null;
@@ -41,10 +41,10 @@ class ScoreEvent extends Model
     }
 
     /**
-     * @return BelongsTo<TrainerProfile, $this>
+     * @return BelongsTo<ProviderProfile, $this>
      */
-    public function trainer(): BelongsTo
+    public function provider(): BelongsTo
     {
-        return $this->belongsTo(TrainerProfile::class, 'trainer_profile_id');
+        return $this->belongsTo(ProviderProfile::class, 'provider_profile_id');
     }
 }

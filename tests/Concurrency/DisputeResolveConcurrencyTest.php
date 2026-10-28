@@ -23,9 +23,9 @@ use Symfony\Component\Process\Process;
 it('decisões simultâneas de admins diferentes movem o dinheiro uma única vez', function () {
     Illuminate\Support\Facades\Queue::fake();
     $session = paidSession(['scheduled_at' => now()->subMinutes(5)]);
-    app(StartSession::class)->handle($session, $session->trainer->user);
-    app(FinishSession::class)->handle($session, $session->trainer->user);
-    $dispute = app(OpenDispute::class)->handle($session->fresh() ?? $session, $session->student, 'quality', 'A aula ficou muito aquém do combinado.');
+    app(StartSession::class)->handle($session, $session->provider->user);
+    app(FinishSession::class)->handle($session, $session->provider->user);
+    $dispute = app(OpenDispute::class)->handle($session->fresh() ?? $session, $session->client, 'quality', 'A aula ficou muito aquém do combinado.');
 
     $php = (new PhpExecutableFinder)->find() ?: 'php';
     $startAt = microtime(true) + 4;
@@ -59,5 +59,5 @@ it('decisões simultâneas de admins diferentes movem o dinheiro uma única vez'
         ->and($ledger->balanceFromEntries(Accounts::ESCROW))->toBe(0)
         ->and((int) LedgerEntry::query()->sum('amount'))->toBe(0)
         ->and(EscrowHold::query()->sole()->state)->toBe($winner)
-        ->and($ledger->balanceFromEntries(Accounts::trainerAvailable($session->trainer_profile_id)))->toBe($winner === 'released' ? 21250 : 0);
+        ->and($ledger->balanceFromEntries(Accounts::providerAvailable($session->provider_profile_id)))->toBe($winner === 'released' ? 21250 : 0);
 });

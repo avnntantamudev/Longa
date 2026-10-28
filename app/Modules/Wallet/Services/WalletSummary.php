@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Wallet\Services;
 
 use App\Modules\Payments\Models\EscrowHold;
-use App\Modules\Users\Models\TrainerProfile;
+use App\Modules\Users\Models\ProviderProfile;
 use App\Modules\Wallet\Ledger\Accounts;
 use App\Modules\Wallet\Ledger\LedgerService;
 use App\Modules\Wallet\Models\LedgerAccount;
@@ -22,17 +22,17 @@ class WalletSummary
     /**
      * @return array{available: int, pending: int, total_earned: int, commission_due: int, currency: string}
      */
-    public function summary(TrainerProfile $trainer): array
+    public function summary(ProviderProfile $provider): array
     {
-        $availableId = $this->accountId(Accounts::trainerAvailable($trainer));
+        $availableId = $this->accountId(Accounts::providerAvailable($provider));
 
         return [
-            'available' => $this->ledger->balance(Accounts::trainerAvailable($trainer)),
+            'available' => $this->ledger->balance(Accounts::providerAvailable($provider)),
             // Líquido das aulas pagas ainda por confirmar (retidas em escrow)
-            'pending' => (int) EscrowHold::query()->where('trainer_profile_id', $trainer->id)->whereIn('state', EscrowHold::ACTIVE)->sum('trainer_net'),
+            'pending' => (int) EscrowHold::query()->where('provider_profile_id', $provider->id)->whereIn('state', EscrowHold::ACTIVE)->sum('provider_net'),
             // Tudo o que entrou na carteira (antes de compensações de comissão e levantamentos)
             'total_earned' => $availableId === null ? 0 : (int) LedgerEntry::query()->where('ledger_account_id', $availableId)->where('amount', '>', 0)->sum('amount'),
-            'commission_due' => -$this->ledger->balance(Accounts::trainerCommissionDue($trainer)),
+            'commission_due' => -$this->ledger->balance(Accounts::providerCommissionDue($provider)),
             'currency' => 'AOA',
         ];
     }
@@ -42,11 +42,11 @@ class WalletSummary
      *
      * @return CursorPaginator<int, LedgerEntry>
      */
-    public function movements(TrainerProfile $trainer, int $perPage = 20): CursorPaginator
+    public function movements(ProviderProfile $provider, int $perPage = 20): CursorPaginator
     {
         $ids = array_filter([
-            $this->accountId(Accounts::trainerAvailable($trainer)),
-            $this->accountId(Accounts::trainerCommissionDue($trainer)),
+            $this->accountId(Accounts::providerAvailable($provider)),
+            $this->accountId(Accounts::providerCommissionDue($provider)),
         ]);
 
         return LedgerEntry::query()

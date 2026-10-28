@@ -14,7 +14,7 @@ use App\Modules\Sessions\Actions\OpenDispute;
 use App\Modules\Sessions\Actions\ReportNoShow;
 use App\Modules\Sessions\Actions\ResolveDispute;
 use App\Modules\Sessions\Actions\StartSession;
-use App\Modules\Sessions\Models\TrainingSession;
+use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Users\Enums\Role;
 use App\Modules\Users\Models\User;
 use App\Modules\Wallet\Ledger\Accounts;
@@ -33,30 +33,30 @@ use Illuminate\Support\Facades\Notification;
 */
 
 const SCENARIOS = [
-    'qr', 'without_qr', 'student_cancel_early', 'student_cancel_late', 'trainer_cancel', 'no_show_trainer',
-    'no_show_student', 'auto_not_started', 'auto_started', 'dispute', 'contested_no_show', 'payment_failed',
+    'qr', 'without_qr', 'client_cancel_early', 'client_cancel_late', 'provider_cancel', 'no_show_provider',
+    'no_show_client', 'auto_not_started', 'auto_started', 'dispute', 'contested_no_show', 'payment_failed',
     'cash_confirmed', 'cash_auto',
 ];
 
 /**
  * Executa um fluxo e devolve a parte bruta esperada do formador (null = sem liquidação no escrow).
  */
-function runFlow(string $scenario, int $amount, ?int $trainerProfileId): array
+function runFlow(string $scenario, int $amount, ?int $providerProfileId): array
 {
     test()->travelBack();
     Cache::flush();
     $split = Commission::split($amount);
     $cash = str_starts_with($scenario, 'cash');
-    $overrides = ['amount' => $amount, 'commission' => $split['commission'], 'trainer_net' => $split['trainer_net']];
-    if ($trainerProfileId !== null) {
-        $overrides['trainer_profile_id'] = $trainerProfileId;
+    $overrides = ['amount' => $amount, 'commission' => $split['commission'], 'provider_net' => $split['provider_net']];
+    if ($providerProfileId !== null) {
+        $overrides['provider_profile_id'] = $providerProfileId;
     }
     $session = acceptedSession($cash ? 'cash' : 'electronic', $overrides);
-    $trainer = $session->trainer->user;
-    $student = $session->student;
+    $provider = $session->provider->user;
+    $client = $session->client;
     $admin = fn () => User::factory()->withRole(Role::Admin)->create();
     $percent = fn (int $p) => min($amount, intdiv($amount * $p + 50, 100));
-    $refresh = fn (): TrainingSession => $session->fresh() ?? $session;
+    $refresh = fn (): ServiceJob => $session->fresh() ?? $session;
     $tick = fn () => test()->artisan('longa:sessions:tick');
 
     if ($scenario === 'payment_failed') {
@@ -64,7 +64,7 @@ function runFlow(string $scenario, int $amount, ?int $trainerProfileId): array
         config(['longa.payments.mock_outcome' => 'failed']);
         app()->forgetInstance(App\Modules\Payments\Contracts\PaymentProvider::class);
         try {
-            app(PayForSession::class)->handle($session, $student, 'multicaixa_express');
+            app(PayForSession::class)->handle($session, $client, 'multicaixa_express');
         } catch (ApiException) {
         }
         config(['longa.payments.mock_outcome' => 'succeeded']);
@@ -74,17 +74,17 @@ function runFlow(string $scenario, int $amount, ?int $trainerProfileId): array
     }
 
     if (! $cash) {
-        app(PayForSession::class)->handle($session, $student, 'multicaixa_express');
-        app(PayForSession::class)->handle($refresh(), $student, 'multicaixa_express'); // repetição: não cobra duas vezes
+        app(PayForSession::class)->handle($session, $client, 'multicaixa_express');
+        app(PayForSession::class)->handle($refresh(), $client, 'multicaixa_express'); // repetição: não cobra duas vezes
     }
 
-    $runLesson = function () use ($session, $trainer, $refresh): string {
+    $runLesson = function () use ($session, $provider, $refresh): string {
         test()->travelTo($session->scheduled_at);
-        app(StartSession::class)->handle($refresh(), $trainer);
+        app(StartSession::class)->handle($refresh(), $provider);
 
-        return app(FinishSession::class)->handle($refresh(), $trainer)['qr']['tokens'][0]['token'];
+        return app(FinishSession::class)->handle($refresh(), $provider)['qr']['tokens'][0]['token'];
     };
-    $decide = function (TrainingSession $s) use ($admin, $amount): int {
+    $decide = function (ServiceJob $s) use ($admin, $amount): int {
         $dispute = $s->disputes()->sole();
         $choice = $amount < 2 ? mt_rand(0, 1) : mt_rand(0, 2);
         $share = [ResolveDispute::RELEASE => $amount, ResolveDispute::REFUND => 0, ResolveDispute::PARTIAL => mt_rand(1, max(1, $amount - 1))];
@@ -104,10 +104,10 @@ function runFlow(string $scenario, int $amount, ?int $trainerProfileId): array
         case 'cash_confirmed':
         case 'cash_auto':
             $token = $runLesson();
-            app(ConfirmSession::class)->handle($refresh(), $student, $token, null);
-            app(ConfirmSession::class)->handle($refresh(), $student, $token, null); // dupla leitura
+            app(ConfirmSession::class)->handle($refresh(), $client, $token, null);
+            app(ConfirmSession::class)->handle($refresh(), $client, $token, null); // dupla leitura
             if ($scenario === 'cash_confirmed') {
-                app(ConfirmCashPayment::class)->handle($refresh(), $student);
+                app(ConfirmCashPayment::class)->handle($refresh(), $client);
             } elseif ($scenario === 'cash_auto') {
                 test()->travel(49)->hours();
                 $tick();
@@ -116,31 +116,31 @@ function runFlow(string $scenario, int $amount, ?int $trainerProfileId): array
             return [$session, $cash ? null : $amount];
         case 'without_qr':
             $runLesson();
-            app(ConfirmWithoutQr::class)->handle($refresh(), $student);
-            app(ConfirmWithoutQr::class)->handle($refresh(), $student);
+            app(ConfirmWithoutQr::class)->handle($refresh(), $client);
+            app(ConfirmWithoutQr::class)->handle($refresh(), $client);
 
             return [$session, $amount];
-        case 'student_cancel_early':
-            app(CancelSession::class)->handle($refresh(), $student, null);
+        case 'client_cancel_early':
+            app(CancelSession::class)->handle($refresh(), $client, null);
 
             return [$session, 0];
-        case 'student_cancel_late':
+        case 'client_cancel_late':
             test()->travelTo($session->scheduled_at->copy()->subHours(mt_rand(1, 5)));
-            app(CancelSession::class)->handle($refresh(), $student, null);
+            app(CancelSession::class)->handle($refresh(), $client, null);
 
             return [$session, $percent(25)];
-        case 'trainer_cancel':
-            app(CancelSession::class)->handle($refresh(), $trainer, null);
+        case 'provider_cancel':
+            app(CancelSession::class)->handle($refresh(), $provider, null);
 
             return [$session, 0];
-        case 'no_show_trainer':
-        case 'no_show_student':
+        case 'no_show_provider':
+        case 'no_show_client':
         case 'contested_no_show':
-            $byStudent = $scenario !== 'no_show_student' && ($scenario === 'no_show_trainer' || mt_rand(0, 1) === 1);
+            $byClient = $scenario !== 'no_show_client' && ($scenario === 'no_show_provider' || mt_rand(0, 1) === 1);
             test()->travelTo($session->scheduled_at->copy()->addMinutes(35));
-            app(ReportNoShow::class)->handle($refresh(), $byStudent ? $student : $trainer, null);
+            app(ReportNoShow::class)->handle($refresh(), $byClient ? $client : $provider, null);
             if ($scenario === 'contested_no_show') {
-                app(OpenDispute::class)->handle($refresh(), $byStudent ? $trainer : $student, 'no_show_contest', 'Estive presente na hora marcada.');
+                app(OpenDispute::class)->handle($refresh(), $byClient ? $provider : $client, 'no_show_contest', 'Estive presente na hora marcada.');
                 test()->travel(25)->hours();
                 $tick(); // não liquida enquanto houver disputa
 
@@ -150,7 +150,7 @@ function runFlow(string $scenario, int $amount, ?int $trainerProfileId): array
             $tick();
             $tick();
 
-            return [$session, $byStudent ? 0 : $percent(50)];
+            return [$session, $byClient ? 0 : $percent(50)];
         case 'auto_not_started':
             test()->travelTo($session->ends_at?->copy()->addHours(3));
             $tick();
@@ -168,7 +168,7 @@ function runFlow(string $scenario, int $amount, ?int $trainerProfileId): array
             return [$session, $amount];
         case 'dispute':
             $runLesson();
-            app(OpenDispute::class)->handle($refresh(), $student, 'quality', 'A aula ficou aquém do combinado.');
+            app(OpenDispute::class)->handle($refresh(), $client, 'quality', 'A aula ficou aquém do combinado.');
 
             return [$session, $decide($refresh())];
     }
@@ -192,7 +192,7 @@ function assertMoneyInvariants(string $context): void
     expect($escrow)->toBe((int) EscrowHold::query()->whereIn('state', EscrowHold::ACTIVE)->sum('amount'), "{$context}: escrow ≠ retenções ativas");
 
     $negative = DB::table('ledger_entries as e')->join('ledger_accounts as a', 'a.id', '=', 'e.ledger_account_id')
-        ->where('a.type', 'trainer_available')->select('a.id')->groupBy('a.id')->havingRaw('SUM(e.amount) < 0')->count();
+        ->where('a.type', 'provider_available')->select('a.id')->groupBy('a.id')->havingRaw('SUM(e.amount) < 0')->count();
     expect($negative)->toBe(0, "{$context}: saldo de formador negativo");
 
     // Reembolsos executados (fila síncrona nos testes): nada fica por pagar
@@ -206,18 +206,18 @@ it('centenas de fluxos aleatórios mantêm as invariantes do dinheiro', function
     $flows = (int) (env('LONGA_PROPERTY_FLOWS') ?: 200);
     mt_srand($seed);
     $edgeAmounts = [1, 2, 3, 7, 999, 25000, 450000];
-    $lastTrainer = null;
+    $lastProvider = null;
     $seen = [];
 
     for ($i = 0; $i < $flows; $i++) {
         $scenario = SCENARIOS[mt_rand(0, count(SCENARIOS) - 1)];
         $amount = mt_rand(0, 4) === 0 ? $edgeAmounts[mt_rand(0, count($edgeAmounts) - 1)] : mt_rand(1, 500000);
         // Às vezes o mesmo formador: comissões em mão compensadas em aulas seguintes
-        $reuse = $lastTrainer !== null && mt_rand(0, 3) === 0 ? $lastTrainer : null;
+        $reuse = $lastProvider !== null && mt_rand(0, 3) === 0 ? $lastProvider : null;
         $context = "semente {$seed}, fluxo {$i} ({$scenario}, {$amount} Kz)";
 
         [$session, $gross] = runFlow($scenario, $amount, $reuse);
-        $lastTrainer = $session->trainer_profile_id;
+        $lastProvider = $session->provider_profile_id;
         $seen[$scenario] = true;
 
         $settlements = LedgerTransaction::query()->where('idempotency_key', "escrow:settle:session:{$session->id}")->with('entries.account')->get();
@@ -228,7 +228,7 @@ it('centenas de fluxos aleatórios mantêm as invariantes do dinheiro', function
             $lines = $settlements->first()->entries->mapWithKeys(fn (LedgerEntry $e) => [explode(':', $e->account->code)[0] => $e->amount]);
             $expected = Commission::split($gross);
             expect((int) ($lines['escrow'] ?? 0))->toBe(-$amount, $context)
-                ->and((int) ($lines['trainer_available'] ?? 0))->toBe($expected['trainer_net'], $context)
+                ->and((int) ($lines['provider_available'] ?? 0))->toBe($expected['provider_net'], $context)
                 ->and((int) ($lines['platform_revenue'] ?? 0))->toBe($expected['commission'], $context)
                 ->and((int) ($lines['refunds_payable'] ?? 0))->toBe($amount - $gross, $context);
         }

@@ -8,22 +8,22 @@ use App\Modules\Requests\Enums\RequestState;
 use App\Modules\Requests\Events\OfferExpired;
 use App\Modules\Requests\Events\OfferSent;
 use App\Modules\Requests\Events\RequestExpired;
-use App\Modules\Requests\Models\TrainingRequest;
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Score\Models\ScoreEvent;
-use App\Modules\Users\Models\Skill;
-use App\Modules\Users\Models\TrainerProfile;
-use Database\Factories\TrainerProfileFactory;
+use App\Modules\Users\Models\Category;
+use App\Modules\Users\Models\ProviderProfile;
+use Database\Factories\ProviderProfileFactory;
 use Illuminate\Support\Facades\Event;
 
 beforeEach(function () {
     Event::fake([OfferSent::class, OfferExpired::class, RequestExpired::class]);
     config(['longa.matching.first_wave_size' => 2, 'longa.matching.next_wave_size' => 3]);
-    $this->sgme = Skill::query()->where('slug', 'sgme-gestao-empresarial')->firstOrFail();
-    [$lat, $lng] = TrainerProfileFactory::TALATONA;
+    $this->sgme = Category::query()->where('slug', 'sgme-gestao-empresarial')->firstOrFail();
+    [$lat, $lng] = ProviderProfileFactory::TALATONA;
     foreach (range(1, 6) as $i) {
-        TrainerProfile::factory()->verified(100 - $i)->near($lat, $lng, $i * 200)->withSkills($this->sgme)->create();
+        ProviderProfile::factory()->verified(100 - $i)->near($lat, $lng, $i * 200)->withCategories($this->sgme)->create();
     }
-    $this->request = TrainingRequest::factory()->forSkill($this->sgme)->create();
+    $this->request = ServiceRequest::factory()->forCategory($this->sgme)->create();
     $this->coordinator = app(MatchingCoordinator::class);
 });
 

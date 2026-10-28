@@ -7,8 +7,8 @@ use Illuminate\Support\Facades\Route;
 
 // Prefixo /api/v1 (ModuleServiceProvider)
 Route::middleware(['auth:sanctum', 'auth.session'])->group(function () {
-    Route::get('me/score-events', [ScoreEventController::class, 'mine'])->middleware('role:trainer')->name('api.score-events.mine');
-    Route::get('admin/trainers/{trainer}/score-events', [ScoreEventController::class, 'forTrainer'])
+    Route::get('me/score-events', [ScoreEventController::class, 'mine'])->middleware('role:provider')->name('api.score-events.mine');
+    Route::get('admin/providers/{provider}/score-events', [ScoreEventController::class, 'forProvider'])
         ->middleware(['role:admin', 'audit:admin.access'])
         ->name('api.admin.score-events');
 });

@@ -24,8 +24,8 @@ class SessionSections
                 TextEntry::make($prefix.'state')->label('Estado')->badge()
                     ->formatStateUsing(fn (SessionState $state) => $state->label()),
                 TextEntry::make($prefix.'amount')->label('Valor')->formatStateUsing(fn (int $state) => self::kz($state)),
-                TextEntry::make($prefix.'student.name')->label('Aluno')->placeholder('—'),
-                TextEntry::make($prefix.'trainer.user.name')->label('Formador')->placeholder('—'),
+                TextEntry::make($prefix.'client.name')->label('Aluno')->placeholder('—'),
+                TextEntry::make($prefix.'provider.user.name')->label('Formador')->placeholder('—'),
                 TextEntry::make($prefix.'payment_method')->label('Pagamento')
                     ->formatStateUsing(fn (string $state) => $state === 'cash' ? 'Em mão' : 'Eletrónico'),
                 TextEntry::make($prefix.'scheduled_at')->label('Agendada para')->dateTime('d/m/Y H:i'),

@@ -2,7 +2,7 @@ import type { PageProps as InertiaPageProps } from '@inertiajs/core';
 import type Echo from 'laravel-echo';
 import type Pusher from 'pusher-js';
 
-export type RoleName = 'student' | 'trainer' | 'company_rh' | 'admin';
+export type RoleName = 'client' | 'provider' | 'company_rh' | 'admin';
 
 export interface AuthUser {
     id: number;
@@ -35,11 +35,11 @@ declare global {
 
 export type PageProps<T extends Record<string, unknown> = Record<string, unknown>> = InertiaPageProps & SharedProps & T;
 
-export interface Skill {
+export interface Category {
     id: number;
     name: string;
     slug: string;
-    category: string;
+    area: string;
 }
 
 export interface Zone {

@@ -13,8 +13,8 @@ class HomeController extends Controller
     {
         return Inertia::render('Home', [
             'profiles' => [
-                ['key' => 'student', 'icon' => 'search', 'title' => 'Para Alunos', 'description' => 'Encontre formadores verificados, presenciais ou online, por especialidade, preço e localização.'],
-                ['key' => 'trainer', 'icon' => 'user', 'title' => 'Para Formadores', 'description' => 'Formalize o seu ensino, receba pagamentos seguros e chegue a mais alunos.'],
+                ['key' => 'client', 'icon' => 'search', 'title' => 'Para Alunos', 'description' => 'Encontre formadores verificados, presenciais ou online, por especialidade, preço e localização.'],
+                ['key' => 'provider', 'icon' => 'user', 'title' => 'Para Formadores', 'description' => 'Formalize o seu ensino, receba pagamentos seguros e chegue a mais alunos.'],
                 ['key' => 'company', 'icon' => 'calendar', 'title' => 'Para Empresas', 'description' => 'Forme a sua equipa com formadores certificados e acompanhe presenças e certificados.'],
             ],
             'highlights' => [

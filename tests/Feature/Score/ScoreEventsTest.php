@@ -4,36 +4,36 @@ declare(strict_types=1);
 
 use App\Modules\Matching\Services\MatchingCoordinator;
 use App\Modules\Requests\Models\RequestOffer;
-use App\Modules\Requests\Models\TrainingRequest;
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Score\Models\ScoreEvent;
 use App\Modules\Users\Enums\Role;
 use App\Modules\Users\Enums\UserStatus;
-use App\Modules\Users\Models\Skill;
-use App\Modules\Users\Models\TrainerProfile;
+use App\Modules\Users\Models\Category;
+use App\Modules\Users\Models\ProviderProfile;
 use App\Modules\Users\Models\User;
-use Database\Factories\TrainerProfileFactory;
+use Database\Factories\ProviderProfileFactory;
 
 beforeEach(function () {
-    $this->sgme = Skill::query()->where('slug', 'sgme-gestao-empresarial')->firstOrFail();
-    [$lat, $lng] = TrainerProfileFactory::TALATONA;
-    $this->trainer = TrainerProfile::factory()->verified()->near($lat, $lng, 500)->withSkills($this->sgme)->create();
+    $this->sgme = Category::query()->where('slug', 'sgme-gestao-empresarial')->firstOrFail();
+    [$lat, $lng] = ProviderProfileFactory::TALATONA;
+    $this->provider = ProviderProfile::factory()->verified()->near($lat, $lng, 500)->withCategories($this->sgme)->create();
 });
 
-function newOfferFor(TrainerProfile $trainer, Skill $skill): RequestOffer
+function newOfferFor(ProviderProfile $provider, Category $category): RequestOffer
 {
-    $request = TrainingRequest::factory()->forSkill($skill)->create();
+    $request = ServiceRequest::factory()->forCategory($category)->create();
     app(MatchingCoordinator::class)->start($request);
 
-    return RequestOffer::query()->where('training_request_id', $request->id)->where('trainer_profile_id', $trainer->id)->firstOrFail();
+    return RequestOffer::query()->where('service_request_id', $request->id)->where('provider_profile_id', $provider->id)->firstOrFail();
 }
 
 it('regista recusas repetidas e ofertas sem resposta e mostra o resumo ao formador', function () {
-    apiLogin($this->trainer->user);
+    apiLogin($this->provider->user);
 
     foreach (range(1, 3) as $i) {
-        $this->postJson('/api/v1/offers/'.newOfferFor($this->trainer, $this->sgme)->id.'/decline')->assertOk();
+        $this->postJson('/api/v1/offers/'.newOfferFor($this->provider, $this->sgme)->id.'/decline')->assertOk();
     }
-    newOfferFor($this->trainer, $this->sgme);
+    newOfferFor($this->provider, $this->sgme);
     $this->travel(61)->seconds();
     $this->artisan('longa:matching-tick');
 
@@ -48,22 +48,22 @@ it('regista recusas repetidas e ofertas sem resposta e mostra o resumo ao formad
 
 it('o admin vê os eventos de um formador; outros não', function () {
     apiLogin(User::factory()->withRole(Role::Admin)->create());
-    $this->getJson("/api/v1/admin/trainers/{$this->trainer->id}/score-events")->assertOk();
+    $this->getJson("/api/v1/admin/providers/{$this->provider->id}/score-events")->assertOk();
 
-    apiLogin(User::factory()->withRole(Role::Student)->create());
-    $this->getJson("/api/v1/admin/trainers/{$this->trainer->id}/score-events")->assertForbidden();
+    apiLogin(User::factory()->withRole(Role::Client)->create());
+    $this->getJson("/api/v1/admin/providers/{$this->provider->id}/score-events")->assertForbidden();
 });
 
 it('um formador suspenso deixa de receber pedidos e não consegue aceitar ofertas já recebidas', function () {
-    apiLogin($this->trainer->user);
-    $offer = newOfferFor($this->trainer, $this->sgme);
+    apiLogin($this->provider->user);
+    $offer = newOfferFor($this->provider, $this->sgme);
 
-    $this->trainer->user->forceFill(['status' => UserStatus::Suspended])->save();
+    $this->provider->user->forceFill(['status' => UserStatus::Suspended])->save();
 
     $this->app['auth']->forgetGuards();
     $this->postJson("/api/v1/offers/{$offer->id}/accept")->assertUnauthorized();
 
-    $next = TrainingRequest::factory()->forSkill($this->sgme)->create();
+    $next = ServiceRequest::factory()->forCategory($this->sgme)->create();
     app(MatchingCoordinator::class)->start($next);
-    expect(RequestOffer::query()->where('training_request_id', $next->id)->count())->toBe(0);
+    expect(RequestOffer::query()->where('service_request_id', $next->id)->count())->toBe(0);
 });

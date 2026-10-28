@@ -25,8 +25,8 @@ Código: `app/Modules/Wallet/Ledger` (`LedgerService` é a única porta de escri
 | `refunds_payable` | positivo | Reembolsos decididos à espera de execução pelo gateway |
 | `cash_settlement` | negativo | Contrapartida do dinheiro recebido em mão pelo admin (comissões, VIP) |
 | `subscription_revenue` | positivo | Receita das subscrições VIP (separada das comissões) |
-| `trainer_available:{id}` | positivo | Saldo disponível do formador (levantamentos na Fase 5) |
-| `trainer_commission_due:{id}` | negativo | Comissão em dívida de aulas pagas em dinheiro |
+| `provider_available:{id}` | positivo | Saldo disponível do formador (levantamentos na Fase 5) |
+| `provider_commission_due:{id}` | negativo | Comissão em dívida de aulas pagas em dinheiro |
 
 O **pendente** do formador (retido em aulas ainda não confirmadas) é a soma dos holds `held` das suas aulas.
 
@@ -35,13 +35,13 @@ O **pendente** do formador (retido em aulas ainda não confirmadas) é a soma do
 | Tipo | Lançamentos |
 |---|---|
 | `escrow_hold` | escrow +25.000 · funds_in −25.000 |
-| `escrow_release` | escrow −25.000 · trainer_available +21.250 · platform_revenue +3.750 |
+| `escrow_release` | escrow −25.000 · provider_available +21.250 · platform_revenue +3.750 |
 | `refund` (total) | escrow −25.000 · refunds_payable +25.000 |
 | `refund_paid` (gateway confirma) | refunds_payable −25.000 · funds_in +25.000 |
-| `refund_partial` (formador fica com 25% = 6.250) | escrow −25.000 · refunds_payable +18.750 · trainer_available +5.312 · platform_revenue +938 (937,5 arredonda para cima) |
-| `cash_commission_due` | platform_revenue +3.750 · trainer_commission_due −3.750 |
-| `cash_commission_received` | cash_settlement −3.750 · trainer_commission_due +3.750 |
-| `commission_offset` | trainer_available −x · trainer_commission_due +x |
+| `refund_partial` (formador fica com 25% = 6.250) | escrow −25.000 · refunds_payable +18.750 · provider_available +5.312 · platform_revenue +938 (937,5 arredonda para cima) |
+| `cash_commission_due` | platform_revenue +3.750 · provider_commission_due −3.750 |
+| `cash_commission_received` | cash_settlement −3.750 · provider_commission_due +3.750 |
+| `commission_offset` | provider_available −x · provider_commission_due +x |
 | `vip_subscription` (na app) | funds_in −50.000 · subscription_revenue +50.000 |
 | `vip_subscription` (em mão) | cash_settlement −50.000 · subscription_revenue +50.000 |
 | `reversal` | lançamentos simétricos de uma transação anterior |
@@ -64,7 +64,7 @@ Não corrige nada; verifica:
 | Soma global de todos os lançamentos = 0 | crítica |
 | Saldo de `escrow` = soma das retenções `held`/`disputed` | crítica |
 | Cache de saldos = soma dos lançamentos de cada conta | crítica |
-| Nenhum `trainer_available:*` negativo | crítica |
+| Nenhum `provider_available:*` negativo | crítica |
 | Retenções sem destino depois de `hold_max_days` | aviso |
 | Reembolsos decididos há mais de 1 h e não executados no gateway | aviso |
 

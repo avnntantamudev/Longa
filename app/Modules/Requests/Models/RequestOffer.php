@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Requests\Models;
 
 use App\Modules\Requests\Enums\OfferState;
-use App\Modules\Users\Models\TrainerProfile;
+use App\Modules\Users\Models\ProviderProfile;
 use App\Support\StateMachine\HasStateMachine;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -16,8 +16,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * Oferta TRIM TRIM enviada a um formador. O prazo (`expires_at`) é decidido pelo servidor.
  *
  * @property int $id
- * @property int $training_request_id
- * @property int $trainer_profile_id
+ * @property int $service_request_id
+ * @property int $provider_profile_id
  * @property int $wave
  * @property int $rank
  * @property int $distance_m
@@ -27,10 +27,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $viewed_at
  * @property \Illuminate\Support\Carbon $expires_at
  * @property \Illuminate\Support\Carbon|null $responded_at
- * @property-read TrainingRequest $request
- * @property-read TrainerProfile $trainer
+ * @property-read ServiceRequest $request
+ * @property-read ProviderProfile $provider
  */
-#[Fillable(['training_request_id', 'trainer_profile_id', 'wave', 'rank', 'distance_m', 'score_snapshot', 'sent_at', 'expires_at'])]
+#[Fillable(['service_request_id', 'provider_profile_id', 'wave', 'rank', 'distance_m', 'score_snapshot', 'sent_at', 'expires_at'])]
 #[Hidden(['accepted_request_id'])]
 class RequestOffer extends Model
 {
@@ -50,19 +50,19 @@ class RequestOffer extends Model
     }
 
     /**
-     * @return BelongsTo<TrainingRequest, $this>
+     * @return BelongsTo<ServiceRequest, $this>
      */
     public function request(): BelongsTo
     {
-        return $this->belongsTo(TrainingRequest::class, 'training_request_id');
+        return $this->belongsTo(ServiceRequest::class, 'service_request_id');
     }
 
     /**
-     * @return BelongsTo<TrainerProfile, $this>
+     * @return BelongsTo<ProviderProfile, $this>
      */
-    public function trainer(): BelongsTo
+    public function provider(): BelongsTo
     {
-        return $this->belongsTo(TrainerProfile::class, 'trainer_profile_id');
+        return $this->belongsTo(ProviderProfile::class, 'provider_profile_id');
     }
 
     public function isOpen(): bool

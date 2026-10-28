@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Wallet\Services;
 
-use App\Modules\Sessions\Models\TrainingSession;
-use App\Modules\Users\Models\TrainerProfile;
+use App\Modules\Sessions\Models\ServiceJob;
+use App\Modules\Users\Models\ProviderProfile;
 use App\Modules\Wallet\Ledger\Accounts;
 use Illuminate\Support\Facades\DB;
 
@@ -20,12 +20,12 @@ class EarningsReport
     /**
      * @return array{year: int, months: list<array{month: int, lessons: int, cash_lessons: int, credited: int, commissions: int, cash_received: int}>, totals: array{lessons: int, cash_lessons: int, credited: int, commissions: int, cash_received: int}}
      */
-    public function build(TrainerProfile $trainer, int $year): array
+    public function build(ProviderProfile $provider, int $year): array
     {
         $months = array_fill(1, 12, ['lessons' => 0, 'cash_lessons' => 0, 'credited' => 0, 'commissions' => 0, 'cash_received' => 0]);
 
-        $lessons = DB::table('training_sessions')
-            ->where('trainer_profile_id', $trainer->id)->where('state', 'completed')->whereYear('scheduled_at', $year)
+        $lessons = DB::table('service_jobs')
+            ->where('provider_profile_id', $provider->id)->where('state', 'completed')->whereYear('scheduled_at', $year)
             ->selectRaw("MONTH(scheduled_at) as m, COUNT(*) as lessons, SUM(payment_method = 'cash') as cash_lessons, SUM(CASE WHEN payment_method = 'cash' THEN amount ELSE 0 END) as cash_received")
             ->groupBy('m')->get();
         foreach ($lessons as $row) {
@@ -35,7 +35,7 @@ class EarningsReport
         $credited = DB::table('ledger_entries as e')
             ->join('ledger_accounts as a', 'a.id', '=', 'e.ledger_account_id')
             ->join('ledger_transactions as t', 't.id', '=', 'e.ledger_transaction_id')
-            ->where('a.code', Accounts::trainerAvailable($trainer))
+            ->where('a.code', Accounts::providerAvailable($provider))
             ->whereIn('t.type', ['escrow_release', 'refund_partial'])
             ->whereYear('e.created_at', $year)
             ->selectRaw('MONTH(e.created_at) as m, SUM(e.amount) as total')->groupBy('m')->get();
@@ -46,9 +46,9 @@ class EarningsReport
         $commissions = DB::table('ledger_entries as e')
             ->join('ledger_accounts as a', 'a.id', '=', 'e.ledger_account_id')
             ->join('ledger_transactions as t', 't.id', '=', 'e.ledger_transaction_id')
-            ->join('training_sessions as s', fn ($j) => $j->on('s.id', '=', 't.reference_id')->where('t.reference_type', '=', TrainingSession::class))
+            ->join('service_jobs as s', fn ($j) => $j->on('s.id', '=', 't.reference_id')->where('t.reference_type', '=', ServiceJob::class))
             ->where('a.code', Accounts::PLATFORM_REVENUE)
-            ->where('s.trainer_profile_id', $trainer->id)
+            ->where('s.provider_profile_id', $provider->id)
             ->whereIn('t.type', ['escrow_release', 'refund_partial', 'cash_commission_due'])
             ->whereYear('e.created_at', $year)
             ->selectRaw('MONTH(e.created_at) as m, SUM(e.amount) as total')->groupBy('m')->get();

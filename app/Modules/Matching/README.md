@@ -1,1 +1,1 @@
-# Matching — Correspondência entre pedidos e formadores (proximidade, skills, score).
+# Matching — Correspondência entre pedidos e formadores (proximidade, categories, score).

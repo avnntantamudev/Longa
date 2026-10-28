@@ -5,8 +5,8 @@ declare(strict_types=1);
 use App\Modules\Requests\Enums\OfferState;
 use App\Modules\Requests\Enums\RequestState;
 use App\Modules\Requests\Models\RequestOffer;
-use App\Modules\Requests\Models\TrainingRequest;
-use App\Modules\Users\Models\TrainerProfile;
+use App\Modules\Requests\Models\ServiceRequest;
+use App\Modules\Users\Models\ProviderProfile;
 use App\Support\StateMachine\InvalidTransition;
 
 /*
@@ -48,7 +48,7 @@ it('define as transições da oferta', function () use ($offerAllowed) {
 });
 
 it('aplica transições válidas e grava na base de dados', function () {
-    $request = TrainingRequest::factory()->create();
+    $request = ServiceRequest::factory()->create();
 
     $request->transitionTo(RequestState::Searching, ['expires_at' => now()->addMinutes(5)]);
 
@@ -58,7 +58,7 @@ it('aplica transições válidas e grava na base de dados', function () {
 });
 
 it('recusa transições inválidas sem alterar nada', function (RequestState $from, RequestState $to) {
-    $request = TrainingRequest::factory()->create();
+    $request = ServiceRequest::factory()->create();
     $request->forceFill(['state' => $from])->save();
 
     expect(fn () => $request->transitionTo($to))->toThrow(InvalidTransition::class);
@@ -71,21 +71,21 @@ it('recusa transições inválidas sem alterar nada', function (RequestState $fr
 ]);
 
 it('deteta mudanças concorrentes (o estado em memória está desatualizado)', function () {
-    $request = TrainingRequest::factory()->create();
+    $request = ServiceRequest::factory()->create();
     $request->transitionTo(RequestState::Searching);
 
     // Outro processo (ex.: o job de expiração) muda o estado primeiro
-    $stale = TrainingRequest::query()->findOrFail($request->id);
-    TrainingRequest::query()->findOrFail($request->id)->transitionTo(RequestState::Expired);
+    $stale = ServiceRequest::query()->findOrFail($request->id);
+    ServiceRequest::query()->findOrFail($request->id)->transitionTo(RequestState::Expired);
 
     expect(fn () => $stale->transitionTo(RequestState::Matched))
         ->toThrow(InvalidTransition::class, 'O estado foi alterado entretanto');
 });
 
 it('uma oferta terminada não volta a mudar', function () {
-    $request = TrainingRequest::factory()->create();
+    $request = ServiceRequest::factory()->create();
     $offer = RequestOffer::query()->create([
-        'training_request_id' => $request->id, 'trainer_profile_id' => TrainerProfile::factory()->create()->id,
+        'service_request_id' => $request->id, 'provider_profile_id' => ProviderProfile::factory()->create()->id,
         'wave' => 1, 'rank' => 1, 'distance_m' => 100, 'score_snapshot' => 50, 'sent_at' => now(), 'expires_at' => now()->addMinute(),
     ]);
 

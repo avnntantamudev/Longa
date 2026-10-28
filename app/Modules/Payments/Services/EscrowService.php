@@ -9,7 +9,7 @@ use App\Modules\Payments\Jobs\ExecuteRefund;
 use App\Modules\Payments\Models\EscrowHold;
 use App\Modules\Payments\Models\PaymentCharge;
 use App\Modules\Requests\Services\Commission;
-use App\Modules\Sessions\Models\TrainingSession;
+use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Users\Models\User;
 use App\Modules\Wallet\Ledger\Accounts;
 use App\Modules\Wallet\Ledger\LedgerException;
@@ -33,14 +33,14 @@ class EscrowService
 {
     public function __construct(
         private readonly LedgerService $ledger,
-        private readonly PaymentProvider $provider,
+        private readonly PaymentProvider $gateway,
         private readonly AuditLogger $audit,
     ) {}
 
-    public function hold(TrainingSession $session, PaymentCharge $charge): EscrowHold
+    public function hold(ServiceJob $session, PaymentCharge $charge): EscrowHold
     {
         return DB::transaction(function () use ($session, $charge) {
-            $existing = EscrowHold::query()->where('training_session_id', $session->id)->lockForUpdate()->first();
+            $existing = EscrowHold::query()->where('service_job_id', $session->id)->lockForUpdate()->first();
             if ($existing !== null) {
                 return $existing;
             }
@@ -51,12 +51,12 @@ class EscrowService
             ], $session, ['charge_id' => $charge->id, 'reference' => $charge->external_reference]);
 
             $hold = EscrowHold::query()->create([
-                'training_session_id' => $session->id,
-                'student_id' => $session->student_id,
-                'trainer_profile_id' => $session->trainer_profile_id,
+                'service_job_id' => $session->id,
+                'client_id' => $session->client_id,
+                'provider_profile_id' => $session->provider_profile_id,
                 'amount' => $session->amount,
                 'commission' => $session->commission,
-                'trainer_net' => $session->trainer_net,
+                'provider_net' => $session->provider_net,
                 'commission_percent' => $session->commission_percent,
                 // Prazo máximo esperado para a retenção ter destino (alerta da reconciliação se ultrapassado)
                 'expires_at' => $session->ends_at?->copy()->addHours((int) config('longa.session_rules.hold_max_days') * 24),
@@ -70,19 +70,19 @@ class EscrowService
     }
 
     /**
-     * Liquidação: o formador fica com $trainerGross (antes da comissão) e o resto volta ao aluno.
-     *  - libertar tudo: $trainerGross = valor total
+     * Liquidação: o formador fica com $providerGross (antes da comissão) e o resto volta ao aluno.
+     *  - libertar tudo: $providerGross = valor total
      *  - reembolso total: 0
      *  - reembolso parcial: qualquer valor entre 0 e o total
      *
      * @param  EscrowHold::RELEASED|EscrowHold::REFUNDED|EscrowHold::PARTIALLY_REFUNDED  $outcome
      * @param  array<string, mixed>  $metadata
      */
-    public function settle(TrainingSession $session, int $trainerGross, string $outcome, string $reason, ?User $actor = null, array $metadata = []): EscrowHold
+    public function settle(ServiceJob $session, int $providerGross, string $outcome, string $reason, ?User $actor = null, array $metadata = []): EscrowHold
     {
-        $hold = DB::transaction(function () use ($session, $trainerGross, $outcome, $reason, $actor, $metadata) {
+        $hold = DB::transaction(function () use ($session, $providerGross, $outcome, $reason, $actor, $metadata) {
             /** @var EscrowHold $hold */
-            $hold = EscrowHold::query()->where('training_session_id', $session->id)->lockForUpdate()->firstOrFail();
+            $hold = EscrowHold::query()->where('service_job_id', $session->id)->lockForUpdate()->firstOrFail();
 
             // Idempotência: já liquidado com o mesmo destino
             if (! $hold->isActive()) {
@@ -93,25 +93,25 @@ class EscrowService
                 throw new LedgerException("Retenção da aula {$session->id} já liquidada como {$hold->state}.");
             }
 
-            if ($trainerGross < 0 || $trainerGross > $hold->amount) {
-                throw new LedgerException("Parte do formador inválida: {$trainerGross} Kz de {$hold->amount} Kz.");
+            if ($providerGross < 0 || $providerGross > $hold->amount) {
+                throw new LedgerException("Parte do formador inválida: {$providerGross} Kz de {$hold->amount} Kz.");
             }
 
             // Libertação total usa os valores gravados na retenção; partes usam a mesma percentagem
-            $split = $trainerGross === $hold->amount
-                ? ['commission' => $hold->commission, 'trainer_net' => $hold->trainer_net]
-                : Commission::split($trainerGross, $hold->commission_percent);
-            $refund = $hold->amount - $trainerGross;
+            $split = $providerGross === $hold->amount
+                ? ['commission' => $hold->commission, 'provider_net' => $hold->provider_net]
+                : Commission::split($providerGross, $hold->commission_percent);
+            $refund = $hold->amount - $providerGross;
 
             $lines = array_filter([
                 Accounts::ESCROW => -$hold->amount,
-                Accounts::trainerAvailable($hold->trainer_profile_id) => $split['trainer_net'],
+                Accounts::providerAvailable($hold->provider_profile_id) => $split['provider_net'],
                 Accounts::PLATFORM_REVENUE => $split['commission'],
                 Accounts::REFUNDS_PAYABLE => $refund,
             ], fn (int $v) => $v !== 0);
 
             $transaction = $this->ledger->post(
-                $refund === 0 ? 'escrow_release' : ($trainerGross === 0 ? 'refund' : 'refund_partial'),
+                $refund === 0 ? 'escrow_release' : ($providerGross === 0 ? 'refund' : 'refund_partial'),
                 "escrow:settle:session:{$session->id}",
                 $lines,
                 $session,
@@ -127,7 +127,7 @@ class EscrowService
             ])->save();
 
             $this->audit->record("escrow.{$outcome}", $hold, [
-                'trainer_net' => $split['trainer_net'], 'commission' => $split['commission'], 'refund' => $refund, 'reason' => $reason,
+                'provider_net' => $split['provider_net'], 'commission' => $split['commission'], 'refund' => $refund, 'reason' => $reason,
             ], $actor?->id);
 
             return $hold;
@@ -141,9 +141,9 @@ class EscrowService
         return $hold;
     }
 
-    public function markDisputed(TrainingSession $session): void
+    public function markDisputed(ServiceJob $session): void
     {
-        EscrowHold::query()->where('training_session_id', $session->id)->where('state', EscrowHold::HELD)->update(['state' => EscrowHold::DISPUTED]);
+        EscrowHold::query()->where('service_job_id', $session->id)->where('state', EscrowHold::HELD)->update(['state' => EscrowHold::DISPUTED]);
     }
 
     /**
@@ -158,26 +158,26 @@ class EscrowService
             return;
         }
 
-        $charge = PaymentCharge::query()->where('training_session_id', $hold->training_session_id)->where('kind', 'charge')->where('status', 'succeeded')->first();
+        $charge = PaymentCharge::query()->where('service_job_id', $hold->service_job_id)->where('kind', 'charge')->where('status', 'succeeded')->first();
         if ($charge === null) {
             Log::error('escrow.refund_without_charge', ['hold_id' => $hold->id]);
 
             return;
         }
 
-        $result = $this->provider->refund((string) $charge->external_reference, $hold->refunded_amount, $key);
+        $result = $this->gateway->refund((string) $charge->external_reference, $hold->refunded_amount, $key);
 
         PaymentCharge::query()->updateOrCreate(['idempotency_key' => $key], [
-            'training_session_id' => $hold->training_session_id,
-            'student_id' => $hold->student_id,
-            'provider' => $this->provider->name(),
+            'service_job_id' => $hold->service_job_id,
+            'client_id' => $hold->client_id,
+            'gateway' => $this->gateway->name(),
             'method' => $charge->method,
             'kind' => 'refund',
             'amount' => $hold->refunded_amount,
             'status' => $result->status,
             'external_reference' => $result->reference,
             'failure_reason' => $result->failureReason,
-            'provider_payload' => $result->payload ?: null,
+            'gateway_payload' => $result->payload ?: null,
         ]);
 
         if (! $result->succeeded()) {

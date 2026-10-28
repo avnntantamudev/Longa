@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Payments\Models;
 
-use App\Modules\Sessions\Models\TrainingSession;
+use App\Modules\Sessions\Models\ServiceJob;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,9 +13,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * Pedido ao gateway (cobrança ou reembolso) e a respetiva resposta.
  *
  * @property int $id
- * @property int $training_session_id
- * @property int $student_id
- * @property string $provider
+ * @property int $service_job_id
+ * @property int $client_id
+ * @property string $gateway
  * @property string $method
  * @property string $kind
  * @property int $amount
@@ -23,22 +23,22 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $external_reference
  * @property string $idempotency_key
  * @property string|null $failure_reason
- * @property array<string, mixed>|null $provider_payload
+ * @property array<string, mixed>|null $gateway_payload
  * @property \Illuminate\Support\Carbon|null $created_at
  */
-#[Fillable(['training_session_id', 'student_id', 'provider', 'method', 'kind', 'amount', 'status', 'external_reference', 'idempotency_key', 'failure_reason', 'provider_payload'])]
+#[Fillable(['service_job_id', 'client_id', 'gateway', 'method', 'kind', 'amount', 'status', 'external_reference', 'idempotency_key', 'failure_reason', 'gateway_payload'])]
 class PaymentCharge extends Model
 {
     protected function casts(): array
     {
-        return ['provider_payload' => 'array', 'amount' => 'integer'];
+        return ['gateway_payload' => 'array', 'amount' => 'integer'];
     }
 
     /**
-     * @return BelongsTo<TrainingSession, $this>
+     * @return BelongsTo<ServiceJob, $this>
      */
     public function session(): BelongsTo
     {
-        return $this->belongsTo(TrainingSession::class, 'training_session_id');
+        return $this->belongsTo(ServiceJob::class, 'service_job_id');
     }
 }

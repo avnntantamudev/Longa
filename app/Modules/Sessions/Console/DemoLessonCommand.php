@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Modules\Sessions\Console;
 
-use App\Modules\Requests\Models\TrainingRequest;
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Requests\Services\Commission;
 use App\Modules\Sessions\Models\Conversation;
-use App\Modules\Sessions\Models\TrainingSession;
+use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Users\Enums\Role;
-use App\Modules\Users\Models\Skill;
-use App\Modules\Users\Models\TrainerProfile;
+use App\Modules\Users\Models\Category;
+use App\Modules\Users\Models\ProviderProfile;
 use App\Modules\Users\Models\User;
 use Illuminate\Console\Command;
 
@@ -21,8 +21,8 @@ use Illuminate\Console\Command;
 class DemoLessonCommand extends Command
 {
     protected $signature = 'longa:demo:lesson
-        {--student=+244900000001 : Telefone do aluno}
-        {--trainer=+244900000002 : Telefone do formador}
+        {--client=+244900000001 : Telefone do aluno}
+        {--provider=+244900000002 : Telefone do formador}
         {--amount=25000 : Valor em Kz}
         {--cash : Pagamento em mão em vez de eletrónico}';
 
@@ -36,31 +36,31 @@ class DemoLessonCommand extends Command
             return self::FAILURE;
         }
 
-        $skill = Skill::query()->firstOrFail();
-        $student = $this->user((string) $this->option('student'), 'Aluno Demo', Role::Student);
-        $trainerUser = $this->user((string) $this->option('trainer'), 'Formador Demo', Role::Trainer);
-        $trainer = $trainerUser->trainerProfile ?? TrainerProfile::factory()->verified()->for($trainerUser)->create();
+        $category = Category::query()->firstOrFail();
+        $client = $this->user((string) $this->option('client'), 'Aluno Demo', Role::Client);
+        $providerUser = $this->user((string) $this->option('provider'), 'Formador Demo', Role::Provider);
+        $provider = $providerUser->providerProfile ?? ProviderProfile::factory()->verified()->for($providerUser)->create();
         $cash = (bool) $this->option('cash');
         $split = Commission::split((int) $this->option('amount'));
 
-        $request = TrainingRequest::factory()->create([
-            'student_id' => $student->id, 'skill_id' => $skill->id, 'amount' => $split['amount'],
+        $request = ServiceRequest::factory()->create([
+            'client_id' => $client->id, 'category_id' => $category->id, 'amount' => $split['amount'],
             'payment_method' => $cash ? 'cash' : 'electronic', 'duration_minutes' => 60,
         ]);
-        $session = TrainingSession::query()->create([
-            'training_request_id' => $request->id, 'student_id' => $student->id, 'trainer_profile_id' => $trainer->id,
-            'skill_id' => $skill->id, 'title' => 'Aula de demonstração', ...$split,
+        $session = ServiceJob::query()->create([
+            'service_request_id' => $request->id, 'client_id' => $client->id, 'provider_profile_id' => $provider->id,
+            'category_id' => $category->id, 'title' => 'Aula de demonstração', ...$split,
             'scheduled_at' => now()->addMinutes(5), 'duration_minutes' => 60, 'payment_method' => $cash ? 'cash' : 'electronic',
             'payment_due_at' => $cash ? null : now()->addMinutes((int) config('longa.session_rules.payment_window_minutes')),
             'modality' => 'in_person', 'municipality' => 'Talatona', 'neighborhood' => 'Talatona', 'latitude' => -8.9167, 'longitude' => 13.1833,
         ]);
         $session->forceFill(['state' => $cash ? 'scheduled' : 'pending_payment'])->save();
-        Conversation::query()->create(['training_session_id' => $session->id]);
+        Conversation::query()->create(['service_job_id' => $session->id]);
 
         $this->info("Aula #{$session->id} criada (".($cash ? 'em mão' : 'pagar em 10 minutos').').');
         $this->table(['Papel', 'Telefone', 'Abrir'], [
-            ['Aluno', $student->phone, url("/aulas/{$session->id}")],
-            ['Formador', $trainerUser->phone, url("/aulas/{$session->id}")],
+            ['Aluno', $client->phone, url("/aulas/{$session->id}")],
+            ['Formador', $providerUser->phone, url("/aulas/{$session->id}")],
         ]);
         $this->line('Fluxo: aluno paga → formador "Iniciar aula" → "Terminar aula" → aluno "Escanear QR para confirmar".');
 

@@ -24,7 +24,7 @@ class OfferExpired implements ShouldBroadcast, ShouldDispatchAfterCommit
 
     public function broadcastOn(): PrivateChannel
     {
-        return new PrivateChannel('user.'.$this->offer->trainer->user_id);
+        return new PrivateChannel('user.'.$this->offer->provider->user_id);
     }
 
     public function broadcastAs(): string
@@ -37,6 +37,6 @@ class OfferExpired implements ShouldBroadcast, ShouldDispatchAfterCommit
      */
     public function broadcastWith(): array
     {
-        return ['offer_id' => $this->offer->id, 'request_id' => $this->offer->training_request_id, 'state' => $this->offer->state->value];
+        return ['offer_id' => $this->offer->id, 'request_id' => $this->offer->service_request_id, 'state' => $this->offer->state->value];
     }
 }

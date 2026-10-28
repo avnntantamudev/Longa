@@ -36,7 +36,7 @@ class Verification extends Model
 {
     public const TYPE_IDENTITY = 'identity_document';
 
-    public const TYPE_SKILL_CERTIFICATE = 'skill_certificate';
+    public const TYPE_CATEGORY_CERTIFICATE = 'category_certificate';
 
     public const STATUS_PENDING = 'pending';
 

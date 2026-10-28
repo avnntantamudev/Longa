@@ -13,6 +13,6 @@ class TestingSeeder extends Seeder
 {
     public function run(): void
     {
-        $this->call([RolesSeeder::class, SkillsSeeder::class]);
+        $this->call([RolesSeeder::class, CategoriesSeeder::class]);
     }
 }

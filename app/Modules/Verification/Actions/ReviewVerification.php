@@ -45,7 +45,7 @@ class ReviewVerification
                 'rejection_reason' => $reason,
             ])->save();
 
-            $profile = $locked->user->trainerProfile;
+            $profile = $locked->user->providerProfile;
             if ($profile !== null && $locked->type === Verification::TYPE_IDENTITY) {
                 $profile->verification_status = $status === Verification::STATUS_APPROVED ? VerificationStatus::Verified : VerificationStatus::Rejected;
                 $profile->save();

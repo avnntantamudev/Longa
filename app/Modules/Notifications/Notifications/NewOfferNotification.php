@@ -96,10 +96,10 @@ class NewOfferNotification extends Notification implements ShouldQueue, SmsNotif
         $request = $this->offer->request;
 
         if ($request->scheduled) {
-            return 'Pedido para '.Formats::when($request->scheduled_at).': '.$request->skill->name.' '.Formats::kwanza($request->amount);
+            return 'Pedido para '.Formats::when($request->scheduled_at).': '.$request->category->name.' '.Formats::kwanza($request->amount);
         }
 
-        return 'Novo pedido a '.Formats::distance($this->offer->distance_m).': '.$request->skill->name.' '.Formats::kwanza($request->amount);
+        return 'Novo pedido a '.Formats::distance($this->offer->distance_m).': '.$request->category->name.' '.Formats::kwanza($request->amount);
     }
 
     private function details(): string
@@ -112,7 +112,7 @@ class NewOfferNotification extends Notification implements ShouldQueue, SmsNotif
     private function allowSmsFallback(User $notifiable): bool
     {
         $key = 'offer-sms:'.$notifiable->id;
-        $max = (int) config('longa.matching.sms_fallback_per_trainer_per_hour');
+        $max = (int) config('longa.matching.sms_fallback_per_provider_per_hour');
 
         if (RateLimiter::tooManyAttempts($key, $max)) {
             return false;

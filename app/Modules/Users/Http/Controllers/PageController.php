@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Users\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Users\Http\Resources\SkillResource;
-use App\Modules\Users\Models\Skill;
+use App\Modules\Users\Http\Resources\CategoryResource;
+use App\Modules\Users\Models\Category;
 use App\Modules\Users\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -22,14 +22,14 @@ class PageController extends Controller
         return Inertia::render('Onboarding/Start');
     }
 
-    public function trainerOnboarding(Request $request): Response
+    public function providerOnboarding(Request $request): Response
     {
         /** @var User $user */
         $user = $request->user();
-        abort_unless($user->trainerProfile !== null, 404);
+        abort_unless($user->providerProfile !== null, 404);
 
-        return Inertia::render('Onboarding/Trainer', [
-            'skills' => SkillResource::collection(Skill::query()->active()->orderBy('category')->orderBy('name')->get())->resolve(),
+        return Inertia::render('Onboarding/Provider', [
+            'categories' => CategoryResource::collection(Category::query()->active()->orderBy('area')->orderBy('name')->get())->resolve(),
             'zones' => config('locations.zones'),
             'provinces' => config('locations.provinces'),
         ]);

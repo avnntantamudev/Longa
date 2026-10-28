@@ -6,7 +6,7 @@ namespace App\Modules\Wallet\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Admin\Reports\ReportExporter;
-use App\Modules\Users\Models\TrainerProfile;
+use App\Modules\Users\Models\ProviderProfile;
 use App\Modules\Users\Models\User;
 use App\Modules\Wallet\Services\EarningsReport;
 use App\Support\Api\ApiException;
@@ -26,7 +26,7 @@ class EarningsController extends Controller
      */
     public function show(Request $request, EarningsReport $report): JsonResponse
     {
-        return response()->json(['data' => $report->build($this->trainer($request), $this->year($request))]);
+        return response()->json(['data' => $report->build($this->provider($request), $this->year($request))]);
     }
 
     /**
@@ -35,10 +35,10 @@ class EarningsController extends Controller
     public function export(Request $request, EarningsReport $report, ReportExporter $exporter): StreamedResponse
     {
         $format = $request->validate(['format' => ['required', 'in:pdf,csv']])['format'];
-        $trainer = $this->trainer($request);
+        $provider = $this->provider($request);
         $year = $this->year($request);
-        $sections = EarningsReport::sections($report->build($trainer, $year));
-        $title = 'Ganhos de '.($trainer->user->name ?? 'formador');
+        $sections = EarningsReport::sections($report->build($provider, $year));
+        $title = 'Ganhos de '.($provider->user->name ?? 'formador');
         $filename = "longa-ganhos-{$year}";
 
         return $format === 'pdf'
@@ -53,11 +53,11 @@ class EarningsController extends Controller
         return max(2024, min((int) now()->year, $year));
     }
 
-    private function trainer(Request $request): TrainerProfile
+    private function provider(Request $request): ProviderProfile
     {
         /** @var User $user */
         $user = $request->user();
 
-        return $user->trainerProfile ?? throw new ApiException('forbidden', 'Só formadores têm relatório de ganhos.', 403);
+        return $user->providerProfile ?? throw new ApiException('forbidden', 'Só formadores têm relatório de ganhos.', 403);
     }
 }

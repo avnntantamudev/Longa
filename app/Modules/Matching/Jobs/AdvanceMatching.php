@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Matching\Jobs;
 
 use App\Modules\Matching\Services\MatchingCoordinator;
-use App\Modules\Requests\Models\TrainingRequest;
+use App\Modules\Requests\Models\ServiceRequest;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
@@ -26,7 +26,7 @@ class AdvanceMatching implements ShouldQueue
 
     public function handle(MatchingCoordinator $coordinator): void
     {
-        $request = TrainingRequest::query()->find($this->requestId);
+        $request = ServiceRequest::query()->find($this->requestId);
 
         if ($request !== null) {
             $coordinator->advance($request);

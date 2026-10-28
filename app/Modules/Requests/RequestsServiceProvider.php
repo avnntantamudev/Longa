@@ -14,8 +14,8 @@ class RequestsServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Publicar/republicar pedidos: por aluno
-        RateLimiter::for('training-requests', fn (Request $request) => Limit::perHour((int) config('longa.requests.create_per_hour'))
-            ->by('training-requests:'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
+        RateLimiter::for('service-requests', fn (Request $request) => Limit::perHour((int) config('longa.requests.create_per_hour'))
+            ->by('service-requests:'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
 
         // Aceitar/recusar ofertas: por formador
         RateLimiter::for('offer-responses', fn (Request $request) => Limit::perMinute((int) config('longa.matching.accept_per_minute'))

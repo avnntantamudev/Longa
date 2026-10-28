@@ -14,7 +14,7 @@ use LogicException;
  * Linha do tempo da aula (só acréscimos): transições, QR, pagamentos, sinais de risco, decisões.
  *
  * @property int $id
- * @property int $training_session_id
+ * @property int $service_job_id
  * @property string $type
  * @property string|null $from_state
  * @property string|null $to_state
@@ -23,7 +23,7 @@ use LogicException;
  * @property \Illuminate\Support\Carbon $created_at
  * @property-read User|null $actor
  */
-#[Fillable(['training_session_id', 'type', 'from_state', 'to_state', 'actor_id', 'metadata'])]
+#[Fillable(['service_job_id', 'type', 'from_state', 'to_state', 'actor_id', 'metadata'])]
 class SessionEvent extends Model
 {
     public const UPDATED_AT = null;

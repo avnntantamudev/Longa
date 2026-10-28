@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Wallet\Ledger;
 
-use App\Modules\Users\Models\TrainerProfile;
+use App\Modules\Users\Models\ProviderProfile;
 
 /**
  * Códigos e tipos das contas do livro-razão (docs/ledger.md).
@@ -15,8 +15,8 @@ use App\Modules\Users\Models\TrainerProfile;
  *  - platform_revenue      comissões do BISCA (positiva)
  *  - refunds_payable       reembolsos decididos à espera do gateway (positiva enquanto por pagar)
  *  - cash_settlement       contrapartida das comissões recebidas em dinheiro (negativa quando recebe)
- *  - trainer_available:{id}       saldo disponível do formador (positivo)
- *  - trainer_commission_due:{id}  comissão em dívida de aulas pagas em dinheiro (negativa = deve)
+ *  - provider_available:{id}       saldo disponível do formador (positivo)
+ *  - provider_commission_due:{id}  comissão em dívida de aulas pagas em dinheiro (negativa = deve)
  */
 final class Accounts
 {
@@ -33,25 +33,25 @@ final class Accounts
     /** Receita das subscrições VIP (separada das comissões) */
     public const SUBSCRIPTION_REVENUE = 'subscription_revenue';
 
-    public const TRAINER_AVAILABLE = 'trainer_available';
+    public const PROVIDER_AVAILABLE = 'provider_available';
 
-    public const TRAINER_COMMISSION_DUE = 'trainer_commission_due';
+    public const PROVIDER_COMMISSION_DUE = 'provider_commission_due';
 
     /** @var list<string> */
     public const SYSTEM = [self::FUNDS_IN, self::ESCROW, self::PLATFORM_REVENUE, self::REFUNDS_PAYABLE, self::CASH_SETTLEMENT, self::SUBSCRIPTION_REVENUE];
 
-    public static function trainerAvailable(TrainerProfile|int $trainer): string
+    public static function providerAvailable(ProviderProfile|int $provider): string
     {
-        return self::TRAINER_AVAILABLE.':'.self::id($trainer);
+        return self::PROVIDER_AVAILABLE.':'.self::id($provider);
     }
 
-    public static function trainerCommissionDue(TrainerProfile|int $trainer): string
+    public static function providerCommissionDue(ProviderProfile|int $provider): string
     {
-        return self::TRAINER_COMMISSION_DUE.':'.self::id($trainer);
+        return self::PROVIDER_COMMISSION_DUE.':'.self::id($provider);
     }
 
     /**
-     * Tipo e dono a partir do código ("trainer_available:12" → [trainer_available, 12]).
+     * Tipo e dono a partir do código ("provider_available:12" → [provider_available, 12]).
      *
      * @return array{0: string, 1: int|null}
      */
@@ -62,8 +62,8 @@ final class Accounts
         return [$type, $owner === null ? null : (int) $owner];
     }
 
-    private static function id(TrainerProfile|int $trainer): int
+    private static function id(ProviderProfile|int $provider): int
     {
-        return $trainer instanceof TrainerProfile ? $trainer->id : $trainer;
+        return $provider instanceof ProviderProfile ? $provider->id : $provider;
     }
 }

@@ -47,7 +47,7 @@ it('recusa valores fora dos limites', function () {
 });
 
 it('só administradores abrem as definições', function () {
-    $this->actingAs(User::factory()->withRole(Role::Trainer)->create())->get('/backoffice/definicoes')->assertForbidden();
+    $this->actingAs(User::factory()->withRole(Role::Provider)->create())->get('/backoffice/definicoes')->assertForbidden();
     loginWeb(User::factory()->withRole(Role::Admin)->create());
     $this->get('/backoffice/definicoes')->assertOk()->assertSee('Preço VIP por ano');
 });

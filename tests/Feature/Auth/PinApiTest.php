@@ -119,9 +119,9 @@ it('repor um PIN esquecido exige ter entrado com o código há pouco', function 
 
 it('pagar exige o PIN confirmado nos últimos 5 minutos', function () {
     $session = acceptedSession();
-    $session->student->forceFill(['pin_hash' => bcrypt('482916')])->save();
+    $session->client->forceFill(['pin_hash' => bcrypt('482916')])->save();
 
-    apiLogin($session->student, pinVerified: false);
+    apiLogin($session->client, pinVerified: false);
     $pay = fn () => test()->postJson("/api/v1/sessions/{$session->id}/pay", ['method' => 'multicaixa_express'], ['Idempotency-Key' => 'pay-'.uniqid()]);
 
     $pay()->assertStatus(423)->assertJsonPath('error.code', 'pin_required');

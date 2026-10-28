@@ -14,22 +14,22 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * Disputa sobre uma aula. Só o admin a resolve; toda a decisão financeira gera uma transação no ledger.
  *
  * @property int $id
- * @property int $training_session_id
+ * @property int $service_job_id
  * @property int $opened_by
  * @property string $reason
  * @property string $description
  * @property string $status
  * @property string|null $resolution
- * @property int|null $trainer_share
+ * @property int|null $provider_share
  * @property string|null $resolution_note
  * @property int|null $resolved_by
  * @property \Illuminate\Support\Carbon|null $resolved_at
  * @property \Illuminate\Support\Carbon $created_at
- * @property-read TrainingSession $session
+ * @property-read ServiceJob $session
  * @property-read User $opener
  * @property-read \Illuminate\Database\Eloquent\Collection<int, DisputeAttachment> $attachments
  */
-#[Fillable(['training_session_id', 'opened_by', 'reason', 'description'])]
+#[Fillable(['service_job_id', 'opened_by', 'reason', 'description'])]
 class Dispute extends Model
 {
     public const OPEN = 'open';
@@ -46,11 +46,11 @@ class Dispute extends Model
     }
 
     /**
-     * @return BelongsTo<TrainingSession, $this>
+     * @return BelongsTo<ServiceJob, $this>
      */
     public function session(): BelongsTo
     {
-        return $this->belongsTo(TrainingSession::class, 'training_session_id');
+        return $this->belongsTo(ServiceJob::class, 'service_job_id');
     }
 
     /**

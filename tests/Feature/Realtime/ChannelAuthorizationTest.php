@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use App\Modules\Requests\Models\TrainingRequest;
-use App\Modules\Sessions\Models\TrainingSession;
-use App\Modules\Users\Models\TrainerProfile;
+use App\Modules\Requests\Models\ServiceRequest;
+use App\Modules\Sessions\Models\ServiceJob;
+use App\Modules\Users\Models\ProviderProfile;
 use App\Modules\Users\Models\User;
 
 beforeEach(function () {
@@ -25,13 +25,13 @@ function authorizeChannel(string $channel): Illuminate\Testing\TestResponse
     return test()->postJson('/api/v1/broadcasting/auth', ['socket_id' => '1234.5678', 'channel_name' => 'private-'.$channel]);
 }
 
-function sessionBetween(User $student, TrainerProfile $trainer): TrainingSession
+function sessionBetween(User $client, ProviderProfile $provider): ServiceJob
 {
-    $request = TrainingRequest::factory()->create(['student_id' => $student->id]);
+    $request = ServiceRequest::factory()->create(['client_id' => $client->id]);
 
-    return TrainingSession::query()->create([
-        'training_request_id' => $request->id, 'student_id' => $student->id, 'trainer_profile_id' => $trainer->id,
-        'skill_id' => $request->skill_id, 'title' => 'Aula', 'amount' => 25000, 'commission' => 3750, 'trainer_net' => 21250,
+    return ServiceJob::query()->create([
+        'service_request_id' => $request->id, 'client_id' => $client->id, 'provider_profile_id' => $provider->id,
+        'category_id' => $request->category_id, 'title' => 'Aula', 'amount' => 25000, 'commission' => 3750, 'provider_net' => 21250,
         'scheduled_at' => now()->addDay(), 'modality' => 'in_person', 'municipality' => 'Talatona', 'neighborhood' => 'Talatona',
         'latitude' => -8.9167, 'longitude' => 13.1833,
     ]);
@@ -49,26 +49,26 @@ it('autoriza só o próprio canal de utilizador', function () {
 });
 
 it('autoriza o canal do pedido só ao aluno que o publicou', function () {
-    $request = TrainingRequest::factory()->create();
+    $request = ServiceRequest::factory()->create();
 
-    apiLogin($request->student);
+    apiLogin($request->client);
     authorizeChannel("request.{$request->id}")->assertOk();
 
-    apiLogin(TrainerProfile::factory()->create()->user);
+    apiLogin(ProviderProfile::factory()->create()->user);
     authorizeChannel("request.{$request->id}")->assertForbidden();
 });
 
 it('autoriza o canal da aula só ao aluno e ao formador da aula', function () {
-    $student = User::factory()->create();
-    $trainer = TrainerProfile::factory()->create();
-    $session = sessionBetween($student, $trainer);
+    $client = User::factory()->create();
+    $provider = ProviderProfile::factory()->create();
+    $session = sessionBetween($client, $provider);
 
-    apiLogin($student);
+    apiLogin($client);
     authorizeChannel("session.{$session->id}")->assertOk();
 
-    apiLogin($trainer->user);
+    apiLogin($provider->user);
     authorizeChannel("session.{$session->id}")->assertOk();
 
-    apiLogin(TrainerProfile::factory()->create()->user);
+    apiLogin(ProviderProfile::factory()->create()->user);
     authorizeChannel("session.{$session->id}")->assertForbidden();
 });

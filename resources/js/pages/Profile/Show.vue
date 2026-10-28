@@ -19,9 +19,9 @@ interface Session {
 const page = usePage();
 const user = computed(() => page.props.auth.user);
 const sessions = ref<Session[]>([]);
-const trainerStatus = ref<{ completed: boolean; verification: string } | null>(null);
+const providerStatus = ref<{ completed: boolean; verification: string } | null>(null);
 
-const roleLabels: Record<RoleName, string> = { student: 'Aluno', trainer: 'Formador', company_rh: 'Empresa (RH)', admin: 'Administrador' };
+const roleLabels: Record<RoleName, string> = { client: 'Aluno', provider: 'Formador', company_rh: 'Empresa (RH)', admin: 'Administrador' };
 const verificationLabels: Record<string, string> = {
     unverified: 'Por verificar',
     pending: 'Verificação em análise',
@@ -52,9 +52,9 @@ async function logoutAll(): Promise<void> {
 
 onMounted(async () => {
     await loadSessions();
-    if (user.value?.roles.includes('trainer')) {
-        const { data } = await api.get<{ data: { onboarding: { completed: boolean }; verification_status: string } }>('/me/trainer-profile');
-        trainerStatus.value = { completed: data.onboarding.completed, verification: data.verification_status };
+    if (user.value?.roles.includes('provider')) {
+        const { data } = await api.get<{ data: { onboarding: { completed: boolean }; verification_status: string } }>('/me/provider-profile');
+        providerStatus.value = { completed: data.onboarding.completed, verification: data.verification_status };
     }
 });
 </script>
@@ -63,7 +63,7 @@ onMounted(async () => {
     <Head title="Perfil" />
 
     <section v-if="user" class="card grid gap-4">
-        <PhotoPicker :name="user.name" :src="user.photo_url" :required="user.roles.includes('trainer')" />
+        <PhotoPicker :name="user.name" :src="user.photo_url" :required="user.roles.includes('provider')" />
         <div class="min-w-0 flex-1">
             <p class="truncate text-title">{{ user.name }}</p>
             <p class="text-caption text-ink-muted">{{ user.phone }}</p>
@@ -77,14 +77,14 @@ onMounted(async () => {
 
     <SecuritySettings />
 
-    <section v-if="trainerStatus" class="card mt-4">
+    <section v-if="providerStatus" class="card mt-4">
         <div class="flex items-center justify-between gap-3">
             <div>
                 <p class="font-semibold">Perfil de formador</p>
-                <p class="text-caption text-ink-muted">{{ trainerStatus.completed ? 'Perfil completo' : 'Faltam dados no perfil' }}</p>
+                <p class="text-caption text-ink-muted">{{ providerStatus.completed ? 'Perfil completo' : 'Faltam dados no perfil' }}</p>
             </div>
-            <span class="badge" :class="trainerStatus.verification === 'verified' ? 'badge-success' : 'badge-warning'">
-                {{ verificationLabels[trainerStatus.verification] }}
+            <span class="badge" :class="providerStatus.verification === 'verified' ? 'badge-success' : 'badge-warning'">
+                {{ verificationLabels[providerStatus.verification] }}
             </span>
         </div>
         <Link href="/onboarding/formador" class="btn-secondary mt-3 w-full">Editar perfil de formador</Link>

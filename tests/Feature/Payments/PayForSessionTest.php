@@ -18,7 +18,7 @@ function pay(int $sessionId, string $key = 'pay-session-0001'): Illuminate\Testi
 
 it('o aluno paga: o valor fica em escrow e a aula fica agendada', function () {
     $session = acceptedSession();
-    apiLogin($session->student);
+    apiLogin($session->client);
 
     pay($session->id)->assertOk()->assertJsonPath('data.state', 'scheduled');
 
@@ -31,7 +31,7 @@ it('o aluno paga: o valor fica em escrow e a aula fica agendada', function () {
 
 it('pagar duas vezes não cobra nem retém duas vezes (mesma chave ou chave nova)', function () {
     $session = acceptedSession();
-    apiLogin($session->student);
+    apiLogin($session->client);
 
     pay($session->id, 'pay-key-aaaa1')->assertOk();
     pay($session->id, 'pay-key-aaaa1')->assertOk()->assertHeader('Idempotent-Replayed', 'true');
@@ -45,8 +45,8 @@ it('pagar duas vezes não cobra nem retém duas vezes (mesma chave ou chave nova
 
 it('pagamento recusado: a aula passa a payment_failed e nada entra no ledger', function () {
     $session = acceptedSession();
-    $session->student->forceFill(['phone' => '+244923450000'])->save(); // o mock recusa telefones terminados em 0000
-    apiLogin($session->student);
+    $session->client->forceFill(['phone' => '+244923450000'])->save(); // o mock recusa telefones terminados em 0000
+    apiLogin($session->client);
 
     pay($session->id)->assertStatus(402)->assertJsonPath('error.code', 'payment_failed');
 
@@ -58,7 +58,7 @@ it('fora da janela de pagamento: recusa e a regra R3 liberta o formador', functi
     $session = acceptedSession();
 
     $this->travel(11)->minutes();
-    apiLogin($session->student); // PIN confirmado agora (o anterior teria expirado com a viagem)
+    apiLogin($session->client); // PIN confirmado agora (o anterior teria expirado com a viagem)
     pay($session->id)->assertStatus(410)->assertJsonPath('error.code', 'payment_window_expired');
 
     $this->artisan('longa:sessions:tick')->assertSuccessful();
@@ -73,13 +73,13 @@ it('só o aluno da aula paga e aulas em dinheiro não se pagam aqui', function (
     pay($session->id)->assertForbidden();
 
     $cash = acceptedSession('cash');
-    apiLogin($cash->student);
+    apiLogin($cash->client);
     pay($cash->id, 'pay-cash-00001')->assertStatus(409)->assertJsonPath('error.code', 'cash_session');
 });
 
 it('exige a Idempotency-Key', function () {
     $session = acceptedSession();
-    apiLogin($session->student);
+    apiLogin($session->client);
 
     $this->postJson("/api/v1/sessions/{$session->id}/pay", ['method' => 'multicaixa_express'])->assertStatus(400);
 });

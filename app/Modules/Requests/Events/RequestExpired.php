@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Requests\Events;
 
-use App\Modules\Requests\Models\TrainingRequest;
+use App\Modules\Requests\Models\ServiceRequest;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
@@ -21,9 +21,9 @@ class RequestExpired implements ShouldBroadcast, ShouldDispatchAfterCommit
     public string $broadcastQueue = 'notifications';
 
     /**
-     * @param  'no_trainers'|'timeout'  $reason
+     * @param  'no_providers'|'timeout'  $reason
      */
-    public function __construct(public readonly TrainingRequest $request, public readonly string $reason) {}
+    public function __construct(public readonly ServiceRequest $request, public readonly string $reason) {}
 
     public function broadcastOn(): PrivateChannel
     {

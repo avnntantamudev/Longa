@@ -10,7 +10,7 @@ declare(strict_types=1);
 */
 
 use App\Modules\Sessions\Actions\ConfirmSession;
-use App\Modules\Sessions\Models\TrainingSession;
+use App\Modules\Sessions\Models\ServiceJob;
 use App\Support\Api\ApiException;
 use Illuminate\Contracts\Console\Kernel;
 
@@ -21,14 +21,14 @@ $app->make(Kernel::class)->bootstrap();
 
 [$sessionId, $token, $startAt] = [(int) $argv[1], (string) $argv[2], (float) $argv[3]];
 
-$session = TrainingSession::query()->with('student')->findOrFail($sessionId);
+$session = ServiceJob::query()->with('client')->findOrFail($sessionId);
 
 while (microtime(true) < $startAt) {
     usleep(500);
 }
 
 try {
-    $confirmed = $app->make(ConfirmSession::class)->handle($session, $session->student, $token, null);
+    $confirmed = $app->make(ConfirmSession::class)->handle($session, $session->client, $token, null);
     echo json_encode(['ok' => true, 'state' => $confirmed->state->value]);
 } catch (ApiException $e) {
     echo json_encode(['ok' => false, 'code' => $e->errorCode]);

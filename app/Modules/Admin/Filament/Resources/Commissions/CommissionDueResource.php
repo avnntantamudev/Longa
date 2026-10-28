@@ -7,7 +7,7 @@ namespace App\Modules\Admin\Filament\Resources\Commissions;
 use App\Modules\Admin\Filament\Resources\Commissions\Pages\ListCommissionsDue;
 use App\Modules\Admin\Filament\Support\SessionSections;
 use App\Modules\Payments\Services\CommissionDebts;
-use App\Modules\Users\Models\TrainerProfile;
+use App\Modules\Users\Models\ProviderProfile;
 use App\Modules\Users\Models\User;
 use App\Modules\Wallet\Ledger\Accounts;
 use App\Modules\Wallet\Ledger\LedgerException;
@@ -50,7 +50,7 @@ class CommissionDueResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->where('type', 'trainer_commission_due')
+            ->where('type', 'provider_commission_due')
             ->whereHas('balance', fn (Builder $q) => $q->where('balance', '<', 0))
             ->with('balance');
     }
@@ -64,10 +64,10 @@ class CommissionDueResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('trainer')->label('Formador')
-                    ->state(fn (LedgerAccount $record) => self::trainer($record)?->user->name ?? '—'),
+                TextColumn::make('provider')->label('Formador')
+                    ->state(fn (LedgerAccount $record) => self::provider($record)?->user->name ?? '—'),
                 TextColumn::make('phone')->label('Telefone')
-                    ->state(fn (LedgerAccount $record) => self::trainer($record)?->user->phone ?? '—'),
+                    ->state(fn (LedgerAccount $record) => self::provider($record)?->user->phone ?? '—'),
                 TextColumn::make('balance.balance')->label('Em dívida')
                     ->formatStateUsing(fn (int $state) => SessionSections::kz(-$state)),
             ])
@@ -86,12 +86,12 @@ class CommissionDueResource extends Resource
                         Textarea::make('note')->label('Nota (opcional)')->maxLength(500),
                     ])
                     ->action(function (LedgerAccount $record, array $data) {
-                        [, $trainerId] = Accounts::parse($record->code);
+                        [, $providerId] = Accounts::parse($record->code);
                         /** @var User $admin */
                         $admin = Auth::user();
 
                         try {
-                            app(CommissionDebts::class)->receive((int) $trainerId, (int) $data['amount'], (string) $data['key'], $admin, $data['note'] ?? null);
+                            app(CommissionDebts::class)->receive((int) $providerId, (int) $data['amount'], (string) $data['key'], $admin, $data['note'] ?? null);
                         } catch (LedgerException $e) {
                             Notification::make()->danger()->title('Não registado')->body($e->getMessage())->send();
 
@@ -103,11 +103,11 @@ class CommissionDueResource extends Resource
             ]);
     }
 
-    private static function trainer(LedgerAccount $account): ?TrainerProfile
+    private static function provider(LedgerAccount $account): ?ProviderProfile
     {
         [, $id] = Accounts::parse($account->code);
 
-        return TrainerProfile::query()->with('user')->find($id);
+        return ProviderProfile::query()->with('user')->find($id);
     }
 
     public static function getPages(): array

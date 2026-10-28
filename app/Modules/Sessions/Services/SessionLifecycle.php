@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Sessions\Services;
 
 use App\Modules\Sessions\Enums\SessionState;
+use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Sessions\Models\SessionEvent;
-use App\Modules\Sessions\Models\TrainingSession;
 use App\Modules\Users\Models\User;
 
 /**
@@ -21,13 +21,13 @@ class SessionLifecycle
      * @param  array<string, mixed>  $metadata
      */
     public function transition(
-        TrainingSession $session,
+        ServiceJob $session,
         SessionState $to,
         string $event,
         ?User $actor = null,
         array $metadata = [],
         array $attributes = [],
-    ): TrainingSession {
+    ): ServiceJob {
         $from = $session->state;
         $session->transitionTo($to, $attributes);
 
@@ -42,7 +42,7 @@ class SessionLifecycle
      * @param  array<string, mixed>  $metadata
      */
     public function record(
-        TrainingSession $session,
+        ServiceJob $session,
         string $event,
         ?User $actor = null,
         array $metadata = [],
@@ -50,7 +50,7 @@ class SessionLifecycle
         ?SessionState $to = null,
     ): SessionEvent {
         return SessionEvent::query()->create([
-            'training_session_id' => $session->id,
+            'service_job_id' => $session->id,
             'type' => $event,
             'from_state' => $from?->value,
             'to_state' => $to?->value,

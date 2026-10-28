@@ -10,8 +10,8 @@ type ProfileKey = Exclude<RoleName, 'admin'>;
 
 const page = usePage();
 const profiles: Array<{ key: ProfileKey; title: string; description: string; icon: IconName }> = [
-    { key: 'student', title: 'Sou Aluno', description: 'Quero encontrar formadores e marcar aulas.', icon: 'search' },
-    { key: 'trainer', title: 'Sou Formador', description: 'Quero ensinar e receber pelas minhas aulas.', icon: 'user' },
+    { key: 'client', title: 'Sou Aluno', description: 'Quero encontrar formadores e marcar aulas.', icon: 'search' },
+    { key: 'provider', title: 'Sou Formador', description: 'Quero ensinar e receber pelas minhas aulas.', icon: 'user' },
     { key: 'company_rh', title: 'Sou Empresa (RH)', description: 'Quero formar a minha equipa.', icon: 'calendar' },
 ];
 
@@ -34,7 +34,7 @@ async function submit(): Promise<void> {
     try {
         await api.post('/onboarding', form);
         // Próximo passo conforme o perfil escolhido
-        const next = form.profiles.includes('trainer') ? '/onboarding/formador' : form.profiles.includes('company_rh') ? '/onboarding/empresa' : '/';
+        const next = form.profiles.includes('provider') ? '/onboarding/formador' : form.profiles.includes('company_rh') ? '/onboarding/empresa' : '/';
         router.visit(next);
     } catch (error) {
         if (error instanceof ApiError) {

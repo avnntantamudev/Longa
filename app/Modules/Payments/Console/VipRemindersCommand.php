@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Payments\Console;
 
 use App\Modules\Notifications\Notifications\VipNotification;
-use App\Modules\Payments\Models\TrainerSubscription;
+use App\Modules\Payments\Models\ProviderSubscription;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 
@@ -26,11 +26,11 @@ class VipRemindersCommand extends Command
         $sent = 0;
 
         // Última subscrição ativa de cada formador = fim do VIP
-        $latest = TrainerSubscription::query()
-            ->where('status', TrainerSubscription::ACTIVE)
-            ->whereIn('id', TrainerSubscription::query()->selectRaw('MAX(id)')->where('status', TrainerSubscription::ACTIVE)->groupBy('trainer_profile_id'))
+        $latest = ProviderSubscription::query()
+            ->where('status', ProviderSubscription::ACTIVE)
+            ->whereIn('id', ProviderSubscription::query()->selectRaw('MAX(id)')->where('status', ProviderSubscription::ACTIVE)->groupBy('provider_profile_id'))
             ->where('ends_at', '>', now()->subDays(2))
-            ->with('trainer.user')
+            ->with('provider.user')
             ->get();
 
         foreach ($latest as $subscription) {
@@ -44,7 +44,7 @@ class VipRemindersCommand extends Command
                 continue;
             }
 
-            $subscription->trainer->user->notify(new VipNotification($due === 0 ? VipNotification::ENDED : VipNotification::ENDING, $end, max(0, $left)));
+            $subscription->provider->user->notify(new VipNotification($due === 0 ? VipNotification::ENDED : VipNotification::ENDING, $end, max(0, $left)));
             // Marca também os avisos maiores (quem renovou tarde não recebe o de 30 dias depois do de 7)
             $subscription->forceFill(['reminders_sent' => array_values(array_unique([...$already, ...array_filter($days, fn (int $d) => $d >= $due), $due]))])->save();
             $sent++;

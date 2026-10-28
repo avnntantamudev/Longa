@@ -19,7 +19,7 @@ export interface Session {
     state_label: string;
     actions: SessionAction[];
     title: string;
-    skill: string;
+    category: string;
     scheduled_at: string;
     ends_at: string | null;
     duration_minutes: number;
@@ -38,10 +38,10 @@ export interface Session {
     longitude: number;
     amount: number;
     commission?: number;
-    trainer_net?: number;
-    role: 'student' | 'trainer';
-    student?: { name: string | null; photo_url: string | null; photo_thumb_url: string | null };
-    trainer?: { name: string | null; photo_url: string | null; photo_thumb_url: string | null; bio: string | null; years_experience: number | null; neighborhood: string | null; verified: boolean; vip: boolean; score: number };
+    provider_net?: number;
+    role: 'client' | 'provider';
+    client?: { name: string | null; photo_url: string | null; photo_thumb_url: string | null };
+    provider?: { name: string | null; photo_url: string | null; photo_thumb_url: string | null; bio: string | null; years_experience: number | null; neighborhood: string | null; verified: boolean; vip: boolean; score: number };
 }
 
 export interface QrToken {
@@ -62,14 +62,14 @@ export interface SessionEventItem {
     type: string;
     from_state: string | null;
     to_state: string | null;
-    by: 'student' | 'trainer' | 'admin' | 'system';
+    by: 'client' | 'provider' | 'admin' | 'system';
     created_at: string;
 }
 
 /** Badge por estado (classes do kit) */
 export function stateBadge(state: string): string {
     if (['completed'].includes(state)) return 'badge-success';
-    if (['disputed', 'no_show_trainer', 'no_show_student', 'payment_failed'].includes(state)) return 'badge-warning';
+    if (['disputed', 'no_show_provider', 'no_show_client', 'payment_failed'].includes(state)) return 'badge-warning';
     if (['pending_payment', 'awaiting_confirmation', 'in_progress'].includes(state)) return 'badge-brand';
     return 'badge-neutral';
 }

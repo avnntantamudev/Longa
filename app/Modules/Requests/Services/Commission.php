@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Requests\Services;
 
 use App\Modules\Payments\Services\VipSubscriptions;
-use App\Modules\Users\Models\TrainerProfile;
+use App\Modules\Users\Models\ProviderProfile;
 use App\Support\Settings\PlatformSettings;
 
 /**
@@ -17,34 +17,34 @@ use App\Support\Settings\PlatformSettings;
 final class Commission
 {
     /**
-     * @return array{amount: int, commission: int, trainer_net: int}
+     * @return array{amount: int, commission: int, provider_net: int}
      */
     public static function split(int $amount, ?int $percent = null): array
     {
         $percent ??= app(PlatformSettings::class)->int('commission_percent');
         $commission = intdiv($amount * $percent + 50, 100);
 
-        return ['amount' => $amount, 'commission' => $commission, 'trainer_net' => $amount - $commission];
+        return ['amount' => $amount, 'commission' => $commission, 'provider_net' => $amount - $commission];
     }
 
     /**
      * Percentagem a aplicar a este formador agora: reduzida enquanto for VIP.
      */
-    public static function percentFor(TrainerProfile|int $trainer): int
+    public static function percentFor(ProviderProfile|int $provider): int
     {
         $settings = app(PlatformSettings::class);
 
-        return app(VipSubscriptions::class)->isVip($trainer)
+        return app(VipSubscriptions::class)->isVip($provider)
             ? $settings->int('vip_commission_percent')
             : $settings->int('commission_percent');
     }
 
     /**
-     * @return array{amount: int, commission: int, trainer_net: int, percent: int}
+     * @return array{amount: int, commission: int, provider_net: int, percent: int}
      */
-    public static function splitFor(int $amount, TrainerProfile|int $trainer): array
+    public static function splitFor(int $amount, ProviderProfile|int $provider): array
     {
-        $percent = self::percentFor($trainer);
+        $percent = self::percentFor($provider);
 
         return [...self::split($amount, $percent), 'percent' => $percent];
     }

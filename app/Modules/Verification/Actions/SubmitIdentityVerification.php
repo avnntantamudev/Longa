@@ -25,7 +25,7 @@ class SubmitIdentityVerification
      */
     public function handle(User $user, string $documentNumber, array $files): Verification
     {
-        $profile = $user->trainerProfile
+        $profile = $user->providerProfile
             ?? throw new ApiException('profile_missing', 'Só formadores podem submeter verificação.', 409);
 
         if ($user->photo === null) {

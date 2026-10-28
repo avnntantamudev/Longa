@@ -8,7 +8,7 @@ use App\Modules\Payments\Services\SessionSettlement;
 use App\Modules\Sessions\Enums\SessionState;
 use App\Modules\Sessions\Events\DisputeResolved;
 use App\Modules\Sessions\Models\Dispute;
-use App\Modules\Sessions\Models\TrainingSession;
+use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Sessions\Services\SessionLifecycle;
 use App\Modules\Users\Models\User;
 use App\Support\Api\ApiException;
@@ -36,13 +36,13 @@ class ResolveDispute
         private readonly AuditLogger $audit,
     ) {}
 
-    public function handle(Dispute $dispute, User $admin, string $decision, ?int $trainerShare, string $note): Dispute
+    public function handle(Dispute $dispute, User $admin, string $decision, ?int $providerShare, string $note): Dispute
     {
-        return DB::transaction(function () use ($dispute, $admin, $decision, $trainerShare, $note) {
+        return DB::transaction(function () use ($dispute, $admin, $decision, $providerShare, $note) {
             /** @var Dispute $locked */
             $locked = Dispute::query()->lockForUpdate()->findOrFail($dispute->id);
-            /** @var TrainingSession $session */
-            $session = TrainingSession::query()->lockForUpdate()->findOrFail($locked->training_session_id);
+            /** @var ServiceJob $session */
+            $session = ServiceJob::query()->lockForUpdate()->findOrFail($locked->service_job_id);
 
             if ($locked->status === Dispute::RESOLVED) {
                 if ($locked->resolution === $decision) {
@@ -55,12 +55,12 @@ class ResolveDispute
             $gross = match ($decision) {
                 self::RELEASE => $session->amount,
                 self::REFUND => 0,
-                self::PARTIAL => $trainerShare ?? throw new ApiException('validation_failed', 'Os dados enviados são inválidos.', 422, ['trainer_share' => ['Indique a parte do formador.']]),
+                self::PARTIAL => $providerShare ?? throw new ApiException('validation_failed', 'Os dados enviados são inválidos.', 422, ['provider_share' => ['Indique a parte do formador.']]),
                 default => throw new ApiException('validation_failed', 'Os dados enviados são inválidos.', 422, ['decision' => ['Decisão inválida.']]),
             };
 
             if ($decision === self::PARTIAL && ($gross <= 0 || $gross >= $session->amount)) {
-                throw new ApiException('validation_failed', 'Os dados enviados são inválidos.', 422, ['trainer_share' => ['A parte do formador tem de estar entre 1 e '.($session->amount - 1).' Kz.']]);
+                throw new ApiException('validation_failed', 'Os dados enviados são inválidos.', 422, ['provider_share' => ['A parte do formador tem de estar entre 1 e '.($session->amount - 1).' Kz.']]);
             }
 
             $target = match ($decision) {
@@ -70,7 +70,7 @@ class ResolveDispute
             };
 
             $this->lifecycle->transition($session, $target, 'dispute_resolved', $admin, [
-                'dispute_id' => $locked->id, 'decision' => $decision, 'trainer_share' => $gross, 'note' => $note,
+                'dispute_id' => $locked->id, 'decision' => $decision, 'provider_share' => $gross, 'note' => $note,
             ], $target === SessionState::Completed ? ['confirmed_at' => now()] : []);
 
             $this->settlement->split($session, $gross, $admin, "dispute:{$locked->id}:{$decision}");
@@ -78,14 +78,14 @@ class ResolveDispute
             $locked->forceFill([
                 'status' => Dispute::RESOLVED,
                 'resolution' => $decision,
-                'trainer_share' => $gross,
+                'provider_share' => $gross,
                 'resolution_note' => $note,
                 'resolved_by' => $admin->id,
                 'resolved_at' => now(),
             ])->save();
 
             DisputeResolved::dispatch($session, $locked);
-            $this->audit->record('disputes.resolved', $locked, ['decision' => $decision, 'trainer_share' => $gross, 'session_id' => $session->id], $admin->id);
+            $this->audit->record('disputes.resolved', $locked, ['decision' => $decision, 'provider_share' => $gross, 'session_id' => $session->id], $admin->id);
 
             return $locked;
         });

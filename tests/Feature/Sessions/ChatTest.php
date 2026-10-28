@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use App\Modules\Requests\Models\TrainingRequest;
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Sessions\Events\MessageSent;
 use App\Modules\Sessions\Models\Conversation;
-use App\Modules\Sessions\Models\TrainingSession;
+use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Users\Enums\Role;
-use App\Modules\Users\Models\TrainerProfile;
+use App\Modules\Users\Models\ProviderProfile;
 use App\Modules\Users\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Event;
@@ -15,39 +15,39 @@ use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
     Storage::fake('local');
-    $this->student = User::factory()->withRole(Role::Student)->create();
-    $this->trainer = TrainerProfile::factory()->verified()->create();
-    $request = TrainingRequest::factory()->create(['student_id' => $this->student->id]);
-    $this->session = TrainingSession::query()->create([
-        'training_request_id' => $request->id, 'student_id' => $this->student->id, 'trainer_profile_id' => $this->trainer->id,
-        'skill_id' => $request->skill_id, 'title' => 'Aula de SGME', 'amount' => 25000, 'commission' => 3750, 'trainer_net' => 21250,
+    $this->client = User::factory()->withRole(Role::Client)->create();
+    $this->provider = ProviderProfile::factory()->verified()->create();
+    $request = ServiceRequest::factory()->create(['client_id' => $this->client->id]);
+    $this->session = ServiceJob::query()->create([
+        'service_request_id' => $request->id, 'client_id' => $this->client->id, 'provider_profile_id' => $this->provider->id,
+        'category_id' => $request->category_id, 'title' => 'Aula de SGME', 'amount' => 25000, 'commission' => 3750, 'provider_net' => 21250,
         'scheduled_at' => now()->addDay(), 'modality' => 'in_person', 'municipality' => 'Talatona', 'neighborhood' => 'Talatona',
         'latitude' => -8.9167, 'longitude' => 13.1833,
     ]);
-    Conversation::query()->create(['training_session_id' => $this->session->id]);
+    Conversation::query()->create(['service_job_id' => $this->session->id]);
 });
 
 it('troca mensagens de texto em tempo real entre aluno e formador', function () {
     Event::fake([MessageSent::class]);
 
-    apiLogin($this->student);
+    apiLogin($this->client);
     $this->postJson("/api/v1/sessions/{$this->session->id}/messages", ['body' => 'Olá Carlos! Pronto para a aula?'])->assertCreated();
 
-    apiLogin($this->trainer->user);
+    apiLogin($this->provider->user);
     $this->postJson("/api/v1/sessions/{$this->session->id}/messages", ['body' => 'Bom dia! Sim.'])->assertCreated();
 
     $this->getJson("/api/v1/sessions/{$this->session->id}/messages")
         ->assertOk()
         ->assertJsonCount(2, 'data')
         ->assertJsonPath('data.0.body', 'Olá Carlos! Pronto para a aula?')
-        ->assertJsonPath('data.1.sender.id', $this->trainer->user_id);
+        ->assertJsonPath('data.1.sender.id', $this->provider->user_id);
 
     Event::assertDispatchedTimes(MessageSent::class, 2);
     Event::assertDispatched(MessageSent::class, fn ($e) => $e->broadcastOn()->name === "private-session.{$this->session->id}");
 });
 
 it('não duplica uma mensagem reenviada com o mesmo client_id', function () {
-    apiLogin($this->student);
+    apiLogin($this->client);
 
     $a = $this->postJson("/api/v1/sessions/{$this->session->id}/messages", ['body' => 'Olá', 'client_id' => 'c-1'])->json('data.id');
     $b = $this->postJson("/api/v1/sessions/{$this->session->id}/messages", ['body' => 'Olá', 'client_id' => 'c-1'])->json('data.id');
@@ -57,7 +57,7 @@ it('não duplica uma mensagem reenviada com o mesmo client_id', function () {
 });
 
 it('envia PDF para o disco privado e dá acesso por link assinado temporário', function () {
-    apiLogin($this->trainer->user);
+    apiLogin($this->provider->user);
 
     $id = $this->post("/api/v1/sessions/{$this->session->id}/messages", [
         'attachment' => UploadedFile::fake()->createWithContent('Relatorio_SGME.pdf', "%PDF-1.4\n%fake pdf\n"),
@@ -77,7 +77,7 @@ it('envia PDF para o disco privado e dá acesso por link assinado temporário', 
 });
 
 it('recusa ficheiros que não são PDF, mesmo com a extensão .pdf', function () {
-    apiLogin($this->student);
+    apiLogin($this->client);
 
     $this->post("/api/v1/sessions/{$this->session->id}/messages", [
         'attachment' => UploadedFile::fake()->createWithContent('falso.pdf', '<?php echo "não sou um pdf";'),
@@ -89,7 +89,7 @@ it('recusa ficheiros que não são PDF, mesmo com a extensão .pdf', function ()
 });
 
 it('esconde telefones e e-mails escritos no chat', function () {
-    apiLogin($this->student);
+    apiLogin($this->client);
 
     $this->postJson("/api/v1/sessions/{$this->session->id}/messages", ['body' => 'Liga-me: +244 923 456 789 ou 923-111-222, ou maria@exemplo.ao'])
         ->assertCreated()
@@ -97,7 +97,7 @@ it('esconde telefones e e-mails escritos no chat', function () {
 });
 
 it('só os participantes veem a aula e o chat', function () {
-    apiLogin(TrainerProfile::factory()->create()->user);
+    apiLogin(ProviderProfile::factory()->create()->user);
 
     $this->getJson("/api/v1/sessions/{$this->session->id}")->assertForbidden();
     $this->getJson("/api/v1/sessions/{$this->session->id}/messages")->assertForbidden();
@@ -105,16 +105,16 @@ it('só os participantes veem a aula e o chat', function () {
 });
 
 it('o aluno vê os dados do formador e o formador vê o local exato e quanto recebe', function () {
-    apiLogin($this->student);
-    $asStudent = $this->getJson("/api/v1/sessions/{$this->session->id}")->assertOk()->json('data');
-    expect($asStudent['trainer']['name'])->toBe($this->trainer->user->name)
-        ->and($asStudent)->not->toHaveKeys(['trainer_net', 'commission'])
-        ->and(json_encode($asStudent))->not->toContain($this->trainer->user->phone);
+    apiLogin($this->client);
+    $asClient = $this->getJson("/api/v1/sessions/{$this->session->id}")->assertOk()->json('data');
+    expect($asClient['provider']['name'])->toBe($this->provider->user->name)
+        ->and($asClient)->not->toHaveKeys(['provider_net', 'commission'])
+        ->and(json_encode($asClient))->not->toContain($this->provider->user->phone);
 
-    apiLogin($this->trainer->user);
-    $asTrainer = $this->getJson("/api/v1/sessions/{$this->session->id}")->assertOk()->json('data');
-    expect($asTrainer['trainer_net'])->toBe(21250)
-        ->and($asTrainer['latitude'])->toBe(-8.9167)
-        ->and($asTrainer['student']['name'])->toBe($this->student->name)
-        ->and(json_encode($asTrainer))->not->toContain($this->student->phone);
+    apiLogin($this->provider->user);
+    $asProvider = $this->getJson("/api/v1/sessions/{$this->session->id}")->assertOk()->json('data');
+    expect($asProvider['provider_net'])->toBe(21250)
+        ->and($asProvider['latitude'])->toBe(-8.9167)
+        ->and($asProvider['client']['name'])->toBe($this->client->name)
+        ->and(json_encode($asProvider))->not->toContain($this->client->phone);
 });

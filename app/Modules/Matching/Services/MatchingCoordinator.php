@@ -11,7 +11,7 @@ use App\Modules\Requests\Events\OfferExpired;
 use App\Modules\Requests\Events\OfferSent;
 use App\Modules\Requests\Events\RequestExpired;
 use App\Modules\Requests\Models\RequestOffer;
-use App\Modules\Requests\Models\TrainingRequest;
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Score\Models\ScoreEvent;
 use App\Modules\Score\Services\ScoreRecorder;
 use App\Support\Settings\PlatformSettings;
@@ -32,12 +32,12 @@ use Illuminate\Support\Facades\DB;
 class MatchingCoordinator
 {
     public function __construct(
-        private readonly TrainerMatcher $matcher,
+        private readonly ProviderMatcher $matcher,
         private readonly ScoreRecorder $score,
         private readonly PlatformSettings $settings,
     ) {}
 
-    public function start(TrainingRequest $request): int
+    public function start(ServiceRequest $request): int
     {
         $request->transitionTo(RequestState::Searching, [
             'expires_at' => $request->scheduled
@@ -53,15 +53,15 @@ class MatchingCoordinator
      *
      * @return int ofertas enviadas
      */
-    public function sendNextWave(TrainingRequest $request): int
+    public function sendNextWave(ServiceRequest $request): int
     {
         if ($request->scheduled) {
             return $this->sendScheduledOffers($request);
         }
 
         $sent = DB::transaction(function () use ($request): array {
-            /** @var TrainingRequest $locked */
-            $locked = TrainingRequest::query()->lockForUpdate()->findOrFail($request->id);
+            /** @var ServiceRequest $locked */
+            $locked = ServiceRequest::query()->lockForUpdate()->findOrFail($request->id);
 
             if ($locked->state !== RequestState::Searching || $locked->expires_at?->isPast()) {
                 return [];
@@ -72,11 +72,11 @@ class MatchingCoordinator
             }
 
             $size = (int) config($locked->wave === 0 ? 'longa.matching.first_wave_size' : 'longa.matching.next_wave_size');
-            $already = $locked->offers()->pluck('trainer_profile_id')->all();
+            $already = $locked->offers()->pluck('provider_profile_id')->all();
             $candidates = $this->matcher->candidates($locked, $size, $already);
 
             if ($candidates === []) {
-                $this->expire($locked, $locked->wave === 0 ? 'no_trainers' : 'timeout');
+                $this->expire($locked, $locked->wave === 0 ? 'no_providers' : 'timeout');
 
                 return [];
             }
@@ -87,8 +87,8 @@ class MatchingCoordinator
             $offerExpiry = $now->copy()->addSeconds((int) config('longa.requests.offer_ttl'))->min($locked->expires_at);
 
             RequestOffer::query()->insert(array_map(fn ($c, int $i) => [
-                'training_request_id' => $locked->id,
-                'trainer_profile_id' => $c->trainerProfileId,
+                'service_request_id' => $locked->id,
+                'provider_profile_id' => $c->providerProfileId,
                 'wave' => $wave,
                 'rank' => count($already) + $i + 1,
                 'distance_m' => $c->distanceM,
@@ -103,7 +103,7 @@ class MatchingCoordinator
             $locked->forceFill(['wave' => $wave, 'next_wave_at' => $offerExpiry])->save();
             $request->setRawAttributes($locked->getAttributes(), true);
 
-            return $locked->offers()->where('wave', $wave)->with(['trainer', 'request.skill'])->get()->all();
+            return $locked->offers()->where('wave', $wave)->with(['provider', 'request.category'])->get()->all();
         });
 
         foreach ($sent as $offer) {
@@ -125,26 +125,26 @@ class MatchingCoordinator
      *
      * @return int ofertas criadas
      */
-    public function sendScheduledOffers(TrainingRequest $request): int
+    public function sendScheduledOffers(ServiceRequest $request): int
     {
         $maxPush = (int) config('longa.scheduled_requests.max_push');
 
         [$offers, $alreadyCount] = DB::transaction(function () use ($request): array {
-            /** @var TrainingRequest $locked */
-            $locked = TrainingRequest::query()->lockForUpdate()->findOrFail($request->id);
+            /** @var ServiceRequest $locked */
+            $locked = ServiceRequest::query()->lockForUpdate()->findOrFail($request->id);
             if ($locked->state !== RequestState::Searching || $locked->expires_at?->isPast()) {
                 return [[], 0];
             }
 
-            $already = $locked->offers()->pluck('trainer_profile_id')->all();
+            $already = $locked->offers()->pluck('provider_profile_id')->all();
             $candidates = $this->matcher->candidates($locked, 500, $already, scheduled: true);
             $now = now();
             $nextSweep = $now->copy()->addMinutes(10)->min($locked->expires_at);
 
             if ($candidates !== []) {
                 RequestOffer::query()->insert(array_map(fn ($c, int $i) => [
-                    'training_request_id' => $locked->id,
-                    'trainer_profile_id' => $c->trainerProfileId,
+                    'service_request_id' => $locked->id,
+                    'provider_profile_id' => $c->providerProfileId,
                     'wave' => $locked->wave + 1,
                     'rank' => count($already) + $i + 1,
                     'distance_m' => $c->distanceM,
@@ -161,7 +161,7 @@ class MatchingCoordinator
             $locked->forceFill(['wave' => $locked->wave, 'next_wave_at' => $nextSweep])->save();
             $request->setRawAttributes($locked->getAttributes(), true);
 
-            return [$candidates === [] ? [] : $locked->offers()->where('wave', $locked->wave)->orderBy('rank')->with(['trainer', 'request.skill'])->get()->all(), count($already)];
+            return [$candidates === [] ? [] : $locked->offers()->where('wave', $locked->wave)->orderBy('rank')->with(['provider', 'request.category'])->get()->all(), count($already)];
         });
 
         foreach (array_slice($offers, 0, max(0, $maxPush - $alreadyCount)) as $offer) {
@@ -174,7 +174,7 @@ class MatchingCoordinator
     /**
      * Um passo do ciclo de vida do pedido (idempotente).
      */
-    public function advance(TrainingRequest $request): void
+    public function advance(ServiceRequest $request): void
     {
         $this->expireDueOffers($request->id);
 
@@ -186,8 +186,8 @@ class MatchingCoordinator
 
         if ($request->expires_at?->isPast()) {
             DB::transaction(function () use ($request) {
-                /** @var TrainingRequest $locked */
-                $locked = TrainingRequest::query()->lockForUpdate()->findOrFail($request->id);
+                /** @var ServiceRequest $locked */
+                $locked = ServiceRequest::query()->lockForUpdate()->findOrFail($request->id);
                 if ($locked->state === RequestState::Searching) {
                     $this->expire($locked, 'timeout');
                 }
@@ -206,12 +206,12 @@ class MatchingCoordinator
     {
         $this->expireDueOffers();
 
-        TrainingRequest::query()
+        ServiceRequest::query()
             ->where('state', RequestState::Searching->value)
             ->where(fn ($q) => $q->where('next_wave_at', '<=', now())->orWhere('expires_at', '<=', now()))
             ->limit(500)
             ->get()
-            ->each(fn (TrainingRequest $r) => $this->advance($r));
+            ->each(fn (ServiceRequest $r) => $this->advance($r));
     }
 
     /**
@@ -222,8 +222,8 @@ class MatchingCoordinator
         $due = RequestOffer::query()
             ->whereIn('state', array_map(fn (OfferState $s) => $s->value, OfferState::open()))
             ->where('expires_at', '<=', now())
-            ->when($requestId, fn ($q) => $q->where('training_request_id', $requestId))
-            ->with(['trainer', 'request'])
+            ->when($requestId, fn ($q) => $q->where('service_request_id', $requestId))
+            ->with(['provider', 'request'])
             ->limit(1000)
             ->get();
 
@@ -237,7 +237,7 @@ class MatchingCoordinator
             }
 
             if (! $offer->request->scheduled) {
-                $this->score->record($offer->trainer_profile_id, ScoreEvent::OFFER_EXPIRED, $offer);
+                $this->score->record($offer->provider_profile_id, ScoreEvent::OFFER_EXPIRED, $offer);
             }
             OfferExpired::dispatch($offer);
             $expired++;
@@ -249,13 +249,13 @@ class MatchingCoordinator
     /**
      * searching → expired; ofertas ainda abertas → lost. Chamar com a linha do pedido bloqueada.
      *
-     * @param  'no_trainers'|'timeout'  $reason
+     * @param  'no_providers'|'timeout'  $reason
      */
-    private function expire(TrainingRequest $request, string $reason): void
+    private function expire(ServiceRequest $request, string $reason): void
     {
         $request->transitionTo(RequestState::Expired, ['next_wave_at' => null]);
 
-        $open = $request->offers()->whereIn('state', OfferState::open())->with('trainer')->get();
+        $open = $request->offers()->whereIn('state', OfferState::open())->with('provider')->get();
         foreach ($open as $offer) {
             $offer->transitionTo(OfferState::Lost, ['responded_at' => now()]);
             OfferExpired::dispatch($offer);

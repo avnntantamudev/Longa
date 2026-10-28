@@ -50,7 +50,7 @@ return [
         'commission_percent' => (int) env('LONGA_COMMISSION_PERCENT', 15),
         'min_amount' => (int) env('LONGA_REQUEST_MIN_AMOUNT', 2000),
         'max_amount' => (int) env('LONGA_REQUEST_MAX_AMOUNT', 5000000),
-        'max_active_per_student' => (int) env('LONGA_REQUEST_MAX_ACTIVE', 2),
+        'max_active_per_client' => (int) env('LONGA_REQUEST_MAX_ACTIVE', 2),
         // Tempo total de procura do pedido e prazo de cada oferta (segundos)
         'ttl' => (int) env('LONGA_REQUEST_TTL', 300),
         'offer_ttl' => (int) env('LONGA_OFFER_TTL', 60),
@@ -72,7 +72,7 @@ return [
         'conflict_buffer_minutes' => (int) env('LONGA_MATCHING_CONFLICT_BUFFER', 30),
         'accept_per_minute' => (int) env('LONGA_OFFER_ACCEPT_PER_MINUTE', 30),
         // SMS de oferta quando o formador não tem push ativo (custa dinheiro)
-        'sms_fallback_per_trainer_per_hour' => (int) env('LONGA_OFFER_SMS_PER_HOUR', 5),
+        'sms_fallback_per_provider_per_hour' => (int) env('LONGA_OFFER_SMS_PER_HOUR', 5),
     ],
 
     // Execução da aula, QR e escrow (Fase 3). Todas as regras de tempo num só sítio [AJUSTAR]
@@ -93,13 +93,13 @@ return [
         'auto_awaiting_after_end_hours' => (int) env('LONGA_AUTO_AWAITING_HOURS', 2),
         'confirmation_window_hours' => (int) env('LONGA_CONFIRMATION_WINDOW_HOURS', 48),
         // R4: faltas
-        'no_show_trainer_after_minutes' => (int) env('LONGA_NO_SHOW_TRAINER_MINUTES', 15),
-        'no_show_student_after_minutes' => (int) env('LONGA_NO_SHOW_STUDENT_MINUTES', 30),
+        'no_show_provider_after_minutes' => (int) env('LONGA_NO_SHOW_PROVIDER_MINUTES', 15),
+        'no_show_client_after_minutes' => (int) env('LONGA_NO_SHOW_CLIENT_MINUTES', 30),
         'no_show_contest_hours' => (int) env('LONGA_NO_SHOW_CONTEST_HOURS', 24),
         // Política de reembolso (percentagens da parte que fica para o formador, antes da comissão)
         'late_cancel_hours' => (int) env('LONGA_LATE_CANCEL_HOURS', 6),
-        'late_cancel_trainer_share_percent' => (int) env('LONGA_LATE_CANCEL_TRAINER_SHARE', 25),
-        'no_show_student_trainer_share_percent' => (int) env('LONGA_NO_SHOW_STUDENT_TRAINER_SHARE', 50),
+        'late_cancel_provider_share_percent' => (int) env('LONGA_LATE_CANCEL_PROVIDER_SHARE', 25),
+        'no_show_client_provider_share_percent' => (int) env('LONGA_NO_SHOW_CLIENT_PROVIDER_SHARE', 50),
         // Reconciliação: uma retenção sem destino N dias após o fim previsto gera alerta
         'hold_max_days' => (int) env('LONGA_HOLD_MAX_DAYS', 7),
     ],
@@ -135,8 +135,8 @@ return [
 
     // Foto de perfil obrigatória para formadores. Os formadores registados antes desta regra
     // continuam a receber pedidos sem foto até esta data (aviso na app).
-    'trainers' => [
-        'photo_required_from' => env('LONGA_TRAINER_PHOTO_REQUIRED_FROM', '2026-11-02 00:00:00'),
+    'providers' => [
+        'photo_required_from' => env('LONGA_PROVIDER_PHOTO_REQUIRED_FROM', '2026-11-02 00:00:00'),
     ],
 
     // Disputas: evidências (imagem ou PDF) no disco privado

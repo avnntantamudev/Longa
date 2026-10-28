@@ -5,8 +5,8 @@ declare(strict_types=1);
 use App\Modules\Payments\Models\EscrowHold;
 use App\Modules\Qr\Models\SessionQrToken;
 use App\Modules\Sessions\Enums\SessionState;
+use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Sessions\Models\SessionEvent;
-use App\Modules\Sessions\Models\TrainingSession;
 use App\Modules\Users\Models\User;
 use App\Modules\Wallet\Ledger\Accounts;
 use App\Modules\Wallet\Ledger\LedgerService;
@@ -20,10 +20,10 @@ beforeEach(fn () => Cache::flush());
  *
  * @return list<array{token: string, code: string, valid_from: string, expires_at: string}>
  */
-function showQr(TrainingSession $session): array
+function showQr(ServiceJob $session): array
 {
     test()->travelTo($session->scheduled_at->copy()->addMinutes(5));
-    apiLogin($session->trainer->user);
+    apiLogin($session->provider->user);
     test()->postJson("/api/v1/sessions/{$session->id}/start")->assertOk()->assertJsonPath('data.state', 'in_progress');
 
     test()->travelTo($session->ends_at?->copy()->subMinutes(2));
@@ -35,9 +35,9 @@ function showQr(TrainingSession $session): array
         ->json('qr.tokens');
 }
 
-function confirmWith(TrainingSession $session, array $body, string $key = 'confirm-0001'): Illuminate\Testing\TestResponse
+function confirmWith(ServiceJob $session, array $body, string $key = 'confirm-0001'): Illuminate\Testing\TestResponse
 {
-    apiLogin($session->student);
+    apiLogin($session->client);
 
     return test()->postJson("/api/v1/sessions/{$session->id}/confirm", $body, ['Idempotency-Key' => $key]);
 }
@@ -57,10 +57,10 @@ it('o aluno lê o QR: aula concluída e valor libertado para o formador menos a 
 
     $ledger = app(LedgerService::class);
     expect($ledger->balance(Accounts::ESCROW))->toBe(0)
-        ->and($ledger->balance(Accounts::trainerAvailable($session->trainer_profile_id)))->toBe(21250)
+        ->and($ledger->balance(Accounts::providerAvailable($session->provider_profile_id)))->toBe(21250)
         ->and($ledger->balance(Accounts::PLATFORM_REVENUE))->toBe(3750)
         ->and(EscrowHold::query()->sole()->state)->toBe('released')
-        ->and(SessionEvent::query()->where('training_session_id', $session->id)->pluck('type')->all())
+        ->and(SessionEvent::query()->where('service_job_id', $session->id)->pluck('type')->all())
         ->toContain('started', 'finished', 'qr_issued', 'qr_scanned', 'confirmed');
 });
 
@@ -73,7 +73,7 @@ it('confirmar de novo devolve o mesmo resultado sem libertar o dinheiro outra ve
     confirmWith($session, ['code' => $tokens[1]['code']], 'confirm-c-0003')->assertOk();
 
     expect(LedgerTransaction::query()->where('type', 'escrow_release')->count())->toBe(1)
-        ->and(app(LedgerService::class)->trainerAvailable($session->trainer))->toBe(21250);
+        ->and(app(LedgerService::class)->providerAvailable($session->provider))->toBe(21250);
 });
 
 it('recusa um QR expirado', function () {
@@ -120,7 +120,7 @@ it('só o aluno da aula confirma: o formador não se autoconfirma', function () 
     $session = paidSession();
     $tokens = showQr($session);
 
-    apiLogin($session->trainer->user);
+    apiLogin($session->provider->user);
     $this->postJson("/api/v1/sessions/{$session->id}/confirm", ['token' => $tokens[0]['token']], ['Idempotency-Key' => 'self-confirm'])->assertForbidden();
 
     apiLogin(User::factory()->create());
@@ -133,7 +133,7 @@ it('recusa a confirmação fora da janela de tempo', function () {
     $session = paidSession();
     // Formador começa 10 min antes e termina logo: o QR existe mas ainda não é a hora da aula
     $this->travelTo($session->scheduled_at->copy()->subMinutes(10));
-    apiLogin($session->trainer->user);
+    apiLogin($session->provider->user);
     $this->postJson("/api/v1/sessions/{$session->id}/start")->assertOk();
     $tokens = $this->postJson("/api/v1/sessions/{$session->id}/finish")->json('qr.tokens');
 
@@ -149,7 +149,7 @@ it('bloqueia após tentativas erradas, mesmo com o código certo', function () {
     }
 
     confirmWith($session, ['code' => $tokens[0]['code']], 'right-code-late')->assertStatus(429)->assertJsonPath('error.code', 'qr_locked');
-    expect(SessionQrToken::query()->where('training_session_id', $session->id)->sum('attempts'))->toBeGreaterThanOrEqual(5);
+    expect(SessionQrToken::query()->where('service_job_id', $session->id)->sum('attempts'))->toBeGreaterThanOrEqual(5);
 });
 
 it('regista sinal de risco se o aluno estiver longe do local, sem bloquear', function () {
@@ -165,19 +165,19 @@ it('regista sinal de risco se o aluno estiver longe do local, sem bloquear', fun
 
 it('o formador só inicia na hora e não termina sem iniciar', function () {
     $session = paidSession();
-    apiLogin($session->trainer->user);
+    apiLogin($session->provider->user);
 
     $this->postJson("/api/v1/sessions/{$session->id}/start")->assertStatus(409)->assertJsonPath('error.code', 'session_too_early');
     $this->postJson("/api/v1/sessions/{$session->id}/finish")->assertStatus(409);
 
-    apiLogin($session->student);
+    apiLogin($session->client);
     $this->postJson("/api/v1/sessions/{$session->id}/start")->assertForbidden();
 });
 
 it('não se inicia uma aula por pagar', function () {
     $session = acceptedSession();
     $this->travelTo($session->scheduled_at);
-    apiLogin($session->trainer->user);
+    apiLogin($session->provider->user);
 
     $this->postJson("/api/v1/sessions/{$session->id}/start")->assertStatus(409)->assertJsonPath('error.code', 'session_not_startable');
 });

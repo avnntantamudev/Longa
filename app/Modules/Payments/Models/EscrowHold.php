@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Payments\Models;
 
-use App\Modules\Sessions\Models\TrainingSession;
+use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Wallet\Models\LedgerTransaction;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
@@ -15,12 +15,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * estado é held ou disputed; a liquidação (libertar / reembolsar) é uma transação do ledger.
  *
  * @property int $id
- * @property int $training_session_id
- * @property int $student_id
- * @property int $trainer_profile_id
+ * @property int $service_job_id
+ * @property int $client_id
+ * @property int $provider_profile_id
  * @property int $amount
  * @property int $commission
- * @property int $trainer_net
+ * @property int $provider_net
  * @property int $commission_percent
  * @property string $state
  * @property \Illuminate\Support\Carbon|null $expires_at
@@ -28,9 +28,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int|null $settlement_transaction_id
  * @property int $refunded_amount
  * @property \Illuminate\Support\Carbon|null $settled_at
- * @property-read TrainingSession $session
+ * @property-read ServiceJob $session
  */
-#[Fillable(['training_session_id', 'student_id', 'trainer_profile_id', 'amount', 'commission', 'trainer_net', 'commission_percent', 'expires_at', 'hold_transaction_id'])]
+#[Fillable(['service_job_id', 'client_id', 'provider_profile_id', 'amount', 'commission', 'provider_net', 'commission_percent', 'expires_at', 'hold_transaction_id'])]
 class EscrowHold extends Model
 {
     public const HELD = 'held';
@@ -54,11 +54,11 @@ class EscrowHold extends Model
     }
 
     /**
-     * @return BelongsTo<TrainingSession, $this>
+     * @return BelongsTo<ServiceJob, $this>
      */
     public function session(): BelongsTo
     {
-        return $this->belongsTo(TrainingSession::class, 'training_session_id');
+        return $this->belongsTo(ServiceJob::class, 'service_job_id');
     }
 
     /**

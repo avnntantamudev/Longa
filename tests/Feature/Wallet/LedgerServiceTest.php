@@ -71,21 +71,21 @@ it('a base de dados rejeita totais declarados desequilibrados', function () {
 
 it('a cache de saldos coincide com a soma dos lançamentos', function () {
     $this->ledger->post('escrow_hold', 'h1', [Accounts::ESCROW => 25000, Accounts::FUNDS_IN => -25000]);
-    $this->ledger->post('escrow_release', 'r1', [Accounts::ESCROW => -25000, Accounts::trainerAvailable(7) => 21250, Accounts::PLATFORM_REVENUE => 3750]);
+    $this->ledger->post('escrow_release', 'r1', [Accounts::ESCROW => -25000, Accounts::providerAvailable(7) => 21250, Accounts::PLATFORM_REVENUE => 3750]);
 
-    foreach ([Accounts::ESCROW, Accounts::FUNDS_IN, Accounts::PLATFORM_REVENUE, Accounts::trainerAvailable(7)] as $code) {
+    foreach ([Accounts::ESCROW, Accounts::FUNDS_IN, Accounts::PLATFORM_REVENUE, Accounts::providerAvailable(7)] as $code) {
         expect($this->ledger->balance($code))->toBe($this->ledger->balanceFromEntries($code));
     }
-    expect($this->ledger->balance(Accounts::trainerAvailable(7)))->toBe(21250);
+    expect($this->ledger->balance(Accounts::providerAvailable(7)))->toBe(21250);
 });
 
 it('a comissão + o valor do formador = total, em valores difíceis', function (int $amount) {
     $split = Commission::split($amount, 15);
 
-    expect($split['commission'] + $split['trainer_net'])->toBe($amount)
+    expect($split['commission'] + $split['provider_net'])->toBe($amount)
         ->and($split['commission'])->toBe(intdiv($amount * 15 + 50, 100))
         ->and($split['commission'])->toBeGreaterThanOrEqual(0)
-        ->and($split['trainer_net'])->toBeGreaterThanOrEqual(0);
+        ->and($split['provider_net'])->toBeGreaterThanOrEqual(0);
 })->with([1, 3, 7, 999, 25000, 450000, 3333, 2010, 1_999_999]);
 
 it('recusa valores não inteiros (ex.: resultado de uma divisão)', function () {

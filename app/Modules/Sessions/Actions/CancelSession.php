@@ -9,7 +9,7 @@ use App\Modules\Score\Models\ScoreEvent;
 use App\Modules\Score\Services\ScoreRecorder;
 use App\Modules\Sessions\Enums\SessionState;
 use App\Modules\Sessions\Events\SessionCancelled;
-use App\Modules\Sessions\Models\TrainingSession;
+use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Sessions\Services\RefundPolicy;
 use App\Modules\Sessions\Services\SessionLifecycle;
 use App\Modules\Users\Models\User;
@@ -29,13 +29,13 @@ class CancelSession
         private readonly ScoreRecorder $score,
     ) {}
 
-    public function handle(TrainingSession $session, User $actor, ?string $reason): TrainingSession
+    public function handle(ServiceJob $session, User $actor, ?string $reason): ServiceJob
     {
         return DB::transaction(function () use ($session, $actor, $reason) {
-            /** @var TrainingSession $locked */
-            $locked = TrainingSession::query()->lockForUpdate()->findOrFail($session->id);
-            $byStudent = $locked->student_id === $actor->id;
-            $target = $byStudent ? SessionState::CancelledByStudent : SessionState::CancelledByTrainer;
+            /** @var ServiceJob $locked */
+            $locked = ServiceJob::query()->lockForUpdate()->findOrFail($session->id);
+            $byClient = $locked->client_id === $actor->id;
+            $target = $byClient ? SessionState::CancelledByClient : SessionState::CancelledByProvider;
 
             if ($locked->state === $target) {
                 return $locked;
@@ -46,16 +46,16 @@ class CancelSession
             }
 
             $late = $this->policy->isLate($locked);
-            $trainerGross = $byStudent ? $this->policy->studentCancellation($locked) : $this->policy->trainerFault($locked);
+            $providerGross = $byClient ? $this->policy->clientCancellation($locked) : $this->policy->providerFault($locked);
 
             $this->lifecycle->transition($locked, $target, 'cancelled', $actor, [
-                'reason' => $reason, 'late' => $late, 'trainer_share' => $trainerGross, 'refund' => $locked->amount - $trainerGross,
+                'reason' => $reason, 'late' => $late, 'provider_share' => $providerGross, 'refund' => $locked->amount - $providerGross,
             ]);
 
-            $this->settlement->split($locked, $trainerGross, $actor, $byStudent ? 'student_cancellation' : 'trainer_cancellation');
+            $this->settlement->split($locked, $providerGross, $actor, $byClient ? 'client_cancellation' : 'provider_cancellation');
 
-            if (! $byStudent && $late) {
-                $this->score->record($locked->trainer_profile_id, ScoreEvent::LATE_CANCELLATION, $locked, ['hours_before' => (int) now()->diffInHours($locked->scheduled_at)]);
+            if (! $byClient && $late) {
+                $this->score->record($locked->provider_profile_id, ScoreEvent::LATE_CANCELLATION, $locked, ['hours_before' => (int) now()->diffInHours($locked->scheduled_at)]);
             }
 
             SessionCancelled::dispatch($locked);

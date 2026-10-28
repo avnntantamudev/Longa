@@ -72,38 +72,38 @@ class NotificationsServiceProvider extends ServiceProvider
 
         // Eventos de domínio → notificações (push / SMS / na app), enviadas pela fila "notifications"
         Event::listen(OfferSent::class, function (OfferSent $event) {
-            $event->offer->trainer->user->notify(new NewOfferNotification($event->offer));
+            $event->offer->provider->user->notify(new NewOfferNotification($event->offer));
         });
 
         Event::listen(RequestMatched::class, function (RequestMatched $event) {
-            $event->request->student->notify(new RequestOutcomeNotification($event->request, RequestOutcomeNotification::MATCHED, $event->session->id));
+            $event->request->client->notify(new RequestOutcomeNotification($event->request, RequestOutcomeNotification::MATCHED, $event->session->id));
         });
 
         Event::listen(RequestExpired::class, function (RequestExpired $event) {
-            $event->request->student->notify(new RequestOutcomeNotification($event->request, RequestOutcomeNotification::EXPIRED));
+            $event->request->client->notify(new RequestOutcomeNotification($event->request, RequestOutcomeNotification::EXPIRED));
         });
 
         // Execução da aula: avisa quem não fez a ação
-        Event::listen(SessionStarted::class, fn (SessionStarted $e) => $e->session->student->notify(new Update($e->session, Update::STARTED)));
+        Event::listen(SessionStarted::class, fn (SessionStarted $e) => $e->session->client->notify(new Update($e->session, Update::STARTED)));
         Event::listen(QrIssued::class, function (QrIssued $e) {
             // Só no primeiro lote (os seguintes são renovações do QR no ecrã do formador)
             if ($e->session->events()->where('type', 'qr_issued')->count() <= 1) {
-                $e->session->student->notify(new Update($e->session, Update::QR_READY));
+                $e->session->client->notify(new Update($e->session, Update::QR_READY));
             }
         });
-        Event::listen(SessionConfirmed::class, fn (SessionConfirmed $e) => $e->session->trainer->user->notify(new Update($e->session, Update::CONFIRMED)));
+        Event::listen(SessionConfirmed::class, fn (SessionConfirmed $e) => $e->session->provider->user->notify(new Update($e->session, Update::CONFIRMED)));
         Event::listen(SessionCancelled::class, function (SessionCancelled $e) {
-            $other = $e->session->state === SessionState::CancelledByStudent ? $e->session->trainer->user : $e->session->student;
+            $other = $e->session->state === SessionState::CancelledByClient ? $e->session->provider->user : $e->session->client;
             $reason = $e->session->events()->where('type', 'cancelled')->latest('id')->first()?->metadata['reason'] ?? null;
             $other->notify(new Update($e->session, Update::CANCELLED, is_string($reason) ? $reason : null));
         });
         Event::listen(DisputeOpened::class, function (DisputeOpened $e) {
             $openedBy = $e->session->disputes()->where('status', Dispute::OPEN)->value('opened_by');
-            $other = $openedBy === $e->session->student_id ? $e->session->trainer->user : $e->session->student;
+            $other = $openedBy === $e->session->client_id ? $e->session->provider->user : $e->session->client;
             $other->notify(new Update($e->session, Update::DISPUTE_OPENED));
         });
         Event::listen(DisputeResolved::class, function (DisputeResolved $e) {
-            foreach ([$e->session->student, $e->session->trainer->user] as $user) {
+            foreach ([$e->session->client, $e->session->provider->user] as $user) {
                 $user->notify(new Update($e->session, Update::DISPUTE_RESOLVED, $e->dispute->resolution));
             }
         });

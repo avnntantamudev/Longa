@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Modules\Requests\Models\TrainingRequest;
-use App\Modules\Sessions\Models\TrainingSession;
+use App\Modules\Requests\Models\ServiceRequest;
+use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Users\Models\User;
 use Illuminate\Support\Facades\Broadcast;
 
@@ -17,14 +17,14 @@ Broadcast::channel('user.{id}', fn (User $user, int $id) => $user->id === $id);
 
 // Pedido: estado da procura, só para o aluno que o publicou
 Broadcast::channel('request.{requestId}', function (User $user, int $requestId) {
-    return TrainingRequest::query()->whereKey($requestId)->where('student_id', $user->id)->exists();
+    return ServiceRequest::query()->whereKey($requestId)->where('client_id', $user->id)->exists();
 });
 
 // Aula: chat entre o aluno e o formador da aula
 Broadcast::channel('session.{sessionId}', function (User $user, int $sessionId) {
-    return TrainingSession::query()
+    return ServiceJob::query()
         ->whereKey($sessionId)
-        ->where(fn ($q) => $q->where('student_id', $user->id)->orWhereHas('trainer', fn ($t) => $t->where('user_id', $user->id)))
+        ->where(fn ($q) => $q->where('client_id', $user->id)->orWhereHas('provider', fn ($t) => $t->where('user_id', $user->id)))
         ->exists();
 });
 

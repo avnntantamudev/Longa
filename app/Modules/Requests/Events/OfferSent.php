@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Requests\Events;
 
-use App\Modules\Requests\Http\Resources\TrainerOfferResource;
+use App\Modules\Requests\Http\Resources\ProviderOfferResource;
 use App\Modules\Requests\Models\RequestOffer;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
@@ -25,7 +25,7 @@ class OfferSent implements ShouldBroadcast, ShouldDispatchAfterCommit
 
     public function broadcastOn(): PrivateChannel
     {
-        return new PrivateChannel('user.'.$this->offer->trainer->user_id);
+        return new PrivateChannel('user.'.$this->offer->provider->user_id);
     }
 
     public function broadcastAs(): string
@@ -38,6 +38,6 @@ class OfferSent implements ShouldBroadcast, ShouldDispatchAfterCommit
      */
     public function broadcastWith(): array
     {
-        return ['offer' => (new TrainerOfferResource($this->offer->loadMissing('request.skill')))->resolve()];
+        return ['offer' => (new ProviderOfferResource($this->offer->loadMissing('request.category')))->resolve()];
     }
 }

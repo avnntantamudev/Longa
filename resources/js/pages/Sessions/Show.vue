@@ -24,9 +24,9 @@ const confirming = ref<SessionAction | null>(null);
 const keys = new Map<SessionAction, string>();
 
 const meId = computed(() => page.props.auth.user?.id ?? 0);
-const isTrainer = computed(() => session.value?.role === 'trainer');
-const counterpart = computed(() => (session.value?.role === 'student' ? session.value.trainer?.name : session.value?.student?.name) ?? '');
-const counterpartPhoto = computed(() => (session.value?.role === 'student' ? session.value.trainer?.photo_url : session.value?.student?.photo_url) ?? null);
+const isProvider = computed(() => session.value?.role === 'provider');
+const counterpart = computed(() => (session.value?.role === 'client' ? session.value.provider?.name : session.value?.client?.name) ?? '');
+const counterpartPhoto = computed(() => (session.value?.role === 'client' ? session.value.provider?.photo_url : session.value?.client?.photo_url) ?? null);
 const has = (action: SessionAction) => session.value?.actions.includes(action) ?? false;
 const late = computed(() => {
     if (!session.value) return false;
@@ -105,14 +105,14 @@ onMounted(load);
             <div class="flex items-center gap-4">
                 <UserAvatar :name="counterpart" :src="counterpartPhoto" :size="64" />
                 <div class="min-w-0">
-                    <p class="text-caption font-semibold text-orange-400">{{ session.role === 'student' ? 'Formador' : 'Aluno' }}</p>
+                    <p class="text-caption font-semibold text-orange-400">{{ session.role === 'client' ? 'Formador' : 'Aluno' }}</p>
                     <p class="truncate text-title">{{ counterpart }}</p>
-                    <span class="badge badge-brand mt-1">{{ session.skill }}</span>
-                    <span v-if="session.trainer?.verified" class="badge badge-success mt-1 ml-1">Verificado BISCA</span>
-                    <span v-if="session.trainer?.vip" class="badge mt-1 ml-1 bg-orange-500 text-white">⭐ VIP</span>
+                    <span class="badge badge-brand mt-1">{{ session.category }}</span>
+                    <span v-if="session.provider?.verified" class="badge badge-success mt-1 ml-1">Verificado BISCA</span>
+                    <span v-if="session.provider?.vip" class="badge mt-1 ml-1 bg-orange-500 text-white">⭐ VIP</span>
                 </div>
             </div>
-            <p v-if="session.trainer?.bio" class="mt-3 text-caption text-navy-100">{{ session.trainer.bio }}</p>
+            <p v-if="session.provider?.bio" class="mt-3 text-caption text-navy-100">{{ session.provider.bio }}</p>
         </section>
 
         <section class="card mt-4">
@@ -124,7 +124,7 @@ onMounted(load);
                 <div><dt class="text-ink-muted">Quando</dt><dd class="font-semibold">{{ when(session.scheduled_at) }} · {{ session.duration_minutes }} min</dd></div>
                 <div><dt class="text-ink-muted">Onde</dt><dd class="font-semibold">{{ session.modality === 'online' ? 'Online' : `${session.neighborhood}, ${session.municipality}` }}</dd></div>
                 <div><dt class="text-ink-muted">Valor</dt><dd class="font-semibold">{{ kwanza(session.amount) }}</dd></div>
-                <div v-if="isTrainer"><dt class="text-ink-muted">Recebe</dt><dd class="font-semibold">{{ kwanza(session.trainer_net ?? 0) }}</dd></div>
+                <div v-if="isProvider"><dt class="text-ink-muted">Recebe</dt><dd class="font-semibold">{{ kwanza(session.provider_net ?? 0) }}</dd></div>
                 <div><dt class="text-ink-muted">Pagamento</dt><dd class="font-semibold">{{ session.payment_method === 'cash' ? 'Em mão' : 'Pelo BISCA' }}</dd></div>
             </dl>
             <div v-if="session.modality !== 'online' && ['scheduled', 'pending_payment', 'in_progress'].includes(session.state)" class="mt-3">
@@ -139,7 +139,7 @@ onMounted(load);
 
             <!-- Pagamento (aluno) -->
             <template v-if="session.state === 'pending_payment'">
-                <template v-if="!isTrainer">
+                <template v-if="!isProvider">
                     <p class="font-semibold">Pague para garantir a aula</p>
                     <p class="text-caption text-ink-muted">
                         O valor fica retido pelo BISCA e só é libertado ao formador depois de confirmar a aula.
@@ -162,7 +162,7 @@ onMounted(load);
             <!-- Aula agendada -->
             <template v-else-if="session.state === 'scheduled'">
                 <p class="text-caption text-ink-muted">
-                    {{ isTrainer ? 'Inicie a aula quando chegar (a partir de 15 minutos antes).' : 'O formador inicia a aula quando chegar.' }}
+                    {{ isProvider ? 'Inicie a aula quando chegar (a partir de 15 minutos antes).' : 'O formador inicia a aula quando chegar.' }}
                 </p>
                 <button v-if="has('start')" class="btn-primary w-full" :disabled="busy !== null" @click="startLesson">
                     {{ busy === 'start' ? 'A iniciar…' : 'Iniciar aula' }}
@@ -173,7 +173,7 @@ onMounted(load);
             <template v-else-if="session.state === 'in_progress'">
                 <p class="font-semibold">Aula a decorrer</p>
                 <p class="text-caption text-ink-muted">
-                    {{ isTrainer ? 'No fim, toque em "Terminar aula" e mostre o QR ao aluno.' : 'No fim, o formador mostra-lhe um QR para confirmar a aula.' }}
+                    {{ isProvider ? 'No fim, toque em "Terminar aula" e mostre o QR ao aluno.' : 'No fim, o formador mostra-lhe um QR para confirmar a aula.' }}
                 </p>
                 <button v-if="has('finish')" class="btn-primary w-full" :disabled="busy !== null" @click="finishLesson">
                     {{ busy === 'finish' ? 'A terminar…' : 'Terminar aula' }}
@@ -182,9 +182,9 @@ onMounted(load);
 
             <!-- À espera de confirmação -->
             <template v-else-if="session.state === 'awaiting_confirmation'">
-                <template v-if="isTrainer">
+                <template v-if="isProvider">
                     <p class="font-semibold">À espera da confirmação do aluno</p>
-                    <p class="text-caption text-ink-muted">{{ kwanza(session.trainer_net ?? 0) }} pendentes, libertados quando o aluno ler o QR.</p>
+                    <p class="text-caption text-ink-muted">{{ kwanza(session.provider_net ?? 0) }} pendentes, libertados quando o aluno ler o QR.</p>
                     <Link v-if="has('show_qr')" :href="`/aulas/${session.id}/qr`" class="btn-primary w-full">Mostrar QR</Link>
                 </template>
                 <template v-else>
@@ -209,7 +209,7 @@ onMounted(load);
             <!-- Concluída -->
             <template v-else-if="session.state === 'completed'">
                 <p class="font-semibold text-success">Aula concluída</p>
-                <p v-if="isTrainer && session.payment_method === 'electronic'" class="text-caption text-ink-muted">{{ kwanza(session.trainer_net ?? 0) }} na sua carteira.</p>
+                <p v-if="isProvider && session.payment_method === 'electronic'" class="text-caption text-ink-muted">{{ kwanza(session.provider_net ?? 0) }} na sua carteira.</p>
                 <template v-if="has('confirm_cash')">
                     <p class="text-caption text-ink-muted">Confirme que pagou {{ kwanza(session.amount) }} ao formador em mão.</p>
                     <button class="btn-primary w-full" :disabled="busy !== null" @click="run('confirm_cash', 'confirm-cash', undefined, 'Pagamento em mão confirmado.')">Confirmei que paguei</button>
@@ -217,8 +217,8 @@ onMounted(load);
             </template>
 
             <!-- Faltas -->
-            <template v-else-if="['no_show_trainer', 'no_show_student'].includes(session.state)">
-                <p class="font-semibold">{{ session.state === 'no_show_trainer' ? 'Falta do formador reportada' : 'Falta do aluno reportada' }}</p>
+            <template v-else-if="['no_show_provider', 'no_show_client'].includes(session.state)">
+                <p class="font-semibold">{{ session.state === 'no_show_provider' ? 'Falta do formador reportada' : 'Falta do aluno reportada' }}</p>
                 <p v-if="session.no_show_contest_until" class="text-caption text-ink-muted">Pode ser contestada até {{ when(session.no_show_contest_until) }}.</p>
                 <Link v-if="has('dispute')" :href="`/aulas/${session.id}/disputa`" class="btn-primary w-full">Contestar a falta</Link>
             </template>
@@ -231,7 +231,7 @@ onMounted(load);
                 <button v-if="confirming !== 'cancel'" class="btn-outline w-full" @click="confirming = 'cancel'">Cancelar aula</button>
                 <div v-else class="grid gap-2 rounded-control bg-navy-50 p-3">
                     <p class="text-caption">
-                        <template v-if="isTrainer">O aluno é reembolsado na totalidade. Cancelamentos em cima da hora afetam a sua pontuação.</template>
+                        <template v-if="isProvider">O aluno é reembolsado na totalidade. Cancelamentos em cima da hora afetam a sua pontuação.</template>
                         <template v-else-if="late">Faltam menos de 6 horas: o formador fica com 25% do valor e recebe o reembolso do resto.</template>
                         <template v-else>Recebe o reembolso total.</template>
                     </p>
@@ -244,7 +244,7 @@ onMounted(load);
             </template>
             <template v-if="has('no_show')">
                 <button v-if="confirming !== 'no_show'" class="text-caption font-semibold text-danger" @click="confirming = 'no_show'">
-                    {{ isTrainer ? 'O aluno não apareceu' : 'O formador não apareceu' }}
+                    {{ isProvider ? 'O aluno não apareceu' : 'O formador não apareceu' }}
                 </button>
                 <div v-else class="grid gap-2 rounded-control bg-navy-50 p-3">
                     <p class="text-caption">A outra parte tem 24 horas para contestar. Sem contestação, aplica-se a política de faltas.</p>

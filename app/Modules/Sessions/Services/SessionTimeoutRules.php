@@ -12,8 +12,8 @@ use App\Modules\Score\Models\ScoreEvent;
 use App\Modules\Score\Services\ScoreRecorder;
 use App\Modules\Sessions\Enums\SessionState;
 use App\Modules\Sessions\Events\SessionConfirmed;
+use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Sessions\Models\SessionEvent;
-use App\Modules\Sessions\Models\TrainingSession;
 use App\Support\StateMachine\InvalidTransition;
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
@@ -59,10 +59,10 @@ class SessionTimeoutRules
     {
         return $this->each(
             fn (Builder $q) => $q->where('state', SessionState::PendingPayment->value)->where('payment_due_at', '<=', now()),
-            function (TrainingSession $s) {
+            function (ServiceJob $s) {
                 $this->lifecycle->transition($s, SessionState::PaymentFailed, 'payment_window_expired', null, ['rule' => 'R3']);
             },
-            fn (TrainingSession $s) => $s->state === SessionState::PendingPayment,
+            fn (ServiceJob $s) => $s->state === SessionState::PendingPayment,
         );
     }
 
@@ -75,12 +75,12 @@ class SessionTimeoutRules
 
         return $this->each(
             fn (Builder $q) => $q->where('state', $from->value)->where('ends_at', '<=', $after),
-            function (TrainingSession $s) use ($reason) {
+            function (ServiceJob $s) use ($reason) {
                 $this->lifecycle->transition($s, SessionState::AwaitingConfirmation, 'auto_awaiting', null, [
                     'rule' => $reason === 'not_started' ? 'R1' : 'R2', 'reason' => $reason,
                 ], ['awaiting_since' => now(), 'ended_at' => $s->ended_at ?? $s->ends_at]);
             },
-            fn (TrainingSession $s) => $s->state === $from,
+            fn (ServiceJob $s) => $s->state === $from,
         );
     }
 
@@ -92,17 +92,17 @@ class SessionTimeoutRules
         $window = (int) config('longa.session_rules.confirmation_window_hours');
         $remindAt = now()->subHours(intdiv($window, 2));
 
-        $sessions = TrainingSession::query()
+        $sessions = ServiceJob::query()
             ->where('state', SessionState::AwaitingConfirmation->value)
             ->where('awaiting_since', '<=', $remindAt)
             ->whereDoesntHave('events', fn ($q) => $q->where('type', 'reminder_sent'))
-            ->with('student')
+            ->with('client')
             ->limit(200)
             ->get();
 
         foreach ($sessions as $session) {
             $this->lifecycle->record($session, 'reminder_sent', null, ['hours_left' => intdiv($window, 2)]);
-            $session->student->notify(new SessionReminderNotification($session, intdiv($window, 2)));
+            $session->client->notify(new SessionReminderNotification($session, intdiv($window, 2)));
         }
 
         return $sessions->count();
@@ -119,7 +119,7 @@ class SessionTimeoutRules
 
         return $this->each(
             fn (Builder $q) => $q->where('state', SessionState::AwaitingConfirmation->value)->where('awaiting_since', '<=', $before),
-            function (TrainingSession $s) {
+            function (ServiceJob $s) {
                 if ($s->started_at === null) {
                     $this->lifecycle->transition($s, SessionState::Refunded, 'auto_refunded', null, ['rule' => 'R1', 'reason' => 'not_started_no_confirmation']);
                     $this->settlement->split($s, 0, null, 'auto_not_started');
@@ -129,7 +129,7 @@ class SessionTimeoutRules
                     SessionConfirmed::dispatch($s);
                 }
             },
-            fn (TrainingSession $s) => $s->state === SessionState::AwaitingConfirmation,
+            fn (ServiceJob $s) => $s->state === SessionState::AwaitingConfirmation,
         );
     }
 
@@ -139,23 +139,23 @@ class SessionTimeoutRules
     public function settleUncontestedNoShows(): int
     {
         return $this->each(
-            fn (Builder $q) => $q->whereIn('state', [SessionState::NoShowTrainer->value, SessionState::NoShowStudent->value])
+            fn (Builder $q) => $q->whereIn('state', [SessionState::NoShowProvider->value, SessionState::NoShowClient->value])
                 ->where('no_show_contest_until', '<=', now())
                 ->whereDoesntHave('events', fn ($e) => $e->where('type', 'no_show_settled')),
-            function (TrainingSession $s) {
-                $trainerFault = $s->state === SessionState::NoShowTrainer;
-                $trainerGross = $trainerFault ? $this->policy->trainerFault($s) : $this->policy->studentNoShow($s);
+            function (ServiceJob $s) {
+                $providerFault = $s->state === SessionState::NoShowProvider;
+                $providerGross = $providerFault ? $this->policy->providerFault($s) : $this->policy->clientNoShow($s);
 
-                $this->lifecycle->record($s, 'no_show_settled', null, ['rule' => 'R4', 'trainer_share' => $trainerGross]);
-                if (! $s->isCash() && EscrowHold::query()->where('training_session_id', $s->id)->whereIn('state', EscrowHold::ACTIVE)->exists()) {
-                    $this->settlement->split($s, $trainerGross, null, $trainerFault ? 'no_show_trainer' : 'no_show_student');
+                $this->lifecycle->record($s, 'no_show_settled', null, ['rule' => 'R4', 'provider_share' => $providerGross]);
+                if (! $s->isCash() && EscrowHold::query()->where('service_job_id', $s->id)->whereIn('state', EscrowHold::ACTIVE)->exists()) {
+                    $this->settlement->split($s, $providerGross, null, $providerFault ? 'no_show_provider' : 'no_show_client');
                 }
-                if ($trainerFault) {
-                    $this->score->record($s->trainer_profile_id, ScoreEvent::NO_SHOW, $s);
+                if ($providerFault) {
+                    $this->score->record($s->provider_profile_id, ScoreEvent::NO_SHOW, $s);
                 }
             },
-            fn (TrainingSession $s) => in_array($s->state, [SessionState::NoShowTrainer, SessionState::NoShowStudent], true)
-                && ! SessionEvent::query()->where('training_session_id', $s->id)->where('type', 'no_show_settled')->exists(),
+            fn (ServiceJob $s) => in_array($s->state, [SessionState::NoShowProvider, SessionState::NoShowClient], true)
+                && ! SessionEvent::query()->where('service_job_id', $s->id)->where('type', 'no_show_settled')->exists(),
         );
     }
 
@@ -166,7 +166,7 @@ class SessionTimeoutRules
     public function autoConfirmCash(): int
     {
         $before = now()->subHours((int) config('longa.session_rules.confirmation_window_hours'));
-        $sessions = TrainingSession::query()
+        $sessions = ServiceJob::query()
             ->where('state', SessionState::Completed->value)
             ->where('payment_method', 'cash')
             ->whereNull('cash_confirmed_at')
@@ -185,20 +185,20 @@ class SessionTimeoutRules
      * Aplica $apply a cada aula selecionada, numa transação própria, com a aula bloqueada e a condição
      * verificada outra vez (outro processo pode ter mudado o estado entretanto).
      *
-     * @param  Closure(Builder<TrainingSession>): Builder<TrainingSession>  $select
-     * @param  Closure(TrainingSession): void  $apply
-     * @param  Closure(TrainingSession): bool  $stillApplies
+     * @param  Closure(Builder<ServiceJob>): Builder<ServiceJob>  $select
+     * @param  Closure(ServiceJob): void  $apply
+     * @param  Closure(ServiceJob): bool  $stillApplies
      */
     private function each(Closure $select, Closure $apply, Closure $stillApplies): int
     {
         $count = 0;
-        $ids = $select(TrainingSession::query())->limit(200)->pluck('id');
+        $ids = $select(ServiceJob::query())->limit(200)->pluck('id');
 
         foreach ($ids as $id) {
             try {
                 DB::transaction(function () use ($id, $apply, $stillApplies, &$count) {
-                    /** @var TrainingSession $session */
-                    $session = TrainingSession::query()->lockForUpdate()->findOrFail($id);
+                    /** @var ServiceJob $session */
+                    $session = ServiceJob::query()->lockForUpdate()->findOrFail($id);
                     if ($stillApplies($session)) {
                         $apply($session);
                         $count++;

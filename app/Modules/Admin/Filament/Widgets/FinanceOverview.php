@@ -22,7 +22,7 @@ class FinanceOverview extends StatsOverviewWidget
         $ledger = app(LedgerService::class);
         $last = LedgerReconciliation::query()->latest('id')->first();
         $commissionsDue = -(int) LedgerAccountBalance::query()
-            ->whereHas('account', fn ($q) => $q->where('type', 'trainer_commission_due'))
+            ->whereHas('account', fn ($q) => $q->where('type', 'provider_commission_due'))
             ->sum('balance');
 
         return [

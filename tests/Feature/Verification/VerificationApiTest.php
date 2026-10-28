@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use App\Models\AuditLog;
 use App\Modules\Users\Enums\Role;
-use App\Modules\Users\Models\TrainerProfile;
+use App\Modules\Users\Models\ProviderProfile;
 use App\Modules\Users\Models\User;
 use App\Modules\Verification\Models\Verification;
 use Illuminate\Http\UploadedFile;
@@ -21,7 +21,7 @@ function submitBi(string $number = '001234567LA042'): Illuminate\Testing\TestRes
 beforeEach(fn () => Storage::fake('local'));
 
 it('submete o BI, guarda os ficheiros em privado e nunca devolve o número completo', function () {
-    $profile = TrainerProfile::factory()->create();
+    $profile = ProviderProfile::factory()->create();
     apiLogin($profile->user);
 
     $response = submitBi()->assertCreated()
@@ -39,27 +39,27 @@ it('submete o BI, guarda os ficheiros em privado e nunca devolve o número compl
 });
 
 it('valida o formato do BI', function () {
-    apiLogin(TrainerProfile::factory()->create()->user);
+    apiLogin(ProviderProfile::factory()->create()->user);
 
     submitBi('12345')->assertStatus(422)->assertJsonValidationErrors(['document_number'], 'error.details');
 });
 
 it('impede o mesmo BI em duas contas', function () {
-    apiLogin(TrainerProfile::factory()->create()->user);
+    apiLogin(ProviderProfile::factory()->create()->user);
     submitBi()->assertCreated();
 
-    apiLogin(TrainerProfile::factory()->create()->user);
+    apiLogin(ProviderProfile::factory()->create()->user);
     submitBi('001234567la042')->assertStatus(409)->assertJsonPath('error.code', 'document_already_used');
 });
 
 it('só formadores submetem verificação', function () {
-    apiLogin(User::factory()->withRole(Role::Student)->create());
+    apiLogin(User::factory()->withRole(Role::Client)->create());
 
     submitBi()->assertForbidden()->assertJsonPath('error.code', 'forbidden');
 });
 
 it('o admin aprova e o formador fica verificado', function () {
-    $profile = TrainerProfile::factory()->create();
+    $profile = ProviderProfile::factory()->create();
     apiLogin($profile->user);
     $id = submitBi()->json('data.id');
 
@@ -74,7 +74,7 @@ it('o admin aprova e o formador fica verificado', function () {
 });
 
 it('o admin rejeita com motivo', function () {
-    $profile = TrainerProfile::factory()->create();
+    $profile = ProviderProfile::factory()->create();
     apiLogin($profile->user);
     $id = submitBi()->json('data.id');
 
@@ -89,7 +89,7 @@ it('o admin rejeita com motivo', function () {
 });
 
 it('quem não é admin não acede à área de verificações', function () {
-    apiLogin(TrainerProfile::factory()->create()->user);
+    apiLogin(ProviderProfile::factory()->create()->user);
 
     $this->getJson('/api/v1/admin/verifications')->assertForbidden();
 });

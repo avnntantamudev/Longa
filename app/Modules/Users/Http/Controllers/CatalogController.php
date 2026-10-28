@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Modules\Users\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Users\Http\Resources\PublicTrainerResource;
-use App\Modules\Users\Http\Resources\SkillResource;
-use App\Modules\Users\Models\Skill;
-use App\Modules\Users\Models\TrainerProfile;
+use App\Modules\Users\Http\Resources\CategoryResource;
+use App\Modules\Users\Http\Resources\PublicProviderResource;
+use App\Modules\Users\Models\Category;
+use App\Modules\Users\Models\ProviderProfile;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -24,9 +24,9 @@ class CatalogController extends Controller
      *
      * @unauthenticated
      */
-    public function skills(): AnonymousResourceCollection
+    public function categories(): AnonymousResourceCollection
     {
-        return SkillResource::collection(Skill::query()->active()->orderBy('category')->orderBy('name')->get());
+        return CategoryResource::collection(Category::query()->active()->orderBy('area')->orderBy('name')->get());
     }
 
     /**
@@ -54,10 +54,10 @@ class CatalogController extends Controller
      *
      * @unauthenticated
      */
-    public function trainer(TrainerProfile $trainer): PublicTrainerResource
+    public function provider(ProviderProfile $provider): PublicProviderResource
     {
-        abort_unless($trainer->isVerified() && $trainer->onboarding_completed_at !== null && ! $trainer->user->isSuspended(), 404);
+        abort_unless($provider->isVerified() && $provider->onboarding_completed_at !== null && ! $provider->user->isSuspended(), 404);
 
-        return new PublicTrainerResource($trainer->load(['skills', 'user']));
+        return new PublicProviderResource($provider->load(['categories', 'user']));
     }
 }

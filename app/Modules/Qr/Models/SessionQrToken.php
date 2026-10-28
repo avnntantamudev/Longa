@@ -12,8 +12,8 @@ use Illuminate\Database\Eloquent\Model;
  * Token de confirmação de uma aula (o valor em claro nunca é guardado).
  *
  * @property int $id
- * @property int $training_session_id
- * @property int $trainer_profile_id
+ * @property int $service_job_id
+ * @property int $provider_profile_id
  * @property string $batch_id
  * @property string $token_hash
  * @property string $code_hash
@@ -24,7 +24,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int|null $used_by
  * @property int $attempts
  */
-#[Fillable(['training_session_id', 'trainer_profile_id', 'batch_id', 'token_hash', 'code_hash', 'valid_from', 'expires_at'])]
+#[Fillable(['service_job_id', 'provider_profile_id', 'batch_id', 'token_hash', 'code_hash', 'valid_from', 'expires_at'])]
 #[Hidden(['token_hash', 'code_hash'])]
 class SessionQrToken extends Model
 {

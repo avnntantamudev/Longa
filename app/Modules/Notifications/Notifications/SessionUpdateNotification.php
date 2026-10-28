@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Notifications\Notifications;
 
-use App\Modules\Sessions\Models\TrainingSession;
+use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Users\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -32,7 +32,7 @@ class SessionUpdateNotification extends Notification implements ShouldQueue
 
     public const DISPUTE_RESOLVED = 'dispute_resolved';
 
-    public function __construct(public readonly TrainingSession $session, public readonly string $kind, public readonly ?string $detail = null)
+    public function __construct(public readonly ServiceJob $session, public readonly string $kind, public readonly ?string $detail = null)
     {
         $this->onQueue('notifications');
     }
@@ -79,7 +79,7 @@ class SessionUpdateNotification extends Notification implements ShouldQueue
             self::QR_READY => ['Confirme a aula', "{$title} terminou. Escaneie o QR do formador para confirmar."],
             self::CONFIRMED => ['Aula confirmada', $this->session->isCash()
                 ? "{$title} foi confirmada. O pagamento foi feito em mão."
-                : "{$title} foi confirmada. Kz ".number_format($this->session->trainer_net, 0, ',', '.').' disponíveis na sua carteira.'],
+                : "{$title} foi confirmada. Kz ".number_format($this->session->provider_net, 0, ',', '.').' disponíveis na sua carteira.'],
             self::CANCELLED => ['Aula cancelada', "{$title} foi cancelada.".($this->detail ? " Motivo: {$this->detail}" : '')],
             self::DISPUTE_OPENED => ['Disputa aberta', "Foi aberta uma disputa sobre {$title}. O valor fica retido até à decisão do BISCA."],
             default => ['Disputa decidida', "A disputa sobre {$title} foi decidida: ".match ($this->detail) {

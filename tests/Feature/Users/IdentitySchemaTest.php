@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 use App\Modules\Users\Enums\Role;
-use App\Modules\Users\Models\TrainerProfile;
+use App\Modules\Users\Models\ProviderProfile;
 use App\Modules\Users\Models\User;
 use App\Modules\Verification\Models\Verification;
-use Database\Factories\TrainerProfileFactory;
+use Database\Factories\ProviderProfileFactory;
 use Illuminate\Support\Facades\DB;
 
 it('cifra o nº do BI na base de dados e nunca o serializa', function () {
@@ -25,20 +25,20 @@ it('cifra o nº do BI na base de dados e nunca o serializa', function () {
 });
 
 it('gera a coluna espacial do formador a partir da latitude e longitude', function () {
-    $profile = TrainerProfile::factory()->create();
+    $profile = ProviderProfile::factory()->create();
 
-    $point = DB::selectOne('select ST_Latitude(location) as lat, ST_Longitude(location) as lng from trainer_profiles where id = ?', [$profile->id]);
+    $point = DB::selectOne('select ST_Latitude(location) as lat, ST_Longitude(location) as lng from provider_profiles where id = ?', [$profile->id]);
 
-    expect(round((float) $point->lat, 4))->toBe(TrainerProfileFactory::TALATONA[0])
-        ->and(round((float) $point->lng, 4))->toBe(TrainerProfileFactory::TALATONA[1])
+    expect(round((float) $point->lat, 4))->toBe(ProviderProfileFactory::TALATONA[0])
+        ->and(round((float) $point->lng, 4))->toBe(ProviderProfileFactory::TALATONA[1])
         ->and($profile->toArray())->not->toHaveKey('location');
 });
 
 it('permite vários perfis no mesmo utilizador', function () {
-    $user = User::factory()->withRole(Role::Student, Role::Trainer)->create();
+    $user = User::factory()->withRole(Role::Client, Role::Provider)->create();
 
-    expect($user->hasProfile(Role::Student))->toBeTrue()
-        ->and($user->hasProfile(Role::Trainer))->toBeTrue()
+    expect($user->hasProfile(Role::Client))->toBeTrue()
+        ->and($user->hasProfile(Role::Provider))->toBeTrue()
         ->and($user->hasProfile(Role::Admin))->toBeFalse();
 });
 

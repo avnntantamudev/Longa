@@ -21,14 +21,14 @@ class DisputeResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'session_id' => $this->training_session_id,
+            'session_id' => $this->service_job_id,
             'opened_by' => $this->opened_by,
             'reason' => $this->reason,
             'reason_label' => $this->reasonLabel(),
             'description' => $this->description,
             'status' => $this->status,
             'resolution' => $this->resolution,
-            'trainer_share' => $this->trainer_share,
+            'provider_share' => $this->provider_share,
             'resolution_note' => $this->resolution_note,
             'resolved_at' => $this->resolved_at?->toIso8601String(),
             'created_at' => $this->created_at->toIso8601String(),

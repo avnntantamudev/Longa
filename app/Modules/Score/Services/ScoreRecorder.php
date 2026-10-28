@@ -15,10 +15,10 @@ class ScoreRecorder
     /**
      * @param  array<string, mixed>  $metadata
      */
-    public function record(int $trainerProfileId, string $type, ?Model $subject = null, array $metadata = []): ScoreEvent
+    public function record(int $providerProfileId, string $type, ?Model $subject = null, array $metadata = []): ScoreEvent
     {
         return ScoreEvent::query()->create([
-            'trainer_profile_id' => $trainerProfileId,
+            'provider_profile_id' => $providerProfileId,
             'type' => $type,
             'points' => 0,
             'subject_type' => $subject?->getMorphClass(),

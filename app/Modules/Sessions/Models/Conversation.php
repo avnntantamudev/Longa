@@ -13,18 +13,18 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * Chat da aula (aluno ↔ formador).
  *
  * @property int $id
- * @property int $training_session_id
- * @property-read TrainingSession $session
+ * @property int $service_job_id
+ * @property-read ServiceJob $session
  */
-#[Fillable(['training_session_id'])]
+#[Fillable(['service_job_id'])]
 class Conversation extends Model
 {
     /**
-     * @return BelongsTo<TrainingSession, $this>
+     * @return BelongsTo<ServiceJob, $this>
      */
     public function session(): BelongsTo
     {
-        return $this->belongsTo(TrainingSession::class, 'training_session_id');
+        return $this->belongsTo(ServiceJob::class, 'service_job_id');
     }
 
     /**

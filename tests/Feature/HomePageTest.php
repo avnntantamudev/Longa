@@ -12,7 +12,7 @@ it('mostra a página inicial com os três perfis', function () {
             ->where('appName', 'BISCA')
             ->where('auth.user', null)
             ->has('profiles', 3)
-            ->where('profiles.0.key', 'student')
+            ->where('profiles.0.key', 'client')
             ->has('highlights', 3));
 });
 

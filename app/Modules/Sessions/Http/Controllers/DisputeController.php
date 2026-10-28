@@ -11,7 +11,7 @@ use App\Modules\Sessions\Http\Requests\OpenDisputeRequest;
 use App\Modules\Sessions\Http\Resources\DisputeResource;
 use App\Modules\Sessions\Models\Dispute;
 use App\Modules\Sessions\Models\DisputeAttachment;
-use App\Modules\Sessions\Models\TrainingSession;
+use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Users\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -34,7 +34,7 @@ class DisputeController extends Controller
      * Requer `Idempotency-Key`. O valor fica retido até à decisão do admin.
      * Erros: `dispute_not_allowed` (409).
      */
-    public function store(OpenDisputeRequest $request, TrainingSession $session, OpenDispute $action): JsonResponse
+    public function store(OpenDisputeRequest $request, ServiceJob $session, OpenDispute $action): JsonResponse
     {
         Gate::authorize('view', $session);
 
@@ -52,7 +52,7 @@ class DisputeController extends Controller
     /**
      * Disputas de uma aula.
      */
-    public function index(TrainingSession $session): JsonResponse
+    public function index(ServiceJob $session): JsonResponse
     {
         Gate::authorize('view', $session);
 
@@ -66,7 +66,7 @@ class DisputeController extends Controller
     {
         $user = $this->user($request);
         /** @var Dispute $dispute */
-        $dispute = Dispute::query()->with('session.trainer')->findOrFail($attachment->dispute_id);
+        $dispute = Dispute::query()->with('session.provider')->findOrFail($attachment->dispute_id);
         abort_unless($user->hasRole('admin') || $dispute->session->involves($user), 403);
 
         $minutes = (int) config('longa.disputes.attachment_link_minutes');
@@ -96,14 +96,14 @@ class DisputeController extends Controller
      * Decidir disputa (admin).
      *
      * Requer `Idempotency-Key`. `released` liberta tudo ao formador, `refunded` devolve tudo ao aluno,
-     * `partially_refunded` dá `trainer_share` Kz ao formador (antes da comissão) e devolve o resto.
+     * `partially_refunded` dá `provider_share` Kz ao formador (antes da comissão) e devolve o resto.
      * Erros: `dispute_already_resolved` (409).
      */
     public function resolve(Request $request, Dispute $dispute, ResolveDispute $action): DisputeResource
     {
         $data = $request->validate([
             'decision' => ['required', Rule::in([ResolveDispute::RELEASE, ResolveDispute::REFUND, ResolveDispute::PARTIAL])],
-            'trainer_share' => ['nullable', 'required_if:decision,'.ResolveDispute::PARTIAL, 'integer', 'min:1'],
+            'provider_share' => ['nullable', 'required_if:decision,'.ResolveDispute::PARTIAL, 'integer', 'min:1'],
             'note' => ['required', 'string', 'min:5', 'max:1000'],
         ]);
 
@@ -111,7 +111,7 @@ class DisputeController extends Controller
             $dispute,
             $this->user($request),
             $data['decision'],
-            isset($data['trainer_share']) ? (int) $data['trainer_share'] : null,
+            isset($data['provider_share']) ? (int) $data['provider_share'] : null,
             $data['note'],
         );
 

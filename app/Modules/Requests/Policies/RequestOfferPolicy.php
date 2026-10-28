@@ -14,6 +14,6 @@ class RequestOfferPolicy
 {
     public function respond(User $user, RequestOffer $offer): bool
     {
-        return $user->trainerProfile !== null && $offer->trainer_profile_id === $user->trainerProfile->id;
+        return $user->providerProfile !== null && $offer->provider_profile_id === $user->providerProfile->id;
     }
 }

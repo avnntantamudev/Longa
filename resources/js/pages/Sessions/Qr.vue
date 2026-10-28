@@ -120,7 +120,7 @@ onBeforeUnmount(() => {
         <span class="flex size-24 items-center justify-center rounded-full bg-success text-5xl text-white">✓</span>
         <h1 class="text-display">Aula confirmada</h1>
         <p v-if="session?.payment_method === 'cash'" class="text-ink-muted">O aluno confirmou. O pagamento é feito em mão.</p>
-        <p v-else class="text-title">{{ kwanza(session?.trainer_net ?? 0) }} <span class="text-ink-muted">na sua carteira</span></p>
+        <p v-else class="text-title">{{ kwanza(session?.provider_net ?? 0) }} <span class="text-ink-muted">na sua carteira</span></p>
         <Link href="/carteira" class="btn-primary w-full max-w-xs">Ver carteira</Link>
         <Link :href="`/aulas/${sessionId}`" class="text-caption font-semibold">Voltar à aula</Link>
     </section>

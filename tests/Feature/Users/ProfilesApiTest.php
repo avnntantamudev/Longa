@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 use App\Modules\Users\Enums\Role;
+use App\Modules\Users\Models\Category;
 use App\Modules\Users\Models\Consent;
-use App\Modules\Users\Models\Skill;
-use App\Modules\Users\Models\TrainerProfile;
+use App\Modules\Users\Models\ProviderProfile;
 use App\Modules\Users\Models\User;
 use Laravel\Sanctum\Sanctum;
 
@@ -14,17 +14,17 @@ it('conclui o registo com vários perfis e regista os consentimentos', function 
 
     $this->postJson('/api/v1/onboarding', [
         'name' => 'Maria Silva',
-        'profiles' => ['student', 'trainer'],
+        'profiles' => ['client', 'provider'],
         'accept_terms' => true,
         'accept_privacy' => true,
     ])->assertOk()
         ->assertJsonPath('data.name', 'Maria Silva')
-        ->assertJsonPath('data.profiles.student', true)
-        ->assertJsonPath('data.profiles.trainer', true)
+        ->assertJsonPath('data.profiles.client', true)
+        ->assertJsonPath('data.profiles.provider', true)
         ->assertJsonPath('data.needs_onboarding', false);
 
-    expect($user->fresh()?->studentProfile)->not->toBeNull()
-        ->and($user->fresh()?->trainerProfile)->not->toBeNull()
+    expect($user->fresh()?->clientProfile)->not->toBeNull()
+        ->and($user->fresh()?->providerProfile)->not->toBeNull()
         ->and(Consent::query()->where('user_id', $user->id)->pluck('type')->sort()->values()->all())->toBe(['privacy', 'terms']);
 });
 
@@ -37,11 +37,11 @@ it('exige a aceitação dos termos e não permite escolher o perfil de admin', f
 });
 
 it('conclui o onboarding do formador por passos', function () {
-    $user = apiLogin(User::factory()->withRole(Role::Trainer)->create());
-    $user->trainerProfile()->create([]);
-    $skills = Skill::query()->limit(2)->pluck('id')->all();
+    $user = apiLogin(User::factory()->withRole(Role::Provider)->create());
+    $user->providerProfile()->create([]);
+    $categories = Category::query()->limit(2)->pluck('id')->all();
 
-    $this->putJson('/api/v1/me/trainer-profile/details', [
+    $this->putJson('/api/v1/me/provider-profile/details', [
         'bio' => 'Formador de SGME com experiência em empresas de Talatona.',
         'years_experience' => 6,
         'modalities' => ['in_person', 'online'],
@@ -49,11 +49,11 @@ it('conclui o onboarding do formador por passos', function () {
         'rate_unit' => 'day',
     ])->assertOk()->assertJsonPath('data.onboarding.completed', false);
 
-    $this->putJson('/api/v1/me/trainer-profile/skills', ['skill_ids' => $skills])
+    $this->putJson('/api/v1/me/provider-profile/categories', ['category_ids' => $categories])
         ->assertOk()
-        ->assertJsonCount(2, 'data.skills');
+        ->assertJsonCount(2, 'data.categories');
 
-    $this->putJson('/api/v1/me/trainer-profile/location', [
+    $this->putJson('/api/v1/me/provider-profile/location', [
         'municipality' => 'Talatona', 'neighborhood' => 'Talatona',
         'latitude' => -8.9167, 'longitude' => 13.1833,
         'service_radius_m' => 5000, 'accept_location' => true,
@@ -64,7 +64,7 @@ it('conclui o onboarding do formador por passos', function () {
     Illuminate\Support\Facades\Storage::fake('local');
     $this->post('/api/v1/me/photo', ['photo' => Illuminate\Http\UploadedFile::fake()->image('eu.jpg', 600, 600)], ['Accept' => 'application/json'])->assertOk();
 
-    $this->getJson('/api/v1/me/trainer-profile')
+    $this->getJson('/api/v1/me/provider-profile')
         ->assertJsonPath('data.onboarding.photo', true)
         ->assertJsonPath('data.onboarding.completed', true)
         ->assertJsonPath('data.verification_status', 'unverified');
@@ -73,10 +73,10 @@ it('conclui o onboarding do formador por passos', function () {
 });
 
 it('rejeita locais fora de Angola', function () {
-    $user = apiLogin(User::factory()->withRole(Role::Trainer)->create());
-    $user->trainerProfile()->create([]);
+    $user = apiLogin(User::factory()->withRole(Role::Provider)->create());
+    $user->providerProfile()->create([]);
 
-    $this->putJson('/api/v1/me/trainer-profile/location', [
+    $this->putJson('/api/v1/me/provider-profile/location', [
         'municipality' => 'Lisboa', 'neighborhood' => 'Baixa',
         'latitude' => 38.71, 'longitude' => -9.14,
         'service_radius_m' => 5000, 'accept_location' => true,
@@ -84,9 +84,9 @@ it('rejeita locais fora de Angola', function () {
 });
 
 it('mostra o perfil público sem telefone nem coordenadas', function () {
-    $profile = TrainerProfile::factory()->verified(87)->create();
+    $profile = ProviderProfile::factory()->verified(87)->create();
 
-    $response = $this->getJson("/api/v1/trainers/{$profile->id}")->assertOk();
+    $response = $this->getJson("/api/v1/providers/{$profile->id}")->assertOk();
 
     $response->assertJsonPath('data.verified', true)->assertJsonPath('data.neighborhood', 'Talatona');
     expect($response->json('data'))->not->toHaveKeys(['phone', 'latitude', 'longitude', 'location', 'user_id']);
@@ -94,13 +94,13 @@ it('mostra o perfil público sem telefone nem coordenadas', function () {
 });
 
 it('esconde perfis de formadores não verificados', function () {
-    $profile = TrainerProfile::factory()->create();
+    $profile = ProviderProfile::factory()->create();
 
-    $this->getJson("/api/v1/trainers/{$profile->id}")->assertNotFound();
+    $this->getJson("/api/v1/providers/{$profile->id}")->assertNotFound();
 });
 
 it('lista áreas de formação e zonas sem autenticação', function () {
-    $this->getJson('/api/v1/skills')->assertOk()->assertJsonFragment(['name' => 'SGME — Gestão Empresarial']);
+    $this->getJson('/api/v1/categories')->assertOk()->assertJsonFragment(['name' => 'SGME — Gestão Empresarial']);
     $this->getJson('/api/v1/zones')->assertOk()->assertJsonFragment(['neighborhood' => 'Talatona']);
 });
 

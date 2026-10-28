@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Sessions\Events;
 
-use App\Modules\Sessions\Models\TrainingSession;
+use App\Modules\Sessions\Models\ServiceJob;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
@@ -20,7 +20,7 @@ class QrIssued implements ShouldBroadcast, ShouldDispatchAfterCommit
 
     public string $broadcastQueue = 'notifications';
 
-    public function __construct(public readonly TrainingSession $session) {}
+    public function __construct(public readonly ServiceJob $session) {}
 
     public function broadcastOn(): PrivateChannel
     {

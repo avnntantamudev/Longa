@@ -1,129 +1,87 @@
-"""Gera os ícones PNG da PWA (192, 512, maskable, apple-touch) e o favicon, sem dependências externas.
+"""
+Gera os ícones da PWA (public/icons) e o favicon a partir da marca BISCA.
 
-Desenho (provisório até chegar o logótipo oficial do BISCA): pino de localização laranja (#ED731D) com um "B"
-branco, sobre fundo branco. A mesma geometria existe em SVG em resources/js/components/BrandLogo.vue
-(viewBox 0 0 78.6 100).
+Desenho: duas setas em "S", a de cima laranja (#FF7300) e a de baixo quase preta (#222222), sobre fundo branco
+(logótipo oficial enviado pelo cliente a 2026-10-28). Os mesmos caminhos existem em SVG em
+resources/js/components/BrandLogo.vue (coordenadas da imagem original, viewBox 530 105 555 600).
 
-Uso: python scripts/generate-icons.py
+Uso: python scripts/generate-icons.py  (precisa do Pillow: pip install pillow)
 """
 import os
-import struct
-import zlib
+import re
 
-WHITE = (0xFF, 0xFF, 0xFF, 255)
-ORANGE = (0xED, 0x73, 0x1D, 255)
-CLEAR = (0, 0, 0, 0)
+from PIL import Image, ImageDraw
+
 OUT = os.path.join(os.path.dirname(__file__), "..", "public", "icons")
 
-# Geometria do SVG (viewBox 0 0 78.6 100): pino = círculo + ponta; o "B" são dois "D" (retângulo + meio disco
-# à direita) com um furo em "D" cada um: (x0, x1, y0, y1)
-PIN_CIRCLE = (39.3, 39.3, 39.3)
-PIN_TIP = [(9.3, 64.7), (69.3, 64.7), (39.3, 100.0)]
-B_OUTER = [(27.0, 41.0, 22.0, 40.0), (27.0, 43.0, 38.0, 57.0)]
-B_HOLES = [(33.5, 41.0, 28.0, 34.0), (33.5, 43.0, 44.5, 50.5)]
-MARK_RATIO = 0.786  # largura / altura
+WHITE = (255, 255, 255, 255)
+ORANGE = (0xFF, 0x73, 0x00, 255)
+INK = (0x22, 0x22, 0x22, 255)
 
-SUPERSAMPLE = 4  # antialiasing
-
-
-def write_png(path, size, pixel):
-    rows = b"".join(
-        b"\x00" + b"".join(bytes(pixel(x, y)) for x in range(size)) for y in range(size)
-    )
-
-    def chunk(kind, data):
-        return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind + data))
-
-    png = b"\x89PNG\r\n\x1a\n"
-    png += chunk(b"IHDR", struct.pack(">IIBBBBB", size, size, 8, 6, 0, 0, 0))
-    png += chunk(b"IDAT", zlib.compress(rows, 9))
-    png += chunk(b"IEND", b"")
-    with open(path, "wb") as fh:
-        fh.write(png)
+# Iguais aos de BrandLogo.vue (só M, L, C e Z, coordenadas absolutas)
+ORANGE_ARROW = (
+    "M565 437 C540 330 590 200 720 140 C820 100 940 120 1015 202 L1057 155 L1077 360 L885 293 L940 262 "
+    "C880 205 790 190 720 215 C630 245 575 330 565 437 Z"
+)
+INK_ARROW = (
+    "M615 450 C700 395 800 360 880 357 C990 355 1072 430 1072 515 C1072 620 950 698 815 698 "
+    "C720 698 640 665 597 610 L552 657 L537 450 L727 520 L670 550 C720 600 780 612 830 612 "
+    "C920 612 982 570 982 518 C982 460 920 420 840 420 C760 420 680 432 615 450 Z"
+)
+BOX = (537, 115, 1077, 698)  # x0, y0, x1, y1 da marca
 
 
-def write_ico(path, png_path, size):
-    # ICO com uma única imagem PNG embebida (suportado por todos os browsers atuais)
-    with open(png_path, "rb") as fh:
-        data = fh.read()
-    header = struct.pack("<HHH", 0, 1, 1)
-    entry = struct.pack("<BBBBHHII", size % 256, size % 256, 0, 0, 1, 32, len(data), 6 + 16)
-    with open(path, "wb") as fh:
-        fh.write(header + entry + data)
+def flatten(d, steps=24):
+    """Converte o caminho num polígono (as curvas cúbicas viram segmentos)."""
+    tokens = re.findall(r"[MLCZ]|-?\d+(?:\.\d+)?", d)
+    points, i, cmd = [], 0, None
+    while i < len(tokens):
+        if tokens[i] in "MLCZ":
+            cmd = tokens[i]
+            i += 1
+            if cmd == "Z":
+                continue
+        if cmd in ("M", "L"):
+            points.append((float(tokens[i]), float(tokens[i + 1])))
+            i += 2
+        elif cmd == "C":
+            x0, y0 = points[-1]
+            x1, y1, x2, y2, x3, y3 = map(float, tokens[i:i + 6])
+            for s in range(1, steps + 1):
+                t = s / steps
+                a, b, c, e = (1 - t) ** 3, 3 * (1 - t) ** 2 * t, 3 * (1 - t) * t * t, t ** 3
+                points.append((a * x0 + b * x1 + c * x2 + e * x3, a * y0 + b * y1 + c * y2 + e * y3))
+            i += 6
+    return points
 
 
-def in_polygon(u, v, poly):
-    inside = False
-    j = len(poly) - 1
-    for i, (xi, yi) in enumerate(poly):
-        xj, yj = poly[j]
-        if (yi > v) != (yj > v) and u < (xj - xi) * (v - yi) / (yj - yi) + xi:
-            inside = not inside
-        j = i
-    return inside
+def icon(size, maskable, rounded=True):
+    """maskable: fundo branco a cheio e marca mais pequena (zona segura de 80%)."""
+    ss = 4
+    big = size * ss
+    img = Image.new("RGBA", (big, big), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    if maskable or not rounded:
+        draw.rectangle((0, 0, big, big), fill=WHITE)
+    else:
+        draw.rounded_rectangle((0, 0, big - 1, big - 1), radius=int(big * 0.22), fill=WHITE)
 
-
-def in_circle(x, y, c):
-    cx, cy, r = c
-    return (x - cx) ** 2 + (y - cy) ** 2 <= r * r
-
-
-def in_d(x, y, d):
-    x0, x1, y0, y1 = d
-    r = (y1 - y0) / 2
-    return y0 <= y <= y1 and (x0 <= x <= x1 or (x > x1 and (x - x1) ** 2 + (y - y0 - r) ** 2 <= r * r))
-
-
-def in_mark(u, v):
-    # (u, v) no quadrado unitário; a marca ocupa a altura toda, centrada na horizontal
-    x = (u - (1 - MARK_RATIO) / 2) * 100
-    y = v * 100
-    pin = in_circle(x, y, PIN_CIRCLE) or in_polygon(x, y, PIN_TIP)
-    letter = any(in_d(x, y, d) for d in B_OUTER) and not any(in_d(x, y, d) for d in B_HOLES)
-    return pin and not letter
-
-
-def in_rounded_rect(u, v, radius):
-    cx = min(max(u, radius), 1 - radius)
-    cy = min(max(v, radius), 1 - radius)
-    return (u - cx) ** 2 + (v - cy) ** 2 <= radius * radius
-
-
-def icon(size, maskable):
-    # maskable: o desenho ocupa a zona segura central (80%) e o fundo cobre tudo
-    scale = 0.6 if maskable else 0.8
-
-    def sample(u, v):
-        if not maskable and not in_rounded_rect(u, v, 0.22):
-            return CLEAR
-        mu = (u - 0.5) / scale + 0.5
-        mv = (v - 0.5) / scale + 0.5
-        return ORANGE if in_mark(mu, mv) else WHITE
-
-    def pixel(x, y):
-        acc = [0, 0, 0, 0]
-        for sy in range(SUPERSAMPLE):
-            for sx in range(SUPERSAMPLE):
-                c = sample((x + (sx + 0.5) / SUPERSAMPLE) / size, (y + (sy + 0.5) / SUPERSAMPLE) / size)
-                for k in range(4):
-                    acc[k] += c[k]
-        n = SUPERSAMPLE * SUPERSAMPLE
-        alpha = acc[3] / n
-        if alpha == 0:
-            return CLEAR
-        # cor média ponderada pela opacidade
-        return tuple(int(acc[k] / n * 255 / alpha) if k < 3 else int(alpha) for k in range(4))
-
-    return pixel
+    x0, y0, x1, y1 = BOX
+    scale = (0.62 if maskable else 0.8) * big / max(x1 - x0, y1 - y0)
+    ox = (big - (x1 - x0) * scale) / 2 - x0 * scale
+    oy = (big - (y1 - y0) * scale) / 2 - y0 * scale
+    for d, colour in ((INK_ARROW, INK), (ORANGE_ARROW, ORANGE)):
+        draw.polygon([(ox + x * scale, oy + y * scale) for x, y in flatten(d)], fill=colour)
+    return img.resize((size, size), Image.LANCZOS)
 
 
 if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
     for size in (192, 512):
-        write_png(os.path.join(OUT, f"icon-{size}.png"), size, icon(size, False))
-        write_png(os.path.join(OUT, f"icon-maskable-{size}.png"), size, icon(size, True))
-    write_png(os.path.join(OUT, "apple-touch-icon.png"), 180, icon(180, True))
-    favicon_png = os.path.join(OUT, "favicon-32.png")
-    write_png(favicon_png, 32, icon(32, False))
-    write_ico(os.path.join(OUT, "..", "favicon.ico"), favicon_png, 32)
+        icon(size, False).save(os.path.join(OUT, f"icon-{size}.png"))
+        icon(size, True).save(os.path.join(OUT, f"icon-maskable-{size}.png"))
+    icon(180, True).save(os.path.join(OUT, "apple-touch-icon.png"))
+    favicon = icon(32, False)
+    favicon.save(os.path.join(OUT, "favicon-32.png"))
+    favicon.save(os.path.join(OUT, "..", "favicon.ico"), sizes=[(32, 32)])
     print("Ícones gerados em", os.path.abspath(OUT))

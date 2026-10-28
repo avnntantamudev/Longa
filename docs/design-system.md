@@ -7,8 +7,8 @@ Fonte: kit de telas enviado a 23/10/2026 (16 imagens, algumas repetidas). Os tok
 
 - **Nome:** BISCA (antes LONGA e, por um dia, Garimpo; mudou a 2026-10-28). Nomes internos (`config/longa.php`, `LONGA_*`, `longa:*`,
   prefixo `LONGA:` do QR) mantêm-se.
-- **Logótipo (provisório):** pino de localização laranja `#ED731D` com um "B" branco + "BISCA" em negrito, até
-  chegar o logótipo oficial.
+- **Logótipo:** duas setas em "S" (laranja `#FF7300` em cima, `#222222` em baixo) + "BISCA" em negrito; a seta
+  escura e o texto ficam brancos sobre fundos escuros. Original enviado pelo cliente a 2026-10-28.
   Componente `BrandLogo.vue` (variante `light` para fundos escuros, `dark` para claros). Ícones PWA gerados
   com a mesma geometria por `scripts/generate-icons.py`.
 - **Assinatura:** "serviços • técnicos" (do logótipo). Ícones da PWA: marca laranja sobre fundo branco.

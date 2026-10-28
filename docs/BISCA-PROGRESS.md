@@ -5,7 +5,7 @@ passam a ser a categoria Educação. O pedido tem 3 fases e paramos no fim de ca
 Auditoria: docs/BISCA-AUDITORIA.md.
 
 Decisões do cliente (2026-10-28):
-1. **Nome:** BISCA (substitui Garimpo). O logótipo é provisório até chegar o oficial.
+1. **Nome:** BISCA (substitui Garimpo). Logótipo oficial: duas setas em "S" (enviado a 2026-10-28).
 2. **Login:** mantém-se o OTP com PIN de 6 dígitos (sem palavra-passe).
 3. **Nomes no código:** em inglês, como já estão (provider, client, categories, ...).
 4. **Dinheiro:** mantém-se o livro-razão de dupla entrada; a carteira mostra os movimentos a partir dele.

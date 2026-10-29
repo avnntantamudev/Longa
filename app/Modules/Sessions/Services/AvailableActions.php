@@ -46,7 +46,12 @@ class AvailableActions
             RequestState::QuoteAccepted => $session->awaitingPayment()
                 ? ['pay' => ! $isProvider && ($session->payment_due_at?->isFuture() ?? false)]
                 : ['start' => $isProvider],
-            RequestState::InProgress => ['finish' => $isProvider, 'dispute' => true],
+            RequestState::InProgress => [
+                'finish' => $isProvider,
+                'dispute' => true,
+                // Orçamento aceite: o técnico pode propor trabalho extra (adenda)
+                'addendum' => $isProvider && $session->pricing_mode === PricingMode::Quote,
+            ],
             RequestState::Completed => [
                 'show_qr' => $isProvider && $now->lt($end->copy()->addHours((int) $rules['qr_window_hours_after_end'])),
                 'confirm' => ! $isProvider,

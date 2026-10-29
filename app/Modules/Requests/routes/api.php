@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Requests\Http\Controllers\AddendumController;
 use App\Modules\Requests\Http\Controllers\OfferController;
 use App\Modules\Requests\Http\Controllers\QuoteController;
 use App\Modules\Requests\Http\Controllers\RequestMediaController;
@@ -40,6 +41,13 @@ Route::middleware(['auth:sanctum', 'auth.session', 'onboarded'])->group(function
     Route::post('quotes/{quote}/accept', [QuoteController::class, 'accept'])->middleware('idempotent')->name('api.quotes.accept');
     Route::post('quotes/{quote}/revision', [QuoteController::class, 'revision'])->middleware('idempotent')->name('api.quotes.revision');
     Route::post('quotes/{quote}/refuse', [QuoteController::class, 'refuse'])->middleware('idempotent')->name('api.quotes.refuse');
+
+    // Adendas ao orçamento aceite
+    Route::get('sessions/{session}/addenda', [AddendumController::class, 'index'])->name('api.sessions.addenda.index');
+    Route::post('sessions/{session}/addenda', [AddendumController::class, 'store'])->middleware(['idempotent', 'throttle:10,1'])->name('api.sessions.addenda.store');
+    Route::post('addenda/{addendum}/approve', [AddendumController::class, 'approve'])->middleware('idempotent')->name('api.addenda.approve');
+    Route::post('addenda/{addendum}/reject', [AddendumController::class, 'reject'])->middleware('idempotent')->name('api.addenda.reject');
+    Route::post('addenda/{addendum}/pay', [AddendumController::class, 'pay'])->middleware(['idempotent', 'throttle:10,1'])->name('api.addenda.pay');
 });
 
 // Fotos e vídeos do formulário do pedido (cliente, técnicos com oferta, técnico atribuído e equipa)

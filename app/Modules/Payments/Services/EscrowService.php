@@ -70,6 +70,38 @@ class EscrowService
     }
 
     /**
+     * Junta um valor pago depois (ex.: adenda aprovada) à retenção do serviço. A comissão e a parte do técnico são
+     * recalculadas sobre o novo total com a percentagem da retenção. Idempotente pela chave.
+     */
+    public function topUp(ServiceRequest $session, PaymentCharge $charge, int $amount, string $key): EscrowHold
+    {
+        return DB::transaction(function () use ($session, $charge, $amount, $key) {
+            /** @var EscrowHold $hold */
+            $hold = EscrowHold::query()->where('service_request_id', $session->id)->lockForUpdate()->firstOrFail();
+
+            if (LedgerTransaction::query()->where('idempotency_key', "escrow:topup:{$key}")->exists()) {
+                return $hold;
+            }
+            if (! $hold->isActive()) {
+                throw new LedgerException("Retenção do serviço {$session->id} já liquidada como {$hold->state}.");
+            }
+
+            $this->ledger->post('escrow_hold', "escrow:topup:{$key}", [
+                Accounts::ESCROW => $amount,
+                Accounts::FUNDS_IN => -$amount,
+            ], $session, ['charge_id' => $charge->id, 'reference' => $charge->external_reference, 'top_up' => $key]);
+
+            $total = $hold->amount + $amount;
+            $split = Commission::split($total, $hold->commission_percent);
+            $hold->forceFill(['amount' => $total, 'commission' => $split['commission'], 'provider_net' => $split['provider_net']])->save();
+
+            $this->audit->record('escrow.topped_up', $hold, ['amount' => $amount, 'total' => $total, 'key' => $key]);
+
+            return $hold;
+        });
+    }
+
+    /**
      * Liquidação: o técnico fica com $providerGross (antes da comissão) e o resto volta ao cliente.
      *  - libertar tudo: $providerGross = valor total
      *  - reembolso total: 0

@@ -207,3 +207,17 @@ Respostas do cliente às dúvidas da Fase 1 (2026-10-29). Confirmado com o "ok":
 - Alerta: orçamentos com total abaixo de mínimo × (1 − 50%) ou acima de máximo × (1 + 50%) do intervalo de referência
   ficam marcados; o painel (Operações → Orçamentos) mostra-os com um contador. Tolerância configurável.
 - Vários orçamentos: cada orçamento guarda o técnico; `longa.quotes.max_per_request` = 1 (não ligado).
+
+### Notas do passo 7
+
+- Migração `2026_10_29_000006_create_quote_addenda` (reversível): adendas com descrição, valor, % do orçamento
+  original (adendas aprovadas + esta), estado, revisão da equipa (quem, quando, nota).
+- Fluxo: durante a execução de um orçamento aceite, o técnico propõe (`POST /sessions/{id}/addenda`); o cliente
+  aprova ou recusa antes de o trabalho ser feito (`POST /addenda/{id}/approve|reject`). Uma adenda de cada vez.
+- Acima de **20%** do orçamento original (parâmetro), a aprovação do cliente envia-a para a equipa: painel
+  Operações → Adendas, com contador; só o admin aprova ou recusa (muda o valor), com nota e auditoria.
+- Aprovada: o valor do pedido sobe e a comissão é recalculada. Pagamento digital: o cliente paga a adenda
+  (`POST /addenda/{id}/pay`) e o valor junta-se à retenção do escrow (`EscrowService::topUp`); em dinheiro, paga
+  tudo ao técnico no fim.
+- Limite conhecido: um reembolso por disputa é pedido ao gateway (simulado) sobre a cobrança original; com o gateway
+  real, os reembolsos de adendas pagas terão de ser repartidos pelas cobranças (Fase 3).

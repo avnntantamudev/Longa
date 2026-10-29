@@ -16,7 +16,19 @@ export type SessionAction =
     | 'confirm_cash'
     | 'diagnosis'
     | 'send_quote'
-    | 'answer_quote';
+    | 'answer_quote'
+    | 'addendum';
+
+/** Adenda ao orçamento (GET /sessions/{id}/addenda) */
+export interface Addendum {
+    id: number;
+    description: string;
+    amount: number;
+    percent_of_quote: number;
+    status: 'pending_client' | 'pending_team' | 'approved' | 'paid' | 'rejected';
+    status_label: string;
+    team_review: boolean;
+}
 
 /** Orçamento (GET /sessions/{id}/quotes) */
 export interface Quote {
@@ -159,6 +171,11 @@ export function eventLabel(type: string): string {
         quote_accepted: 'Orçamento aceite',
         quote_refused: 'Orçamento recusado',
         quote_expired: 'Orçamento expirado',
+        addendum_submitted: 'Trabalho extra proposto',
+        addendum_team_review: 'Trabalho extra em revisão pela equipa',
+        addendum_approved: 'Trabalho extra aprovado',
+        addendum_rejected: 'Trabalho extra recusado',
+        addendum_paid: 'Trabalho extra pago',
         reminder_24h: 'Lembrete enviado (24 h antes)',
         reminder_1h: 'Lembrete enviado (1 h antes)',
         auto_not_started: 'Cancelado: o serviço não foi iniciado',

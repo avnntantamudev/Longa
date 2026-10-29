@@ -16,6 +16,373 @@
         }
     ],
     "paths": {
+        "/sessions/{session}/addenda": {
+            "get": {
+                "operationId": "sessions.addenda.index",
+                "summary": "Adendas do pedido (cliente e t\u00e9cnico atribu\u00eddo)",
+                "tags": [
+                    "Addendum"
+                ],
+                "parameters": [
+                    {
+                        "name": "session",
+                        "in": "path",
+                        "required": true,
+                        "description": "The session ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `AddendumResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/AddendumResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "sessions.addenda.store",
+                "summary": "Propor trabalho extra (t\u00e9cnico, durante a execu\u00e7\u00e3o de um or\u00e7amento aceite)",
+                "tags": [
+                    "Addendum"
+                ],
+                "parameters": [
+                    {
+                        "name": "session",
+                        "in": "path",
+                        "required": true,
+                        "description": "The session ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "description": "Chave \u00fanica por a\u00e7\u00e3o (8\u2013100 caracteres: letras, n\u00fameros, \"-\" e \"_\"). Repetir o mesmo pedido com a mesma chave devolve a resposta guardada (24 h, cabe\u00e7alho `Idempotent-Replayed: true`); a mesma chave com outro corpo d\u00e1 422 `idempotency_key_reused`; um pedido ainda em curso d\u00e1 409 `request_in_progress`.",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z0-9_-]{8,100}$"
+                        },
+                        "example": "3f1c9a2e-7b4d-4e8a-9c1f-2a6b8d0e4f13"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "description": {
+                                        "type": "string",
+                                        "minLength": 5,
+                                        "maxLength": 1000
+                                    },
+                                    "amount": {
+                                        "type": "integer",
+                                        "description": "Valor do trabalho extra (Kz). @example 12000",
+                                        "minimum": 1,
+                                        "maximum": 100000000
+                                    }
+                                },
+                                "required": [
+                                    "description",
+                                    "amount"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`AddendumResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AddendumResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/addenda/{addendum}/approve": {
+            "post": {
+                "operationId": "addenda.approve",
+                "summary": "Aprovar a adenda (cliente). Acima do limite vai para revis\u00e3o da equipa",
+                "tags": [
+                    "Addendum"
+                ],
+                "parameters": [
+                    {
+                        "name": "addendum",
+                        "in": "path",
+                        "required": true,
+                        "description": "The addendum ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "description": "Chave \u00fanica por a\u00e7\u00e3o (8\u2013100 caracteres: letras, n\u00fameros, \"-\" e \"_\"). Repetir o mesmo pedido com a mesma chave devolve a resposta guardada (24 h, cabe\u00e7alho `Idempotent-Replayed: true`); a mesma chave com outro corpo d\u00e1 422 `idempotency_key_reused`; um pedido ainda em curso d\u00e1 409 `request_in_progress`.",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z0-9_-]{8,100}$"
+                        },
+                        "example": "3f1c9a2e-7b4d-4e8a-9c1f-2a6b8d0e4f13"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`AddendumResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AddendumResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/addenda/{addendum}/reject": {
+            "post": {
+                "operationId": "addenda.reject",
+                "summary": "Recusar a adenda (cliente): o trabalho extra n\u00e3o \u00e9 feito",
+                "tags": [
+                    "Addendum"
+                ],
+                "parameters": [
+                    {
+                        "name": "addendum",
+                        "in": "path",
+                        "required": true,
+                        "description": "The addendum ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "description": "Chave \u00fanica por a\u00e7\u00e3o (8\u2013100 caracteres: letras, n\u00fameros, \"-\" e \"_\"). Repetir o mesmo pedido com a mesma chave devolve a resposta guardada (24 h, cabe\u00e7alho `Idempotent-Replayed: true`); a mesma chave com outro corpo d\u00e1 422 `idempotency_key_reused`; um pedido ainda em curso d\u00e1 409 `request_in_progress`.",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z0-9_-]{8,100}$"
+                        },
+                        "example": "3f1c9a2e-7b4d-4e8a-9c1f-2a6b8d0e4f13"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "note": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`AddendumResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AddendumResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/addenda/{addendum}/pay": {
+            "post": {
+                "operationId": "addenda.pay",
+                "summary": "Pagar a adenda aprovada (cliente, pagamento digital): o valor junta-se ao escrow",
+                "tags": [
+                    "Addendum"
+                ],
+                "parameters": [
+                    {
+                        "name": "addendum",
+                        "in": "path",
+                        "required": true,
+                        "description": "The addendum ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "description": "Chave \u00fanica por a\u00e7\u00e3o (8\u2013100 caracteres: letras, n\u00fameros, \"-\" e \"_\"). Repetir o mesmo pedido com a mesma chave devolve a resposta guardada (24 h, cabe\u00e7alho `Idempotent-Replayed: true`); a mesma chave com outro corpo d\u00e1 422 `idempotency_key_reused`; um pedido ainda em curso d\u00e1 409 `request_in_progress`.",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z0-9_-]{8,100}$"
+                        },
+                        "example": "3f1c9a2e-7b4d-4e8a-9c1f-2a6b8d0e4f13"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "method": {
+                                        "type": "string",
+                                        "enum": [
+                                            "multicaixa_express",
+                                            "reference",
+                                            "card"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "method"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`AddendumResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AddendumResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/auth/otp/request": {
             "post": {
                 "operationId": "auth.otp.request",
@@ -6901,6 +7268,62 @@
     },
     "components": {
         "schemas": {
+            "AddendumResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "amount": {
+                        "type": "integer"
+                    },
+                    "percent_of_quote": {
+                        "type": "integer",
+                        "description": "Adendas aprovadas + esta, em % do or\u00e7amento original"
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "pending_client | pending_team | approved | paid | rejected"
+                    },
+                    "status_label": {
+                        "type": "string"
+                    },
+                    "team_review": {
+                        "type": "boolean"
+                    },
+                    "client_note": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "review_note": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "description",
+                    "amount",
+                    "percent_of_quote",
+                    "status",
+                    "status_label",
+                    "team_review",
+                    "client_note",
+                    "review_note",
+                    "created_at"
+                ],
+                "title": "AddendumResource"
+            },
             "AuthSessionResource": {
                 "type": "object",
                 "properties": {

@@ -268,6 +268,16 @@ class ServiceRequest extends Model
     }
 
     /**
+     * Adendas ao orçamento aceite.
+     *
+     * @return HasMany<QuoteAddendum, $this>
+     */
+    public function addenda(): HasMany
+    {
+        return $this->hasMany(QuoteAddendum::class);
+    }
+
+    /**
      * @return HasMany<RequestOffer, $this>
      */
     public function offers(): HasMany

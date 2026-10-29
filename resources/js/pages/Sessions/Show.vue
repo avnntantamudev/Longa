@@ -5,7 +5,7 @@ import UserAvatar from '@/components/UserAvatar.vue';
 import { usePolling, usePrivateChannel } from '@/composables/useRealtime';
 import { api, ApiError, newIdempotencyKey } from '@/lib/api';
 import { kwanza, when } from '@/lib/format';
-import { eventLabel, sessionPhase, stateBadge, type Quote, type Session, type SessionAction, type SessionEventItem } from '@/lib/session';
+import { eventLabel, sessionPhase, stateBadge, type Addendum, type Quote, type Session, type SessionAction, type SessionEventItem } from '@/lib/session';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { computed, onMounted, reactive, ref } from 'vue';
 
@@ -42,7 +42,12 @@ async function load() {
     session.value = s.data;
     events.value = e.data.slice().reverse();
     if (s.data.pricing_mode === 'quote') {
-        quotes.value = (await api.get<{ data: Quote[] }>(`/sessions/${props.sessionId}/quotes`)).data;
+        const [q, a] = await Promise.all([
+            api.get<{ data: Quote[] }>(`/sessions/${props.sessionId}/quotes`),
+            api.get<{ data: Addendum[] }>(`/sessions/${props.sessionId}/addenda`),
+        ]);
+        quotes.value = q.data;
+        addenda.value = a.data;
     }
 }
 
@@ -51,6 +56,21 @@ const quotes = ref<Quote[]>([]);
 const latestQuote = computed(() => quotes.value[0] ?? null);
 const quoteForm = reactive({ labour_amount: null as number | null, materials_amount: null as number | null, execution_days: 1, notes: '' });
 const quoteNote = ref('');
+
+// Adendas (trabalho extra durante a execução)
+const addenda = ref<Addendum[]>([]);
+const addendumForm = reactive({ description: '', amount: null as number | null });
+
+async function proposeAddendum(): Promise<void> {
+    await call('addendum', `/sessions/${props.sessionId}/addenda`, { ...addendumForm }, 'Trabalho extra enviado ao cliente para aprovação.');
+    addendumForm.description = '';
+    addendumForm.amount = null;
+}
+
+async function answerAddendum(item: Addendum, action: 'approve' | 'reject' | 'pay'): Promise<void> {
+    const messages = { approve: 'Trabalho extra aprovado.', reject: 'Trabalho extra recusado.', pay: 'Trabalho extra pago. O valor fica retido até confirmar o serviço.' };
+    await call('addendum', `/addenda/${item.id}/${action}`, action === 'pay' ? { method: payMethod.value } : {}, messages[action]);
+}
 
 async function sendQuote(): Promise<void> {
     await call('send_quote', `/sessions/${props.sessionId}/quotes`, { ...quoteForm, materials_amount: quoteForm.materials_amount ?? 0 }, 'Orçamento enviado ao cliente.');
@@ -275,6 +295,28 @@ onMounted(load);
                 <button v-if="has('finish')" class="btn-primary w-full" :disabled="busy !== null" @click="finishLesson">
                     {{ busy === 'finish' ? 'A terminar…' : 'Terminar serviço' }}
                 </button>
+
+                <!-- Trabalho extra (adendas ao orçamento) -->
+                <div v-if="addenda.length || has('addendum')" class="grid gap-2 rounded-control bg-navy-50 p-3">
+                    <p class="text-caption font-semibold">Trabalho extra</p>
+                    <div v-for="item in addenda" :key="item.id" class="grid gap-1 border-b border-border pb-2 last:border-0">
+                        <p class="text-caption">{{ item.description }} · <strong>{{ kwanza(item.amount) }}</strong></p>
+                        <p class="text-caption text-ink-muted">{{ item.status_label }}{{ item.team_review ? ' (acima do limite: revisto pela equipa do BISCA)' : '' }}</p>
+                        <div v-if="!isProvider && item.status === 'pending_client'" class="flex gap-2">
+                            <button class="btn-primary flex-1" :disabled="busy !== null" @click="answerAddendum(item, 'approve')">Aprovar</button>
+                            <button class="btn-outline flex-1" :disabled="busy !== null" @click="answerAddendum(item, 'reject')">Recusar</button>
+                        </div>
+                        <button v-if="!isProvider && item.status === 'approved' && session.payment_method === 'electronic'" class="btn-primary w-full" :disabled="busy !== null" @click="answerAddendum(item, 'pay')">
+                            Pagar {{ kwanza(item.amount) }}
+                        </button>
+                    </div>
+                    <form v-if="has('addendum') && !addenda.some((a) => ['pending_client', 'pending_team'].includes(a.status))" class="grid gap-2" @submit.prevent="proposeAddendum">
+                        <textarea v-model="addendumForm.description" class="input min-h-16 py-2" maxlength="1000" placeholder="O que é preciso fazer a mais" />
+                        <input v-model.number="addendumForm.amount" class="input" type="number" min="1" step="500" inputmode="numeric" placeholder="Valor (Kz)" />
+                        <button type="submit" class="btn-outline w-full" :disabled="busy !== null || !addendumForm.amount || addendumForm.description.length < 5">Propor trabalho extra</button>
+                        <p class="text-caption text-ink-muted">Só faça o trabalho extra depois de o cliente aprovar.</p>
+                    </form>
+                </div>
             </template>
 
             <!-- À espera de confirmação -->

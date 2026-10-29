@@ -4414,7 +4414,8 @@
                                                 {
                                                     "type": "object",
                                                     "required": [
-                                                        "categories"
+                                                        "categories",
+                                                        "hourly_rates"
                                                     ]
                                                 }
                                             ]
@@ -4467,7 +4468,8 @@
                                                 {
                                                     "type": "object",
                                                     "required": [
-                                                        "categories"
+                                                        "categories",
+                                                        "hourly_rates"
                                                     ]
                                                 }
                                             ]
@@ -4523,7 +4525,8 @@
                                                 {
                                                     "type": "object",
                                                     "required": [
-                                                        "categories"
+                                                        "categories",
+                                                        "hourly_rates"
                                                     ]
                                                 }
                                             ]
@@ -4579,7 +4582,8 @@
                                                 {
                                                     "type": "object",
                                                     "required": [
-                                                        "categories"
+                                                        "categories",
+                                                        "hourly_rates"
                                                     ]
                                                 }
                                             ]
@@ -6481,6 +6485,11 @@
                         "type": "array",
                         "items": {}
                     },
+                    "packages": {
+                        "type": "array",
+                        "description": "Pacotes de aulas (modo hora/pacote): n\u00famero de aulas e desconto.",
+                        "items": {}
+                    },
                     "price": {
                         "type": [
                             "object",
@@ -6537,6 +6546,7 @@
                 "required": [
                     "category",
                     "fields",
+                    "packages",
                     "price"
                 ],
                 "title": "CategoryFormResource"
@@ -6705,6 +6715,25 @@
                         "type": "integer",
                         "description": "Fixo: pre\u00e7o da tabela, bloqueado no envio. Or\u00e7amento: 0 at\u00e9 o cliente aceitar um or\u00e7amento."
                     },
+                    "max_hourly_rate": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "Hora/pacote: m\u00e1ximo por hora do cliente, pre\u00e7o por hora do t\u00e9cnico (depois de aceite), aulas e desconto."
+                    },
+                    "hourly_rate": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "sessions": {
+                        "type": "integer"
+                    },
+                    "discount_percent": {
+                        "type": "integer"
+                    },
                     "answers": {
                         "type": "array",
                         "items": {
@@ -6817,6 +6846,10 @@
                     "description",
                     "pricing_mode",
                     "amount",
+                    "max_hourly_rate",
+                    "hourly_rate",
+                    "sessions",
+                    "discount_percent",
                     "answers",
                     "media",
                     "scheduled_at",
@@ -7396,6 +7429,7 @@
             },
             "ProviderCategoriesRequest": {
                 "type": "object",
+                "description": "Categorias do t\u00e9cnico e, nas categorias por hora/pacote (ex.: aulas), o pre\u00e7o por hora dele, dentro dos limites\nda categoria. Sem pre\u00e7o por hora, o t\u00e9cnico n\u00e3o recebe pedidos dessas categorias.",
                 "properties": {
                     "category_ids": {
                         "type": "array",
@@ -7406,6 +7440,19 @@
                         "minItems": 1,
                         "maxItems": 10,
                         "uniqueItems": true
+                    },
+                    "hourly_rates": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "description": "Pre\u00e7o por hora (Kz) por categoria por hora/pacote: {\"12\": 5000}.",
+                        "items": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
                     }
                 },
                 "required": [
@@ -7760,6 +7807,10 @@
                             "$ref": "#/components/schemas/CategoryResource"
                         }
                     },
+                    "hourly_rates": {
+                        "type": "string",
+                        "description": "Pre\u00e7o por hora por categoria (categorias por hora/pacote): {\"12\": 5000}"
+                    },
                     "onboarding": {
                         "type": "object",
                         "properties": {
@@ -8003,14 +8054,14 @@
                         "format": "date-time",
                         "description": "Nova data (opcional)."
                     },
-                    "amount": {
+                    "max_hourly_rate": {
                         "type": [
                             "integer",
                             "null"
                         ],
-                        "description": "Novo valor em Kz (opcional).",
-                        "minimum": 2000,
-                        "maximum": 5000000
+                        "description": "Hora/pacote: novo pre\u00e7o m\u00e1ximo por hora em Kz (opcional).",
+                        "minimum": 500,
+                        "maximum": 1000000
                     }
                 },
                 "title": "RepublishServiceRequestRequest"
@@ -8377,7 +8428,15 @@
                     },
                     "amount": {
                         "type": "string",
-                        "description": "S\u00f3 nos servi\u00e7os por hora/pacote: valor oferecido em Kz inteiros. @example 25000"
+                        "description": "O valor nunca \u00e9 enviado: fixo = tabela da categoria; or\u00e7amento = or\u00e7amento aceite; hora/pacote = pre\u00e7o do t\u00e9cnico."
+                    },
+                    "max_hourly_rate": {
+                        "type": "string",
+                        "description": "Hora/pacote: pre\u00e7o m\u00e1ximo por hora que aceita pagar (dentro dos limites da categoria). @example 5000"
+                    },
+                    "category_package_id": {
+                        "type": "string",
+                        "description": "Hora/pacote: pacote de aulas (GET /api/v1/categories/{id}/form \u2192 packages). Sem pacote: uma aula."
                     },
                     "answers": {
                         "type": [

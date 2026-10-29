@@ -8,6 +8,7 @@ use App\Modules\Users\Enums\FieldType;
 use App\Modules\Users\Enums\PricingMode;
 use App\Modules\Users\Models\Category;
 use App\Modules\Users\Models\CategoryField;
+use App\Modules\Users\Models\CategoryPackage;
 use App\Modules\Users\Models\CategoryPrice;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
@@ -39,6 +40,8 @@ class CategoriesSeeder extends Seeder
         $edu = $this->node('educacao', 'Educação', null, PricingMode::HourlyPackage, ['in_person', 'online'], icon: 'academic-cap');
         $lessons = $this->node('aulas-e-explicacoes', 'Aulas e explicações', $edu, PricingMode::HourlyPackage, description: 'Explicações escolares, formação profissional e línguas.');
         $this->price($lessons, ['hourly_min' => 1500, 'hourly_max' => 20000]);
+        // Pacotes de aulas (editáveis no painel): 4, 8 e 12 aulas com 5%, 10% e 15% de desconto
+        $this->packages($edu, [4 => 5, 8 => 10, 12 => 15]);
         $this->fields($lessons, [
             ['key' => 'disciplina', 'label' => 'Disciplina ou tema', 'type' => FieldType::Text, 'required' => true, 'help' => 'Ex.: Matemática da 10.ª classe, fórmulas de Excel.'],
             ['key' => 'nivel', 'label' => 'Nível', 'type' => FieldType::Choice, 'required' => true, 'options' => ['Ensino primário', 'I ciclo', 'II ciclo', 'Ensino superior', 'Profissional', 'Outro']],
@@ -103,6 +106,15 @@ class CategoriesSeeder extends Seeder
     private function price(Category $category, array $values): void
     {
         CategoryPrice::query()->updateOrCreate(['category_id' => $category->id], $values);
+    }
+
+    /** @param array<int, int> $packages aulas => desconto (%) */
+    private function packages(Category $category, array $packages): void
+    {
+        $i = 0;
+        foreach ($packages as $sessions => $discount) {
+            CategoryPackage::query()->updateOrCreate(['category_id' => $category->id, 'sessions' => $sessions], ['discount_percent' => $discount, 'active' => true, 'sort_order' => ++$i]);
+        }
     }
 
     /** @param list<array<string, mixed>> $fields */

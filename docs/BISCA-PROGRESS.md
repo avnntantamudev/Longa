@@ -175,3 +175,18 @@ Respostas do cliente às dúvidas da Fase 1 (2026-10-29). Confirmado com o "ok":
 - Notificação ao técnico com a distância e o valor que recebe.
 - Online: sem perímetro, oferta aos técnicos da categoria, lembretes 24 h e 1 h antes.
 - Removidos `longa.requests.ttl`, `longa.requests.offer_ttl` e os tamanhos de onda.
+
+### Notas do passo 5
+
+- Migração `2026_10_29_000004_add_hourly_packages` (reversível): preço por hora do técnico por categoria
+  (`category_provider_profile.hourly_rate`), pacotes por categoria (`category_packages`) e, no pedido, o preço
+  máximo por hora, o pacote, o número de aulas, o desconto e o preço por hora de quem aceitou.
+- Pacotes de Educação (herdados pelas subcategorias): 4, 8 e 12 aulas com 5%, 10% e 15%. Editáveis no painel
+  (Catálogo → Categorias → Pacotes de aulas).
+- O técnico indica o preço por hora em cada área de aulas, dentro dos limites da categoria (1.500 a 20.000 Kz/h).
+  Sem preço não recebe pedidos dessas áreas.
+- O cliente escolhe 1 aula ou um pacote e o preço máximo por hora; vê a estimativa máxima antes de enviar. O pedido só
+  vai a técnicos com preço até esse máximo e o total fixa-se com o preço de quem aceita
+  (`HourlyPricing::total` = preço × horas × aulas − desconto), mostrado antes de pagar.
+- Republicar muda o preço máximo por hora (já não se envia um valor).
+- Limite atual: um pacote é um só pedido; o calendário das aulas combina-se no chat e a confirmação é no fim.

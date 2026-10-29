@@ -30,7 +30,7 @@ function vipOfferFor(ProviderProfile $provider, Category $category, int $amount 
     [$lat, $lng] = ProviderProfileFactory::TALATONA;
     apiLogin(User::factory()->withRole(Role::Client)->create());
     test()->postJson('/api/v1/service-requests', [
-        'category_id' => $category->id, 'title' => 'Serviço', 'amount' => $amount, 'modality' => 'in_person',
+        'category_id' => $category->id, 'title' => 'Serviço', 'max_hourly_rate' => intdiv($amount, 2), 'duration_minutes' => 120, 'modality' => 'in_person',
         'scheduled_at' => now()->addHours(3)->toIso8601String(),
         'municipality' => 'Talatona', 'neighborhood' => 'Talatona', 'latitude' => $lat, 'longitude' => $lng,
     ])->assertCreated();

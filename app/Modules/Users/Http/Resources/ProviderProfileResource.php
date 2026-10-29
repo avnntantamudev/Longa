@@ -8,6 +8,7 @@ use App\Modules\Payments\Services\VipSubscriptions;
 use App\Modules\Users\Models\ProviderProfile;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Perfil de técnico visto pelo próprio (inclui coordenadas e estado do onboarding).
@@ -41,6 +42,10 @@ class ProviderProfileResource extends JsonResource
             'badges' => $this->badges ?? [],
             'is_available' => $this->is_available,
             'categories' => CategoryResource::collection($this->whenLoaded('categories')),
+            /** Preço por hora por categoria (categorias por hora/pacote): {"12": 5000} */
+            'hourly_rates' => $this->whenLoaded('categories', fn () => (object) DB::table('category_provider_profile')
+                ->where('provider_profile_id', $this->id)->whereNotNull('hourly_rate')
+                ->pluck('hourly_rate', 'category_id')->mapWithKeys(fn ($rate, $id) => [(string) $id => (int) $rate])->all()),
             'onboarding' => [
                 'photo' => $this->user->photo !== null,
                 'details' => filled($this->bio),

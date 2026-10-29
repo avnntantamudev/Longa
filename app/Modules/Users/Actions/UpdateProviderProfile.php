@@ -35,11 +35,15 @@ class UpdateProviderProfile
 
     /**
      * @param  list<int>  $categoryIds
+     * @param  array<int, int>  $hourlyRates  preço por hora por categoria (categorias por hora/pacote)
      */
-    public function categories(User $user, array $categoryIds): ProviderProfile
+    public function categories(User $user, array $categoryIds, array $hourlyRates = []): ProviderProfile
     {
         $profile = $this->profileOf($user);
-        $profile->categories()->sync($categoryIds);
+        $profile->categories()->sync(array_combine($categoryIds, array_map(
+            fn (int $id) => ['hourly_rate' => $hourlyRates[$id] ?? null],
+            $categoryIds,
+        )));
 
         return $this->refreshCompletion($profile);
     }

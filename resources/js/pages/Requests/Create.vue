@@ -20,6 +20,7 @@ interface FormFieldDef {
 }
 interface CategoryForm {
     fields: FormFieldDef[];
+    packages: Array<{ id: number; sessions: number; discount_percent: number; label: string }>;
     price: { fixed_price: number | null; reference_min: number | null; reference_max: number | null; hourly_min: number | null; hourly_max: number | null; visit_fee: number | null } | null;
 }
 
@@ -31,7 +32,8 @@ const form = reactive({
     category_id: null as number | null,
     title: '',
     description: '',
-    amount: null as number | null,
+    max_hourly_rate: null as number | null,
+    category_package_id: null as number | null,
     scheduled_at: toLocalInput(suggested),
     duration_minutes: 60,
     payment_method: 'electronic' as 'electronic' | 'cash',
@@ -56,6 +58,14 @@ const category = computed(() => props.categories.find((c) => c.id === form.categ
 const mode = computed(() => category.value?.pricing_mode ?? null);
 const modalities = computed<Array<'in_person' | 'online'>>(() => category.value?.modalities ?? ['in_person']);
 const price = computed(() => categoryForm.value?.price ?? null);
+const selectedPackage = computed(() => categoryForm.value?.packages.find((p) => p.id === form.category_package_id) ?? null);
+/** Estimativa ao preço máximo (o total final usa o preço por hora do técnico que aceitar, nunca acima disto) */
+const estimate = computed(() => {
+    if (mode.value !== 'hourly_package' || !form.max_hourly_rate) return null;
+    const sessions = selectedPackage.value?.sessions ?? 1;
+    const discount = selectedPackage.value?.discount_percent ?? 0;
+    return Math.round((form.max_hourly_rate * form.duration_minutes * sessions * (100 - discount)) / 6000);
+});
 
 const categoriesByGroup = computed(() => {
     const groups: Record<string, Category[]> = {};
@@ -94,7 +104,8 @@ function body(): FormData | Record<string, unknown> {
     const base: Record<string, unknown> = {
         ...form,
         title: form.title || null,
-        amount: mode.value === 'hourly_package' ? form.amount : undefined,
+        max_hourly_rate: mode.value === 'hourly_package' ? form.max_hourly_rate : undefined,
+        category_package_id: mode.value === 'hourly_package' ? form.category_package_id : undefined,
         scheduled_at: new Date(form.scheduled_at).toISOString(),
     };
     const filled = Object.fromEntries(Object.entries(answers).filter(([, v]) => v !== null && v !== ''));
@@ -209,16 +220,41 @@ function fileError(key: string): string | undefined {
             <input id="title" v-model="form.title" class="input" maxlength="120" :placeholder="category?.name ?? ''" />
         </FormField>
 
-        <div class="grid gap-3 sm:grid-cols-2">
-            <FormField v-if="mode === 'hourly_package'" label="Valor (Kz)" for="amount" :error="errors.amount" :hint="`Mínimo ${kwanza(minAmount)}`">
-                <input id="amount" v-model.number="form.amount" class="input" type="number" inputmode="numeric" :min="minAmount" step="500" placeholder="5000" />
+        <template v-if="mode === 'hourly_package' && categoryForm">
+            <fieldset v-if="categoryForm.packages.length" class="grid gap-2">
+                <legend class="mb-1 text-caption font-semibold">Aulas</legend>
+                <div class="flex flex-wrap gap-2">
+                    <button type="button" class="chip" :class="{ 'chip-active': form.category_package_id === null }" @click="form.category_package_id = null">1 aula</button>
+                    <button
+                        v-for="p in categoryForm.packages"
+                        :key="p.id"
+                        type="button"
+                        class="chip"
+                        :class="{ 'chip-active': form.category_package_id === p.id }"
+                        @click="form.category_package_id = p.id"
+                    >
+                        {{ p.label }}
+                    </button>
+                </div>
+                <p v-if="errors.category_package_id" class="text-caption text-danger">{{ errors.category_package_id }}</p>
+            </fieldset>
+            <FormField
+                label="Quanto paga no máximo por hora? (Kz)"
+                for="max-rate"
+                :error="errors.max_hourly_rate"
+                :hint="price?.hourly_min && price?.hourly_max ? `Entre ${kwanza(price.hourly_min)} e ${kwanza(price.hourly_max)}. Só recebe técnicos com preço até este valor.` : undefined"
+            >
+                <input id="max-rate" v-model.number="form.max_hourly_rate" class="input" type="number" inputmode="numeric" :min="price?.hourly_min ?? 500" step="500" placeholder="5000" />
             </FormField>
+        </template>
+
+        <div class="grid gap-3 sm:grid-cols-2">
             <FormField label="Quando" for="when" :error="errors.scheduled_at">
                 <input id="when" v-model="form.scheduled_at" class="input" type="datetime-local" :min="minDate" />
             </FormField>
         </div>
 
-        <FormField label="Duração" for="duration" :error="errors.duration_minutes">
+        <FormField :label="mode === 'hourly_package' ? 'Duração de cada aula' : 'Duração'" for="duration" :error="errors.duration_minutes">
             <select id="duration" v-model.number="form.duration_minutes" class="input">
                 <option v-for="m in [30, 45, 60, 90, 120, 180, 240]" :key="m" :value="m">{{ m < 60 ? `${m} min` : `${m / 60} h`.replace('.5', ',5') }}</option>
             </select>
@@ -253,8 +289,9 @@ function fileError(key: string): string | undefined {
             <LocationPicker :value="form" :zones="zones" :provinces="provinces" :errors="errors" />
         </fieldset>
 
-        <p v-if="mode === 'hourly_package' && form.amount" class="text-caption text-ink-muted">
-            Paga {{ kwanza(form.amount) }}. A comissão do BISCA ({{ commissionPercent }}%) é descontada ao técnico.
+        <p v-if="estimate" class="text-caption text-ink-muted" data-testid="estimate">
+            Paga no máximo {{ kwanza(estimate) }}{{ selectedPackage ? ` pelas ${selectedPackage.sessions} aulas` : '' }}. O total final usa o preço por hora do técnico que
+            aceitar e aparece antes de pagar. A comissão do BISCA ({{ commissionPercent }}%) é descontada ao técnico.
         </p>
 
         <p v-if="errors.general" class="text-caption text-danger" role="alert">{{ errors.general }}</p>

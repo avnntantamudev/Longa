@@ -23,7 +23,7 @@ it('o cliente pede um serviço num bairro escrito à mão', function () {
     apiLogin(User::factory()->withRole(Role::Client)->create());
 
     $this->postJson('/api/v1/service-requests', [
-        'category_id' => Category::query()->value('id'), 'title' => 'Serviço de Excel', 'amount' => 10000, 'answers' => ['disciplina' => 'SGME', 'nivel' => 'Profissional'],
+        'category_id' => Category::query()->value('id'), 'title' => 'Serviço de Excel', 'max_hourly_rate' => 12500, 'answers' => ['disciplina' => 'SGME', 'nivel' => 'Profissional'],
         'scheduled_at' => now()->addDay()->setTime(10, 0)->toIso8601String(), 'modality' => 'in_person',
         'municipality' => 'Viana', 'neighborhood' => 'Zango 3, quarteirão 12', 'latitude' => -8.9201, 'longitude' => 13.4302,
     ])->assertCreated()->assertJsonPath('data.neighborhood', 'Zango 3, quarteirão 12');

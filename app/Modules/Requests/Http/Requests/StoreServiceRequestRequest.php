@@ -27,19 +27,24 @@ class StoreServiceRequestRequest extends FormRequest
      */
     public function rules(): array
     {
-        $min = (int) config('longa.requests.min_amount');
-        $max = (int) config('longa.requests.max_amount');
         $lead = (int) config('longa.requests.min_lead_minutes');
         $category = $this->category();
+        $price = $category?->effectivePrice();
 
         return [
             'category_id' => ['required', 'integer', Rule::exists('categories', 'id')->where('active', true)],
             /** Tema do serviço (opcional: por omissão, o nome da categoria). @example Manutenção do ar condicionado da sala */
             'title' => ['nullable', 'string', 'min:3', 'max:120'],
             'description' => ['nullable', 'string', 'max:1000'],
-            /** Só nos serviços por hora/pacote: valor oferecido em Kz inteiros. @example 25000 */
-            'amount' => $category?->pricing_mode === PricingMode::HourlyPackage
-                ? ['required', 'integer', "min:{$min}", "max:{$max}"]
+            /** O valor nunca é enviado: fixo = tabela da categoria; orçamento = orçamento aceite; hora/pacote = preço do técnico. */
+            'amount' => ['prohibited'],
+            /** Hora/pacote: preço máximo por hora que aceita pagar (dentro dos limites da categoria). @example 5000 */
+            'max_hourly_rate' => $category?->pricing_mode === PricingMode::HourlyPackage
+                ? ['required', 'integer', 'min:'.($price->hourly_min ?? 500), 'max:'.($price->hourly_max ?? 1_000_000)]
+                : ['prohibited'],
+            /** Hora/pacote: pacote de aulas (GET /api/v1/categories/{id}/form → packages). Sem pacote: uma aula. */
+            'category_package_id' => $category?->pricing_mode === PricingMode::HourlyPackage
+                ? ['nullable', 'integer', Rule::in(array_map(fn ($p) => $p->id, $category->effectivePackages()))]
                 : ['prohibited'],
             /** Respostas ao formulário da categoria (GET /api/v1/categories/{id}/form), por chave do campo. */
             'answers' => ['nullable', 'array'],
@@ -109,8 +114,9 @@ class StoreServiceRequestRequest extends FormRequest
     {
         return [
             'scheduled_at.after' => 'O serviço tem de ser marcado com pelo menos '.config('longa.requests.min_lead_minutes').' minutos de antecedência.',
-            'amount.min' => 'O valor mínimo é :min Kz.',
-            'amount.prohibited' => 'O valor deste serviço é definido pela tabela ou pelo orçamento do técnico.',
+            'amount.prohibited' => 'O valor deste serviço é definido pela tabela, pelo orçamento ou pelo preço do técnico.',
+            'max_hourly_rate.min' => 'O preço por hora mínimo neste serviço é :min Kz.',
+            'max_hourly_rate.max' => 'O preço por hora máximo neste serviço é :max Kz.',
             'modality.in' => 'Esta modalidade não está disponível para este serviço.',
             'answers.*.*.mimes' => 'Só são aceites fotos JPG, PNG ou WebP.',
             'answers.*.mimes' => 'Formato de ficheiro não aceite.',
@@ -130,22 +136,25 @@ class StoreServiceRequestRequest extends FormRequest
         return [
             ...$labels,
             'category_id' => 'serviço', 'title' => 'tema', 'description' => 'descrição', 'amount' => 'valor',
+            'max_hourly_rate' => 'preço máximo por hora', 'category_package_id' => 'pacote',
             'scheduled_at' => 'data e hora', 'duration_minutes' => 'duração', 'payment_method' => 'forma de pagamento', 'modality' => 'modalidade', 'municipality' => 'município', 'neighborhood' => 'bairro',
         ];
     }
 
     /**
-     * @return array{category_id: int, title: string|null, description: string|null, amount: int|null, answers: array<string, mixed>, scheduled_at: string, duration_minutes: int, payment_method: string, modality: string, province: string, municipality: string, neighborhood: string, latitude: float, longitude: float}
+     * @return array{category_id: int, title: string|null, description: string|null, max_hourly_rate: int|null, category_package_id: int|null, answers: array<string, mixed>, scheduled_at: string, duration_minutes: int, payment_method: string, modality: string, province: string, municipality: string, neighborhood: string, latitude: float, longitude: float}
      */
     public function requestData(): array
     {
-        $amount = $this->validated('amount');
+        $maxRate = $this->validated('max_hourly_rate');
+        $package = $this->validated('category_package_id');
 
         return [
             'category_id' => (int) $this->validated('category_id'),
             'title' => $this->validated('title'),
             'description' => $this->validated('description'),
-            'amount' => $amount === null ? null : (int) $amount,
+            'max_hourly_rate' => $maxRate === null ? null : (int) $maxRate,
+            'category_package_id' => $package === null ? null : (int) $package,
             'answers' => $this->textAnswers(),
             'scheduled_at' => (string) $this->validated('scheduled_at'),
             'duration_minutes' => (int) ($this->validated('duration_minutes') ?? 60),

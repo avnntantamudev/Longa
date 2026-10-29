@@ -6,6 +6,7 @@ namespace App\Modules\Users\Http\Resources;
 
 use App\Modules\Users\Models\Category;
 use App\Modules\Users\Models\CategoryField;
+use App\Modules\Users\Models\CategoryPackage;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -35,6 +36,10 @@ class CategoryFormResource extends JsonResource
                 'options' => $f->options,
                 'help' => $f->help,
             ], $this->formFields()),
+            /** Pacotes de aulas (modo hora/pacote): número de aulas e desconto. */
+            'packages' => array_map(fn (CategoryPackage $p) => [
+                'id' => $p->id, 'sessions' => $p->sessions, 'discount_percent' => $p->discount_percent, 'label' => $p->label(),
+            ], $this->effectivePackages()),
             'price' => $price === null ? null : [
                 'fixed_price' => $price->fixed_price,
                 'reference_min' => $price->reference_min,

@@ -17,7 +17,7 @@ class RepublishServiceRequest
 {
     public function __construct(private readonly CreateServiceRequest $create) {}
 
-    public function handle(ServiceRequest $original, User $client, ?string $scheduledAt, ?int $amount): ServiceRequest
+    public function handle(ServiceRequest $original, User $client, ?string $scheduledAt, ?int $maxHourlyRate): ServiceRequest
     {
         if (! in_array($original->state, [RequestState::NoProvider, RequestState::Cancelled], true)) {
             throw new ApiException('request_not_republishable', 'Só pode republicar pedidos expirados ou cancelados.', 409);
@@ -34,7 +34,8 @@ class RepublishServiceRequest
             'category_id' => $original->category_id,
             'title' => $original->title,
             'description' => $original->description,
-            'amount' => $amount ?? $original->amount,
+            'max_hourly_rate' => $maxHourlyRate ?? $original->max_hourly_rate,
+            'category_package_id' => $original->category_package_id,
             'answers' => $original->answers ?? [],
             'scheduled_at' => $scheduledAt ?? $original->scheduled_at->toIso8601String(),
             'duration_minutes' => $original->duration_minutes,

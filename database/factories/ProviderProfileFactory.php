@@ -62,8 +62,13 @@ class ProviderProfileFactory extends Factory
         ]);
     }
 
+    /** Preço por hora usado nas categorias por hora/pacote (ex.: 2 h = 25.000 Kz) */
+    public const HOURLY_RATE = 12500;
+
     public function withCategories(Category ...$categories): static
     {
-        return $this->afterCreating(fn (ProviderProfile $profile) => $profile->categories()->attach(array_map(fn (Category $s) => $s->id, $categories)));
+        return $this->afterCreating(fn (ProviderProfile $profile) => $profile->categories()->attach(
+            array_fill_keys(array_map(fn (Category $s) => $s->id, $categories), ['hourly_rate' => self::HOURLY_RATE]),
+        ));
     }
 }

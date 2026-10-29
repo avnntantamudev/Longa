@@ -107,9 +107,9 @@ class ServiceRequestController extends Controller
 
         /** @var User $user */
         $user = $request->user();
-        $amount = $request->validated('amount');
+        $maxRate = $request->validated('max_hourly_rate');
 
-        $new = $action->handle($serviceRequest, $user, $request->validated('scheduled_at'), $amount === null ? null : (int) $amount);
+        $new = $action->handle($serviceRequest, $user, $request->validated('scheduled_at'), $maxRate === null ? null : (int) $maxRate);
 
         return (new ClientRequestResource($new->load(['category'])))->response()->setStatusCode(201);
     }

@@ -87,6 +87,16 @@ class Category extends Model
     }
 
     /**
+     * Pacotes de aulas (modo hora/pacote).
+     *
+     * @return HasMany<CategoryPackage, $this>
+     */
+    public function packages(): HasMany
+    {
+        return $this->hasMany(CategoryPackage::class)->orderBy('sort_order')->orderBy('sessions');
+    }
+
+    /**
      * @return BelongsToMany<ProviderProfile, $this>
      */
     public function providers(): BelongsToMany
@@ -190,6 +200,23 @@ class Category extends Model
         }
 
         return array_values(array_unique($docs));
+    }
+
+    /**
+     * Pacotes ativos da própria categoria ou do antepassado mais próximo que os tenha.
+     *
+     * @return list<CategoryPackage>
+     */
+    public function effectivePackages(): array
+    {
+        foreach ([$this, ...array_reverse($this->ancestors())] as $node) {
+            $active = $node->packages->where('active', true)->values()->all();
+            if ($active !== []) {
+                return $active;
+            }
+        }
+
+        return [];
     }
 
     /** Preços da própria categoria ou do antepassado mais próximo que os tenha. */

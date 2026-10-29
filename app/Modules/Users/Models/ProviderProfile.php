@@ -92,7 +92,7 @@ class ProviderProfile extends Model
      */
     public function categories(): BelongsToMany
     {
-        return $this->belongsToMany(Category::class);
+        return $this->belongsToMany(Category::class)->withPivot('hourly_rate');
     }
 
     /**

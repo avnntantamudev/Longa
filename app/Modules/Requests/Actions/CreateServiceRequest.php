@@ -9,8 +9,10 @@ use App\Modules\Requests\Enums\RequestState;
 use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Requests\Models\ServiceRequestMedia;
 use App\Modules\Requests\Services\Commission;
+use App\Modules\Requests\Services\HourlyPricing;
 use App\Modules\Users\Enums\PricingMode;
 use App\Modules\Users\Models\Category;
+use App\Modules\Users\Models\CategoryPackage;
 use App\Modules\Users\Models\User;
 use App\Support\Api\ApiException;
 use App\Support\Audit\AuditLogger;
@@ -30,17 +32,20 @@ class CreateServiceRequest
     public function __construct(private readonly MatchingCoordinator $matching, private readonly AuditLogger $audit) {}
 
     /**
-     * @param  array{category_id: int, title?: string|null, description?: string|null, amount?: int|null, answers?: array<string, mixed>, scheduled_at: string, duration_minutes?: int, payment_method?: string, modality: string, province: string, municipality: string, neighborhood: string, latitude: float, longitude: float}  $data
+     * @param  array{category_id: int, title?: string|null, description?: string|null, max_hourly_rate?: int|null, category_package_id?: int|null, answers?: array<string, mixed>, scheduled_at: string, duration_minutes?: int, payment_method?: string, modality: string, province: string, municipality: string, neighborhood: string, latitude: float, longitude: float}  $data
      * @param  array<string, list<UploadedFile>>  $media  fotos e vídeos por campo do formulário
      */
     public function handle(User $client, array $data, ?ServiceRequest $republishedFrom = null, array $media = []): ServiceRequest
     {
         $scheduledAt = Carbon::parse($data['scheduled_at']);
         $category = Category::query()->findOrFail((int) $data['category_id']);
-        $amount = $this->amountFor($category, $data['amount'] ?? null);
+        $package = isset($data['category_package_id']) ? CategoryPackage::query()->find($data['category_package_id']) : null;
+        $sessions = $package->sessions ?? 1;
+        $discount = $package->discount_percent ?? 0;
+        $amount = $this->amountFor($category, $data['max_hourly_rate'] ?? null, (int) ($data['duration_minutes'] ?? 60), $sessions, $discount);
         $stored = $this->storeMedia($media);
 
-        $request = DB::transaction(function () use ($client, $data, $scheduledAt, $republishedFrom, $category, $amount, $stored) {
+        $request = DB::transaction(function () use ($client, $data, $scheduledAt, $republishedFrom, $category, $amount, $stored, $sessions, $discount) {
             // Serializa os pedidos do mesmo cliente para os limites não serem contornados em paralelo
             User::query()->whereKey($client->id)->lockForUpdate()->first();
 
@@ -63,6 +68,8 @@ class CreateServiceRequest
             $request->scheduled = $this->isScheduled($scheduledAt);
             // Modo de preço da categoria no envio: decide se o pedido passa por diagnóstico e orçamento
             $request->pricing_mode = $category->pricing_mode;
+            $request->sessions = $sessions;
+            $request->discount_percent = $discount;
             $request->save();
 
             foreach ($stored as $file) {
@@ -87,16 +94,19 @@ class CreateServiceRequest
     }
 
     /**
-     * Valor do pedido conforme o modo de preço da categoria.
+     * Valor do pedido conforme o modo de preço da categoria. Hora/pacote: estimativa ao preço máximo do cliente;
+     * o total final fixa-se com o preço por hora do técnico que aceitar (nunca acima desta estimativa).
      */
-    private function amountFor(Category $category, ?int $clientAmount): int
+    private function amountFor(Category $category, ?int $maxHourlyRate, int $durationMinutes, int $sessions, int $discount): int
     {
         return match ($category->pricing_mode) {
             PricingMode::Fixed => $category->effectivePrice()->fixed_price
                 ?? throw new ApiException('price_unavailable', 'Este serviço ainda não tem preço definido. Tente mais tarde.', 409),
             PricingMode::Quote => 0,
-            PricingMode::HourlyPackage => $clientAmount
-                ?? throw new ApiException('validation_failed', 'Os dados enviados são inválidos.', 422, ['amount' => ['Indique o valor.']]),
+            PricingMode::HourlyPackage => HourlyPricing::total(
+                $maxHourlyRate ?? throw new ApiException('validation_failed', 'Os dados enviados são inválidos.', 422, ['max_hourly_rate' => ['Indique o preço máximo por hora.']]),
+                $durationMinutes, $sessions, $discount,
+            ),
         };
     }
 

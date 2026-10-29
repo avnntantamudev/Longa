@@ -30,7 +30,7 @@ function publishRequest(Category $category, string $when, string $province = 'Lu
     [$lat, $lng] = ProviderProfileFactory::TALATONA;
     apiLogin(User::factory()->withRole(Role::Client)->create());
     $id = test()->postJson('/api/v1/service-requests', [
-        'category_id' => $category->id, 'title' => 'Serviço', 'amount' => 20000, 'answers' => ['disciplina' => 'SGME', 'nivel' => 'Profissional'], 'modality' => 'in_person',
+        'category_id' => $category->id, 'title' => 'Serviço', 'max_hourly_rate' => 12500, 'answers' => ['disciplina' => 'SGME', 'nivel' => 'Profissional'], 'modality' => 'in_person',
         'scheduled_at' => $when, 'province' => $province,
         'municipality' => 'Talatona', 'neighborhood' => 'Talatona', 'latitude' => $lat, 'longitude' => $lng,
     ])->assertCreated()->json('data.id');

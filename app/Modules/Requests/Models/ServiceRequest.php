@@ -44,6 +44,11 @@ use Illuminate\Support\Facades\Auth;
  * @property int $commission
  * @property int $provider_net
  * @property int|null $commission_percent
+ * @property int|null $max_hourly_rate preço máximo por hora indicado pelo cliente (hora/pacote)
+ * @property int|null $hourly_rate preço por hora do técnico que aceitou (hora/pacote)
+ * @property int $sessions número de aulas (pacote)
+ * @property int|null $category_package_id
+ * @property int $discount_percent desconto do pacote
  * @property \Illuminate\Support\Carbon $scheduled_at
  * @property int $duration_minutes
  * @property \Illuminate\Support\Carbon|null $ends_at
@@ -84,7 +89,7 @@ use Illuminate\Support\Facades\Auth;
  * @property-read \Illuminate\Database\Eloquent\Collection<int, ServiceRequestTransition> $transitions
  */
 #[Fillable([
-    'client_id', 'category_id', 'pricing_mode', 'title', 'description', 'answers', 'amount', 'commission', 'provider_net', 'commission_percent',
+    'client_id', 'category_id', 'pricing_mode', 'title', 'description', 'answers', 'max_hourly_rate', 'category_package_id', 'amount', 'commission', 'provider_net', 'commission_percent',
     'scheduled_at', 'duration_minutes', 'ends_at', 'payment_method', 'payment_status', 'payment_due_at', 'escrow_reference', 'modality',
     'province', 'municipality', 'neighborhood', 'latitude', 'longitude', 'republished_from_id',
 ])]
@@ -152,6 +157,10 @@ class ServiceRequest extends Model
             'amount' => 'integer',
             'commission' => 'integer',
             'commission_percent' => 'integer',
+            'max_hourly_rate' => 'integer',
+            'hourly_rate' => 'integer',
+            'sessions' => 'integer',
+            'discount_percent' => 'integer',
             'scheduled' => 'boolean',
             'provider_net' => 'integer',
         ];

@@ -31,7 +31,8 @@ function payload(array $overrides = []): array
         'category_id' => test()->sgme->id,
         'title' => 'Serviço de SGME',
         'description' => 'Rever controlo e monitorização.',
-        'amount' => 25000,
+        'max_hourly_rate' => 12500,
+        'duration_minutes' => 120,
         'answers' => ['disciplina' => 'SGME', 'nivel' => 'Profissional'],
         'scheduled_at' => now()->setTime(14, 0)->toIso8601String(),
         'modality' => 'in_person',
@@ -150,9 +151,10 @@ it('republica um pedido expirado como pedido novo ligado ao original', function 
 
     verifiedProviders(1);
 
-    $this->postJson("/api/v1/service-requests/{$id}/republish", ['amount' => 30000])
+    $this->postJson("/api/v1/service-requests/{$id}/republish", ['max_hourly_rate' => 15000])
         ->assertCreated()
         ->assertJsonPath('data.state', 'searching')
+        ->assertJsonPath('data.max_hourly_rate', 15000)
         ->assertJsonPath('data.amount', 30000)
         ->assertJsonPath('data.republished_from_id', $id);
 

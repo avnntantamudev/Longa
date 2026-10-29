@@ -32,6 +32,11 @@ class ClientRequestResource extends JsonResource
             'pricing_mode' => $this->pricing_mode->value,
             /** Fixo: preço da tabela, bloqueado no envio. Orçamento: 0 até o cliente aceitar um orçamento. */
             'amount' => $this->amount,
+            /** Hora/pacote: máximo por hora do cliente, preço por hora do técnico (depois de aceite), aulas e desconto. */
+            'max_hourly_rate' => $this->max_hourly_rate,
+            'hourly_rate' => $this->hourly_rate,
+            'sessions' => $this->sessions,
+            'discount_percent' => $this->discount_percent,
             ...$this->formSummary(),
             'scheduled_at' => $this->scheduled_at->toIso8601String(),
             'modality' => $this->modality,

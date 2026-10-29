@@ -10,6 +10,7 @@ use App\Modules\Requests\Events\RequestMatched;
 use App\Modules\Requests\Models\RequestOffer;
 use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Requests\Services\Commission;
+use App\Modules\Requests\Services\HourlyPricing;
 use App\Modules\Sessions\Models\Conversation;
 use App\Modules\Sessions\Services\SessionLifecycle;
 use App\Modules\Users\Enums\PricingMode;
@@ -65,8 +66,12 @@ class AcceptOffer
 
             $this->ensureCanAccept($request, $offer);
 
+            // Hora/pacote: o total fixa-se com o preço por hora do técnico que aceita (nunca acima do máximo do cliente)
+            $hourly = $request->pricing_mode === PricingMode::HourlyPackage ? $this->hourlyRateOf($request, $offer) : null;
+            $amount = $hourly === null ? $request->amount : HourlyPricing::total($hourly, $request->duration_minutes, $request->sessions, $request->discount_percent);
+
             // Comissão do técnico que aceita (reduzida se for VIP), fixada neste pedido
-            $split = Commission::splitFor($request->amount, $offer->provider_profile_id);
+            $split = Commission::splitFor($amount, $offer->provider_profile_id);
 
             $offer->transitionTo(OfferState::Accepted, ['responded_at' => now()]);
 
@@ -85,6 +90,8 @@ class AcceptOffer
                 'matched_at' => now(),
                 'provider_profile_id' => $offer->provider_profile_id,
                 'next_wave_at' => null,
+                'amount' => $amount,
+                'hourly_rate' => $hourly,
                 'commission' => $split['commission'],
                 'provider_net' => $split['provider_net'],
                 'commission_percent' => $split['percent'],
@@ -110,6 +117,19 @@ class AcceptOffer
         }
 
         return $result['request'];
+    }
+
+    private function hourlyRateOf(ServiceRequest $request, RequestOffer $offer): int
+    {
+        $rate = DB::table('category_provider_profile')
+            ->where('provider_profile_id', $offer->provider_profile_id)->where('category_id', $request->category_id)
+            ->value('hourly_rate');
+
+        if ($rate === null || ($request->max_hourly_rate !== null && (int) $rate > $request->max_hourly_rate)) {
+            throw new ApiException('rate_not_allowed', 'O seu preço por hora está acima do máximo deste pedido.', 409);
+        }
+
+        return (int) $rate;
     }
 
     private function ensureCanAccept(ServiceRequest $request, RequestOffer $offer): void

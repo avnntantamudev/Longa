@@ -102,6 +102,15 @@ class CategoryResource extends Resource
                     TextInput::make('hourly_max')->label('Por hora: máximo')->integer()->minValue(0),
                     TextInput::make('visit_fee')->label('Taxa de visita')->integer()->minValue(0),
                 ]),
+            Section::make('Pacotes de aulas')->description('Só para "por hora ou pacote". Vazio = usa os da categoria-pai.')->schema([
+                Repeater::make('packages')->relationship()->label('Pacotes')->orderColumn('sort_order')->reorderable()
+                    ->columns(3)->defaultItems(0)->addActionLabel('Adicionar pacote')
+                    ->schema([
+                        TextInput::make('sessions')->label('Aulas')->integer()->required()->minValue(2)->maxValue(100),
+                        TextInput::make('discount_percent')->label('Desconto (%)')->integer()->required()->minValue(0)->maxValue(50)->default(0),
+                        Toggle::make('active')->label('Ativo')->default(true),
+                    ]),
+            ]),
             Section::make('Formulário do pedido')->description('Campos próprios desta categoria; os das categorias-pai aparecem antes.')->schema([
                 Repeater::make('fields')->relationship()->label('Campos')->orderColumn('sort_order')->reorderable()->collapsible()
                     ->itemLabel(fn (array $state) => $state['label'] ?? null)

@@ -7,6 +7,7 @@ namespace App\Modules\Matching\Services;
 use App\Modules\Matching\Support\MatchCandidate;
 use App\Modules\Requests\Enums\RequestState;
 use App\Modules\Requests\Models\ServiceRequest;
+use App\Modules\Users\Enums\PricingMode;
 use App\Modules\Users\Enums\UserStatus;
 use App\Modules\Users\Enums\VerificationStatus;
 use App\Modules\Wallet\Ledger\Accounts;
@@ -21,6 +22,7 @@ use Illuminate\Support\Facades\DB;
  *  - conta ativa e não apagada; perfil verificado, com onboarding concluído e "Disponível";
  *  - trabalha na categoria do pedido e aceita a modalidade (presencial/online);
  *  - presencial: a ≤ raio da ronda do despacho do local do pedido E o pedido dentro do raio de atuação do técnico;
+ *  - hora/pacote: com preço por hora na categoria ≤ preço máximo do cliente;
  *  - com saldo disponível ≥ saldo mínimo, quando configurado (Definições → Despacho; 0 = desligado);
  *  - sem serviço ativa que se sobreponha ao horário pedido (com folga configurável);
  *  - não é o próprio cliente e ainda não recebeu oferta deste pedido.
@@ -69,6 +71,9 @@ class ProviderMatcher
             ->whereNotNull('tp.latitude')
             ->whereRaw('JSON_CONTAINS(tp.modalities, ?)', [json_encode($online ? 'online' : 'in_person')])
             ->when($excludeProviderIds !== [], fn ($q) => $q->whereNotIn('tp.id', $excludeProviderIds))
+            // Hora/pacote: preço por hora do técnico definido e dentro do máximo do cliente
+            ->when($request->pricing_mode === PricingMode::HourlyPackage && $request->max_hourly_rate !== null, fn ($q) => $q
+                ->whereNotNull('stp.hourly_rate')->where('stp.hourly_rate', '<=', $request->max_hourly_rate))
             // Saldo mínimo (carteira do técnico no livro-razão; sem conta = 0)
             ->when($minBalance > 0, fn ($q) => $q->whereRaw(
                 "COALESCE((SELECT b.balance FROM ledger_accounts a JOIN ledger_account_balances b ON b.ledger_account_id = a.id WHERE a.code = CONCAT(?, ':', tp.id)), 0) >= ?",

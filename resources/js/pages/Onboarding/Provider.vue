@@ -23,9 +23,13 @@ interface ProviderProfile {
     service_radius_m: number;
     verification_status: string;
     categories?: Category[];
+    hourly_rates?: Record<string, number>;
 }
 
 const steps = ['Sobre si', 'Áreas', 'Local', 'Verificação'] as const;
+// Preço por hora por área (só nas áreas por hora/pacote, ex.: aulas); sem preço não recebe pedidos dessa área
+const hourlyRates = reactive<Record<string, number | null>>({});
+const hourlySelected = computed(() => props.categories.filter((c) => c.pricing_mode === 'hourly_package' && selectedCategories.value.includes(c.id)));
 const step = ref(0);
 const errors = ref<Record<string, string>>({});
 const saving = ref(false);
@@ -92,6 +96,7 @@ onMounted(async () => {
     details.rate_amount = data.rate_amount;
     details.rate_unit = data.rate_unit ?? 'session';
     selectedCategories.value = (data.categories ?? []).map((s) => s.id);
+    Object.assign(hourlyRates, data.hourly_rates ?? {});
     Object.assign(location, {
         province: data.province,
         municipality: data.municipality ?? '',
@@ -127,7 +132,7 @@ async function next(): Promise<void> {
     }
     const actions = [
         () => api.put('/me/provider-profile/details', details),
-        () => (selectedCategories.value.length === 0 && suggestions.value.some((x) => x.status === 'pending') ? Promise.resolve() : api.put('/me/provider-profile/categories', { category_ids: selectedCategories.value })),
+        () => (selectedCategories.value.length === 0 && suggestions.value.some((x) => x.status === 'pending') ? Promise.resolve() : api.put('/me/provider-profile/categories', { category_ids: selectedCategories.value, hourly_rates: hourlyRates })),
         () => api.put('/me/provider-profile/location', location),
         () => submitVerification(),
     ];
@@ -226,6 +231,14 @@ function submitVerification(): Promise<unknown> {
                 </div>
             </section>
             <p v-if="errors.category_ids" class="text-caption text-danger">{{ errors.category_ids }}</p>
+
+            <section v-if="hourlySelected.length" class="card grid gap-3">
+                <h2 class="font-semibold">Preço por hora</h2>
+                <p class="-mt-2 text-caption text-ink-muted">Nas aulas, o cliente indica quanto paga no máximo por hora. Só recebe pedidos em que o seu preço cabe.</p>
+                <FormField v-for="category in hourlySelected" :key="category.id" :label="`${category.name} (Kz/h)`" :for="`rate-${category.id}`" :error="errors[`hourly_rates.${category.id}`]">
+                    <input :id="`rate-${category.id}`" v-model.number="hourlyRates[category.id]" class="input" type="number" min="500" step="500" inputmode="numeric" placeholder="5000" />
+                </FormField>
+            </section>
 
             <section class="card grid gap-2">
                 <h2 class="font-semibold">Não encontra a sua área?</h2>

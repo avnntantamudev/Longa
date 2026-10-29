@@ -18,8 +18,8 @@ class RepublishServiceRequestRequest extends FormRequest
         return [
             /** Nova data (opcional). */
             'scheduled_at' => ['nullable', 'date', 'after:'.now()->addMinutes($lead)->toDateTimeString()],
-            /** Novo valor em Kz (opcional). */
-            'amount' => ['nullable', 'integer', 'min:'.config('longa.requests.min_amount'), 'max:'.config('longa.requests.max_amount')],
+            /** Hora/pacote: novo preço máximo por hora em Kz (opcional). */
+            'max_hourly_rate' => ['nullable', 'integer', 'min:500', 'max:1000000'],
         ];
     }
 
@@ -36,6 +36,6 @@ class RepublishServiceRequestRequest extends FormRequest
      */
     public function attributes(): array
     {
-        return ['scheduled_at' => 'data e hora', 'amount' => 'valor'];
+        return ['scheduled_at' => 'data e hora', 'max_hourly_rate' => 'preço máximo por hora'];
     }
 }

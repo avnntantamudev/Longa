@@ -35,7 +35,7 @@ it('executa o serviço de ponta a ponta com QR e liberta o dinheiro uma vez', fu
     // 1. Pedido e aceitação (TRIM TRIM)
     apiLogin($client);
     $requestId = $this->postJson('/api/v1/service-requests', [
-        'category_id' => $sgme->id, 'title' => 'Serviço de SGME', 'amount' => 25000, 'answers' => ['disciplina' => 'SGME', 'nivel' => 'Profissional'], 'duration_minutes' => 90, 'payment_method' => 'electronic',
+        'category_id' => $sgme->id, 'title' => 'Serviço de SGME', 'max_hourly_rate' => 12500, 'answers' => ['disciplina' => 'SGME', 'nivel' => 'Profissional'], 'duration_minutes' => 120, 'payment_method' => 'electronic',
         'scheduled_at' => now()->addDay()->setTime(14, 0)->toIso8601String(), 'modality' => 'in_person',
         'municipality' => 'Talatona', 'neighborhood' => 'Talatona', 'latitude' => $lat, 'longitude' => $lng,
     ])->assertCreated()->json('data.id');
@@ -47,7 +47,7 @@ it('executa o serviço de ponta a ponta com QR e liberta o dinheiro uma vez', fu
     // 2. Pagamento dentro da janela: dinheiro retido
     apiLogin($client);
     $this->getJson("/api/v1/sessions/{$sessionId}")->assertJsonPath('data.state', 'accepted')->assertJsonPath('data.actions', ['pay'])
-        ->assertJsonPath('data.duration_minutes', 90);
+        ->assertJsonPath('data.duration_minutes', 120);
     $payKey = $key('pay');
     $this->postJson("/api/v1/sessions/{$sessionId}/pay", ['method' => 'multicaixa_express'], $payKey)->assertOk()->assertJsonPath('data.state', 'accepted');
     $this->postJson("/api/v1/sessions/{$sessionId}/pay", ['method' => 'multicaixa_express'], $payKey)->assertOk()->assertHeader('Idempotent-Replayed', 'true');

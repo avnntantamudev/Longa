@@ -88,7 +88,7 @@ class ProfileController extends Controller
      */
     public function providerCategories(ProviderCategoriesRequest $request, UpdateProviderProfile $action): ProviderProfileResource
     {
-        return new ProviderProfileResource($action->categories($this->user($request), $request->categoryIds()));
+        return new ProviderProfileResource($action->categories($this->user($request), $request->categoryIds(), $request->hourlyRates()));
     }
 
     /**

@@ -13,7 +13,27 @@ export type SessionAction =
     | 'confirm'
     | 'confirm_without_qr'
     | 'dispute'
-    | 'confirm_cash';
+    | 'confirm_cash'
+    | 'diagnosis'
+    | 'send_quote'
+    | 'answer_quote';
+
+/** Orçamento (GET /sessions/{id}/quotes) */
+export interface Quote {
+    id: number;
+    revision: number;
+    status: 'sent' | 'accepted' | 'refused' | 'revision_requested' | 'expired' | 'superseded';
+    labour_amount: number;
+    materials_amount: number;
+    materials: Array<{ descricao: string; quantidade: number; valor: number }>;
+    total: number;
+    visit_fee_deducted: number;
+    amount_due: number;
+    execution_days: number;
+    notes: string | null;
+    valid_until: string;
+    client_note: string | null;
+}
 
 export interface Session {
     id: number;
@@ -29,6 +49,8 @@ export interface Session {
     payment_status: 'pending' | 'held' | 'failed' | null;
     payment_due_at: string | null;
     closed_reason: string | null;
+    pricing_mode: 'fixed' | 'quote' | 'hourly_package';
+    visit_fee: number;
     started_at: string | null;
     ended_at: string | null;
     confirmed_at: string | null;
@@ -79,6 +101,7 @@ export type SessionPhase =
     | 'scheduled'
     | 'in_progress'
     | 'awaiting_confirmation'
+    | 'quote'
     | 'completed'
     | 'no_show_provider'
     | 'no_show_client'
@@ -92,6 +115,11 @@ export function sessionPhase(s: Pick<Session, 'state' | 'payment_status' | 'clos
             return s.payment_status === 'pending' ? 'pending_payment' : 'scheduled';
         case 'on_the_way':
             return 'scheduled';
+        case 'diagnosing':
+        case 'quote_sent':
+            return 'quote';
+        case 'quote_accepted':
+            return s.payment_status === 'pending' ? 'pending_payment' : 'scheduled';
         case 'in_progress':
             return 'in_progress';
         case 'completed':
@@ -125,6 +153,12 @@ export function eventLabel(type: string): string {
         payment_failed: 'Pagamento falhou',
         payment_window_expired: 'Prazo de pagamento terminou',
         on_the_way: 'Técnico a caminho',
+        diagnosis_started: 'Diagnóstico no local',
+        quote_sent: 'Orçamento enviado',
+        quote_revision_requested: 'Revisão do orçamento pedida',
+        quote_accepted: 'Orçamento aceite',
+        quote_refused: 'Orçamento recusado',
+        quote_expired: 'Orçamento expirado',
         reminder_24h: 'Lembrete enviado (24 h antes)',
         reminder_1h: 'Lembrete enviado (1 h antes)',
         auto_not_started: 'Cancelado: o serviço não foi iniciado',

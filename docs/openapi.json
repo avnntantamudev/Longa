@@ -4668,6 +4668,477 @@
                 }
             }
         },
+        "/sessions/{session}/diagnosis": {
+            "post": {
+                "operationId": "sessions.diagnosis",
+                "summary": "Come\u00e7ar o diagn\u00f3stico (t\u00e9cnico chegou ao local). A taxa de visita, se houver, \u00e9 paga em m\u00e3o",
+                "tags": [
+                    "Quote"
+                ],
+                "parameters": [
+                    {
+                        "name": "session",
+                        "in": "path",
+                        "required": true,
+                        "description": "The session ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "description": "Chave \u00fanica por a\u00e7\u00e3o (8\u2013100 caracteres: letras, n\u00fameros, \"-\" e \"_\"). Repetir o mesmo pedido com a mesma chave devolve a resposta guardada (24 h, cabe\u00e7alho `Idempotent-Replayed: true`); a mesma chave com outro corpo d\u00e1 422 `idempotency_key_reused`; um pedido ainda em curso d\u00e1 409 `request_in_progress`.",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z0-9_-]{8,100}$"
+                        },
+                        "example": "3f1c9a2e-7b4d-4e8a-9c1f-2a6b8d0e4f13"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`SessionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/SessionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/sessions/{session}/quotes": {
+            "get": {
+                "operationId": "sessions.quotes.index",
+                "summary": "Or\u00e7amentos do pedido (cliente e t\u00e9cnico atribu\u00eddo)",
+                "tags": [
+                    "Quote"
+                ],
+                "parameters": [
+                    {
+                        "name": "session",
+                        "in": "path",
+                        "required": true,
+                        "description": "The session ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `QuoteResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/QuoteResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "sessions.quotes.store",
+                "summary": "Enviar or\u00e7amento (t\u00e9cnico): m\u00e3o de obra, materiais, prazo de execu\u00e7\u00e3o. Validade definida no painel",
+                "tags": [
+                    "Quote"
+                ],
+                "parameters": [
+                    {
+                        "name": "session",
+                        "in": "path",
+                        "required": true,
+                        "description": "The session ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "description": "Chave \u00fanica por a\u00e7\u00e3o (8\u2013100 caracteres: letras, n\u00fameros, \"-\" e \"_\"). Repetir o mesmo pedido com a mesma chave devolve a resposta guardada (24 h, cabe\u00e7alho `Idempotent-Replayed: true`); a mesma chave com outro corpo d\u00e1 422 `idempotency_key_reused`; um pedido ainda em curso d\u00e1 409 `request_in_progress`.",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z0-9_-]{8,100}$"
+                        },
+                        "example": "3f1c9a2e-7b4d-4e8a-9c1f-2a6b8d0e4f13"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "labour_amount": {
+                                        "type": "integer",
+                                        "description": "M\u00e3o de obra (Kz). @example 15000",
+                                        "minimum": 0,
+                                        "maximum": 100000000
+                                    },
+                                    "materials_amount": {
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ],
+                                        "description": "Total dos materiais (Kz). @example 8000",
+                                        "minimum": 0,
+                                        "maximum": 100000000
+                                    },
+                                    "materials": {
+                                        "type": [
+                                            "array",
+                                            "null"
+                                        ],
+                                        "description": "Lista de materiais (opcional).",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "descricao": {
+                                                    "type": "string",
+                                                    "maxLength": 120
+                                                },
+                                                "quantidade": {
+                                                    "type": "integer",
+                                                    "minimum": 1,
+                                                    "maximum": 10000
+                                                },
+                                                "valor": {
+                                                    "type": "integer",
+                                                    "minimum": 0,
+                                                    "maximum": 100000000
+                                                }
+                                            },
+                                            "required": [
+                                                "descricao",
+                                                "quantidade",
+                                                "valor"
+                                            ]
+                                        },
+                                        "maxItems": 30
+                                    },
+                                    "execution_days": {
+                                        "type": "integer",
+                                        "description": "Prazo de execu\u00e7\u00e3o (dias). @example 1",
+                                        "minimum": 1,
+                                        "maximum": 365
+                                    },
+                                    "notes": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 1000
+                                    }
+                                },
+                                "required": [
+                                    "labour_amount",
+                                    "execution_days"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`QuoteResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/QuoteResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/quotes/{quote}/accept": {
+            "post": {
+                "operationId": "quotes.accept",
+                "summary": "Aceitar or\u00e7amento (cliente): o pre\u00e7o fica bloqueado. Paga o total menos a taxa de visita",
+                "tags": [
+                    "Quote"
+                ],
+                "parameters": [
+                    {
+                        "name": "quote",
+                        "in": "path",
+                        "required": true,
+                        "description": "The quote ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "description": "Chave \u00fanica por a\u00e7\u00e3o (8\u2013100 caracteres: letras, n\u00fameros, \"-\" e \"_\"). Repetir o mesmo pedido com a mesma chave devolve a resposta guardada (24 h, cabe\u00e7alho `Idempotent-Replayed: true`); a mesma chave com outro corpo d\u00e1 422 `idempotency_key_reused`; um pedido ainda em curso d\u00e1 409 `request_in_progress`.",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z0-9_-]{8,100}$"
+                        },
+                        "example": "3f1c9a2e-7b4d-4e8a-9c1f-2a6b8d0e4f13"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`SessionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/SessionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/quotes/{quote}/revision": {
+            "post": {
+                "operationId": "quotes.revision",
+                "summary": "Pedir revis\u00e3o do or\u00e7amento (cliente): volta ao diagn\u00f3stico",
+                "tags": [
+                    "Quote"
+                ],
+                "parameters": [
+                    {
+                        "name": "quote",
+                        "in": "path",
+                        "required": true,
+                        "description": "The quote ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "description": "Chave \u00fanica por a\u00e7\u00e3o (8\u2013100 caracteres: letras, n\u00fameros, \"-\" e \"_\"). Repetir o mesmo pedido com a mesma chave devolve a resposta guardada (24 h, cabe\u00e7alho `Idempotent-Replayed: true`); a mesma chave com outro corpo d\u00e1 422 `idempotency_key_reused`; um pedido ainda em curso d\u00e1 409 `request_in_progress`.",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z0-9_-]{8,100}$"
+                        },
+                        "example": "3f1c9a2e-7b4d-4e8a-9c1f-2a6b8d0e4f13"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "note": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`SessionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/SessionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/quotes/{quote}/refuse": {
+            "post": {
+                "operationId": "quotes.refuse",
+                "summary": "Recusar or\u00e7amento (cliente): o pedido \u00e9 cancelado; o t\u00e9cnico fica com a taxa de visita",
+                "tags": [
+                    "Quote"
+                ],
+                "parameters": [
+                    {
+                        "name": "quote",
+                        "in": "path",
+                        "required": true,
+                        "description": "The quote ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "description": "Chave \u00fanica por a\u00e7\u00e3o (8\u2013100 caracteres: letras, n\u00fameros, \"-\" e \"_\"). Repetir o mesmo pedido com a mesma chave devolve a resposta guardada (24 h, cabe\u00e7alho `Idempotent-Replayed: true`); a mesma chave com outro corpo d\u00e1 422 `idempotency_key_reused`; um pedido ainda em curso d\u00e1 409 `request_in_progress`.",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z0-9_-]{8,100}$"
+                        },
+                        "example": "3f1c9a2e-7b4d-4e8a-9c1f-2a6b8d0e4f13"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "note": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`SessionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/SessionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/request-media/{media}": {
             "get": {
                 "operationId": "request-media.link",
@@ -8030,6 +8501,97 @@
                 ],
                 "title": "PushSubscriptionRequest"
             },
+            "QuoteResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "revision": {
+                        "type": "integer"
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "sent | accepted | refused | revision_requested | expired | superseded"
+                    },
+                    "labour_amount": {
+                        "type": "integer"
+                    },
+                    "materials_amount": {
+                        "type": "integer"
+                    },
+                    "materials": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "descricao": {
+                                    "type": "string"
+                                },
+                                "quantidade": {
+                                    "type": "integer"
+                                },
+                                "valor": {
+                                    "type": "integer"
+                                }
+                            },
+                            "required": [
+                                "descricao",
+                                "quantidade",
+                                "valor"
+                            ]
+                        }
+                    },
+                    "total": {
+                        "type": "integer"
+                    },
+                    "visit_fee_deducted": {
+                        "type": "integer",
+                        "description": "Taxa de visita j\u00e1 paga em m\u00e3o, descontada no valor a pagar"
+                    },
+                    "amount_due": {
+                        "type": "integer"
+                    },
+                    "execution_days": {
+                        "type": "integer"
+                    },
+                    "notes": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "valid_until": {
+                        "type": "string"
+                    },
+                    "client_note": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "revision",
+                    "status",
+                    "labour_amount",
+                    "materials_amount",
+                    "materials",
+                    "total",
+                    "visit_fee_deducted",
+                    "amount_due",
+                    "execution_days",
+                    "notes",
+                    "valid_until",
+                    "client_note",
+                    "created_at"
+                ],
+                "title": "QuoteResource"
+            },
             "RefreshTokenRequest": {
                 "type": "object",
                 "properties": {
@@ -8211,6 +8773,12 @@
                             "null"
                         ]
                     },
+                    "pricing_mode": {
+                        "type": "string"
+                    },
+                    "visit_fee": {
+                        "type": "integer"
+                    },
                     "started_at": {
                         "type": [
                             "string",
@@ -8390,6 +8958,8 @@
                     "payment_status",
                     "payment_due_at",
                     "closed_reason",
+                    "pricing_mode",
+                    "visit_fee",
                     "started_at",
                     "ended_at",
                     "confirmed_at",

@@ -69,6 +69,8 @@ class CreateServiceRequest
             // Modo de preço da categoria no envio: decide se o pedido passa por diagnóstico e orçamento
             $request->pricing_mode = $category->pricing_mode;
             $request->sessions = $sessions;
+            // Orçamentos: taxa de visita da categoria no envio (paga em mão no diagnóstico)
+            $request->visit_fee = $category->pricing_mode === PricingMode::Quote ? (int) ($category->effectivePrice()->visit_fee ?? 0) : 0;
             $request->discount_percent = $discount;
             $request->save();
 

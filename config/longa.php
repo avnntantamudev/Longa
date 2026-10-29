@@ -69,6 +69,17 @@ return [
         ],
     ],
 
+    // Orçamentos e adendas (BISCA, Fase 2.5; editáveis no painel → Definições)
+    'quotes' => [
+        'validity_days' => (int) env('LONGA_QUOTE_VALIDITY_DAYS', 7),
+        // Alerta no painel quando o total sai do intervalo de referência da categoria em mais de N%
+        'outlier_percent' => (int) env('LONGA_QUOTE_OUTLIER_PERCENT', 50),
+        // Adendas acima de N% do orçamento original vão para revisão da equipa
+        'addendum_review_percent' => (int) env('LONGA_ADDENDUM_REVIEW_PERCENT', 20),
+        // Orçamentos por pedido: 1 hoje; preparado para até 3 técnicos a enviar propostas (opção futura)
+        'max_per_request' => (int) env('LONGA_QUOTES_MAX_PER_REQUEST', 1),
+    ],
+
     'matching' => [
         // Despacho presencial (BISCA, Fase 2.3; editáveis no painel → Definições): raio inicial, alargamento por
         // ronda e raio máximo (metros); tempo total de procura, repartido pelas rondas (minutos). As ofertas

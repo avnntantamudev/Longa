@@ -49,6 +49,8 @@ class SessionResource extends JsonResource
             'payment_status' => $this->payment_status,
             'payment_due_at' => $this->payment_due_at?->toIso8601String(),
             'closed_reason' => $this->closed_reason,
+            'pricing_mode' => $this->pricing_mode->value,
+            'visit_fee' => $this->visit_fee,
             'started_at' => $this->started_at?->toIso8601String(),
             'ended_at' => $this->ended_at?->toIso8601String(),
             'confirmed_at' => $this->confirmed_at?->toIso8601String(),

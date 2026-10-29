@@ -38,12 +38,13 @@ class StartSession
                 throw new ApiException('session_not_startable', 'Este serviço não pode ser iniciado no estado atual ('.$locked->state->label().').', 409);
             }
 
+            $afterQuote = $locked->state === RequestState::QuoteAccepted;
             $earliest = $locked->scheduled_at->copy()->subMinutes((int) config('longa.session_rules.start_early_minutes'));
-            if (now()->lt($earliest)) {
+            if (! $afterQuote && now()->lt($earliest)) {
                 throw new ApiException('session_too_early', 'Só pode iniciar o serviço a partir de '.$earliest->format('H:i').'.', 409);
             }
 
-            if ($locked->ends_at !== null && now()->gt($locked->ends_at)) {
+            if (! $afterQuote && $locked->ends_at !== null && now()->gt($locked->ends_at)) {
                 throw new ApiException('session_too_late', 'A hora prevista do serviço já terminou.', 409);
             }
 

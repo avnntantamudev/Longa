@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Requests\Http\Controllers\OfferController;
+use App\Modules\Requests\Http\Controllers\QuoteController;
 use App\Modules\Requests\Http\Controllers\RequestMediaController;
 use App\Modules\Requests\Http\Controllers\ServiceRequestController;
 use Illuminate\Support\Facades\Route;
@@ -30,6 +31,16 @@ Route::middleware(['auth:sanctum', 'auth.session', 'onboarded', 'role:provider']
         Route::post('{offer}/accept', [OfferController::class, 'accept'])->middleware('throttle:offer-responses')->name('accept');
         Route::post('{offer}/decline', [OfferController::class, 'decline'])->middleware('throttle:offer-responses')->name('decline');
     });
+
+// Orçamentos (serviços por orçamento): diagnóstico e orçamento do técnico, resposta do cliente
+Route::middleware(['auth:sanctum', 'auth.session', 'onboarded'])->group(function () {
+    Route::post('sessions/{session}/diagnosis', [QuoteController::class, 'diagnosis'])->middleware('idempotent')->name('api.sessions.diagnosis');
+    Route::get('sessions/{session}/quotes', [QuoteController::class, 'index'])->name('api.sessions.quotes.index');
+    Route::post('sessions/{session}/quotes', [QuoteController::class, 'store'])->middleware(['idempotent', 'throttle:10,1'])->name('api.sessions.quotes.store');
+    Route::post('quotes/{quote}/accept', [QuoteController::class, 'accept'])->middleware('idempotent')->name('api.quotes.accept');
+    Route::post('quotes/{quote}/revision', [QuoteController::class, 'revision'])->middleware('idempotent')->name('api.quotes.revision');
+    Route::post('quotes/{quote}/refuse', [QuoteController::class, 'refuse'])->middleware('idempotent')->name('api.quotes.refuse');
+});
 
 // Fotos e vídeos do formulário do pedido (cliente, técnicos com oferta, técnico atribuído e equipa)
 Route::middleware(['auth:sanctum', 'auth.session', 'onboarded'])

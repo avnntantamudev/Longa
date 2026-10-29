@@ -35,6 +35,9 @@ class PlatformSettings
         'dispatch_max_radius_m' => ['config' => 'longa.matching.max_radius_m', 'type' => 'int', 'min' => 500, 'max' => 100_000, 'label' => 'Despacho: raio máximo (metros)'],
         'dispatch_search_minutes' => ['config' => 'longa.matching.search_minutes', 'type' => 'int', 'min' => 5, 'max' => 240, 'label' => 'Despacho: tempo para um técnico aceitar (minutos)'],
         'dispatch_min_balance' => ['config' => 'longa.matching.min_balance', 'type' => 'int', 'min' => 0, 'max' => 10_000_000, 'label' => 'Saldo mínimo do técnico para receber pedidos (Kz; 0 = desligado)'],
+        'quote_validity_days' => ['config' => 'longa.quotes.validity_days', 'type' => 'int', 'min' => 1, 'max' => 60, 'label' => 'Orçamentos: validade (dias)'],
+        'quote_outlier_percent' => ['config' => 'longa.quotes.outlier_percent', 'type' => 'int', 'min' => 0, 'max' => 500, 'label' => 'Orçamentos: alerta quando sai do intervalo de referência em mais de (%)'],
+        'addendum_review_percent' => ['config' => 'longa.quotes.addendum_review_percent', 'type' => 'int', 'min' => 0, 'max' => 500, 'label' => 'Adendas: revisão da equipa acima de (% do orçamento original)'],
         'scheduled_request_close_hours' => ['config' => 'longa.scheduled_requests.close_hours_before', 'type' => 'int', 'min' => 1, 'max' => 48, 'label' => 'Pedidos para outro dia: fecham X horas antes do serviço'],
     ];
 

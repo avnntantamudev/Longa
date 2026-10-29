@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Payments\Services;
 
 use App\Modules\Requests\Models\ServiceRequest;
+use App\Modules\Requests\Services\Commission;
 use App\Modules\Users\Models\User;
 use App\Modules\Wallet\Ledger\Accounts;
 use App\Modules\Wallet\Ledger\LedgerException;
@@ -35,6 +36,22 @@ class CommissionDebts
             Accounts::PLATFORM_REVENUE => $session->commission,
             Accounts::providerCommissionDue($session->provider_profile_id) => -$session->commission,
         ], $session, ['reason' => $reason, 'amount_paid_in_cash' => $session->amount], $actor?->id);
+    }
+
+    /**
+     * Taxa de visita (orçamentos): o técnico recebe-a em mão no diagnóstico; a comissão sobre ela fica em dívida.
+     */
+    public function registerVisitFee(ServiceRequest $request, ?User $actor): ?LedgerTransaction
+    {
+        $commission = Commission::splitFor($request->visit_fee, (int) $request->provider_profile_id)['commission'];
+        if ($commission === 0) {
+            return null;
+        }
+
+        return $this->ledger->post('cash_commission_due', "cash:due:visit:{$request->id}", [
+            Accounts::PLATFORM_REVENUE => $commission,
+            Accounts::providerCommissionDue((int) $request->provider_profile_id) => -$commission,
+        ], $request, ['reason' => 'visit_fee', 'amount_paid_in_cash' => $request->visit_fee], $actor?->id);
     }
 
     /**

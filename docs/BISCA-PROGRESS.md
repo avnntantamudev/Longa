@@ -190,3 +190,20 @@ Respostas do cliente às dúvidas da Fase 1 (2026-10-29). Confirmado com o "ok":
   (`HourlyPricing::total` = preço × horas × aulas − desconto), mostrado antes de pagar.
 - Republicar muda o preço máximo por hora (já não se envia um valor).
 - Limite atual: um pacote é um só pedido; o calendário das aulas combina-se no chat e a confirmação é no fim.
+
+### Notas do passo 6
+
+- Migração `2026_10_29_000005_create_quotes` (reversível): tabela `quotes` (mão de obra, materiais, total, taxa de
+  visita descontada, prazo em dias, validade, estado, revisão, alerta fora do intervalo) e, no pedido, `visit_fee`
+  (da categoria no envio) e `diagnosis_started_at`.
+- Fluxo: aceite → (a caminho →) **em diagnóstico** (`POST /sessions/{id}/diagnosis`) → **orçamento enviado**
+  (`POST /sessions/{id}/quotes`) → o cliente aceita, pede revisão (volta ao diagnóstico, nova revisão) ou recusa
+  (`POST /quotes/{id}/accept|revision|refuse`). Aceite → preço bloqueado; pagamento digital retido no escrow como
+  nos outros serviços; depois o técnico inicia a execução.
+- **Taxa de visita** (decisão "a melhor opção"): paga em mão ao técnico no diagnóstico, com a comissão sobre ela em
+  dívida (como no dinheiro); descontada no valor a pagar se o orçamento for aceite; o técnico fica com ela se for
+  recusado. Assim o técnico nunca vai de graça e o cliente nunca paga duas vezes.
+- Validade 7 dias (parâmetro); sem resposta, o orçamento expira e o pedido é cancelado (regra automática).
+- Alerta: orçamentos com total abaixo de mínimo × (1 − 50%) ou acima de máximo × (1 + 50%) do intervalo de referência
+  ficam marcados; o painel (Operações → Orçamentos) mostra-os com um contador. Tolerância configurável.
+- Vários orçamentos: cada orçamento guarda o técnico; `longa.quotes.max_per_request` = 1 (não ligado).

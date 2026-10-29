@@ -49,6 +49,8 @@ use Illuminate\Support\Facades\Auth;
  * @property int $sessions número de aulas (pacote)
  * @property int|null $category_package_id
  * @property int $discount_percent desconto do pacote
+ * @property int $visit_fee taxa de visita (orçamentos), paga em mão no diagnóstico
+ * @property \Illuminate\Support\Carbon|null $diagnosis_started_at
  * @property \Illuminate\Support\Carbon $scheduled_at
  * @property int $duration_minutes
  * @property \Illuminate\Support\Carbon|null $ends_at
@@ -161,6 +163,8 @@ class ServiceRequest extends Model
             'hourly_rate' => 'integer',
             'sessions' => 'integer',
             'discount_percent' => 'integer',
+            'visit_fee' => 'integer',
+            'diagnosis_started_at' => 'datetime',
             'scheduled' => 'boolean',
             'provider_net' => 'integer',
         ];
@@ -254,6 +258,16 @@ class ServiceRequest extends Model
     }
 
     /**
+     * Orçamentos (serviços por orçamento), com as revisões.
+     *
+     * @return HasMany<Quote, $this>
+     */
+    public function quotes(): HasMany
+    {
+        return $this->hasMany(Quote::class);
+    }
+
+    /**
      * @return HasMany<RequestOffer, $this>
      */
     public function offers(): HasMany
@@ -342,7 +356,7 @@ class ServiceRequest extends Model
 
     public function awaitingPayment(): bool
     {
-        return $this->state === RequestState::Accepted && $this->payment_status === self::PAYMENT_PENDING;
+        return in_array($this->state, [RequestState::Accepted, RequestState::QuoteAccepted], true) && $this->payment_status === self::PAYMENT_PENDING;
     }
 
     public function involves(User $user): bool

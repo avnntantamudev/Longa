@@ -5,9 +5,9 @@ import UserAvatar from '@/components/UserAvatar.vue';
 import { usePolling, usePrivateChannel } from '@/composables/useRealtime';
 import { api, ApiError, newIdempotencyKey } from '@/lib/api';
 import { kwanza, when } from '@/lib/format';
-import { eventLabel, sessionPhase, stateBadge, type Session, type SessionAction, type SessionEventItem } from '@/lib/session';
+import { eventLabel, sessionPhase, stateBadge, type Quote, type Session, type SessionAction, type SessionEventItem } from '@/lib/session';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 
 const props = defineProps<{ sessionId: number }>();
 
@@ -41,6 +41,49 @@ async function load() {
     ]);
     session.value = s.data;
     events.value = e.data.slice().reverse();
+    if (s.data.pricing_mode === 'quote') {
+        quotes.value = (await api.get<{ data: Quote[] }>(`/sessions/${props.sessionId}/quotes`)).data;
+    }
+}
+
+// Orçamentos: o mais recente primeiro; formulário do técnico e nota do cliente
+const quotes = ref<Quote[]>([]);
+const latestQuote = computed(() => quotes.value[0] ?? null);
+const quoteForm = reactive({ labour_amount: null as number | null, materials_amount: null as number | null, execution_days: 1, notes: '' });
+const quoteNote = ref('');
+
+async function sendQuote(): Promise<void> {
+    await call('send_quote', `/sessions/${props.sessionId}/quotes`, { ...quoteForm, materials_amount: quoteForm.materials_amount ?? 0 }, 'Orçamento enviado ao cliente.');
+}
+
+async function answerQuote(action: 'accept' | 'revision' | 'refuse'): Promise<void> {
+    if (!latestQuote.value) return;
+    const messages = { accept: 'Orçamento aceite. O preço fica bloqueado.', revision: 'Pedido de revisão enviado ao técnico.', refuse: 'Orçamento recusado.' };
+    await call('answer_quote', `/quotes/${latestQuote.value.id}/${action}`, { note: quoteNote.value || null }, messages[action]);
+}
+
+/** Como run(), para endpoints fora de /sessions/{id}/... */
+async function call(action: SessionAction, path: string, body: unknown, success: string): Promise<void> {
+    error.value = '';
+    notice.value = '';
+    busy.value = action;
+    if (!keys.has(action)) keys.set(action, newIdempotencyKey());
+    try {
+        await api.post(path, body, { idempotencyKey: keys.get(action) });
+        keys.delete(action);
+        notice.value = success;
+        await load();
+    } catch (e) {
+        if (e instanceof ApiError) {
+            keys.delete(action);
+            const fields = e.fieldErrors();
+            error.value = Object.values(fields)[0] ?? e.message;
+        } else {
+            error.value = 'Sem ligação. Tente de novo: a operação não será repetida.';
+        }
+    } finally {
+        busy.value = null;
+    }
 }
 
 async function run(action: SessionAction, path: string, body?: unknown, success?: string) {
@@ -160,6 +203,56 @@ onMounted(load);
 
             <p v-else-if="phase === 'payment_failed'" class="text-caption text-ink-muted">O pagamento não foi concluído e o serviço não foi marcado.</p>
 
+            <!-- Orçamento: diagnóstico e resposta -->
+            <template v-else-if="phase === 'quote'">
+                <template v-if="session.state === 'diagnosing'">
+                    <p class="font-semibold">Diagnóstico no local</p>
+                    <p v-if="session.visit_fee" class="text-caption text-ink-muted">
+                        Taxa de visita: {{ kwanza(session.visit_fee) }}, paga em mão ao técnico (descontada no serviço se o orçamento for aceite).
+                    </p>
+                    <p v-if="latestQuote?.status === 'revision_requested'" class="text-caption text-ink-muted">
+                        O cliente pediu revisão{{ latestQuote.client_note ? `: "${latestQuote.client_note}"` : '' }}.
+                    </p>
+                    <form v-if="has('send_quote')" class="grid gap-2" @submit.prevent="sendQuote">
+                        <div class="grid grid-cols-2 gap-2">
+                            <input v-model.number="quoteForm.labour_amount" class="input" type="number" min="0" step="500" inputmode="numeric" placeholder="Mão de obra (Kz)" aria-label="Mão de obra (Kz)" />
+                            <input v-model.number="quoteForm.materials_amount" class="input" type="number" min="0" step="500" inputmode="numeric" placeholder="Materiais (Kz)" aria-label="Materiais (Kz)" />
+                        </div>
+                        <label class="text-caption">Prazo de execução (dias)
+                            <input v-model.number="quoteForm.execution_days" class="input mt-1" type="number" min="1" max="365" />
+                        </label>
+                        <textarea v-model="quoteForm.notes" class="input min-h-20 py-3" maxlength="1000" placeholder="O que vai fazer e que materiais usa" />
+                        <button type="submit" class="btn-primary w-full" :disabled="busy !== null || !quoteForm.labour_amount">
+                            {{ busy === 'send_quote' ? 'A enviar…' : 'Enviar orçamento' }}
+                        </button>
+                    </form>
+                    <p v-else class="text-caption text-ink-muted">O técnico está a ver o problema e vai enviar o orçamento.</p>
+                </template>
+                <template v-else-if="latestQuote">
+                    <p class="font-semibold">Orçamento{{ latestQuote.revision > 1 ? ` (revisão ${latestQuote.revision})` : '' }}</p>
+                    <dl class="grid grid-cols-2 gap-1 text-caption">
+                        <dt class="text-ink-muted">Mão de obra</dt><dd class="text-right">{{ kwanza(latestQuote.labour_amount) }}</dd>
+                        <dt class="text-ink-muted">Materiais</dt><dd class="text-right">{{ kwanza(latestQuote.materials_amount) }}</dd>
+                        <dt v-if="latestQuote.visit_fee_deducted" class="text-ink-muted">Taxa de visita já paga</dt>
+                        <dd v-if="latestQuote.visit_fee_deducted" class="text-right">− {{ kwanza(latestQuote.visit_fee_deducted) }}</dd>
+                        <dt class="font-semibold">A pagar</dt><dd class="text-right font-semibold">{{ kwanza(latestQuote.amount_due) }}</dd>
+                        <dt class="text-ink-muted">Prazo</dt><dd class="text-right">{{ latestQuote.execution_days }} {{ latestQuote.execution_days === 1 ? 'dia' : 'dias' }}</dd>
+                        <dt class="text-ink-muted">Válido até</dt><dd class="text-right">{{ when(latestQuote.valid_until) }}</dd>
+                    </dl>
+                    <p v-if="latestQuote.notes" class="text-caption text-ink-muted">{{ latestQuote.notes }}</p>
+                    <template v-if="has('answer_quote')">
+                        <input v-model="quoteNote" class="input" maxlength="500" placeholder="Comentário (opcional)" />
+                        <button class="btn-primary w-full" :disabled="busy !== null" @click="answerQuote('accept')">Aceitar orçamento</button>
+                        <div class="flex gap-2">
+                            <button class="btn-outline flex-1" :disabled="busy !== null" @click="answerQuote('revision')">Pedir revisão</button>
+                            <button class="btn-outline flex-1 text-danger" :disabled="busy !== null" @click="answerQuote('refuse')">Recusar</button>
+                        </div>
+                        <p v-if="session.visit_fee" class="text-caption text-ink-muted">Se recusar, o técnico fica com a taxa de visita.</p>
+                    </template>
+                    <p v-else class="text-caption text-ink-muted">À espera da resposta do cliente.</p>
+                </template>
+            </template>
+
             <!-- Serviço agendado -->
             <template v-else-if="phase === 'scheduled'">
                 <p class="text-caption text-ink-muted">
@@ -167,6 +260,9 @@ onMounted(load);
                 </p>
                 <button v-if="has('start')" class="btn-primary w-full" :disabled="busy !== null" @click="startLesson">
                     {{ busy === 'start' ? 'A iniciar…' : 'Iniciar serviço' }}
+                </button>
+                <button v-if="has('diagnosis')" class="btn-primary w-full" :disabled="busy !== null" @click="run('diagnosis', 'diagnosis', undefined, 'Diagnóstico iniciado.')">
+                    {{ busy === 'diagnosis' ? 'A começar…' : 'Cheguei: começar diagnóstico' }}
                 </button>
             </template>
 

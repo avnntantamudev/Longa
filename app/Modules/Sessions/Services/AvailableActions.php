@@ -6,6 +6,7 @@ namespace App\Modules\Sessions\Services;
 
 use App\Modules\Requests\Enums\RequestState;
 use App\Modules\Requests\Models\ServiceRequest;
+use App\Modules\Users\Enums\PricingMode;
 
 /**
  * Ações que o participante pode fazer agora (a app só mostra estes botões).
@@ -30,11 +31,21 @@ class AvailableActions
             'no_show' => $now->gte($start->copy()->addMinutes((int) ($isProvider ? $rules['no_show_client_after_minutes'] : $rules['no_show_provider_after_minutes']))),
         ];
 
+        // Por orçamento: o técnico começa pelo diagnóstico (não inicia o serviço antes de o orçamento ser aceite)
+        if ($session->pricing_mode === PricingMode::Quote) {
+            $beforeStart = [...$beforeStart, 'start' => false, 'diagnosis' => $isProvider];
+        }
+
         $actions = match ($session->state) {
             RequestState::Accepted => $session->awaitingPayment()
                 ? ['pay' => ! $isProvider && ($session->payment_due_at?->isFuture() ?? false)]
                 : $beforeStart,
             RequestState::OnTheWay => $beforeStart,
+            RequestState::Diagnosing => ['send_quote' => $isProvider],
+            RequestState::QuoteSent => ['answer_quote' => ! $isProvider],
+            RequestState::QuoteAccepted => $session->awaitingPayment()
+                ? ['pay' => ! $isProvider && ($session->payment_due_at?->isFuture() ?? false)]
+                : ['start' => $isProvider],
             RequestState::InProgress => ['finish' => $isProvider, 'dispute' => true],
             RequestState::Completed => [
                 'show_qr' => $isProvider && $now->lt($end->copy()->addHours((int) $rules['qr_window_hours_after_end'])),

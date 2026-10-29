@@ -11,6 +11,7 @@ use App\Modules\Payments\Models\EscrowHold;
 use App\Modules\Payments\Services\SessionSettlement;
 use App\Modules\Requests\Enums\RequestState;
 use App\Modules\Requests\Models\ServiceRequest;
+use App\Modules\Requests\Services\QuoteFlow;
 use App\Modules\Score\Models\ScoreEvent;
 use App\Modules\Score\Services\ScoreRecorder;
 use App\Modules\Sessions\Events\SessionConfirmed;
@@ -36,6 +37,7 @@ class SessionTimeoutRules
         private readonly RefundPolicy $policy,
         private readonly ScoreRecorder $score,
         private readonly ConfirmCashPayment $confirmCash,
+        private readonly QuoteFlow $quotes,
     ) {}
 
     /** Motivos de cancelamento com prazo de contestação antes de mexer no dinheiro (R1 e R4) */
@@ -48,6 +50,7 @@ class SessionTimeoutRules
     {
         return [
             'R3_payment_expired' => $this->expireUnpaid(),
+            'quotes_expired' => $this->quotes->expireDue(),
             'R1_not_started' => $this->cancelNotStarted(),
             'R2_no_qr' => $this->completeWithoutQr(),
             'reminders_before' => $this->remindUpcoming(),

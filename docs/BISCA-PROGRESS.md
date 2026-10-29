@@ -150,3 +150,17 @@ Respostas do cliente às dúvidas da Fase 1 (2026-10-29). Confirmado com o "ok":
   nunca iniciado (R1) passa a cancelado com prazo de contestação, em vez de esperar pela confirmação do cliente.
 - Enquanto o passo 6 não existir, os pedidos de categorias por orçamento não podem passar a "em execução"
   (exigem diagnóstico e orçamento aceite).
+
+### Notas do passo 3
+
+- Migração `2026_10_29_000003_add_request_form_answers` (reversível): `service_requests.answers` (respostas de texto,
+  número e escolha) e `service_request_media` (fotos e vídeo, disco privado).
+- O pedido valida as respostas pelo formulário da categoria (campos herdados incluídos), as fotos (JPG/PNG/WebP, até
+  6 de 5 MB) e o vídeo (MP4/MOV/WebM, até 50 MB), e só aceita as modalidades da categoria. Limites em
+  `longa.requests.media`.
+- Valor conforme o modo de preço: **fixo** = preço da tabela, bloqueado no envio (o cliente não o pode enviar);
+  **orçamento** = 0 até haver orçamento aceite, sem pagamento antecipado quando o técnico aceita; **hora/pacote** =
+  valor indicado pelo cliente (muda no passo 5).
+- Fotos e vídeos: `GET /api/v1/request-media/{id}` devolve um link temporário (10 min) para o cliente, os técnicos a
+  quem o pedido foi oferecido, o técnico atribuído e a equipa. A oferta mostra ao técnico as respostas e os ficheiros.
+- Republicar mantém as respostas e os ficheiros do pedido original.

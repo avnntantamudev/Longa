@@ -12,6 +12,7 @@ use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Requests\Services\Commission;
 use App\Modules\Sessions\Models\Conversation;
 use App\Modules\Sessions\Services\SessionLifecycle;
+use App\Modules\Users\Enums\PricingMode;
 use App\Support\Api\ApiException;
 use App\Support\Audit\AuditLogger;
 use Illuminate\Contracts\Cache\LockTimeoutException;
@@ -78,7 +79,8 @@ class AcceptOffer
                 $loser->transitionTo(OfferState::Lost, ['responded_at' => now()]);
             }
 
-            $cash = $request->isCash();
+            // Sem pagamento antecipado: em dinheiro, ou por orçamento (paga-se quando o cliente aceitar o orçamento)
+            $noUpfront = $request->isCash() || $request->pricing_mode === PricingMode::Quote;
             $request->by($offer->provider->user_id)->transitionTo(RequestState::Accepted, [
                 'matched_at' => now(),
                 'provider_profile_id' => $offer->provider_profile_id,
@@ -87,13 +89,13 @@ class AcceptOffer
                 'provider_net' => $split['provider_net'],
                 'commission_percent' => $split['percent'],
                 // Pagamento digital: o cliente paga na janela de pagamento e o valor fica retido (escrow)
-                'payment_status' => $cash ? null : ServiceRequest::PAYMENT_PENDING,
-                'payment_due_at' => $cash ? null : now()->addMinutes((int) config('longa.session_rules.payment_window_minutes')),
+                'payment_status' => $noUpfront ? null : ServiceRequest::PAYMENT_PENDING,
+                'payment_due_at' => $noUpfront ? null : now()->addMinutes((int) config('longa.session_rules.payment_window_minutes')),
             ]);
             Conversation::query()->create(['service_request_id' => $request->id]);
 
-            if ($cash) {
-                $this->lifecycle->record($request, 'scheduled', null, ['payment_method' => 'cash']);
+            if ($noUpfront) {
+                $this->lifecycle->record($request, 'scheduled', null, ['payment_method' => $request->payment_method]);
             } else {
                 $this->lifecycle->record($request, 'payment_requested', null, ['amount' => $request->amount, 'due_at' => $request->payment_due_at?->toIso8601String()]);
             }

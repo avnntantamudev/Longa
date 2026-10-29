@@ -28,7 +28,11 @@ class ClientRequestResource extends JsonResource
             'category' => ['id' => $this->category_id, 'name' => $this->category->name],
             'title' => $this->title,
             'description' => $this->description,
+            /** fixed | quote | hourly_package */
+            'pricing_mode' => $this->pricing_mode->value,
+            /** Fixo: preço da tabela, bloqueado no envio. Orçamento: 0 até o cliente aceitar um orçamento. */
             'amount' => $this->amount,
+            ...$this->formSummary(),
             'scheduled_at' => $this->scheduled_at->toIso8601String(),
             'modality' => $this->modality,
             'province' => $this->province,

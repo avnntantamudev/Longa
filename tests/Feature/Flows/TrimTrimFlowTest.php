@@ -28,7 +28,7 @@ it('cumpre o fluxo TRIM TRIM de ponta a ponta', function () {
     // 1. Cliente publica
     apiLogin($client);
     $requestId = $this->postJson('/api/v1/service-requests', [
-        'category_id' => $sgme->id, 'title' => 'Serviço de SGME', 'amount' => 25000,
+        'category_id' => $sgme->id, 'title' => 'Serviço de SGME', 'amount' => 25000, 'answers' => ['disciplina' => 'SGME', 'nivel' => 'Profissional'],
         'scheduled_at' => now()->addDay()->setTime(14, 0)->toIso8601String(), 'modality' => 'in_person',
         'municipality' => 'Talatona', 'neighborhood' => 'Talatona', 'latitude' => $lat, 'longitude' => $lng,
     ])->assertCreated()->assertJsonPath('data.state', 'searching')->json('data.id');

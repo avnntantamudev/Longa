@@ -33,6 +33,8 @@ class ProviderOfferResource extends JsonResource
             'title' => $serviceRequest->title,
             'description' => $serviceRequest->description,
             'category' => $serviceRequest->category->name,
+            'pricing_mode' => $serviceRequest->pricing_mode->value,
+            ...$serviceRequest->formSummary(),
             'amount' => $serviceRequest->amount,
             'commission' => $split['commission'],
             'commission_percent' => $split['percent'],

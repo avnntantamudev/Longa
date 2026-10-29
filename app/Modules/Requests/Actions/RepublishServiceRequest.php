@@ -35,6 +35,7 @@ class RepublishServiceRequest
             'title' => $original->title,
             'description' => $original->description,
             'amount' => $amount ?? $original->amount,
+            'answers' => $original->answers ?? [],
             'scheduled_at' => $scheduledAt ?? $original->scheduled_at->toIso8601String(),
             'duration_minutes' => $original->duration_minutes,
             'payment_method' => $original->payment_method,

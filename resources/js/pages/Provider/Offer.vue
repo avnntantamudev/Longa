@@ -18,6 +18,9 @@ interface Offer {
     title: string;
     description: string | null;
     category: string;
+    pricing_mode: 'fixed' | 'quote' | 'hourly_package';
+    answers: Array<{ key: string; label: string; value: string | number }>;
+    media: Array<{ id: number; field_key: string; kind: 'photo' | 'video' }>;
     amount: number;
     commission: number;
     provider_net: number;
@@ -37,6 +40,16 @@ const offer = ref<Offer | null>(null);
 const busy = ref(false);
 const outcome = ref<string | null>(null);
 const countdown = useCountdown();
+
+/** Abre uma foto ou vídeo do pedido (link temporário) noutro separador */
+async function openMedia(id: number): Promise<void> {
+    try {
+        const { data } = await api.get<{ data: { url: string } }>(`/request-media/${id}`);
+        window.open(data.url, '_blank', 'noopener');
+    } catch (e) {
+        outcome.value = e instanceof ApiError ? e.message : 'Sem ligação. Tente de novo.';
+    }
+}
 
 const isOpen = computed(() => offer.value && ['sent', 'viewed'].includes(offer.value.state) && !countdown.finished.value && !outcome.value);
 const zone = computed(() => props.zones.find((z) => z.neighborhood === offer.value?.neighborhood && z.municipality === offer.value?.municipality));
@@ -122,12 +135,29 @@ onMounted(() => {
                 <p class="text-title">Pedido recebido</p>
                 <p class="mt-1 font-semibold">{{ offer.title }}</p>
                 <p class="text-caption text-navy-200">{{ offer.category }}</p>
-                <p class="mt-3 text-2xl font-bold text-orange-400">{{ kwanza(offer.amount) }}</p>
-                <p class="text-caption text-navy-200">Recebe {{ kwanza(offer.provider_net) }} (comissão do BISCA {{ kwanza(offer.commission) }})</p>
+                <template v-if="offer.pricing_mode === 'quote'">
+                    <p class="mt-3 text-lg font-bold text-orange-400">Por orçamento</p>
+                    <p class="text-caption text-navy-200">Vê o problema no local e envia o orçamento na app.</p>
+                </template>
+                <template v-else>
+                    <p class="mt-3 text-2xl font-bold text-orange-400">{{ kwanza(offer.amount) }}</p>
+                    <p class="text-caption text-navy-200">Recebe {{ kwanza(offer.provider_net) }} (comissão do BISCA {{ kwanza(offer.commission) }})</p>
+                </template>
                 <p class="mt-3 flex items-center gap-2 text-caption">
                     <AppIcon name="calendar" :size="16" /> {{ when(offer.scheduled_at) }} · {{ offer.modality === 'online' ? 'Online' : offer.neighborhood }}
                 </p>
                 <p v-if="offer.description" class="mt-2 text-caption text-navy-100">{{ offer.description }}</p>
+                <dl v-if="offer.answers.length" class="mt-3 grid gap-1 text-caption">
+                    <div v-for="answer in offer.answers" :key="answer.key">
+                        <dt class="text-navy-200">{{ answer.label }}</dt>
+                        <dd>{{ answer.value }}</dd>
+                    </div>
+                </dl>
+                <div v-if="offer.media.length" class="mt-3 flex flex-wrap gap-2">
+                    <button v-for="(item, i) in offer.media" :key="item.id" type="button" class="chip" @click="openMedia(item.id)">
+                        {{ item.kind === 'video' ? 'Vídeo' : `Foto ${i + 1}` }}
+                    </button>
+                </div>
             </div>
 
             <div class="mt-5 flex justify-center">

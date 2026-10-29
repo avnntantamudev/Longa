@@ -50,7 +50,7 @@ class ServiceRequestController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        $created = $action->handle($user, $request->requestData());
+        $created = $action->handle($user, $request->requestData(), media: $request->mediaFiles());
 
         return (new ClientRequestResource($created->load(['category'])))->response()->setStatusCode(201);
     }

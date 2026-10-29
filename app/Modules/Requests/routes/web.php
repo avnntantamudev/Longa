@@ -3,7 +3,13 @@
 declare(strict_types=1);
 
 use App\Modules\Requests\Http\Controllers\PageController;
+use App\Modules\Requests\Http\Controllers\RequestMediaController;
 use Illuminate\Support\Facades\Route;
+
+// Fotos e vídeos do pedido por link assinado temporário (gerado em /api/v1/request-media/{id})
+Route::get('/pedidos/ficheiros/{media}', [RequestMediaController::class, 'download'])
+    ->middleware('signed:relative')
+    ->name('requests.media');
 
 Route::middleware(['auth', 'auth.session', 'onboarded'])->group(function () {
     Route::middleware('role:client')->group(function () {

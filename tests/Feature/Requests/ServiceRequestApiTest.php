@@ -32,6 +32,7 @@ function payload(array $overrides = []): array
         'title' => 'Serviço de SGME',
         'description' => 'Rever controlo e monitorização.',
         'amount' => 25000,
+        'answers' => ['disciplina' => 'SGME', 'nivel' => 'Profissional'],
         'scheduled_at' => now()->setTime(14, 0)->toIso8601String(),
         'modality' => 'in_person',
         'municipality' => 'Talatona',

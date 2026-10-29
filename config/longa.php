@@ -63,6 +63,13 @@ return [
         // Mesmo cliente, mesma área e hora próxima com um pedido ativo = duplicado
         'duplicate_window_minutes' => (int) env('LONGA_REQUEST_DUPLICATE_WINDOW', 120),
         'create_per_hour' => (int) env('LONGA_REQUEST_CREATE_PER_HOUR', 5),
+        // Fotos e vídeo do formulário da categoria (disco privado; link temporário em minutos)
+        'media' => [
+            'max_photos' => (int) env('LONGA_REQUEST_MAX_PHOTOS', 6),
+            'photo_max_kb' => (int) env('LONGA_REQUEST_PHOTO_MAX_KB', 5120),
+            'video_max_kb' => (int) env('LONGA_REQUEST_VIDEO_MAX_KB', 51200),
+            'link_minutes' => (int) env('LONGA_REQUEST_MEDIA_LINK_MINUTES', 10),
+        ],
     ],
 
     'matching' => [

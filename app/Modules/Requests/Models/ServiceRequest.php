@@ -38,6 +38,7 @@ use Illuminate\Support\Facades\Auth;
  * @property PricingMode $pricing_mode
  * @property string $title
  * @property string|null $description
+ * @property array<string, mixed>|null $answers respostas do formulário da categoria
  * @property int $amount
  * @property bool $scheduled
  * @property int $commission
@@ -79,10 +80,11 @@ use Illuminate\Support\Facades\Auth;
  * @property-read Category $category
  * @property-read ProviderProfile $provider só existe depois de aceite (provider_profile_id não nulo)
  * @property-read Conversation|null $conversation
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, ServiceRequestMedia> $media
  * @property-read \Illuminate\Database\Eloquent\Collection<int, ServiceRequestTransition> $transitions
  */
 #[Fillable([
-    'client_id', 'category_id', 'pricing_mode', 'title', 'description', 'amount', 'commission', 'provider_net', 'commission_percent',
+    'client_id', 'category_id', 'pricing_mode', 'title', 'description', 'answers', 'amount', 'commission', 'provider_net', 'commission_percent',
     'scheduled_at', 'duration_minutes', 'ends_at', 'payment_method', 'payment_status', 'payment_due_at', 'escrow_reference', 'modality',
     'province', 'municipality', 'neighborhood', 'latitude', 'longitude', 'republished_from_id',
 ])]
@@ -130,6 +132,7 @@ class ServiceRequest extends Model
         return [
             'state' => RequestState::class,
             'pricing_mode' => PricingMode::class,
+            'answers' => 'array',
             'scheduled_at' => 'datetime',
             'ends_at' => 'datetime',
             'expires_at' => 'datetime',
@@ -232,6 +235,16 @@ class ServiceRequest extends Model
     }
 
     /**
+     * Fotos e vídeos do formulário.
+     *
+     * @return HasMany<ServiceRequestMedia, $this>
+     */
+    public function media(): HasMany
+    {
+        return $this->hasMany(ServiceRequestMedia::class)->orderBy('id');
+    }
+
+    /**
      * @return HasMany<RequestOffer, $this>
      */
     public function offers(): HasMany
@@ -287,6 +300,30 @@ class ServiceRequest extends Model
     public function republishedFrom(): BelongsTo
     {
         return $this->belongsTo(self::class, 'republished_from_id');
+    }
+
+    /**
+     * Respostas do formulário prontas a mostrar (com o rótulo do campo) e os ficheiros enviados (sem caminhos:
+     * cada um abre-se por GET /api/v1/request-media/{id}).
+     *
+     * @return array{answers: list<array{key: string, label: string, value: mixed}>, media: list<array{id: int, field_key: string, kind: string}>}
+     */
+    public function formSummary(): array
+    {
+        $labels = [];
+        foreach ($this->category->formFields() as $field) {
+            $labels[$field->key] = $field->label;
+        }
+
+        $answers = [];
+        foreach ($this->answers ?? [] as $key => $value) {
+            $answers[] = ['key' => (string) $key, 'label' => $labels[$key] ?? (string) $key, 'value' => $value];
+        }
+
+        return [
+            'answers' => $answers,
+            'media' => $this->media->map(fn (ServiceRequestMedia $m) => ['id' => $m->id, 'field_key' => $m->field_key, 'kind' => $m->kind])->values()->all(),
+        ];
     }
 
     public function isCash(): bool

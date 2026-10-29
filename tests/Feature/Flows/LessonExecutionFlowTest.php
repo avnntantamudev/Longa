@@ -35,7 +35,7 @@ it('executa o serviço de ponta a ponta com QR e liberta o dinheiro uma vez', fu
     // 1. Pedido e aceitação (TRIM TRIM)
     apiLogin($client);
     $requestId = $this->postJson('/api/v1/service-requests', [
-        'category_id' => $sgme->id, 'title' => 'Serviço de SGME', 'amount' => 25000, 'duration_minutes' => 90, 'payment_method' => 'electronic',
+        'category_id' => $sgme->id, 'title' => 'Serviço de SGME', 'amount' => 25000, 'answers' => ['disciplina' => 'SGME', 'nivel' => 'Profissional'], 'duration_minutes' => 90, 'payment_method' => 'electronic',
         'scheduled_at' => now()->addDay()->setTime(14, 0)->toIso8601String(), 'modality' => 'in_person',
         'municipality' => 'Talatona', 'neighborhood' => 'Talatona', 'latitude' => $lat, 'longitude' => $lng,
     ])->assertCreated()->json('data.id');

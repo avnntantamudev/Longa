@@ -27,6 +27,14 @@ class ServiceRequestPolicy
         return $request->client_id === $user->id;
     }
 
+    /** Fotos e vídeos do formulário: também os técnicos a quem o pedido foi oferecido e a equipa */
+    public function viewMedia(User $user, ServiceRequest $request): bool
+    {
+        return $user->isTeam()
+            || $request->involves($user)
+            || ($user->providerProfile !== null && $request->offers()->where('provider_profile_id', $user->providerProfile->id)->exists());
+    }
+
     public function chat(User $user, ServiceRequest $request): bool
     {
         return $request->provider_profile_id !== null && $request->involves($user);

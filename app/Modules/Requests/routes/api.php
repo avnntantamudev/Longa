@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Requests\Http\Controllers\OfferController;
+use App\Modules\Requests\Http\Controllers\RequestMediaController;
 use App\Modules\Requests\Http\Controllers\ServiceRequestController;
 use Illuminate\Support\Facades\Route;
 
@@ -28,3 +29,8 @@ Route::middleware(['auth:sanctum', 'auth.session', 'onboarded', 'role:provider']
         Route::post('{offer}/accept', [OfferController::class, 'accept'])->middleware('throttle:offer-responses')->name('accept');
         Route::post('{offer}/decline', [OfferController::class, 'decline'])->middleware('throttle:offer-responses')->name('decline');
     });
+
+// Fotos e vídeos do formulário do pedido (cliente, técnicos com oferta, técnico atribuído e equipa)
+Route::middleware(['auth:sanctum', 'auth.session', 'onboarded'])
+    ->get('request-media/{media}', [RequestMediaController::class, 'link'])
+    ->name('api.request-media.link');

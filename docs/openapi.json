@@ -4613,6 +4613,67 @@
                 }
             }
         },
+        "/request-media/{media}": {
+            "get": {
+                "operationId": "request-media.link",
+                "summary": "Link tempor\u00e1rio para uma foto ou v\u00eddeo do pedido",
+                "tags": [
+                    "RequestMedia"
+                ],
+                "parameters": [
+                    {
+                        "name": "media",
+                        "in": "path",
+                        "required": true,
+                        "description": "The media ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "url": {
+                                                    "type": "string"
+                                                },
+                                                "expires_in": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "url",
+                                                "expires_in"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/me/score-events": {
             "get": {
                 "operationId": "score-events.mine",
@@ -6585,8 +6646,55 @@
                             "null"
                         ]
                     },
+                    "pricing_mode": {
+                        "type": "string",
+                        "description": "fixed | quote | hourly_package"
+                    },
                     "amount": {
-                        "type": "integer"
+                        "type": "integer",
+                        "description": "Fixo: pre\u00e7o da tabela, bloqueado no envio. Or\u00e7amento: 0 at\u00e9 o cliente aceitar um or\u00e7amento."
+                    },
+                    "answers": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "key": {
+                                    "type": "string"
+                                },
+                                "label": {
+                                    "type": "string"
+                                },
+                                "value": {}
+                            },
+                            "required": [
+                                "key",
+                                "label",
+                                "value"
+                            ]
+                        }
+                    },
+                    "media": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "integer"
+                                },
+                                "field_key": {
+                                    "type": "string"
+                                },
+                                "kind": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "id",
+                                "field_key",
+                                "kind"
+                            ]
+                        }
                     },
                     "scheduled_at": {
                         "type": "string"
@@ -6656,7 +6764,10 @@
                     "category",
                     "title",
                     "description",
+                    "pricing_mode",
                     "amount",
+                    "answers",
+                    "media",
                     "scheduled_at",
                     "modality",
                     "province",
@@ -7406,6 +7517,37 @@
                     "category": {
                         "type": "string"
                     },
+                    "pricing_mode": {
+                        "type": "string"
+                    },
+                    "answers": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "key": {
+                                    "type": "string"
+                                },
+                                "label": {
+                                    "type": "string"
+                                },
+                                "value": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "key",
+                                "label",
+                                "value"
+                            ]
+                        }
+                    },
+                    "media": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
                     "amount": {
                         "type": "integer"
                     },
@@ -7458,6 +7600,9 @@
                     "title",
                     "description",
                     "category",
+                    "pricing_mode",
+                    "answers",
+                    "media",
                     "amount",
                     "commission",
                     "commission_percent",
@@ -8158,13 +8303,17 @@
             },
             "StoreServiceRequestRequest": {
                 "type": "object",
+                "description": "Pedido do cliente (BISCA, Fase 2.1): categoria, respostas ao formul\u00e1rio da categoria (com fotos ou v\u00eddeo quando\nprevisto), localiza\u00e7\u00e3o e modalidade permitida pela categoria. O valor s\u00f3 \u00e9 pedido nos servi\u00e7os por hora/pacote:\nno pre\u00e7o fixo vem da tabela da categoria e nos or\u00e7amentos \u00e9 definido pelo or\u00e7amento aceite.\nCom ficheiros, o pedido vai em multipart/form-data (answers[chave] e answers[chave][] para v\u00e1rias fotos).",
                 "properties": {
                     "category_id": {
                         "type": "integer"
                     },
                     "title": {
-                        "type": "string",
-                        "description": "Tema do servi\u00e7o. @example Servi\u00e7o de SGME",
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Tema do servi\u00e7o (opcional: por omiss\u00e3o, o nome da categoria). @example Manuten\u00e7\u00e3o do ar condicionado da sala",
                         "minLength": 3,
                         "maxLength": 120
                     },
@@ -8176,10 +8325,18 @@
                         "maxLength": 1000
                     },
                     "amount": {
-                        "type": "integer",
-                        "description": "Valor oferecido em Kz inteiros. @example 25000",
-                        "minimum": 2000,
-                        "maximum": 5000000
+                        "type": "string",
+                        "description": "S\u00f3 nos servi\u00e7os por hora/pacote: valor oferecido em Kz inteiros. @example 25000"
+                    },
+                    "answers": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "description": "Respostas ao formul\u00e1rio da categoria (GET /api/v1/categories/{id}/form), por chave do campo.",
+                        "items": {
+                            "type": "string"
+                        }
                     },
                     "scheduled_at": {
                         "type": "string",
@@ -8202,6 +8359,7 @@
                     },
                     "modality": {
                         "type": "string",
+                        "description": "S\u00f3 as modalidades que a categoria permite.",
                         "enum": [
                             "in_person",
                             "online"
@@ -8251,8 +8409,6 @@
                 },
                 "required": [
                     "category_id",
-                    "title",
-                    "amount",
                     "scheduled_at",
                     "modality",
                     "municipality",

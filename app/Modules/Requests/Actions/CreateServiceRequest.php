@@ -8,6 +8,7 @@ use App\Modules\Matching\Services\MatchingCoordinator;
 use App\Modules\Requests\Enums\RequestState;
 use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Requests\Services\Commission;
+use App\Modules\Users\Models\Category;
 use App\Modules\Users\Models\User;
 use App\Support\Api\ApiException;
 use App\Support\Audit\AuditLogger;
@@ -48,6 +49,8 @@ class CreateServiceRequest
             ]);
             $request->client_id = $client->id;
             $request->scheduled = $this->isScheduled($scheduledAt);
+            // Modo de preço da categoria no envio: decide se o pedido passa por diagnóstico e orçamento
+            $request->pricing_mode = Category::query()->findOrFail((int) $data['category_id'])->pricing_mode;
             $request->save();
 
             return $request;
@@ -80,7 +83,7 @@ class CreateServiceRequest
         $duplicate = ServiceRequest::query()
             ->where('client_id', $client->id)
             ->where('category_id', $categoryId)
-            ->whereIn('state', [RequestState::Searching->value, RequestState::Matched->value])
+            ->whereIn('state', [RequestState::Searching->value, RequestState::Accepted->value])
             ->whereBetween('scheduled_at', [$scheduledAt->copy()->subMinutes($window), $scheduledAt->copy()->addMinutes($window)])
             ->exists();
 

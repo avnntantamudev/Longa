@@ -82,7 +82,7 @@ it('o VIP longe aceita o serviço; os outros perdem a oferta', function () {
     $this->getJson('/api/v1/offers')->assertJsonPath('data.0.scheduled', true);
     $this->postJson("/api/v1/offers/{$offer->id}/accept")->assertOk();
 
-    expect($request->fresh()?->state)->toBe(RequestState::Matched)
+    expect($request->fresh()?->state)->toBe(RequestState::Accepted)
         ->and(RequestOffer::query()->where('provider_profile_id', $near->id)->value('state')->value)->toBe('lost');
 });
 
@@ -99,6 +99,6 @@ it('sem ninguém, o pedido espera; quem fica elegível depois recebe; expira no 
     $this->travelTo($request->fresh()?->expires_at?->copy()->addMinute());
     app(MatchingCoordinator::class)->sweep();
 
-    expect($request->fresh()?->state)->toBe(RequestState::Expired)
+    expect($request->fresh()?->state)->toBe(RequestState::NoProvider)
         ->and(ScoreEvent::query()->where('type', ScoreEvent::OFFER_EXPIRED)->count())->toBe(0);
 });

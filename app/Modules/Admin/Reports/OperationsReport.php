@@ -23,7 +23,8 @@ class OperationsReport
         $requests = DB::table('service_requests')->whereBetween('created_at', [$from, $to]);
         $byState = (clone $requests)->selectRaw('state, COUNT(*) as n')->groupBy('state')->pluck('n', 'state')->map(fn ($n) => (int) $n);
         $total = (int) $byState->sum();
-        $matched = (int) ($byState['matched'] ?? 0);
+        // Aceite = teve técnico atribuído (o pedido seguiu para os estados de execução)
+        $matched = (int) (clone $requests)->whereNotNull('assigned_provider_profile_id')->count();
 
         $avgSeconds = DB::table('service_requests as r')
             ->join('service_jobs as s', 's.service_request_id', '=', 'r.id')
@@ -43,7 +44,7 @@ class OperationsReport
             'requests' => [
                 'total' => $total,
                 'matched' => $matched,
-                'expired' => (int) ($byState['expired'] ?? 0),
+                'expired' => (int) ($byState['no_provider'] ?? 0),
                 'cancelled' => (int) ($byState['cancelled'] ?? 0),
                 'scheduled' => (int) (clone $requests)->where('scheduled', true)->count(),
                 'acceptance_rate' => $total > 0 ? round($matched / $total * 100, 1) : 0.0,
@@ -67,12 +68,12 @@ class OperationsReport
             'by_category' => DB::table('service_requests as r')
                 ->join('categories as k', 'k.id', '=', 'r.category_id')
                 ->whereBetween('r.created_at', [$from, $to])
-                ->selectRaw("k.name, COUNT(*) as requests, SUM(r.state = 'matched') as matched")
+                ->selectRaw('k.name, COUNT(*) as requests, SUM(r.assigned_provider_profile_id IS NOT NULL) as matched')
                 ->groupBy('k.name')->orderByDesc('requests')->limit(15)->get()
                 ->map(fn ($r) => ['name' => (string) $r->name, 'requests' => (int) $r->requests, 'matched' => (int) $r->matched])->all(),
             'by_place' => DB::table('service_requests')
                 ->whereBetween('created_at', [$from, $to])
-                ->selectRaw("province, municipality, COUNT(*) as requests, SUM(state = 'matched') as matched")
+                ->selectRaw('province, municipality, COUNT(*) as requests, SUM(assigned_provider_profile_id IS NOT NULL) as matched')
                 ->groupBy('province', 'municipality')->orderByDesc('requests')->limit(20)->get()
                 ->map(fn ($r) => ['province' => (string) $r->province, 'municipality' => (string) $r->municipality, 'requests' => (int) $r->requests, 'matched' => (int) $r->matched])->all(),
             'top_providers' => DB::table('service_jobs as s')

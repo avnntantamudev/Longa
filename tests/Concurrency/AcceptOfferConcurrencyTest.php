@@ -76,7 +76,7 @@ it('só um técnico consegue o serviço quando vários aceitam ao mesmo tempo', 
     expect(ServiceJob::query()->count())->toBe(1)
         ->and(RequestOffer::query()->where('state', OfferState::Accepted->value)->count())->toBe(1)
         ->and(RequestOffer::query()->where('state', OfferState::Lost->value)->count())->toBe(WORKERS - 1)
-        ->and($this->request->fresh()?->state)->toBe(RequestState::Matched);
+        ->and($this->request->fresh()?->state)->toBe(RequestState::Accepted);
 });
 
 it('é idempotente sob concorrência: o mesmo técnico a aceitar várias vezes recebe o mesmo serviço', function () {

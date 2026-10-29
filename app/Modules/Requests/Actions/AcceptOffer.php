@@ -103,7 +103,7 @@ class AcceptOffer
                 $loser->transitionTo(OfferState::Lost, ['responded_at' => now()]);
             }
 
-            $request->transitionTo(RequestState::Matched, [
+            $request->by($offer->provider->user_id)->transitionTo(RequestState::Accepted, [
                 'matched_at' => now(),
                 'assigned_provider_profile_id' => $offer->provider_profile_id,
                 'next_wave_at' => null,
@@ -133,7 +133,7 @@ class AcceptOffer
 
     private function ensureCanAccept(ServiceRequest $request, RequestOffer $offer): void
     {
-        if ($request->state === RequestState::Matched) {
+        if ($request->state === RequestState::Accepted) {
             throw new ApiException('request_already_matched', 'Outro técnico aceitou este pedido primeiro.', 409);
         }
 

@@ -56,7 +56,7 @@ it('cumpre o fluxo TRIM TRIM de ponta a ponta', function () {
 
     // 5. Serviço criado: o cliente vê-a com os dados do técnico e é notificado
     apiLogin($client);
-    $this->getJson("/api/v1/service-requests/{$requestId}")->assertJsonPath('data.state', 'matched')->assertJsonPath('data.session_id', $sessionId);
+    $this->getJson("/api/v1/service-requests/{$requestId}")->assertJsonPath('data.state', 'accepted')->assertJsonPath('data.session_id', $sessionId);
     $this->getJson("/api/v1/sessions/{$sessionId}")->assertOk()->assertJsonPath('data.provider.name', $winner->user->name);
     Notification::assertSentTo($client, RequestOutcomeNotification::class, fn ($n) => $n->outcome === 'matched');
 

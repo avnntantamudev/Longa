@@ -247,13 +247,13 @@ class MatchingCoordinator
     }
 
     /**
-     * searching → expired; ofertas ainda abertas → lost. Chamar com a linha do pedido bloqueada.
+     * searching → no_provider; ofertas ainda abertas → lost. Chamar com a linha do pedido bloqueada.
      *
      * @param  'no_providers'|'timeout'  $reason
      */
     private function expire(ServiceRequest $request, string $reason): void
     {
-        $request->transitionTo(RequestState::Expired, ['next_wave_at' => null]);
+        $request->by(null, $reason)->transitionTo(RequestState::NoProvider, ['next_wave_at' => null]);
 
         $open = $request->offers()->whereIn('state', OfferState::open())->with('provider')->get();
         foreach ($open as $offer) {

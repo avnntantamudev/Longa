@@ -28,11 +28,11 @@ class CancelServiceRequest
             /** @var ServiceRequest $locked */
             $locked = ServiceRequest::query()->lockForUpdate()->findOrFail($request->id);
 
-            if ($locked->state === RequestState::Matched) {
+            if ($locked->state === RequestState::Accepted) {
                 throw new ApiException('request_already_matched', 'Um técnico já aceitou este pedido. Veja o serviço marcado.', 409);
             }
 
-            $locked->transitionTo(RequestState::Cancelled, [
+            $locked->by($client)->transitionTo(RequestState::Cancelled, [
                 'cancelled_by' => $client->id,
                 'cancel_reason' => $reason,
                 'cancelled_at' => now(),

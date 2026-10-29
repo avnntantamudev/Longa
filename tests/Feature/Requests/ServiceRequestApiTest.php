@@ -77,7 +77,7 @@ it('publica o pedido, calcula a comissão e envia a 1.ª onda', function () {
 it('expira logo quando não há técnicos elegíveis', function () {
     apiLogin($this->client);
 
-    $this->postJson('/api/v1/service-requests', payload())->assertCreated()->assertJsonPath('data.state', 'expired');
+    $this->postJson('/api/v1/service-requests', payload())->assertCreated()->assertJsonPath('data.state', 'no_provider');
 
     Event::assertDispatched(RequestExpired::class, fn ($e) => $e->reason === 'no_providers');
 });

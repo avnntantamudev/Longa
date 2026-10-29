@@ -11,30 +11,48 @@ Por isso nenhuma transição inválida acontece, nem pela API nem pelos jobs, e 
 concorrentes nunca são aplicadas as duas. Cobertura: `tests/Feature/Requests/StateMachineTest.php`
 (matriz completa de pares de estados).
 
-## Pedido de aula (`training_requests.state`)
+## Pedido de serviço (`service_requests.state`) — estado único do BISCA
+
+O pedido tem um só estado, do envio ao pagamento. Cada mudança fica em `service_request_transitions`
+(de, para, quem, quando, motivo; só acréscimos). Para indicar quem fez a mudança: `$request->by($user, 'motivo')`;
+sem isso fica o utilizador autenticado, e `by(null)` regista o sistema (jobs e prazos).
 
 ```mermaid
 stateDiagram-v2
-    [*] --> draft : aluno cria
-    draft --> searching : publicar (expires_at = agora + 5 min, 1.ª onda)
-    draft --> cancelled : aluno cancela
-    searching --> matched : um formador aceita (transação atómica)
-    searching --> expired : sem aceitação até expires_at (job)
-    searching --> cancelled : aluno cancela
-    matched --> [*]
-    expired --> [*]
+    [*] --> created : cliente envia
+    created --> searching : despacho começa
+    searching --> accepted : um técnico aceita (operação atómica)
+    searching --> no_provider : raio máximo e tempo esgotados
+    searching --> cancelled : cliente cancela
+    no_provider --> searching : nova tentativa
+    no_provider --> cancelled
+    accepted --> on_the_way : técnico a caminho
+    accepted --> cancelled
+    on_the_way --> diagnosing : só por orçamento
+    on_the_way --> in_progress : fixo e hora/pacote
+    on_the_way --> cancelled
+    diagnosing --> quote_sent : técnico envia o orçamento
+    quote_sent --> quote_accepted : cliente aceita (preço bloqueado)
+    quote_sent --> diagnosing : cliente pede revisão
+    quote_sent --> cancelled : cliente recusa
+    quote_accepted --> in_progress
+    in_progress --> completed : técnico conclui
+    in_progress --> disputed
+    completed --> paid : cliente confirma (ou automático no prazo)
+    completed --> disputed
+    disputed --> paid : equipa liberta ou divide
+    disputed --> cancelled : equipa reembolsa
+    paid --> [*]
     cancelled --> [*]
 ```
 
-| De | Para | Quem / quando | Efeitos |
-|---|---|---|---|
-| draft | searching | aluno publica | `expires_at`, onda 1 enviada, `next_wave_at` |
-| draft | cancelled | aluno | — |
-| searching | matched | formador aceita | aula criada, conversa criada, restantes ofertas → `lost`, escrow `hold()` (mock) |
-| searching | expired | job `ExpireRequests`, quando `expires_at` passa e já não há ofertas abertas nem ondas | ofertas abertas → `lost`; aluno notificado com opção de republicar |
-| searching | cancelled | aluno | ofertas abertas → `lost`; formadores notificados |
+Regra do modo de preço (`ServiceRequest::transitionAllowed()`, com `service_requests.pricing_mode` copiado da
+categoria no envio):
+- `diagnosing`, `quote_sent` e `quote_accepted` só existem nos serviços **por orçamento**;
+- nesses, `on_the_way → in_progress` é recusado (tem de haver diagnóstico e orçamento aceite).
 
-**Republicar** um pedido `expired` ou `cancelled` cria um **pedido novo** (`republished_from_id` aponta para o original).
+**Republicar** um pedido `no_provider` ou `cancelled` cria um **pedido novo** (`republished_from_id` aponta para o
+original).
 
 ## Oferta TRIM TRIM (`request_offers.state`)
 

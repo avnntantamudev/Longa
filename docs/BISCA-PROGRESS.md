@@ -99,3 +99,40 @@ Migração `2026_10_28_000002_create_generic_service_model` (reversível):
   `legal_acceptance_required`.
 - **Rotas:** `/legal/termos` e `/legal/privacidade` são páginas públicas; `GET /api/v1/legal/{terms|privacy}`,
   `GET /api/v1/me/legal` e `POST /api/v1/me/legal/accept`.
+
+## Fase 2 — Estado: EM CURSO (plano aprovado a 2026-10-29)
+
+Respostas do cliente às dúvidas da Fase 1 (2026-10-29). Confirmado com o "ok": 1 h é o tempo total de procura
+(cerca de 12 min por ronda); nas aulas o cliente indica um preço máximo por hora e só recebe técnicos dentro dele.
+1. **Despacho:** raio 3 km → +3 km por ronda → 15 km; **1 h** para aceitar (tempo total de procura).
+2. **Taxa de visita:** a melhor opção. Cobra-se quando o técnico chega para o diagnóstico. Desconta-se no
+   serviço se o orçamento for aceite e fica para o técnico (menos a comissão) se for recusado.
+3. **Adendas:** acima de 20% do orçamento original vão para revisão da equipa.
+4. **Validade do orçamento:** 7 dias.
+5. **Confirmação automática:** mantém-se 48 h (sem resposta = valor atual).
+6. **Pacotes de aulas:** 4, 8 e 12 aulas com 5%, 10% e 15% de desconto, configuráveis no painel por categoria.
+7. **Aulas online:** a plataforma terá vídeo próprio mais tarde. Por agora há um campo de ligação e lembretes.
+8. **Ortografia:** "Electricidade".
+
+### Passos (um commit cada)
+
+| # | Passo |
+|---|---|
+| 1 | Máquina de estados única do pedido (`RequestState`) com histórico em `service_request_transitions` (estado anterior e novo, quem, quando, motivo); transições inválidas recusadas; testes de todas as transições |
+| 2 | Juntar `service_jobs` em `service_requests` (migração reversível; as FK de pagamentos, escrow, chat, disputas, QR, avaliações e recibos passam a apontar para o pedido) e adaptar os módulos |
+| 3 | Pedido do cliente: formulário dinâmico com fotos/vídeo, respostas guardadas no pedido, localização, modalidade e preço fixo bloqueado no envio |
+| 4 | Despacho: rondas de raio crescente (3/3/15 km) dentro de 1 h, estado "sem técnico disponível" com nova tentativa, notificação com distância e valor a receber, gancho do saldo mínimo (desligado até à Fase 3); online sem perímetro, com agendamento e lembretes |
+| 5 | Preço por hora/pacote: preço por hora do técnico dentro dos limites da categoria e pacotes configuráveis |
+| 6 | Orçamentos: diagnóstico, taxa de visita, orçamento (mão de obra, materiais, prazo, validade), aceitar/recusar/pedir revisão, alerta no painel quando está fora do intervalo; código preparado para até 3 orçamentos |
+| 7 | Adendas: submetidas pelo técnico e aprovadas pelo cliente; acima de 20% vão para revisão da equipa no backoffice |
+| 8 | Execução: a caminho → (diagnóstico) → em execução → concluído → confirmação (automática em 48 h) → pago; disputas; ecrãs da PWA |
+| 9 | Testes de fluxo completo (fixo e por orçamento com adenda, corrida entre dois técnicos), CI e relatório da fase |
+
+### Notas do passo 1
+
+- `RequestState` passa a ter os 13 estados do BISCA. Migração `2026_10_29_000001_unify_request_states` (reversível):
+  draft → created, matched → accepted, expired → no_provider; acrescenta `pricing_mode` ao pedido e cria
+  `service_request_transitions`.
+- `HasStateMachine` aceita regras extra por modelo (`transitionAllowed`) e um registo depois da transição
+  (`afterTransition`), na mesma transação.
+- Enquanto `service_jobs` não for junto ao pedido (passo 2), o pedido fica em `accepted` durante a execução.

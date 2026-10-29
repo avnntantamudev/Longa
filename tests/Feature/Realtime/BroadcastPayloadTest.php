@@ -42,6 +42,6 @@ it('o pedido aceite é anunciado ao cliente e aos técnicos que perderam', funct
 
     expect(array_map(fn ($c) => $c->name, $event->broadcastOn()))
         ->toBe(["private-request.{$request->id}", 'private-user.11', 'private-user.12'])
-        ->and($event->broadcastWith())->toBe(['request_id' => $request->id, 'session_id' => 99, 'state' => 'draft']);
+        ->and($event->broadcastWith())->toBe(['request_id' => $request->id, 'session_id' => 99, 'state' => 'created']);
     expect(RequestOffer::query()->count())->toBe(0);
 });

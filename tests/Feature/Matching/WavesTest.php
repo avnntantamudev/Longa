@@ -58,7 +58,7 @@ it('expira o pedido quando acabam os técnicos', function () {
         $this->artisan('longa:matching-tick');
     }
 
-    expect($this->request->fresh()?->state)->toBe(RequestState::Expired)
+    expect($this->request->fresh()?->state)->toBe(RequestState::NoProvider)
         ->and($this->request->offers()->count())->toBe(6);
     Event::assertDispatched(RequestExpired::class, fn ($e) => $e->reason === 'timeout');
 });
@@ -76,7 +76,7 @@ it('expira o pedido ao fim do tempo total mesmo com ofertas abertas', function (
     $this->travel(30)->seconds();
     $this->artisan('longa:matching-tick');
 
-    expect($this->request->fresh()?->state)->toBe(RequestState::Expired)
+    expect($this->request->fresh()?->state)->toBe(RequestState::NoProvider)
         ->and($this->request->offers()->whereIn('state', OfferState::open())->count())->toBe(0);
 });
 

@@ -19,7 +19,7 @@ class RepublishServiceRequest
 
     public function handle(ServiceRequest $original, User $client, ?string $scheduledAt, ?int $amount): ServiceRequest
     {
-        if (! in_array($original->state, [RequestState::Expired, RequestState::Cancelled], true)) {
+        if (! in_array($original->state, [RequestState::NoProvider, RequestState::Cancelled], true)) {
             throw new ApiException('request_not_republishable', 'Só pode republicar pedidos expirados ou cancelados.', 409);
         }
 

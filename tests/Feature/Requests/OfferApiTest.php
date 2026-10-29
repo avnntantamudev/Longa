@@ -62,7 +62,7 @@ it('aceita: cria o serviço, as outras ofertas perdem e o pedido fica matched', 
     $session = ServiceJob::query()->sole();
     expect($session->payment_due_at)->not->toBeNull()
         ->and($session->conversation)->not->toBeNull()
-        ->and($this->request->fresh()?->state)->toBe(RequestState::Matched)
+        ->and($this->request->fresh()?->state)->toBe(RequestState::Accepted)
         ->and($this->request->fresh()?->assigned_provider_profile_id)->toBe($this->providers[1]->id)
         ->and(RequestOffer::query()->where('state', 'lost')->count())->toBe(2)
         ->and(AuditLog::query()->where('action', 'requests.offer_accepted')->exists())->toBeTrue();

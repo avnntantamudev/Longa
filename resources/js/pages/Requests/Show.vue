@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { hasProvider, type RequestState } from '@/lib/requestState';
 import AppIcon from '@/components/AppIcon.vue';
 import PushOptIn from '@/components/PushOptIn.vue';
 import { useCountdown } from '@/composables/useCountdown';
@@ -12,7 +13,7 @@ const props = defineProps<{ requestId: number }>();
 
 interface ServiceRequest {
     id: number;
-    state: 'draft' | 'searching' | 'matched' | 'expired' | 'cancelled';
+    state: RequestState;
     title: string;
     category: { name: string };
     amount: number;
@@ -37,7 +38,7 @@ async function load(): Promise<void> {
     if (data.state === 'searching' && data.seconds_left !== null) {
         countdown.start(data.seconds_left);
     }
-    if (data.state === 'matched' && data.session_id) {
+    if (hasProvider(data.state) && data.session_id) {
         router.visit(`/servicos/${data.session_id}`);
     }
 }
@@ -107,7 +108,7 @@ async function republish(): Promise<void> {
         </section>
 
         <!-- Sem técnicos -->
-        <section v-else-if="request.state === 'expired'" class="card text-center">
+        <section v-else-if="request.state === 'no_provider'" class="card text-center">
             <p class="text-title">Sem técnicos disponíveis</p>
             <p class="mt-1 text-ink-muted">Ninguém aceitou a tempo. Pode republicar, por exemplo com outro valor ou outra hora.</p>
             <button type="button" class="btn-primary mt-4 w-full" :disabled="busy" @click="republish">Republicar pedido</button>
@@ -119,7 +120,7 @@ async function republish(): Promise<void> {
             <button type="button" class="btn-secondary mt-4 w-full" :disabled="busy" @click="republish">Publicar de novo</button>
         </section>
 
-        <section v-else-if="request.state === 'matched'" class="card text-center">
+        <section v-else-if="hasProvider(request.state)" class="card text-center">
             <p class="text-title text-success">Técnico encontrado!</p>
             <a v-if="request.session_id" :href="`/servicos/${request.session_id}`" class="btn-primary mt-4 w-full">Ver serviço</a>
         </section>

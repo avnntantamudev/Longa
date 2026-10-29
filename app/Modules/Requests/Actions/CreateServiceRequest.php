@@ -163,6 +163,6 @@ class CreateServiceRequest
         $closeAt = $scheduledAt->copy()->subHours(app(PlatformSettings::class)->int('scheduled_request_close_hours'));
 
         return ! $scheduledAt->copy()->setTimezone('Africa/Luanda')->isSameDay(now('Africa/Luanda'))
-            && $closeAt->gt(now()->addSeconds((int) config('longa.requests.ttl')));
+            && $closeAt->gt(now()->addMinutes(app(PlatformSettings::class)->int('dispatch_search_minutes')));
     }
 }

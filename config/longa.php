@@ -55,9 +55,6 @@ return [
         'min_amount' => (int) env('LONGA_REQUEST_MIN_AMOUNT', 2000),
         'max_amount' => (int) env('LONGA_REQUEST_MAX_AMOUNT', 5000000),
         'max_active_per_client' => (int) env('LONGA_REQUEST_MAX_ACTIVE', 2),
-        // Tempo total de procura do pedido e prazo de cada oferta (segundos)
-        'ttl' => (int) env('LONGA_REQUEST_TTL', 300),
-        'offer_ttl' => (int) env('LONGA_OFFER_TTL', 60),
         // Antecedência mínima do serviço (minutos)
         'min_lead_minutes' => (int) env('LONGA_REQUEST_MIN_LEAD_MINUTES', 30),
         // Mesmo cliente, mesma área e hora próxima com um pedido ativo = duplicado
@@ -73,9 +70,19 @@ return [
     ],
 
     'matching' => [
+        // Despacho presencial (BISCA, Fase 2.3; editáveis no painel → Definições): raio inicial, alargamento por
+        // ronda e raio máximo (metros); tempo total de procura, repartido pelas rondas (minutos). As ofertas
+        // enviadas ficam abertas até ao fim da procura ou até alguém aceitar.
+        'initial_radius_m' => (int) env('LONGA_DISPATCH_INITIAL_RADIUS_M', 3000),
+        'radius_step_m' => (int) env('LONGA_DISPATCH_RADIUS_STEP_M', 3000),
+        'max_radius_m' => (int) env('LONGA_DISPATCH_MAX_RADIUS_M', 15000),
+        'search_minutes' => (int) env('LONGA_DISPATCH_SEARCH_MINUTES', 60),
+        // Saldo mínimo na carteira do técnico para receber pedidos (Kz; 0 = desligado até à Fase 3)
+        'min_balance' => (int) env('LONGA_DISPATCH_MIN_BALANCE', 0),
+        // Máximo de técnicos novos por ronda
+        'round_size' => (int) env('LONGA_DISPATCH_ROUND_SIZE', 25),
+        // Pedidos para outro dia: raio da oferta (metros)
         'radius_m' => (int) env('LONGA_MATCHING_RADIUS_M', 5000),
-        'first_wave_size' => (int) env('LONGA_MATCHING_FIRST_WAVE', 10),
-        'next_wave_size' => (int) env('LONGA_MATCHING_NEXT_WAVE', 15),
         // Pesos da ordenação: score do técnico vs proximidade (somam 1)
         'weight_score' => (float) env('LONGA_MATCHING_WEIGHT_SCORE', 0.6),
         'weight_distance' => (float) env('LONGA_MATCHING_WEIGHT_DISTANCE', 0.4),

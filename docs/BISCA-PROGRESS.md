@@ -164,3 +164,14 @@ Respostas do cliente às dúvidas da Fase 1 (2026-10-29). Confirmado com o "ok":
 - Fotos e vídeos: `GET /api/v1/request-media/{id}` devolve um link temporário (10 min) para o cliente, os técnicos a
   quem o pedido foi oferecido, o técnico atribuído e a equipa. A oferta mostra ao técnico as respostas e os ficheiros.
 - Republicar mantém as respostas e os ficheiros do pedido original.
+
+### Notas do passo 4
+
+- Despacho presencial em rondas de raio crescente: 3 km → +3 km → 15 km, dentro de 1 h (5 rondas de 12 min). As
+  ofertas ficam abertas até alguém aceitar ou a procura acabar. Parâmetros no painel (Definições → Despacho).
+- "Sem técnico disponível" ao fim da hora, ou logo se ninguém puder servir o pedido nem a 15 km. Nova tentativa com
+  o mesmo pedido (`/retry`), que volta a oferecer a quem não respondeu; republicar continua para mudar a data.
+- Saldo mínimo para receber pedidos: parâmetro `dispatch_min_balance` (0 = desligado até à carteira da Fase 3).
+- Notificação ao técnico com a distância e o valor que recebe.
+- Online: sem perímetro, oferta aos técnicos da categoria, lembretes 24 h e 1 h antes.
+- Removidos `longa.requests.ttl`, `longa.requests.offer_ttl` e os tamanhos de onda.

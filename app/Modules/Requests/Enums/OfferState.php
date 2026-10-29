@@ -24,7 +24,9 @@ enum OfferState: string implements StateEnum
         return match ($this) {
             self::Sent => [self::Viewed, self::Accepted, self::Declined, self::Expired, self::Lost],
             self::Viewed => [self::Accepted, self::Declined, self::Expired, self::Lost],
-            self::Accepted, self::Declined, self::Expired, self::Lost => [],
+            // Nova tentativa de um pedido "sem técnico disponível": volta a oferecer a quem não respondeu
+            self::Expired, self::Lost => [self::Sent],
+            self::Accepted, self::Declined => [],
         };
     }
 

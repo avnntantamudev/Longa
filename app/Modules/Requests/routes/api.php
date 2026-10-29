@@ -16,6 +16,7 @@ Route::middleware(['auth:sanctum', 'auth.session', 'onboarded', 'role:client'])
         Route::post('/', [ServiceRequestController::class, 'store'])->middleware('throttle:service-requests')->name('store');
         Route::get('{serviceRequest}', [ServiceRequestController::class, 'show'])->name('show');
         Route::post('{serviceRequest}/cancel', [ServiceRequestController::class, 'cancel'])->name('cancel');
+        Route::post('{serviceRequest}/retry', [ServiceRequestController::class, 'retry'])->middleware('throttle:service-requests')->name('retry');
         Route::post('{serviceRequest}/republish', [ServiceRequestController::class, 'republish'])->middleware('throttle:service-requests')->name('republish');
     });
 

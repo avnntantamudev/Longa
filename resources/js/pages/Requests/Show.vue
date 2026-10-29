@@ -70,6 +70,20 @@ async function cancel(): Promise<void> {
     }
 }
 
+/** Nova tentativa com o mesmo pedido (volta a procurar técnicos) */
+async function retry(): Promise<void> {
+    busy.value = true;
+    error.value = null;
+    try {
+        await api.post(`/service-requests/${props.requestId}/retry`);
+        await load();
+    } catch (e) {
+        if (e instanceof ApiError) error.value = e.message;
+    } finally {
+        busy.value = false;
+    }
+}
+
 async function republish(): Promise<void> {
     busy.value = true;
     error.value = null;
@@ -110,8 +124,9 @@ async function republish(): Promise<void> {
         <!-- Sem técnicos -->
         <section v-else-if="request.state === 'no_provider'" class="card text-center">
             <p class="text-title">Sem técnicos disponíveis</p>
-            <p class="mt-1 text-ink-muted">Ninguém aceitou a tempo. Pode republicar, por exemplo com outro valor ou outra hora.</p>
-            <button type="button" class="btn-primary mt-4 w-full" :disabled="busy" @click="republish">Republicar pedido</button>
+            <p class="mt-1 text-ink-muted">Ninguém aceitou a tempo. Pode tentar de novo agora ou mudar a hora.</p>
+            <button type="button" class="btn-primary mt-4 w-full" :disabled="busy" @click="retry">Tentar de novo</button>
+            <button type="button" class="btn-secondary mt-2 w-full" :disabled="busy" @click="republish">Republicar com outra hora</button>
             <a href="/pedidos/novo" class="btn-secondary mt-2 w-full">Novo pedido com outros dados</a>
         </section>
 

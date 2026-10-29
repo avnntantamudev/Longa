@@ -3865,6 +3865,57 @@
                 }
             }
         },
+        "/service-requests/{serviceRequest}/retry": {
+            "post": {
+                "operationId": "service-requests.retry",
+                "description": "Volta a procurar com o mesmo pedido: nova janela de procura e nova oferta a quem n\u00e3o respondeu.\nErros: `request_not_retryable` (409), `request_date_passed` (409, republique com outra data).",
+                "summary": "Tentar de novo (pedido sem t\u00e9cnico dispon\u00edvel)",
+                "tags": [
+                    "Pedidos de servi\u00e7o",
+                    "ServiceRequest"
+                ],
+                "parameters": [
+                    {
+                        "name": "serviceRequest",
+                        "in": "path",
+                        "required": true,
+                        "description": "The service request ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`ClientRequestResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ClientRequestResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/service-requests/{serviceRequest}/republish": {
             "post": {
                 "operationId": "service-requests.republish",

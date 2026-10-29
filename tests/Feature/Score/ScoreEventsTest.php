@@ -34,9 +34,11 @@ it('regista recusas repetidas e ofertas sem resposta e mostra o resumo ao técni
         $this->postJson('/api/v1/offers/'.newOfferFor($this->provider, $this->sgme)->id.'/decline')->assertOk();
     }
     newOfferFor($this->provider, $this->sgme);
-    $this->travel(61)->seconds();
+    // A oferta fica aberta até ao fim da procura (1 h); sem resposta, expira e conta para o score
+    $this->travel(61)->minutes();
     $this->artisan('longa:matching-tick');
 
+    apiLogin($this->provider->user);
     $this->getJson('/api/v1/me/score-events')
         ->assertOk()
         ->assertJsonPath('summary_30_days.offer_declined', 3)

@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Requests\Actions\CancelServiceRequest;
 use App\Modules\Requests\Actions\CreateServiceRequest;
 use App\Modules\Requests\Actions\RepublishServiceRequest;
+use App\Modules\Requests\Actions\RetryServiceRequest;
 use App\Modules\Requests\Http\Requests\RepublishServiceRequestRequest;
 use App\Modules\Requests\Http\Requests\StoreServiceRequestRequest;
 use App\Modules\Requests\Http\Resources\ClientRequestResource;
@@ -77,6 +78,22 @@ class ServiceRequestController extends Controller
         $user = $request->user();
 
         return new ClientRequestResource($action->handle($serviceRequest, $user, $data['reason'] ?? null)->load(['category']));
+    }
+
+    /**
+     * Tentar de novo (pedido sem técnico disponível).
+     *
+     * Volta a procurar com o mesmo pedido: nova janela de procura e nova oferta a quem não respondeu.
+     * Erros: `request_not_retryable` (409), `request_date_passed` (409, republique com outra data).
+     */
+    public function retry(Request $request, ServiceRequest $serviceRequest, RetryServiceRequest $action): ClientRequestResource
+    {
+        Gate::authorize('cancel', $serviceRequest);
+
+        /** @var User $user */
+        $user = $request->user();
+
+        return new ClientRequestResource($action->handle($serviceRequest, $user)->load(['category']));
     }
 
     /**

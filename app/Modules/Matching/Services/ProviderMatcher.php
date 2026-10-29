@@ -9,6 +9,8 @@ use App\Modules\Requests\Enums\RequestState;
 use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Users\Enums\UserStatus;
 use App\Modules\Users\Enums\VerificationStatus;
+use App\Modules\Wallet\Ledger\Accounts;
+use App\Support\Settings\PlatformSettings;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -18,7 +20,8 @@ use Illuminate\Support\Facades\DB;
  * Elegível:
  *  - conta ativa e não apagada; perfil verificado, com onboarding concluído e "Disponível";
  *  - trabalha na categoria do pedido e aceita a modalidade (presencial/online);
- *  - presencial: a ≤ raio do matching (5 km) do local do pedido E o pedido dentro do raio de atuação do técnico;
+ *  - presencial: a ≤ raio da ronda do despacho do local do pedido E o pedido dentro do raio de atuação do técnico;
+ *  - com saldo disponível ≥ saldo mínimo, quando configurado (Definições → Despacho; 0 = desligado);
  *  - sem serviço ativa que se sobreponha ao horário pedido (com folga configurável);
  *  - não é o próprio cliente e ainda não recebeu oferta deste pedido.
  *
@@ -27,14 +30,17 @@ use Illuminate\Support\Facades\DB;
  */
 class ProviderMatcher
 {
+    public function __construct(private readonly PlatformSettings $settings) {}
+
     /**
      * @param  list<int>  $excludeProviderIds
      * @return list<MatchCandidate>
      */
-    public function candidates(ServiceRequest $request, int $limit, array $excludeProviderIds = [], bool $scheduled = false): array
+    public function candidates(ServiceRequest $request, int $limit, array $excludeProviderIds = [], bool $scheduled = false, ?int $radiusM = null): array
     {
         $config = config('longa.matching');
-        $radius = (int) $config['radius_m'];
+        $radius = $radiusM ?? (int) $config['radius_m'];
+        $minBalance = $this->settings->int('dispatch_min_balance');
         $weightScore = (float) $config['weight_score'];
         $weightDistance = (float) $config['weight_distance'];
         $buffer = (int) $config['conflict_buffer_minutes'];
@@ -63,6 +69,11 @@ class ProviderMatcher
             ->whereNotNull('tp.latitude')
             ->whereRaw('JSON_CONTAINS(tp.modalities, ?)', [json_encode($online ? 'online' : 'in_person')])
             ->when($excludeProviderIds !== [], fn ($q) => $q->whereNotIn('tp.id', $excludeProviderIds))
+            // Saldo mínimo (carteira do técnico no livro-razão; sem conta = 0)
+            ->when($minBalance > 0, fn ($q) => $q->whereRaw(
+                "COALESCE((SELECT b.balance FROM ledger_accounts a JOIN ledger_account_balances b ON b.ledger_account_id = a.id WHERE a.code = CONCAT(?, ':', tp.id)), 0) >= ?",
+                [Accounts::PROVIDER_AVAILABLE, $minBalance],
+            ))
             // Conflito: serviço ativa do técnico que se sobrepõe ao horário pedido (com folga)
             ->whereNotExists(function ($q) use ($start, $end) {
                 $q->selectRaw('1')

@@ -125,6 +125,8 @@ export function eventLabel(type: string): string {
         payment_failed: 'Pagamento falhou',
         payment_window_expired: 'Prazo de pagamento terminou',
         on_the_way: 'Técnico a caminho',
+        reminder_24h: 'Lembrete enviado (24 h antes)',
+        reminder_1h: 'Lembrete enviado (1 h antes)',
         auto_not_started: 'Cancelado: o serviço não foi iniciado',
         scheduled: 'Serviço agendado',
         started: 'Serviço iniciado',

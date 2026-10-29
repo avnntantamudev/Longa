@@ -67,11 +67,11 @@ it('publica o pedido, calcula a comissão e envia a 1.ª onda', function () {
     $request = ServiceRequest::query()->sole();
     expect($request->commission)->toBe(5000)
         ->and($request->provider_net)->toBe(20000)
-        ->and((int) round(now()->diffInSeconds($request->expires_at)))->toBeBetween(295, 300);
+        ->and((int) round(now()->diffInSeconds($request->expires_at)))->toBeBetween(3595, 3600);
 
     Event::assertDispatchedTimes(OfferSent::class, 3);
     foreach (RequestOffer::query()->get() as $offer) {
-        expect((int) round(now()->diffInSeconds($offer->expires_at)))->toBeBetween(58, 60);
+        expect((int) round(now()->diffInSeconds($offer->expires_at)))->toBeBetween(3595, 3600);
     }
 });
 

@@ -82,7 +82,7 @@ it('usa SMS como fallback sem push ativo, com limite por hora', function () {
         ->and($second->via($this->provider->user))->toBe(['database']);
 });
 
-it('escreve a oferta em texto curto: "Novo pedido a 1,2 km: SGME 25.000 Kz"', function () {
+it('escreve a oferta em texto curto: serviço, distância e quanto o técnico recebe', function () {
     $offer = RequestOffer::query()->create([
         'service_request_id' => $this->request->id, 'provider_profile_id' => $this->provider->id,
         'wave' => 1, 'rank' => 1, 'distance_m' => 1234, 'score_snapshot' => 50, 'sent_at' => now(), 'expires_at' => now()->addMinute(),
@@ -92,7 +92,7 @@ it('escreve a oferta em texto curto: "Novo pedido a 1,2 km: SGME 25.000 Kz"', fu
     $push = $notification->toWebPush($this->provider->user, $notification)->toArray();
     $sms = $notification->toSms($this->provider->user);
 
-    expect($push['title'])->toBe('TRIM TRIM · Novo pedido a 1,2 km: SGME — Gestão Empresarial 25.000 Kz')
+    expect($push['title'])->toBe('TRIM TRIM · Novo pedido a 1,2 km: SGME — Gestão Empresarial · recebe 20.000 Kz')
         ->and($push['data']['url'])->toBe("/tecnico/ofertas/{$offer->id}")
         ->and($sms)->toStartWith('BISCA: Novo pedido a 1,2 km')
         ->and($sms)->not->toContain((string) $this->request->latitude);

@@ -90,15 +90,16 @@ it('responde ao perdedor que outro técnico aceitou primeiro', function () {
         ->assertJsonPath('error.message', 'Outro técnico aceitou este pedido primeiro.');
 });
 
-it('impõe o prazo de 60 s no servidor, mesmo antes do job de expiração correr', function () {
+it('impõe o fim da procura no servidor, mesmo antes do job de expiração correr', function () {
     apiLogin($this->providers[0]->user);
     $offer = offerOf($this->providers[0]);
 
-    $this->travel(61)->seconds();
+    $this->travel(61)->minutes();
+    apiLogin($this->providers[0]->user);
 
     $this->postJson("/api/v1/offers/{$offer->id}/accept")
         ->assertStatus(410)
-        ->assertJsonPath('error.code', 'offer_expired');
+        ->assertJsonPath('error.code', 'request_closed');
 
     expect(ServiceRequest::query()->whereNotNull('provider_profile_id')->count())->toBe(0)
         ->and($offer->fresh()?->state)->toBe(OfferState::Sent);

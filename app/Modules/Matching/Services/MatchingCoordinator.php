@@ -19,15 +19,21 @@ use App\Support\StateMachine\InvalidTransition;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Orquestra o TRIM TRIM em ondas (docs/state-machines.md):
+ * Orquestra o despacho do pedido (BISCA, Fase 2.3; docs/state-machines.md):
  *
- *  start()      draft → searching e envia a 1.ª onda;
- *  advance()    chamado pelo job atrasado de cada onda e pela varredura do scheduler: expira ofertas
- *               vencidas, envia a onda seguinte quando já não há ofertas abertas e expira o pedido
- *               quando acaba o tempo ou os candidatos.
+ *  start()      created → searching e envia a 1.ª ronda;
+ *  sendNextWave() presencial no próprio dia: rondas de raio crescente (raio inicial, + alargamento por ronda, até
+ *               ao raio máximo), repartidas pelo tempo total de procura. Cada ronda oferece a técnicos novos dentro
+ *               do raio; as ofertas enviadas ficam abertas até alguém aceitar ou a procura acabar. Depois do raio
+ *               máximo continua a oferecer, à mesma distância, a quem ficar disponível;
+ *               online ou para outro dia: oferta a todos os elegíveis de uma vez (sem perímetro no online);
+ *  advance()    chamado pelo job atrasado de cada ronda e pela varredura do scheduler: abre a ronda seguinte e
+ *               passa o pedido a "sem técnico disponível" quando acaba o tempo;
+ *  retry()      nova tentativa de um pedido "sem técnico disponível" (volta a oferecer a quem não respondeu).
  *
  * Todas as operações são idempotentes e seguras em concorrência (lock na linha do pedido +
  * transições condicionais), por isso o job e a varredura podem correr ao mesmo tempo.
+ * Parâmetros em Definições → Despacho (PlatformSettings dispatch_*).
  */
 class MatchingCoordinator
 {
@@ -42,24 +48,27 @@ class MatchingCoordinator
         $request->transitionTo(RequestState::Searching, [
             'expires_at' => $request->scheduled
                 ? $request->scheduled_at->copy()->subHours($this->settings->int('scheduled_request_close_hours'))
-                : now()->addSeconds((int) config('longa.requests.ttl')),
+                : now()->addMinutes($this->settings->int('dispatch_search_minutes')),
+            'wave' => 0,
+            'next_wave_at' => null,
         ]);
 
         return $this->sendNextWave($request);
     }
 
     /**
-     * Envia a próxima onda se o pedido estiver à procura e não houver ofertas em aberto.
+     * Abre a próxima ronda do despacho (se a ronda atual já terminou).
      *
      * @return int ofertas enviadas
      */
     public function sendNextWave(ServiceRequest $request): int
     {
-        if ($request->scheduled) {
+        if ($request->scheduled || $request->modality === 'online') {
             return $this->sendScheduledOffers($request);
         }
 
-        $sent = DB::transaction(function () use ($request): array {
+        $opened = false;
+        $sent = DB::transaction(function () use ($request, &$opened): array {
             /** @var ServiceRequest $locked */
             $locked = ServiceRequest::query()->lockForUpdate()->findOrFail($request->id);
 
@@ -67,54 +76,121 @@ class MatchingCoordinator
                 return [];
             }
 
-            if ($locked->offers()->whereIn('state', OfferState::open())->where('expires_at', '>', now())->exists()) {
-                return [];
-            }
-
-            $size = (int) config($locked->wave === 0 ? 'longa.matching.first_wave_size' : 'longa.matching.next_wave_size');
-            $already = $locked->offers()->pluck('provider_profile_id')->all();
-            $candidates = $this->matcher->candidates($locked, $size, $already);
-
-            if ($candidates === []) {
-                $this->expire($locked, $locked->wave === 0 ? 'no_providers' : 'timeout');
-
+            // A ronda atual ainda está a decorrer (o job e a varredura podem chegar os dois)
+            if ($locked->next_wave_at !== null && $locked->next_wave_at->isFuture()) {
                 return [];
             }
 
             $wave = $locked->wave + 1;
+            $radius = $this->radiusFor($wave);
+            $already = $locked->offers()->pluck('provider_profile_id')->all();
+            $candidates = $this->matcher->candidates($locked, (int) config('longa.matching.round_size'), $already, radiusM: $radius);
+
+            // Ninguém pode servir este pedido agora, nem no raio máximo: não faz esperar o cliente
+            if ($candidates === [] && $already === []
+                && $this->matcher->candidates($locked, 1, radiusM: $this->settings->int('dispatch_max_radius_m')) === []) {
+                $this->expire($locked, 'no_providers');
+
+                return [];
+            }
+
             $now = now();
-            // A oferta nunca dura mais do que o próprio pedido
-            $offerExpiry = $now->copy()->addSeconds((int) config('longa.requests.offer_ttl'))->min($locked->expires_at);
+            if ($candidates !== []) {
+                RequestOffer::query()->insert(array_map(fn ($c, int $i) => [
+                    'service_request_id' => $locked->id,
+                    'provider_profile_id' => $c->providerProfileId,
+                    'wave' => $wave,
+                    'rank' => count($already) + $i + 1,
+                    'distance_m' => $c->distanceM,
+                    'score_snapshot' => $c->score,
+                    'state' => OfferState::Sent->value,
+                    'sent_at' => $now,
+                    // A oferta fica aberta até ao fim da procura (ou até alguém aceitar)
+                    'expires_at' => $locked->expires_at,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ], $candidates, array_keys($candidates)));
+            }
 
-            RequestOffer::query()->insert(array_map(fn ($c, int $i) => [
-                'service_request_id' => $locked->id,
-                'provider_profile_id' => $c->providerProfileId,
-                'wave' => $wave,
-                'rank' => count($already) + $i + 1,
-                'distance_m' => $c->distanceM,
-                'score_snapshot' => $c->score,
-                'state' => OfferState::Sent->value,
-                'sent_at' => $now,
-                'expires_at' => $offerExpiry,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ], $candidates, array_keys($candidates)));
-
-            $locked->forceFill(['wave' => $wave, 'next_wave_at' => $offerExpiry])->save();
+            $nextRound = $now->copy()->addSeconds($this->roundSeconds())->min($locked->expires_at);
+            $locked->forceFill(['wave' => min($wave, 255), 'next_wave_at' => $nextRound])->save();
             $request->setRawAttributes($locked->getAttributes(), true);
+            $opened = true;
 
-            return $locked->offers()->where('wave', $wave)->with(['provider', 'request.category'])->get()->all();
+            return $candidates === [] ? [] : $locked->offers()->where('wave', $wave)->with(['provider', 'request.category'])->get()->all();
         });
 
         foreach ($sent as $offer) {
             OfferSent::dispatch($offer);
         }
 
-        if ($sent !== []) {
-            AdvanceMatching::dispatch($request->id)->delay($request->next_wave_at?->copy()->addSecond());
+        // Só quando abriu uma ronda (com a fila síncrona, o job corre logo e não pode voltar a agendar-se)
+        if ($opened && $request->next_wave_at !== null) {
+            AdvanceMatching::dispatch($request->id)->delay($request->next_wave_at->copy()->addSecond());
         }
 
         return count($sent);
+    }
+
+    /**
+     * Raio da ronda N (metros): inicial + (N − 1) × alargamento, sem passar do máximo.
+     */
+    public function radiusFor(int $wave): int
+    {
+        $initial = $this->settings->int('dispatch_initial_radius_m');
+        $max = max($initial, $this->settings->int('dispatch_max_radius_m'));
+
+        return min($max, $initial + (max(1, $wave) - 1) * $this->settings->int('dispatch_radius_step_m'));
+    }
+
+    /**
+     * Rondas até ao raio máximo (ex.: 3 → 15 km de 3 em 3 km = 5 rondas).
+     */
+    public function rounds(): int
+    {
+        $initial = $this->settings->int('dispatch_initial_radius_m');
+        $max = $this->settings->int('dispatch_max_radius_m');
+
+        return $max <= $initial ? 1 : intdiv($max - $initial + $this->settings->int('dispatch_radius_step_m') - 1, $this->settings->int('dispatch_radius_step_m')) + 1;
+    }
+
+    /**
+     * Duração de cada ronda: o tempo total de procura repartido pelas rondas (ex.: 60 min / 5 = 12 min).
+     */
+    public function roundSeconds(): int
+    {
+        return max(30, intdiv($this->settings->int('dispatch_search_minutes') * 60, $this->rounds()));
+    }
+
+    /**
+     * Nova tentativa (sem técnico disponível → à procura): nova janela de procura, volta a oferecer a quem não
+     * respondeu (as ofertas recusadas ficam recusadas) e abre as rondas outra vez.
+     */
+    public function retry(ServiceRequest $request): int
+    {
+        $reopened = DB::transaction(function () use ($request): array {
+            /** @var ServiceRequest $locked */
+            $locked = ServiceRequest::query()->lockForUpdate()->findOrFail($request->id);
+            $locked->transitionTo(RequestState::Searching, [
+                'expires_at' => now()->addMinutes($this->settings->int('dispatch_search_minutes')),
+                'wave' => 0,
+                'next_wave_at' => null,
+            ]);
+            $request->setRawAttributes($locked->getAttributes(), true);
+
+            $offers = $locked->offers()->whereIn('state', [OfferState::Expired->value, OfferState::Lost->value])->with(['provider', 'request.category'])->get();
+            foreach ($offers as $offer) {
+                $offer->transitionTo(OfferState::Sent, ['sent_at' => now(), 'expires_at' => $locked->expires_at, 'responded_at' => null, 'viewed_at' => null]);
+            }
+
+            return $offers->all();
+        });
+
+        foreach ($reopened as $offer) {
+            OfferSent::dispatch($offer);
+        }
+
+        return count($reopened) + $this->sendNextWave($request);
     }
 
     /**
@@ -189,7 +265,7 @@ class MatchingCoordinator
                 /** @var ServiceRequest $locked */
                 $locked = ServiceRequest::query()->lockForUpdate()->findOrFail($request->id);
                 if ($locked->state === RequestState::Searching) {
-                    $this->expire($locked, 'timeout');
+                    $this->expire($locked, $locked->offers()->exists() ? 'timeout' : 'no_providers');
                 }
             });
 

@@ -111,26 +111,38 @@ acima. Detalhes que não são estados:
 | R4 | Falta reportada (ou R1) | 24 h para contestar (abre disputa); sem contestação, liquidação conforme a política |
 | R5 | Dinheiro: `paid` sem confirmação do pagamento em mão em 48 h | assume-se pago e regista-se a comissão em dívida |
 
-## Ondas do matching
+## Despacho presencial (rondas de raio crescente)
 
 ```mermaid
 sequenceDiagram
-    participant A as Aluno
+    participant C as Cliente
     participant S as Servidor
-    participant F as Formadores
-    A->>S: publicar pedido
-    S->>F: onda 1 (top 10 por score + proximidade), 60 s
+    participant T as Técnicos
+    C->>S: enviar pedido
+    S->>T: ronda 1: técnicos a ≤ 3 km (ordem: proximidade e reputação)
     alt alguém aceita
-        F->>S: aceitar (atómico)
-        S-->>A: RequestMatched
-        S-->>F: restantes: OfferLost
-    else ninguém aceita em 60 s
-        S->>F: ofertas da onda 1 → expired
-        S->>F: onda 2 (15 seguintes), 60 s
+        T->>S: aceitar (atómico, o primeiro ganha)
+        S-->>C: RequestMatched
+        S-->>T: restantes: oferta perdida
+    else ninguém aceita em 12 min
+        S->>T: ronda 2: técnicos novos a ≤ 6 km (as ofertas da ronda 1 continuam abertas)
     end
-    Note over S: repete até não haver mais formadores ou acabar o tempo do pedido (5 min)
-    S-->>A: RequestExpired (opção de republicar)
+    Note over S: + 3 km por ronda até 15 km; depois continua a 15 km com quem ficar disponível
+    S-->>C: ao fim de 1 h: "sem técnico disponível" (tentar de novo ou republicar)
 ```
+
+- Parâmetros (Definições → Despacho): raio inicial 3 km, alargamento 3 km, raio máximo 15 km, tempo de procura
+  60 min (repartido pelas rondas: 5 × 12 min), saldo mínimo 0 Kz (desligado até à Fase 3), até 25 técnicos novos
+  por ronda (`longa.matching.round_size`).
+- Elegível: verificado, disponível, com a categoria e a modalidade, sem outro serviço à mesma hora, dentro do raio
+  da ronda e do raio de atuação dele, e com saldo ≥ saldo mínimo quando ligado.
+- Se ninguém puder servir o pedido nem no raio máximo, o pedido passa logo a "sem técnico disponível".
+- A notificação diz o serviço, a distância e quanto o técnico recebe (valor − comissão dele; "por orçamento" nos
+  orçamentos).
+- **Nova tentativa** (`POST /api/v1/service-requests/{id}/retry`): `no_provider → searching` com nova janela de
+  procura; as ofertas sem resposta voltam a `sent` (as recusadas ficam recusadas) e as rondas recomeçam.
+- **Online:** sem perímetro; o pedido é oferecido de uma vez aos técnicos da categoria que fazem online. O serviço é
+  agendado e há lembretes ao cliente e ao técnico 24 h e 1 h antes (regra `reminders_before`).
 
 ## Disputas
 

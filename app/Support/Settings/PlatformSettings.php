@@ -30,6 +30,11 @@ class PlatformSettings
         'vip_commission_percent' => ['config' => 'longa.vip.commission_percent', 'type' => 'int', 'min' => 0, 'max' => 50, 'label' => 'Comissão para técnicos VIP (%)'],
         'vip_price' => ['config' => 'longa.vip.price', 'type' => 'int', 'min' => 0, 'max' => 10_000_000, 'label' => 'Preço VIP por ano (Kz)'],
         'vip_duration_days' => ['config' => 'longa.vip.duration_days', 'type' => 'int', 'min' => 30, 'max' => 730, 'label' => 'Duração da subscrição VIP (dias)'],
+        'dispatch_initial_radius_m' => ['config' => 'longa.matching.initial_radius_m', 'type' => 'int', 'min' => 500, 'max' => 50_000, 'label' => 'Despacho: raio inicial (metros)'],
+        'dispatch_radius_step_m' => ['config' => 'longa.matching.radius_step_m', 'type' => 'int', 'min' => 500, 'max' => 50_000, 'label' => 'Despacho: alargamento por ronda (metros)'],
+        'dispatch_max_radius_m' => ['config' => 'longa.matching.max_radius_m', 'type' => 'int', 'min' => 500, 'max' => 100_000, 'label' => 'Despacho: raio máximo (metros)'],
+        'dispatch_search_minutes' => ['config' => 'longa.matching.search_minutes', 'type' => 'int', 'min' => 5, 'max' => 240, 'label' => 'Despacho: tempo para um técnico aceitar (minutos)'],
+        'dispatch_min_balance' => ['config' => 'longa.matching.min_balance', 'type' => 'int', 'min' => 0, 'max' => 10_000_000, 'label' => 'Saldo mínimo do técnico para receber pedidos (Kz; 0 = desligado)'],
         'scheduled_request_close_hours' => ['config' => 'longa.scheduled_requests.close_hours_before', 'type' => 'int', 'min' => 1, 'max' => 48, 'label' => 'Pedidos para outro dia: fecham X horas antes do serviço'],
     ];
 

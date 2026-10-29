@@ -84,7 +84,7 @@ it('encontra e ordena 500 técnicos elegíveis em tempo aceitável', function ()
 });
 
 it('envia uma onda para os 500 (pior caso: todos ao mesmo tempo) em tempo aceitável', function () {
-    config(['longa.matching.first_wave_size' => ELIGIBLE]);
+    config(['longa.matching.round_size' => ELIGIBLE, 'longa.matching.initial_radius_m' => 5000]);
     Queue::fake();
 
     $start = hrtime(true);

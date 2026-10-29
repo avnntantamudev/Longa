@@ -37,8 +37,9 @@ $offerAllowed = [
     'viewed' => ['accepted', 'declined', 'expired', 'lost'],
     'accepted' => [],
     'declined' => [],
-    'expired' => [],
-    'lost' => [],
+    // Nova tentativa de um pedido sem técnico disponível: volta a oferecer a quem não respondeu
+    'expired' => ['sent'],
+    'lost' => ['sent'],
 ];
 
 it('define as transições do pedido', function () use ($requestAllowed) {

@@ -32,6 +32,9 @@ class SessionUpdateNotification extends Notification implements ShouldQueue
 
     public const DISPUTE_RESOLVED = 'dispute_resolved';
 
+    /** Lembrete antes de um serviço marcado (detalhe: "24h" ou "1h") */
+    public const REMINDER = 'reminder';
+
     public function __construct(public readonly ServiceRequest $session, public readonly string $kind, public readonly ?string $detail = null)
     {
         $this->onQueue('notifications');
@@ -76,6 +79,8 @@ class SessionUpdateNotification extends Notification implements ShouldQueue
 
         return match ($this->kind) {
             self::STARTED => ['O serviço começou', "{$title} foi iniciado pelo técnico."],
+            self::REMINDER => ['Lembrete do serviço', "{$title} é ".($this->detail === '1h' ? 'daqui a 1 hora' : 'amanhã').', às '.$this->session->scheduled_at->format('H:i')
+                .($this->session->modality === 'online' ? ' (online).' : ', em '.$this->session->neighborhood.'.')],
             self::QR_READY => ['Confirme o serviço', "{$title} terminou. Escaneie o QR do técnico para confirmar."],
             self::CONFIRMED => ['Serviço confirmado', $this->session->isCash()
                 ? "{$title} foi confirmada. O pagamento foi feito em mão."

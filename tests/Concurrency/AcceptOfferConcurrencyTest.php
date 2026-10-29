@@ -22,7 +22,7 @@ use Symfony\Component\Process\Process;
 const WORKERS = 8;
 
 beforeEach(function () {
-    config(['longa.matching.first_wave_size' => WORKERS]);
+    config(['longa.matching.round_size' => WORKERS]);
     $sgme = Category::query()->where('slug', 'sgme-gestao-empresarial')->firstOrFail();
     [$lat, $lng] = ProviderProfileFactory::TALATONA;
 

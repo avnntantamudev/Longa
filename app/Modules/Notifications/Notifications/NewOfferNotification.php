@@ -8,6 +8,8 @@ use App\Modules\Notifications\Channels\SmsChannel;
 use App\Modules\Notifications\Contracts\SmsNotification;
 use App\Modules\Notifications\Support\Formats;
 use App\Modules\Requests\Models\RequestOffer;
+use App\Modules\Requests\Services\Commission;
+use App\Modules\Users\Enums\PricingMode;
 use App\Modules\Users\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -91,15 +93,25 @@ class NewOfferNotification extends Notification implements ShouldQueue, SmsNotif
         ];
     }
 
+    /**
+     * Serviço, distância (presencial) e quanto o técnico recebe (valor − comissão dele; nos orçamentos, "por orçamento").
+     */
     private function headline(): string
     {
         $request = $this->offer->request;
+        $value = $request->pricing_mode === PricingMode::Quote
+            ? 'por orçamento'
+            : 'recebe '.Formats::kwanza(Commission::splitFor($request->amount, $this->offer->provider_profile_id)['provider_net']);
 
         if ($request->scheduled) {
-            return 'Pedido para '.Formats::when($request->scheduled_at).': '.$request->category->name.' '.Formats::kwanza($request->amount);
+            return 'Pedido para '.Formats::when($request->scheduled_at).': '.$request->category->name.' · '.$value;
         }
 
-        return 'Novo pedido a '.Formats::distance($this->offer->distance_m).': '.$request->category->name.' '.Formats::kwanza($request->amount);
+        if ($request->modality === 'online') {
+            return 'Novo pedido online: '.$request->category->name.' · '.$value;
+        }
+
+        return 'Novo pedido a '.Formats::distance($this->offer->distance_m).': '.$request->category->name.' · '.$value;
     }
 
     private function details(): string

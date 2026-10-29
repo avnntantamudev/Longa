@@ -61,6 +61,10 @@ class Settings extends Page
         return $schema->statePath('data')->components([
             Section::make('Comissões')->columns(2)->schema([$field('commission_percent'), $field('vip_commission_percent')]),
             Section::make('Técnico VIP')->columns(2)->schema([$field('vip_price'), $field('vip_duration_days')]),
+            Section::make('Despacho')->columns(2)->schema([
+                $field('dispatch_initial_radius_m'), $field('dispatch_radius_step_m'), $field('dispatch_max_radius_m'),
+                $field('dispatch_search_minutes'), $field('dispatch_min_balance'),
+            ]),
             Section::make('Pedidos para outro dia')->schema([$field('scheduled_request_close_hours')]),
         ]);
     }

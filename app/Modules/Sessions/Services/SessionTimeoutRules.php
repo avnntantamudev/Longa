@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Sessions\Services;
 
 use App\Modules\Notifications\Notifications\SessionReminderNotification;
+use App\Modules\Notifications\Notifications\SessionUpdateNotification;
 use App\Modules\Payments\Actions\ConfirmCashPayment;
 use App\Modules\Payments\Models\EscrowHold;
 use App\Modules\Payments\Services\SessionSettlement;
@@ -49,6 +50,7 @@ class SessionTimeoutRules
             'R3_payment_expired' => $this->expireUnpaid(),
             'R1_not_started' => $this->cancelNotStarted(),
             'R2_no_qr' => $this->completeWithoutQr(),
+            'reminders_before' => $this->remindUpcoming(),
             'reminders' => $this->remindPendingConfirmations(),
             'R2_window_closed' => $this->closeConfirmationWindows(),
             'R4_no_show_settled' => $this->settleUncontestedNoShows(),
@@ -112,6 +114,39 @@ class SessionTimeoutRules
             },
             fn (ServiceRequest $s) => $s->state === RequestState::InProgress,
         );
+    }
+
+    /**
+     * Lembretes ao cliente e ao técnico antes de um serviço marcado (24 h e 1 h antes; só se o técnico aceitou
+     * antes desse momento). Cada lembrete é enviado uma vez.
+     */
+    public function remindUpcoming(): int
+    {
+        $sent = 0;
+        foreach (['24h' => 24, '1h' => 1] as $label => $hours) {
+            $requests = ServiceRequest::query()
+                ->whereIn('state', [RequestState::Accepted->value, RequestState::OnTheWay->value])
+                ->where('scheduled_at', '>', now())
+                ->where('scheduled_at', '<=', now()->addHours($hours))
+                ->whereRaw('matched_at <= DATE_SUB(scheduled_at, INTERVAL ? HOUR)', [$hours])
+                ->whereDoesntHave('events', fn ($q) => $q->where('type', "reminder_{$label}"))
+                ->with(['client', 'provider.user'])
+                ->limit(200)
+                ->get();
+
+            foreach ($requests as $request) {
+                // O lembrete de 1 h torna o de 24 h desnecessário
+                if ($label === '24h' && $request->scheduled_at->lte(now()->addHour())) {
+                    continue;
+                }
+                $this->lifecycle->record($request, "reminder_{$label}");
+                $request->client->notify(new SessionUpdateNotification($request, SessionUpdateNotification::REMINDER, $label));
+                $request->provider->user->notify(new SessionUpdateNotification($request, SessionUpdateNotification::REMINDER, $label));
+                $sent++;
+            }
+        }
+
+        return $sent;
     }
 
     /**

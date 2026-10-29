@@ -59,7 +59,7 @@ it('diagnóstico: o técnico chega, a taxa de visita é paga em mão e a comiss�
     $session = quoteSession();
     asProvider($session);
 
-    $this->getJson("/api/v1/sessions/{$session->id}")->assertJsonPath('data.actions', ['cancel', 'diagnosis']);
+    $this->getJson("/api/v1/sessions/{$session->id}")->assertJsonPath('data.actions', ['cancel', 'diagnosis', 'on_the_way']);
     $this->postJson("/api/v1/sessions/{$session->id}/diagnosis", [], ['Idempotency-Key' => 'diag-0001'])
         ->assertOk()->assertJsonPath('data.state', 'diagnosing')->assertJsonPath('data.actions', ['send_quote']);
 

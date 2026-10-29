@@ -20,6 +20,8 @@ class SessionUpdateNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
+    public const ON_THE_WAY = 'on_the_way';
+
     public const STARTED = 'started';
 
     public const QR_READY = 'qr_ready';
@@ -78,6 +80,7 @@ class SessionUpdateNotification extends Notification implements ShouldQueue
         $title = "\"{$this->session->title}\"";
 
         return match ($this->kind) {
+            self::ON_THE_WAY => ['O técnico está a caminho', "{$title}: o técnico já saiu para o local."],
             self::STARTED => ['O serviço começou', "{$title} foi iniciado pelo técnico."],
             self::REMINDER => ['Lembrete do serviço', "{$title} é ".($this->detail === '1h' ? 'daqui a 1 hora' : 'amanhã').', às '.$this->session->scheduled_at->format('H:i')
                 .($this->session->modality === 'online' ? ' (online).' : ', em '.$this->session->neighborhood.'.')],

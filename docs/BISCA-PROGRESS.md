@@ -221,3 +221,13 @@ Respostas do cliente às dúvidas da Fase 1 (2026-10-29). Confirmado com o "ok":
   tudo ao técnico no fim.
 - Limite conhecido: um reembolso por disputa é pedido ao gateway (simulado) sobre a cobrança original; com o gateway
   real, os reembolsos de adendas pagas terão de ser repartidos pelas cobranças (Fase 3).
+
+### Notas do passo 8
+
+- Execução com o estado único: o técnico marca **a caminho** (`POST /sessions/{id}/on-the-way`, opcional; o cliente é
+  avisado por push), **em execução** (`/start`) e **concluído** (`/finish`, mostra o QR). O cliente confirma pelo QR,
+  pelo código ou sem QR (o QR é opcional, como decidido). Concluído → pago.
+- Sem resposta do cliente em 48 h e sem disputa: confirmação automática (regra R2), com o histórico a registar o
+  sistema como autor. Com disputa aberta não há confirmação automática.
+- Ecrãs da PWA: botão "Estou a caminho", orçamento (diagnóstico, formulário, resposta), trabalho extra (adendas) e a
+  fase de cada estado; o ecrã do pedido mostra "tentar de novo" e o formulário da categoria.

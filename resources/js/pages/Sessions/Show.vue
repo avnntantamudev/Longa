@@ -275,9 +275,13 @@ onMounted(load);
 
             <!-- Serviço agendado -->
             <template v-else-if="phase === 'scheduled'">
+                <p v-if="session.state === 'on_the_way'" class="font-semibold">{{ isProvider ? 'A caminho do local' : 'O técnico está a caminho' }}</p>
                 <p class="text-caption text-ink-muted">
                     {{ isProvider ? 'Inicie o serviço quando chegar (a partir de 15 minutos antes).' : 'O técnico inicia o serviço quando chegar.' }}
                 </p>
+                <button v-if="has('on_the_way')" class="btn-outline w-full" :disabled="busy !== null" @click="run('on_the_way', 'on-the-way', undefined, 'O cliente foi avisado de que está a caminho.')">
+                    {{ busy === 'on_the_way' ? 'A avisar…' : 'Estou a caminho' }}
+                </button>
                 <button v-if="has('start')" class="btn-primary w-full" :disabled="busy !== null" @click="startLesson">
                     {{ busy === 'start' ? 'A iniciar…' : 'Iniciar serviço' }}
                 </button>

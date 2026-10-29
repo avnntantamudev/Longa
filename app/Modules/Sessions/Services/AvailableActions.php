@@ -39,7 +39,7 @@ class AvailableActions
         $actions = match ($session->state) {
             RequestState::Accepted => $session->awaitingPayment()
                 ? ['pay' => ! $isProvider && ($session->payment_due_at?->isFuture() ?? false)]
-                : $beforeStart,
+                : [...$beforeStart, 'on_the_way' => $isProvider],
             RequestState::OnTheWay => $beforeStart,
             RequestState::Diagnosing => ['send_quote' => $isProvider],
             RequestState::QuoteSent => ['answer_quote' => ! $isProvider],

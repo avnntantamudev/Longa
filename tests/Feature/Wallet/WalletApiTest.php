@@ -90,7 +90,7 @@ it('linha do tempo e ações disponíveis do serviço', function () {
 
     $this->travelTo($session->scheduled_at);
     apiLogin($session->provider->user);
-    $this->getJson("/api/v1/sessions/{$session->id}")->assertJsonPath('data.actions', ['start', 'cancel']);
+    $this->getJson("/api/v1/sessions/{$session->id}")->assertJsonPath('data.actions', ['start', 'cancel', 'on_the_way']);
     app(StartSession::class)->handle($session, $session->provider->user);
     app(FinishSession::class)->handle($session, $session->provider->user);
 

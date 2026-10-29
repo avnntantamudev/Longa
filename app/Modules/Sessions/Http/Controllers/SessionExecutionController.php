@@ -10,6 +10,7 @@ use App\Modules\Sessions\Actions\CancelSession;
 use App\Modules\Sessions\Actions\ConfirmSession;
 use App\Modules\Sessions\Actions\ConfirmWithoutQr;
 use App\Modules\Sessions\Actions\FinishSession;
+use App\Modules\Sessions\Actions\MarkOnTheWay;
 use App\Modules\Sessions\Actions\ReportNoShow;
 use App\Modules\Sessions\Actions\StartSession;
 use App\Modules\Sessions\Http\Requests\ConfirmSessionRequest;
@@ -110,6 +111,16 @@ class SessionExecutionController extends Controller
         $data = $request->validate(['reason' => ['nullable', 'string', 'max:255']]);
 
         return $this->resource($action->handle($session, $this->user($request), $data['reason'] ?? null));
+    }
+
+    /**
+     * Marcar "a caminho" (técnico). O cliente é avisado.
+     */
+    public function onTheWay(Request $request, ServiceRequest $session, MarkOnTheWay $action): SessionResource
+    {
+        Gate::authorize('actAsProvider', $session);
+
+        return $this->resource($action->handle($session, $this->user($request)));
     }
 
     /**

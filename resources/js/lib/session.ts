@@ -17,7 +17,8 @@ export type SessionAction =
     | 'diagnosis'
     | 'send_quote'
     | 'answer_quote'
-    | 'addendum';
+    | 'addendum'
+    | 'on_the_way';
 
 /** Adenda ao orçamento (GET /sessions/{id}/addenda) */
 export interface Addendum {

@@ -17,6 +17,7 @@ Route::middleware(['auth:sanctum', 'auth.session', 'onboarded'])->group(function
     Route::get('messages/{message}/attachment', [SessionController::class, 'attachmentLink'])->name('api.messages.attachment');
 
     // Execução do serviço (Fase 3)
+    Route::post('sessions/{session}/on-the-way', [SessionExecutionController::class, 'onTheWay'])->middleware('throttle:20,1')->name('api.sessions.on-the-way');
     Route::post('sessions/{session}/start', [SessionExecutionController::class, 'start'])->name('api.sessions.start');
     Route::post('sessions/{session}/finish', [SessionExecutionController::class, 'finish'])->middleware('throttle:20,1')->name('api.sessions.finish');
     Route::post('sessions/{session}/qr', [SessionExecutionController::class, 'qr'])->middleware('throttle:30,1')->name('api.sessions.qr');

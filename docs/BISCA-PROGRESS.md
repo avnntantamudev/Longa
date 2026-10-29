@@ -100,7 +100,7 @@ Migração `2026_10_28_000002_create_generic_service_model` (reversível):
 - **Rotas:** `/legal/termos` e `/legal/privacidade` são páginas públicas; `GET /api/v1/legal/{terms|privacy}`,
   `GET /api/v1/me/legal` e `POST /api/v1/me/legal/accept`.
 
-## Fase 2 — Estado: EM CURSO (plano aprovado a 2026-10-29)
+## Fase 2 — Estado: CONCLUÍDA (à espera de validação para a Fase 3; relatório em docs/BISCA-FASE2-RELATORIO.md)
 
 Respostas do cliente às dúvidas da Fase 1 (2026-10-29). Confirmado com o "ok": 1 h é o tempo total de procura
 (cerca de 12 min por ronda); nas aulas o cliente indica um preço máximo por hora e só recebe técnicos dentro dele.
@@ -231,3 +231,8 @@ Respostas do cliente às dúvidas da Fase 1 (2026-10-29). Confirmado com o "ok":
   sistema como autor. Com disputa aberta não há confirmação automática.
 - Ecrãs da PWA: botão "Estou a caminho", orçamento (diagnóstico, formulário, resposta), trabalho extra (adendas) e a
   fase de cada estado; o ecrã do pedido mostra "tentar de novo" e o formulário da categoria.
+
+### Notas do passo 9
+
+- `tests/Feature/Flows/BiscaFlowsTest.php`: fluxo completo de preço fixo, fluxo completo por orçamento com adenda e
+  corrida entre dois técnicos pelo mesmo pedido. Relatório da fase: `docs/BISCA-FASE2-RELATORIO.md`.

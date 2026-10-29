@@ -8,8 +8,8 @@ use App\Modules\Payments\Contracts\PaymentProvider;
 use App\Modules\Payments\Jobs\ExecuteRefund;
 use App\Modules\Payments\Models\EscrowHold;
 use App\Modules\Payments\Models\PaymentCharge;
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Requests\Services\Commission;
-use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Users\Models\User;
 use App\Modules\Wallet\Ledger\Accounts;
 use App\Modules\Wallet\Ledger\LedgerException;
@@ -37,10 +37,10 @@ class EscrowService
         private readonly AuditLogger $audit,
     ) {}
 
-    public function hold(ServiceJob $session, PaymentCharge $charge): EscrowHold
+    public function hold(ServiceRequest $session, PaymentCharge $charge): EscrowHold
     {
         return DB::transaction(function () use ($session, $charge) {
-            $existing = EscrowHold::query()->where('service_job_id', $session->id)->lockForUpdate()->first();
+            $existing = EscrowHold::query()->where('service_request_id', $session->id)->lockForUpdate()->first();
             if ($existing !== null) {
                 return $existing;
             }
@@ -51,7 +51,7 @@ class EscrowService
             ], $session, ['charge_id' => $charge->id, 'reference' => $charge->external_reference]);
 
             $hold = EscrowHold::query()->create([
-                'service_job_id' => $session->id,
+                'service_request_id' => $session->id,
                 'client_id' => $session->client_id,
                 'provider_profile_id' => $session->provider_profile_id,
                 'amount' => $session->amount,
@@ -78,11 +78,11 @@ class EscrowService
      * @param  EscrowHold::RELEASED|EscrowHold::REFUNDED|EscrowHold::PARTIALLY_REFUNDED  $outcome
      * @param  array<string, mixed>  $metadata
      */
-    public function settle(ServiceJob $session, int $providerGross, string $outcome, string $reason, ?User $actor = null, array $metadata = []): EscrowHold
+    public function settle(ServiceRequest $session, int $providerGross, string $outcome, string $reason, ?User $actor = null, array $metadata = []): EscrowHold
     {
         $hold = DB::transaction(function () use ($session, $providerGross, $outcome, $reason, $actor, $metadata) {
             /** @var EscrowHold $hold */
-            $hold = EscrowHold::query()->where('service_job_id', $session->id)->lockForUpdate()->firstOrFail();
+            $hold = EscrowHold::query()->where('service_request_id', $session->id)->lockForUpdate()->firstOrFail();
 
             // Idempotência: já liquidado com o mesmo destino
             if (! $hold->isActive()) {
@@ -141,9 +141,9 @@ class EscrowService
         return $hold;
     }
 
-    public function markDisputed(ServiceJob $session): void
+    public function markDisputed(ServiceRequest $session): void
     {
-        EscrowHold::query()->where('service_job_id', $session->id)->where('state', EscrowHold::HELD)->update(['state' => EscrowHold::DISPUTED]);
+        EscrowHold::query()->where('service_request_id', $session->id)->where('state', EscrowHold::HELD)->update(['state' => EscrowHold::DISPUTED]);
     }
 
     /**
@@ -158,7 +158,7 @@ class EscrowService
             return;
         }
 
-        $charge = PaymentCharge::query()->where('service_job_id', $hold->service_job_id)->where('kind', 'charge')->where('status', 'succeeded')->first();
+        $charge = PaymentCharge::query()->where('service_request_id', $hold->service_request_id)->where('kind', 'charge')->where('status', 'succeeded')->first();
         if ($charge === null) {
             Log::error('escrow.refund_without_charge', ['hold_id' => $hold->id]);
 
@@ -168,7 +168,7 @@ class EscrowService
         $result = $this->gateway->refund((string) $charge->external_reference, $hold->refunded_amount, $key);
 
         PaymentCharge::query()->updateOrCreate(['idempotency_key' => $key], [
-            'service_job_id' => $hold->service_job_id,
+            'service_request_id' => $hold->service_request_id,
             'client_id' => $hold->client_id,
             'gateway' => $this->gateway->name(),
             'method' => $charge->method,

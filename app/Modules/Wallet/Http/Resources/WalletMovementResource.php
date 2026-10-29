@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Wallet\Http\Resources;
 
-use App\Modules\Sessions\Models\ServiceJob;
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Wallet\Models\LedgerEntry;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -29,7 +29,7 @@ class WalletMovementResource extends JsonResource
             'type' => $tx->type,
             'label' => self::label($tx->type),
             'amount' => $this->amount,
-            'session_id' => $tx->reference_type === ServiceJob::class ? $tx->reference_id : null,
+            'session_id' => $tx->reference_type === ServiceRequest::class ? $tx->reference_id : null,
             'created_at' => $this->created_at->toIso8601String(),
         ];
     }

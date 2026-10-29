@@ -10,9 +10,7 @@ use App\Modules\Requests\Events\RequestMatched;
 use App\Modules\Requests\Models\RequestOffer;
 use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Requests\Services\Commission;
-use App\Modules\Sessions\Enums\SessionState;
 use App\Modules\Sessions\Models\Conversation;
-use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Sessions\Services\SessionLifecycle;
 use App\Support\Api\ApiException;
 use App\Support\Audit\AuditLogger;
@@ -26,12 +24,12 @@ use Illuminate\Support\Facades\DB;
  *  1. lock em Redis por pedido (reduz a disputa na BD quando muitos técnicos carregam ao mesmo tempo);
  *  2. SELECT … FOR UPDATE na linha do pedido (serializa as aceitações do mesmo pedido entre processos);
  *  3. verifica o estado do pedido e da oferta e o prazo (decidido pelo servidor);
- *  4. cria o serviço e a conversa, aceita a oferta, marca as outras como "lost", pedido → "matched";
- *  5. serviço eletrónica fica em pending_payment (o cliente paga na janela de pagamento e o valor vai para o
- *     escrow); serviço em dinheiro fica logo agendado.
+ *  4. aceita a oferta, marca as outras como "lost", pedido → "accepted" com o técnico e a comissão dele, cria a conversa;
+ *  5. pagamento digital fica à espera (payment_status = pending, o cliente paga na janela de pagamento e o valor vai
+ *     para o escrow); em dinheiro não há pagamento antecipado.
  *
- * Idempotente: se o mesmo técnico repetir o pedido depois de ganhar, recebe o mesmo serviço.
- * Últimas barreiras na BD: índice único de oferta aceite por pedido e de serviço por pedido.
+ * Idempotente: se o mesmo técnico repetir o pedido depois de ganhar, recebe o mesmo pedido.
+ * Última barreira na BD: índice único de oferta aceite por pedido.
  */
 class AcceptOffer
 {
@@ -41,7 +39,7 @@ class AcceptOffer
 
     public function __construct(private readonly SessionLifecycle $lifecycle, private readonly AuditLogger $audit) {}
 
-    public function handle(RequestOffer $offer): ServiceJob
+    public function handle(RequestOffer $offer): ServiceRequest
     {
         try {
             return Cache::lock('accept:request:'.$offer->service_request_id, self::LOCK_SECONDS)
@@ -51,7 +49,7 @@ class AcceptOffer
         }
     }
 
-    private function accept(RequestOffer $offer): ServiceJob
+    private function accept(RequestOffer $offer): ServiceRequest
     {
         $result = DB::transaction(function () use ($offer): array {
             /** @var ServiceRequest $request */
@@ -59,38 +57,15 @@ class AcceptOffer
             /** @var RequestOffer $offer */
             $offer = RequestOffer::query()->lockForUpdate()->findOrFail($offer->id);
 
-            // Idempotência: este técnico já ganhou este serviço
+            // Idempotência: este técnico já ganhou este pedido
             if ($offer->state === OfferState::Accepted) {
-                return ['session' => ServiceJob::query()->where('service_request_id', $request->id)->firstOrFail(), 'new' => false];
+                return ['request' => $request, 'new' => false];
             }
 
             $this->ensureCanAccept($request, $offer);
 
-            // Comissão do técnico que aceita (reduzida se for VIP), fixada neste serviço
+            // Comissão do técnico que aceita (reduzida se for VIP), fixada neste pedido
             $split = Commission::splitFor($request->amount, $offer->provider_profile_id);
-
-            $session = ServiceJob::query()->create([
-                'service_request_id' => $request->id,
-                'client_id' => $request->client_id,
-                'provider_profile_id' => $offer->provider_profile_id,
-                'category_id' => $request->category_id,
-                'title' => $request->title,
-                'amount' => $request->amount,
-                'commission' => $split['commission'],
-                'provider_net' => $split['provider_net'],
-                'commission_percent' => $split['percent'],
-                'scheduled_at' => $request->scheduled_at,
-                'duration_minutes' => $request->duration_minutes,
-                'ends_at' => $request->scheduled_at->copy()->addMinutes($request->duration_minutes),
-                'payment_method' => $request->payment_method,
-                'modality' => $request->modality,
-                'province' => $request->province,
-                'municipality' => $request->municipality,
-                'neighborhood' => $request->neighborhood,
-                'latitude' => $request->latitude,
-                'longitude' => $request->longitude,
-            ]);
-            Conversation::query()->create(['service_job_id' => $session->id]);
 
             $offer->transitionTo(OfferState::Accepted, ['responded_at' => now()]);
 
@@ -103,37 +78,41 @@ class AcceptOffer
                 $loser->transitionTo(OfferState::Lost, ['responded_at' => now()]);
             }
 
+            $cash = $request->isCash();
             $request->by($offer->provider->user_id)->transitionTo(RequestState::Accepted, [
                 'matched_at' => now(),
-                'assigned_provider_profile_id' => $offer->provider_profile_id,
+                'provider_profile_id' => $offer->provider_profile_id,
                 'next_wave_at' => null,
+                'commission' => $split['commission'],
+                'provider_net' => $split['provider_net'],
+                'commission_percent' => $split['percent'],
+                // Pagamento digital: o cliente paga na janela de pagamento e o valor fica retido (escrow)
+                'payment_status' => $cash ? null : ServiceRequest::PAYMENT_PENDING,
+                'payment_due_at' => $cash ? null : now()->addMinutes((int) config('longa.session_rules.payment_window_minutes')),
             ]);
+            Conversation::query()->create(['service_request_id' => $request->id]);
 
-            if ($session->isCash()) {
-                $this->lifecycle->record($session, 'scheduled', null, ['payment_method' => 'cash'], null, SessionState::Scheduled);
+            if ($cash) {
+                $this->lifecycle->record($request, 'scheduled', null, ['payment_method' => 'cash']);
             } else {
-                $session->forceFill([
-                    'state' => SessionState::PendingPayment,
-                    'payment_due_at' => now()->addMinutes((int) config('longa.session_rules.payment_window_minutes')),
-                ])->save();
-                $this->lifecycle->record($session, 'payment_requested', null, ['amount' => $session->amount, 'due_at' => $session->payment_due_at?->toIso8601String()], null, SessionState::PendingPayment);
+                $this->lifecycle->record($request, 'payment_requested', null, ['amount' => $request->amount, 'due_at' => $request->payment_due_at?->toIso8601String()]);
             }
 
-            RequestMatched::dispatch($request, $session, $losers->map(fn (RequestOffer $o) => $o->provider->user_id)->values()->all());
+            RequestMatched::dispatch($request, $losers->map(fn (RequestOffer $o) => $o->provider->user_id)->values()->all());
 
-            return ['session' => $session, 'new' => true];
+            return ['request' => $request, 'new' => true];
         });
 
         if ($result['new']) {
-            $this->audit->record('requests.offer_accepted', $result['session'], ['offer_id' => $offer->id]);
+            $this->audit->record('requests.offer_accepted', $result['request'], ['offer_id' => $offer->id]);
         }
 
-        return $result['session'];
+        return $result['request'];
     }
 
     private function ensureCanAccept(ServiceRequest $request, RequestOffer $offer): void
     {
-        if ($request->state === RequestState::Accepted) {
+        if ($request->provider_profile_id !== null) {
             throw new ApiException('request_already_matched', 'Outro técnico aceitou este pedido primeiro.', 409);
         }
 

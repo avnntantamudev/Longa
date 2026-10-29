@@ -3,17 +3,17 @@
 declare(strict_types=1);
 
 use App\Modules\Payments\Actions\ConfirmCashPayment;
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Sessions\Actions\ConfirmSession;
 use App\Modules\Sessions\Actions\FinishSession;
 use App\Modules\Sessions\Actions\StartSession;
-use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Users\Enums\Role;
 use App\Modules\Users\Models\User;
 use Illuminate\Support\Facades\Cache;
 
 beforeEach(fn () => Cache::flush());
 
-function completeWithQr(ServiceJob $session): void
+function completeWithQr(ServiceRequest $session): void
 {
     test()->travelTo($session->scheduled_at);
     app(StartSession::class)->handle($session, $session->provider->user);
@@ -86,7 +86,7 @@ it('linha do tempo e ações disponíveis do serviço', function () {
     $session = paidSession();
     apiLogin($session->client);
     $this->getJson("/api/v1/sessions/{$session->id}")->assertJsonPath('data.actions', ['cancel'])
-        ->assertJsonPath('data.state_label', 'Agendada');
+        ->assertJsonPath('data.state_label', 'Aceite');
 
     $this->travelTo($session->scheduled_at);
     apiLogin($session->provider->user);
@@ -94,7 +94,7 @@ it('linha do tempo e ações disponíveis do serviço', function () {
     app(StartSession::class)->handle($session, $session->provider->user);
     app(FinishSession::class)->handle($session, $session->provider->user);
 
-    $this->getJson("/api/v1/sessions/{$session->id}")->assertJsonPath('data.actions', ['show_qr']);
+    $this->getJson("/api/v1/sessions/{$session->id}")->assertJsonPath('data.actions', ['show_qr', 'dispute']);
     apiLogin($session->client);
     $this->getJson("/api/v1/sessions/{$session->id}")->assertJsonPath('data.actions', ['confirm', 'confirm_without_qr', 'dispute']);
 

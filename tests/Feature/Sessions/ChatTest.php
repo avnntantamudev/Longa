@@ -2,10 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Sessions\Events\MessageSent;
-use App\Modules\Sessions\Models\Conversation;
-use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Users\Enums\Role;
 use App\Modules\Users\Models\ProviderProfile;
 use App\Modules\Users\Models\User;
@@ -17,14 +14,7 @@ beforeEach(function () {
     Storage::fake('local');
     $this->client = User::factory()->withRole(Role::Client)->create();
     $this->provider = ProviderProfile::factory()->verified()->create();
-    $request = ServiceRequest::factory()->create(['client_id' => $this->client->id]);
-    $this->session = ServiceJob::query()->create([
-        'service_request_id' => $request->id, 'client_id' => $this->client->id, 'provider_profile_id' => $this->provider->id,
-        'category_id' => $request->category_id, 'title' => 'Serviço de SGME', 'amount' => 25000, 'commission' => 3750, 'provider_net' => 21250,
-        'scheduled_at' => now()->addDay(), 'modality' => 'in_person', 'municipality' => 'Talatona', 'neighborhood' => 'Talatona',
-        'latitude' => -8.9167, 'longitude' => 13.1833,
-    ]);
-    Conversation::query()->create(['service_job_id' => $this->session->id]);
+    $this->session = acceptedSession('electronic', ['client_id' => $this->client->id, 'provider_profile_id' => $this->provider->id]);
 });
 
 it('troca mensagens de texto em tempo real entre cliente e técnico', function () {

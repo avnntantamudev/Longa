@@ -5,18 +5,18 @@ declare(strict_types=1);
 namespace App\Modules\Sessions\Http\Resources;
 
 use App\Modules\Payments\Services\VipSubscriptions;
-use App\Modules\Sessions\Models\ServiceJob;
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Sessions\Services\AvailableActions;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * Serviço vista por um dos participantes. Depois da aceitação:
+ * Execução do pedido vista por um dos participantes (o serviço é o próprio pedido). Depois da aceitação:
  *  - o cliente vê os dados públicos completos do técnico (sem contactos: a comunicação é pelo chat);
  *  - o técnico vê o nome do cliente e o local exato.
  * Os valores mostram ao técnico quanto recebe (valor − comissão).
  *
- * @mixin ServiceJob
+ * @mixin ServiceRequest
  */
 class SessionResource extends JsonResource
 {
@@ -33,7 +33,7 @@ class SessionResource extends JsonResource
             'state' => $this->state->value,
             'state_label' => $this->state->label(),
             'actions' => app(AvailableActions::class)->for($this->resource, $isProvider),
-            'request_id' => $this->service_request_id,
+            'request_id' => $this->id,
             'title' => $this->title,
             'category' => $this->category->name,
             'scheduled_at' => $this->scheduled_at->toIso8601String(),
@@ -46,11 +46,13 @@ class SessionResource extends JsonResource
             'duration_minutes' => $this->duration_minutes,
             'ends_at' => $this->ends_at?->toIso8601String(),
             'payment_method' => $this->payment_method,
+            'payment_status' => $this->payment_status,
             'payment_due_at' => $this->payment_due_at?->toIso8601String(),
+            'closed_reason' => $this->closed_reason,
             'started_at' => $this->started_at?->toIso8601String(),
             'ended_at' => $this->ended_at?->toIso8601String(),
             'confirmed_at' => $this->confirmed_at?->toIso8601String(),
-            'confirmation_deadline' => $this->awaiting_since?->copy()->addHours((int) config('longa.session_rules.confirmation_window_hours'))->toIso8601String(),
+            'confirmation_deadline' => $this->completed_at?->copy()->addHours((int) config('longa.session_rules.confirmation_window_hours'))->toIso8601String(),
             'no_show_contest_until' => $this->no_show_contest_until?->toIso8601String(),
             'cash_confirmed_at' => $this->cash_confirmed_at?->toIso8601String(),
             'amount' => $this->amount,

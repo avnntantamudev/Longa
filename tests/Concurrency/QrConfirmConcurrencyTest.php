@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 use App\Modules\Payments\Models\EscrowHold;
+use App\Modules\Requests\Enums\RequestState;
 use App\Modules\Sessions\Actions\FinishSession;
 use App\Modules\Sessions\Actions\StartSession;
-use App\Modules\Sessions\Enums\SessionState;
 use App\Modules\Wallet\Ledger\Accounts;
 use App\Modules\Wallet\Ledger\LedgerService;
 use App\Modules\Wallet\Models\LedgerTransaction;
@@ -40,11 +40,11 @@ it('duas ou mais leituras simultâneas do mesmo QR libertam o dinheiro uma únic
     }, $processes);
 
     expect(array_column($results, 'ok'))->toBe(array_fill(0, 6, true), json_encode($results))
-        ->and(array_unique(array_column($results, 'state')))->toBe(['completed']);
+        ->and(array_unique(array_column($results, 'state')))->toBe(['paid']);
 
     expect(LedgerTransaction::query()->where('type', 'escrow_release')->count())->toBe(1)
         ->and(app(LedgerService::class)->balanceFromEntries(Accounts::providerAvailable($session->provider_profile_id)))->toBe(21250)
         ->and(app(LedgerService::class)->balanceFromEntries(Accounts::ESCROW))->toBe(0)
         ->and(EscrowHold::query()->sole()->state)->toBe('released')
-        ->and($session->fresh()?->state)->toBe(SessionState::Completed);
+        ->and($session->fresh()?->state)->toBe(RequestState::Paid);
 });

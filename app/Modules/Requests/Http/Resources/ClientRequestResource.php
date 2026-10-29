@@ -42,7 +42,8 @@ class ClientRequestResource extends JsonResource
             'wave' => $this->wave,
             // Quantos técnicos estão a ver a oferta agora (sem dizer quem)
             'open_offers' => $this->offers()->whereIn('state', OfferState::open())->where('expires_at', '>', now())->count(),
-            'session_id' => $this->session?->id,
+            // O serviço é o próprio pedido: a execução abre-se pelo mesmo id depois de um técnico aceitar
+            'session_id' => $this->provider_profile_id !== null ? $this->id : null,
             'cancel_reason' => $this->cancel_reason,
             'republished_from_id' => $this->republished_from_id,
             'created_at' => $this->created_at->toIso8601String(),

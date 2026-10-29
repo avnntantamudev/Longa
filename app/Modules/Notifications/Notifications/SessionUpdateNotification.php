@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Notifications\Notifications;
 
-use App\Modules\Sessions\Models\ServiceJob;
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Users\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -32,7 +32,7 @@ class SessionUpdateNotification extends Notification implements ShouldQueue
 
     public const DISPUTE_RESOLVED = 'dispute_resolved';
 
-    public function __construct(public readonly ServiceJob $session, public readonly string $kind, public readonly ?string $detail = null)
+    public function __construct(public readonly ServiceRequest $session, public readonly string $kind, public readonly ?string $detail = null)
     {
         $this->onQueue('notifications');
     }

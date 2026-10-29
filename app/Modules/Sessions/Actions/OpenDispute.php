@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace App\Modules\Sessions\Actions;
 
 use App\Modules\Payments\Services\EscrowService;
-use App\Modules\Sessions\Enums\SessionState;
+use App\Modules\Requests\Enums\RequestState;
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Sessions\Events\DisputeOpened;
 use App\Modules\Sessions\Models\Dispute;
 use App\Modules\Sessions\Models\DisputeAttachment;
-use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Sessions\Services\SessionLifecycle;
 use App\Modules\Users\Models\User;
 use App\Support\Api\ApiException;
@@ -34,7 +34,7 @@ class OpenDispute
     /**
      * @param  list<UploadedFile>  $files
      */
-    public function handle(ServiceJob $session, User $user, string $reason, string $description, array $files = []): Dispute
+    public function handle(ServiceRequest $session, User $user, string $reason, string $description, array $files = []): Dispute
     {
         $paths = [];
         foreach ($files as $file) {
@@ -47,8 +47,8 @@ class OpenDispute
         }
 
         return DB::transaction(function () use ($session, $user, $reason, $description, $paths) {
-            /** @var ServiceJob $locked */
-            $locked = ServiceJob::query()->lockForUpdate()->findOrFail($session->id);
+            /** @var ServiceRequest $locked */
+            $locked = ServiceRequest::query()->lockForUpdate()->findOrFail($session->id);
 
             $existing = $locked->disputes()->where('status', Dispute::OPEN)->first();
             if ($existing !== null) {
@@ -58,7 +58,7 @@ class OpenDispute
             $this->ensureAllowed($locked, $user);
 
             $dispute = Dispute::query()->create([
-                'service_job_id' => $locked->id,
+                'service_request_id' => $locked->id,
                 'opened_by' => $user->id,
                 'reason' => $reason,
                 'description' => $description,
@@ -68,7 +68,11 @@ class OpenDispute
                 DisputeAttachment::query()->create([...$attachment, 'dispute_id' => $dispute->id, 'uploaded_by' => $user->id]);
             }
 
-            $this->lifecycle->transition($locked, SessionState::Disputed, 'dispute_opened', $user, ['dispute_id' => $dispute->id, 'reason' => $reason]);
+            if ($locked->state === RequestState::Cancelled) {
+                $this->lifecycle->record($locked, 'dispute_opened', $user, ['dispute_id' => $dispute->id, 'reason' => $reason, 'contest' => $locked->closed_reason]);
+            } else {
+                $this->lifecycle->transition($locked, RequestState::Disputed, 'dispute_opened', $user, ['dispute_id' => $dispute->id, 'reason' => $reason]);
+            }
             $this->escrow->markDisputed($locked);
 
             DisputeOpened::dispatch($locked);
@@ -78,16 +82,20 @@ class OpenDispute
         });
     }
 
-    private function ensureAllowed(ServiceJob $session, User $user): void
+    private function ensureAllowed(ServiceRequest $session, User $user): void
     {
         $isClient = $session->client_id === $user->id;
         $isProvider = $session->provider->user_id === $user->id;
 
+        $contestOpen = $session->no_show_contest_until?->isFuture() ?? false;
         $allowed = match ($session->state) {
-            SessionState::AwaitingConfirmation => $isClient,
+            RequestState::InProgress, RequestState::Completed => $isClient || $isProvider,
             // Contestar a falta: a parte acusada, dentro do prazo
-            SessionState::NoShowProvider => $isProvider && $session->no_show_contest_until?->isFuture(),
-            SessionState::NoShowClient => $isClient && $session->no_show_contest_until?->isFuture(),
+            RequestState::Cancelled => match ($session->closed_reason) {
+                'no_show_provider' => $isProvider && $contestOpen,
+                'no_show_client' => $isClient && $contestOpen,
+                default => false,
+            },
             default => false,
         };
 

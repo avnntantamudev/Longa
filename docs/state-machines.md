@@ -78,46 +78,38 @@ stateDiagram-v2
 - Uma coluna gerada `accepted_request_id` com índice único garante, na própria BD, **no máximo uma oferta `accepted` por pedido**; `training_sessions.training_request_id` também é único.
 - Recusar (`declined`) e deixar expirar (`expired`) registam um `score_event`.
 
-## Aula (`training_sessions.state`)
+## Execução do pedido (o serviço é o próprio pedido)
 
-```mermaid
-stateDiagram-v2
-    [*] --> pending_payment : formador aceita (pagamento eletrónico)
-    [*] --> scheduled : formador aceita (pagamento em dinheiro)
-    pending_payment --> scheduled : pagamento confirmado → escrow
-    pending_payment --> payment_failed : falhou ou 10 min sem pagar (R3)
-    scheduled --> in_progress : formador inicia
-    scheduled --> cancelled_by_student
-    scheduled --> cancelled_by_trainer
-    scheduled --> no_show_trainer : aluno reporta (≥ 15 min após o início)
-    scheduled --> no_show_student : formador reporta (≥ 30 min após o início)
-    scheduled --> awaiting_confirmation : R1 (nunca iniciada)
-    in_progress --> awaiting_confirmation : "Terminar aula e mostrar QR" ou R2
-    awaiting_confirmation --> completed : aluno lê o QR / código / confirma
-    awaiting_confirmation --> disputed : aluno disputa
-    awaiting_confirmation --> refunded : R1 sem resposta do aluno
-    no_show_trainer --> disputed : formador contesta (24 h)
-    no_show_student --> disputed : aluno contesta (24 h)
-    disputed --> completed : admin liberta
-    disputed --> refunded : admin reembolsa tudo
-    disputed --> partially_refunded : admin reembolsa parte
-```
+Desde a Fase 2 não há tabela de aulas/trabalhos: a execução fica no pedido (`service_requests`), com o estado único
+acima. Detalhes que não são estados:
 
-- Todas as transições passam por `SessionLifecycle::transition()`, que grava um `session_event` (de, para,
-  ator, metadados) na mesma transação. Ninguém (API, job ou admin) consegue uma transição fora do diagrama.
-- Estados finais: `payment_failed`, `completed`, `cancelled_by_student`, `cancelled_by_trainer`, `refunded`,
-  `partially_refunded`. As faltas ficam em aberto 24 h para contestação; sem contestação são liquidadas pelo job.
-- O fim previsto (`ends_at`) = início + `duration_minutes` (por defeito 60). Conflitos de horário no matching:
-  aulas em `pending_payment`, `scheduled` ou `in_progress` que se sobreponham, com 30 min de folga.
+- **`payment_status`** (pagamento digital): `pending` depois de aceite e até o cliente pagar (janela de 10 min),
+  `held` quando o valor está retido (escrow), `failed` quando o prazo acabou ou o pagamento foi recusado. Em
+  dinheiro fica `null`. O técnico só pode iniciar sem pagamento pendente.
+- **`closed_reason`** (porque terminou sem pagamento normal): `payment_failed`, `cancelled_by_client`,
+  `cancelled_by_provider`, `no_show_provider`, `no_show_client`, `not_started`, `refunded`.
+- Cada transição passa por `SessionLifecycle::transition()`: grava o histórico do pedido (quem, evento) e um
+  `session_event` com os detalhes (QR, pagamento, sinais de risco), na mesma transação.
+- `ends_at` = início + `duration_minutes`. Conflitos de horário no despacho: pedidos do técnico em
+  `RequestState::occupying()` (aceite até em execução) que se sobreponham, com 30 min de folga.
+
+| Ação | De | Para |
+|---|---|---|
+| Técnico inicia | `accepted` / `on_the_way` / `quote_accepted` | (`on_the_way` →) `in_progress` |
+| Técnico conclui e mostra o QR | `in_progress` | `completed` (começa a janela de confirmação) |
+| Cliente lê o QR, o código ou confirma sem QR | `completed` (ou `in_progress`, que passa a `completed`) | `paid` |
+| Cliente ou técnico cancela antes de começar | `accepted` / `on_the_way` | `cancelled` (`cancelled_by_*`), com a política de reembolso |
+| Reportar falta | `accepted` / `on_the_way` | `cancelled` (`no_show_*`), dinheiro retido até ao fim do prazo de contestação |
 
 ### Regras automáticas (config `longa.session_rules`)
 
-| Regra | Quando | Efeito | Risco aluno / formador |
-|---|---|---|---|
-| R1 | Aula ainda `scheduled` 2 h após o fim previsto | → `awaiting_confirmation` (não iniciada); 48 h para o aluno confirmar ou disputar; sem resposta → `refunded` (100%) | baixo / perde se esquecer de iniciar e o aluno não confirmar |
-| R2 | Aula `in_progress` 2 h após o fim previsto (sem QR) | → `awaiting_confirmation`; 48 h para o aluno confirmar ou disputar; sem resposta → `completed` e libertação | perde se esquecer de responder (lembretes às 24 h e 47 h) / baixo |
-| R3 | `pending_payment` há 10 min | → `payment_failed`; formador libertado | — / perde a oferta |
-| R4 | Falta reportada | a outra parte tem 24 h para contestar (→ `disputed`); sem contestação, liquidação conforme a política | falsas acusações → disputa |
+| Regra | Quando | Efeito |
+|---|---|---|
+| R1 | Ainda `accepted`/`on_the_way` 2 h após o fim previsto | → `cancelled` (`not_started`); o técnico pode contestar em 24 h; sem contestação, reembolso total |
+| R2 | `in_progress` 2 h após o fim previsto (sem QR) | → `completed`; 48 h para o cliente confirmar ou disputar; sem resposta → `paid` e libertação |
+| R3 | Pagamento `pending` com o prazo vencido | → `cancelled` (`payment_failed`); técnico libertado |
+| R4 | Falta reportada (ou R1) | 24 h para contestar (abre disputa); sem contestação, liquidação conforme a política |
+| R5 | Dinheiro: `paid` sem confirmação do pagamento em mão em 48 h | assume-se pago e regista-se a comissão em dívida |
 
 ## Ondas do matching
 
@@ -144,16 +136,16 @@ sequenceDiagram
 
 | Quem abre | Quando | Efeito |
 |---|---|---|
-| Aluno | aula em `awaiting_confirmation` | aula → `disputed`, retenção → `disputed` |
-| Parte acusada de faltar | `no_show_*` e dentro de `no_show_contest_until` (24 h) | idem |
+| Cliente ou técnico | pedido `in_progress` ou `completed` | pedido → `disputed`, retenção → `disputed` |
+| Parte acusada de faltar (ou técnico em `not_started`) | pedido `cancelled` por falta e dentro de `no_show_contest_until` (24 h) | o pedido fica `cancelled`; a disputa retém o dinheiro até à decisão |
 
-- Uma só disputa aberta por aula (repetir devolve a mesma). As regras automáticas (R1–R5) ignoram aulas `disputed`.
+- Uma só disputa aberta por pedido (repetir devolve a mesma). As regras automáticas ignoram pedidos com disputa.
 - Evidências: até 5 ficheiros JPG/PNG/WebP/PDF de 5 MB cada (tipo verificado pelo conteúdo), no disco privado;
-  acesso por link assinado de 10 minutos, só participantes e admin.
+  acesso por link assinado de 10 minutos, só participantes e equipa.
 - Decisão só pelo admin (`POST /api/v1/admin/disputes/{id}/resolve`, nota obrigatória, auditada):
-  `released` → `completed`, `refunded` → `refunded`, `partially_refunded` (parte do formador entre 1 Kz e valor − 1) →
-  `partially_refunded`. Disputa e aula são bloqueadas (`FOR UPDATE`); uma segunda decisão diferente recebe 409
-  `dispute_already_resolved` e não move dinheiro. A liquidação usa a chave de ledger `escrow:settle:session:{id}`.
+  `released` → `paid`, `partially_refunded` (parte do técnico entre 1 Kz e valor − 1) → `paid`, `refunded` →
+  `cancelled` (`refunded`). Numa contestação de falta só se move o dinheiro. Disputa e pedido são bloqueados
+  (`FOR UPDATE`); uma segunda decisão diferente recebe 409 `dispute_already_resolved` e não move dinheiro.
 
 ## Pedidos para outro dia (agendados)
 

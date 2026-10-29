@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 use App\Modules\Payments\Actions\ConfirmCashPayment;
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Sessions\Actions\ConfirmSession;
 use App\Modules\Sessions\Actions\FinishSession;
 use App\Modules\Sessions\Actions\StartSession;
-use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Users\Enums\Role;
 use App\Modules\Users\Models\User;
 use App\Modules\Wallet\Ledger\Accounts;
@@ -16,7 +16,7 @@ use App\Modules\Wallet\Models\LedgerTransaction;
 /**
  * Leva o serviço até "concluído por QR" com as Actions (sem HTTP).
  */
-function completeByQr(ServiceJob $session): ServiceJob
+function completeByQr(ServiceRequest $session): ServiceRequest
 {
     test()->travelTo($session->scheduled_at->copy()->addMinutes(5));
     app(StartSession::class)->handle($session, $session->provider->user);

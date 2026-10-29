@@ -31,14 +31,14 @@ class CompanyServicesReport
         $to = $to->copy()->endOfDay();
 
         $base = DB::table('company_employees as ce')
-            ->join('service_jobs as s', 's.client_id', '=', 'ce.user_id')
+            ->join('service_requests as s', 's.client_id', '=', 'ce.user_id')
             ->join('categories as k', 'k.id', '=', 's.category_id')
             ->join('provider_profiles as tp', 'tp.id', '=', 's.provider_profile_id')
             ->join('users as tu', 'tu.id', '=', 'tp.user_id')
             ->where('ce.company_id', $company->id)
             ->where('ce.consent_status', 'accepted')
             ->whereNotNull('ce.user_id')
-            ->where('s.state', 'completed')
+            ->where('s.state', 'paid')
             ->whereBetween('s.scheduled_at', [$from, $to]);
 
         $lessons = (clone $base)

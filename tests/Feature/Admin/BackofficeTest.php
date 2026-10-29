@@ -7,10 +7,10 @@ use App\Modules\Admin\Filament\Resources\Disputes\Pages\ListDisputes;
 use App\Modules\Admin\Filament\Resources\Disputes\Pages\ViewDispute;
 use App\Modules\Admin\Filament\Resources\Reconciliations\Pages\ListLedgerReconciliations;
 use App\Modules\Payments\Services\CommissionDebts;
+use App\Modules\Requests\Enums\RequestState;
 use App\Modules\Sessions\Actions\FinishSession;
 use App\Modules\Sessions\Actions\OpenDispute;
 use App\Modules\Sessions\Actions\StartSession;
-use App\Modules\Sessions\Enums\SessionState;
 use App\Modules\Sessions\Models\Dispute;
 use App\Modules\Users\Enums\Role;
 use App\Modules\Users\Models\User;
@@ -79,7 +79,7 @@ it('decidir exige nota e a palavra CONFIRMAR; depois move o dinheiro uma vez', f
         ->assertHasNoActionErrors();
 
     expect($dispute->fresh()?->resolution)->toBe('released')
-        ->and($dispute->session->fresh()?->state)->toBe(SessionState::Completed)
+        ->and($dispute->session->fresh()?->state)->toBe(RequestState::Paid)
         ->and(balances($dispute->session)['provider'])->toBe(21250);
 
     Livewire::test(ViewDispute::class, ['record' => $dispute->getRouteKey()])->assertActionHidden('refund');

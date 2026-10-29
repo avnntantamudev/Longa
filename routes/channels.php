@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use App\Modules\Requests\Models\ServiceRequest;
-use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Users\Models\User;
 use Illuminate\Support\Facades\Broadcast;
 
@@ -22,7 +21,7 @@ Broadcast::channel('request.{requestId}', function (User $user, int $requestId) 
 
 // Serviço: chat entre o cliente e o técnico do serviço
 Broadcast::channel('session.{sessionId}', function (User $user, int $sessionId) {
-    return ServiceJob::query()
+    return ServiceRequest::query()
         ->whereKey($sessionId)
         ->where(fn ($q) => $q->where('client_id', $user->id)->orWhereHas('provider', fn ($t) => $t->where('user_id', $user->id)))
         ->exists();

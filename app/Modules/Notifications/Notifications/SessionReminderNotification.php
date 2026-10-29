@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Notifications\Notifications;
 
-use App\Modules\Sessions\Models\ServiceJob;
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Users\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -19,7 +19,7 @@ class SessionReminderNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    public function __construct(public readonly ServiceJob $session, public readonly int $hoursLeft)
+    public function __construct(public readonly ServiceRequest $session, public readonly int $hoursLeft)
     {
         $this->onQueue('notifications');
     }

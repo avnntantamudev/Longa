@@ -64,7 +64,7 @@ it('o relatório de operação conta serviços por estado e técnicos ativos', f
 
     $report = app(OperationsReport::class)->build(now()->subDays(3), now()->addDays(3));
 
-    expect($report['sessions']['by_state'])->toMatchArray(['completed' => 1, 'cancelled_by_client' => 1])
+    expect($report['sessions']['by_state'])->toMatchArray(['paid' => 1, 'cancelled' => 1])
         ->and($report['top_providers'][0]['lessons'])->toBe(1)
         ->and($report['top_providers'][0]['net'])->toBe(21250);
 });

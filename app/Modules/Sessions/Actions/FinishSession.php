@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Modules\Sessions\Actions;
 
 use App\Modules\Qr\Services\QrTokenService;
-use App\Modules\Sessions\Enums\SessionState;
+use App\Modules\Requests\Enums\RequestState;
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Sessions\Events\QrIssued;
-use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Sessions\Services\SessionLifecycle;
 use App\Modules\Users\Models\User;
 use App\Support\Api\ApiException;
@@ -22,20 +22,20 @@ class FinishSession
     public function __construct(private readonly SessionLifecycle $lifecycle, private readonly QrTokenService $qr) {}
 
     /**
-     * @return array{session: ServiceJob, qr: array{batch_id: string, rotation_seconds: int, tokens: list<array{token: string, code: string, valid_from: string, expires_at: string}>}}
+     * @return array{session: ServiceRequest, qr: array{batch_id: string, rotation_seconds: int, tokens: list<array{token: string, code: string, valid_from: string, expires_at: string}>}}
      */
-    public function handle(ServiceJob $session, User $provider): array
+    public function handle(ServiceRequest $session, User $provider): array
     {
         return DB::transaction(function () use ($session, $provider) {
-            /** @var ServiceJob $locked */
-            $locked = ServiceJob::query()->lockForUpdate()->findOrFail($session->id);
+            /** @var ServiceRequest $locked */
+            $locked = ServiceRequest::query()->lockForUpdate()->findOrFail($session->id);
 
-            if ($locked->state === SessionState::InProgress) {
-                $this->lifecycle->transition($locked, SessionState::AwaitingConfirmation, 'finished', $provider, [], [
+            if ($locked->state === RequestState::InProgress) {
+                $this->lifecycle->transition($locked, RequestState::Completed, 'finished', $provider, [], [
                     'ended_at' => now(),
-                    'awaiting_since' => now(),
+                    'completed_at' => now(),
                 ]);
-            } elseif ($locked->state !== SessionState::AwaitingConfirmation) {
+            } elseif ($locked->state !== RequestState::Completed) {
                 throw new ApiException('session_not_finishable', 'Inicie o serviço antes de mostrar o QR.', 409);
             }
 

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Payments\Models\EscrowHold;
 use App\Modules\Payments\Models\PaymentCharge;
-use App\Modules\Sessions\Enums\SessionState;
+use App\Modules\Requests\Enums\RequestState;
 use App\Modules\Sessions\Models\SessionEvent;
 use App\Modules\Users\Models\User;
 use App\Modules\Wallet\Ledger\Accounts;
@@ -20,7 +20,7 @@ it('o cliente paga: o valor fica em escrow e o serviço fica agendado', function
     $session = acceptedSession();
     apiLogin($session->client);
 
-    pay($session->id)->assertOk()->assertJsonPath('data.state', 'scheduled');
+    pay($session->id)->assertOk()->assertJsonPath('data.state', 'accepted')->assertJsonPath('data.payment_status', 'held');
 
     $ledger = app(LedgerService::class);
     expect($ledger->balance(Accounts::ESCROW))->toBe(25000)
@@ -50,7 +50,7 @@ it('pagamento recusado: o serviço passa a payment_failed e nada entra no ledger
 
     pay($session->id)->assertStatus(402)->assertJsonPath('error.code', 'payment_failed');
 
-    expect($session->fresh()?->state)->toBe(SessionState::PaymentFailed)
+    expect($session->fresh()?->state)->toBe(RequestState::Cancelled)
         ->and(LedgerTransaction::query()->count())->toBe(0);
 });
 
@@ -63,7 +63,7 @@ it('fora da janela de pagamento: recusa e a regra R3 liberta o técnico', functi
 
     $this->artisan('longa:sessions:tick')->assertSuccessful();
 
-    expect($session->fresh()?->state)->toBe(SessionState::PaymentFailed)
+    expect($session->fresh()?->state)->toBe(RequestState::Cancelled)
         ->and(SessionEvent::query()->where('type', 'payment_window_expired')->exists())->toBeTrue();
 });
 

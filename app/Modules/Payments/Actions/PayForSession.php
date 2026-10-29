@@ -9,8 +9,8 @@ use App\Modules\Payments\Models\EscrowHold;
 use App\Modules\Payments\Models\PaymentCharge;
 use App\Modules\Payments\Services\EscrowService;
 use App\Modules\Payments\Support\ProviderResult;
-use App\Modules\Sessions\Enums\SessionState;
-use App\Modules\Sessions\Models\ServiceJob;
+use App\Modules\Requests\Enums\RequestState;
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Sessions\Services\SessionLifecycle;
 use App\Modules\Users\Models\User;
 use App\Support\Api\ApiException;
@@ -36,17 +36,17 @@ class PayForSession
         private readonly AuditLogger $audit,
     ) {}
 
-    public function handle(ServiceJob $session, User $client, string $method): ServiceJob
+    public function handle(ServiceRequest $session, User $client, string $method): ServiceRequest
     {
         if ($session->isCash()) {
             throw new ApiException('cash_session', 'Este serviço é pago em dinheiro ao técnico.', 409);
         }
 
-        if (EscrowHold::query()->where('service_job_id', $session->id)->exists()) {
+        if (EscrowHold::query()->where('service_request_id', $session->id)->exists()) {
             return $session->refresh();
         }
 
-        if ($session->state !== SessionState::PendingPayment) {
+        if (! $session->awaitingPayment()) {
             throw new ApiException('payment_not_expected', 'Este serviço já não está à espera de pagamento.', 409);
         }
 
@@ -68,12 +68,14 @@ class PayForSession
         }
 
         $locked = DB::transaction(function () use ($session, $client, $charge) {
-            /** @var ServiceJob $locked */
-            $locked = ServiceJob::query()->lockForUpdate()->findOrFail($session->id);
+            /** @var ServiceRequest $locked */
+            $locked = ServiceRequest::query()->lockForUpdate()->findOrFail($session->id);
 
             if ($charge->status === ProviderResult::FAILED) {
-                if ($locked->state === SessionState::PendingPayment) {
-                    $this->lifecycle->transition($locked, SessionState::PaymentFailed, 'payment_failed', $client, ['reason' => $charge->failure_reason]);
+                if ($locked->awaitingPayment()) {
+                    $this->lifecycle->transition($locked, RequestState::Cancelled, 'payment_failed', $client, ['reason' => $charge->failure_reason], [
+                        'payment_status' => ServiceRequest::PAYMENT_FAILED, 'closed_reason' => 'payment_failed', 'cancelled_at' => now(),
+                    ]);
                 }
 
                 return $locked;
@@ -86,8 +88,9 @@ class PayForSession
 
             $this->escrow->hold($locked, $charge);
 
-            if ($locked->state === SessionState::PendingPayment) {
-                $this->lifecycle->transition($locked, SessionState::Scheduled, 'payment_confirmed', $client, [
+            if ($locked->awaitingPayment()) {
+                $locked->forceFill(['payment_status' => ServiceRequest::PAYMENT_HELD])->save();
+                $this->lifecycle->record($locked, 'payment_confirmed', $client, [
                     'charge_id' => $charge->id, 'amount' => $charge->amount, 'method' => $charge->method,
                 ]);
             }
@@ -97,7 +100,7 @@ class PayForSession
             return $locked;
         });
 
-        // Fora da transação: a passagem a payment_failed fica gravada antes de responder com o erro
+        // Fora da transação: o cancelamento por pagamento recusado fica gravado antes de responder com o erro
         if ($charge->status === ProviderResult::FAILED) {
             throw new ApiException('payment_failed', 'O pagamento não foi aceite: '.($charge->failure_reason ?? 'tente outro meio.'), 402);
         }
@@ -105,7 +108,7 @@ class PayForSession
         return $locked;
     }
 
-    private function registerCharge(ServiceJob $session, User $client, string $method, string $key): PaymentCharge
+    private function registerCharge(ServiceRequest $session, User $client, string $method, string $key): PaymentCharge
     {
         $existing = PaymentCharge::query()->where('idempotency_key', $key)->first();
 
@@ -121,7 +124,7 @@ class PayForSession
 
         try {
             return PaymentCharge::query()->create([
-                'service_job_id' => $session->id,
+                'service_request_id' => $session->id,
                 'client_id' => $client->id,
                 'gateway' => $this->gateway->name(),
                 'method' => $method,

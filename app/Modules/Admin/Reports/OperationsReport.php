@@ -24,16 +24,17 @@ class OperationsReport
         $byState = (clone $requests)->selectRaw('state, COUNT(*) as n')->groupBy('state')->pluck('n', 'state')->map(fn ($n) => (int) $n);
         $total = (int) $byState->sum();
         // Aceite = teve técnico atribuído (o pedido seguiu para os estados de execução)
-        $matched = (int) (clone $requests)->whereNotNull('assigned_provider_profile_id')->count();
+        $matched = (int) (clone $requests)->whereNotNull('provider_profile_id')->count();
 
         $avgSeconds = DB::table('service_requests as r')
-            ->join('service_jobs as s', 's.service_request_id', '=', 'r.id')
+            ->whereNotNull('r.matched_at')
             ->whereBetween('r.created_at', [$from, $to])
             ->where('r.scheduled', false)
-            ->selectRaw('AVG(TIMESTAMPDIFF(SECOND, r.created_at, s.created_at)) as avg')
+            ->selectRaw('AVG(TIMESTAMPDIFF(SECOND, r.created_at, r.matched_at)) as avg')
             ->value('avg');
 
-        $sessions = DB::table('service_jobs')->whereBetween('scheduled_at', [$from, $to]);
+        // Serviços: pedidos com técnico atribuído, pela data marcada
+        $sessions = DB::table('service_requests')->whereNotNull('provider_profile_id')->whereBetween('scheduled_at', [$from, $to]);
         $sessionStates = (clone $sessions)->selectRaw('state, COUNT(*) as n')->groupBy('state')->pluck('n', 'state')->map(fn ($n) => (int) $n);
 
         $disputes = DB::table('disputes')->whereBetween('created_at', [$from, $to]);
@@ -54,7 +55,7 @@ class OperationsReport
                 'total' => (int) $sessionStates->sum(),
                 'by_state' => $sessionStates->all(),
                 'late_cancellations' => (int) DB::table('session_events as ev')
-                    ->join('service_jobs as s', 's.id', '=', 'ev.service_job_id')
+                    ->join('service_requests as s', 's.id', '=', 'ev.service_request_id')
                     ->whereBetween('s.scheduled_at', [$from, $to])
                     ->where('ev.type', 'cancelled')
                     ->whereRaw("JSON_EXTRACT(ev.metadata, '$.late') = true")
@@ -68,24 +69,24 @@ class OperationsReport
             'by_category' => DB::table('service_requests as r')
                 ->join('categories as k', 'k.id', '=', 'r.category_id')
                 ->whereBetween('r.created_at', [$from, $to])
-                ->selectRaw('k.name, COUNT(*) as requests, SUM(r.assigned_provider_profile_id IS NOT NULL) as matched')
+                ->selectRaw('k.name, COUNT(*) as requests, SUM(r.provider_profile_id IS NOT NULL) as matched')
                 ->groupBy('k.name')->orderByDesc('requests')->limit(15)->get()
                 ->map(fn ($r) => ['name' => (string) $r->name, 'requests' => (int) $r->requests, 'matched' => (int) $r->matched])->all(),
             'by_place' => DB::table('service_requests')
                 ->whereBetween('created_at', [$from, $to])
-                ->selectRaw('province, municipality, COUNT(*) as requests, SUM(assigned_provider_profile_id IS NOT NULL) as matched')
+                ->selectRaw('province, municipality, COUNT(*) as requests, SUM(provider_profile_id IS NOT NULL) as matched')
                 ->groupBy('province', 'municipality')->orderByDesc('requests')->limit(20)->get()
                 ->map(fn ($r) => ['province' => (string) $r->province, 'municipality' => (string) $r->municipality, 'requests' => (int) $r->requests, 'matched' => (int) $r->matched])->all(),
-            'top_providers' => DB::table('service_jobs as s')
+            'top_providers' => DB::table('service_requests as s')
                 ->join('provider_profiles as tp', 'tp.id', '=', 's.provider_profile_id')
                 ->join('users as u', 'u.id', '=', 'tp.user_id')
-                ->whereBetween('s.scheduled_at', [$from, $to])->where('s.state', 'completed')
+                ->whereBetween('s.scheduled_at', [$from, $to])->where('s.state', 'paid')
                 ->selectRaw('u.name, COUNT(*) as lessons, SUM(s.provider_net) as net')
                 ->groupBy('u.id', 'u.name')->orderByDesc('lessons')->limit(10)->get()
                 ->map(fn ($r) => ['name' => (string) $r->name, 'lessons' => (int) $r->lessons, 'net' => (int) $r->net])->all(),
-            'top_clients' => DB::table('service_jobs as s')
+            'top_clients' => DB::table('service_requests as s')
                 ->join('users as u', 'u.id', '=', 's.client_id')
-                ->whereBetween('s.scheduled_at', [$from, $to])->where('s.state', 'completed')
+                ->whereBetween('s.scheduled_at', [$from, $to])->where('s.state', 'paid')
                 ->selectRaw('u.name, COUNT(*) as lessons, SUM(s.amount) as spent')
                 ->groupBy('u.id', 'u.name')->orderByDesc('lessons')->limit(10)->get()
                 ->map(fn ($r) => ['name' => (string) $r->name, 'lessons' => (int) $r->lessons, 'spent' => (int) $r->spent])->all(),

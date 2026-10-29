@@ -1,3 +1,5 @@
+import type { RequestState } from '@/lib/requestState';
+
 /**
  * Tipos e textos da execução do serviço (espelham SessionResource e AvailableActions no servidor).
  */
@@ -15,7 +17,7 @@ export type SessionAction =
 
 export interface Session {
     id: number;
-    state: string;
+    state: RequestState;
     state_label: string;
     actions: SessionAction[];
     title: string;
@@ -24,7 +26,9 @@ export interface Session {
     ends_at: string | null;
     duration_minutes: number;
     payment_method: 'electronic' | 'cash';
+    payment_status: 'pending' | 'held' | 'failed' | null;
     payment_due_at: string | null;
+    closed_reason: string | null;
     started_at: string | null;
     ended_at: string | null;
     confirmed_at: string | null;
@@ -66,11 +70,50 @@ export interface SessionEventItem {
     created_at: string;
 }
 
+/**
+ * Fase da execução no ecrã, a partir do estado único do pedido, do pagamento e do motivo de cancelamento.
+ */
+export type SessionPhase =
+    | 'pending_payment'
+    | 'payment_failed'
+    | 'scheduled'
+    | 'in_progress'
+    | 'awaiting_confirmation'
+    | 'completed'
+    | 'no_show_provider'
+    | 'no_show_client'
+    | 'disputed'
+    | 'cancelled'
+    | 'other';
+
+export function sessionPhase(s: Pick<Session, 'state' | 'payment_status' | 'closed_reason'>): SessionPhase {
+    switch (s.state) {
+        case 'accepted':
+            return s.payment_status === 'pending' ? 'pending_payment' : 'scheduled';
+        case 'on_the_way':
+            return 'scheduled';
+        case 'in_progress':
+            return 'in_progress';
+        case 'completed':
+            return 'awaiting_confirmation';
+        case 'paid':
+            return 'completed';
+        case 'disputed':
+            return 'disputed';
+        case 'cancelled':
+            if (s.closed_reason === 'payment_failed') return 'payment_failed';
+            if (s.closed_reason === 'no_show_provider' || s.closed_reason === 'no_show_client') return s.closed_reason;
+            return 'cancelled';
+        default:
+            return 'other';
+    }
+}
+
 /** Badge por estado (classes do kit) */
-export function stateBadge(state: string): string {
-    if (['completed'].includes(state)) return 'badge-success';
-    if (['disputed', 'no_show_provider', 'no_show_client', 'payment_failed'].includes(state)) return 'badge-warning';
-    if (['pending_payment', 'awaiting_confirmation', 'in_progress'].includes(state)) return 'badge-brand';
+export function stateBadge(state: RequestState): string {
+    if (state === 'paid') return 'badge-success';
+    if (state === 'disputed' || state === 'cancelled') return 'badge-warning';
+    if (['accepted', 'on_the_way', 'in_progress', 'completed'].includes(state)) return 'badge-brand';
     return 'badge-neutral';
 }
 
@@ -80,6 +123,9 @@ export function eventLabel(type: string): string {
         payment_requested: 'Pagamento pedido',
         payment_confirmed: 'Pagamento recebido (retido pelo BISCA)',
         payment_failed: 'Pagamento falhou',
+        payment_window_expired: 'Prazo de pagamento terminou',
+        on_the_way: 'Técnico a caminho',
+        auto_not_started: 'Cancelado: o serviço não foi iniciado',
         scheduled: 'Serviço agendado',
         started: 'Serviço iniciado',
         finished: 'Serviço terminado',

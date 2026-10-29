@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Modules\Sessions\Console;
 
+use App\Modules\Requests\Enums\RequestState;
 use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Requests\Services\Commission;
 use App\Modules\Sessions\Models\Conversation;
-use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Users\Enums\Role;
 use App\Modules\Users\Models\Category;
 use App\Modules\Users\Models\ProviderProfile;
@@ -43,19 +43,18 @@ class DemoLessonCommand extends Command
         $cash = (bool) $this->option('cash');
         $split = Commission::split((int) $this->option('amount'));
 
-        $request = ServiceRequest::factory()->create([
-            'client_id' => $client->id, 'category_id' => $category->id, 'amount' => $split['amount'],
-            'payment_method' => $cash ? 'cash' : 'electronic', 'duration_minutes' => 60,
-        ]);
-        $session = ServiceJob::query()->create([
-            'service_request_id' => $request->id, 'client_id' => $client->id, 'provider_profile_id' => $provider->id,
-            'category_id' => $category->id, 'title' => 'Serviço de demonstração', ...$split,
+        // Pedido já aceite pelo técnico de demonstração (o serviço é o próprio pedido)
+        $session = ServiceRequest::factory()->create([
+            'client_id' => $client->id, 'category_id' => $category->id, 'title' => 'Serviço de demonstração', ...$split,
             'scheduled_at' => now()->addMinutes(5), 'duration_minutes' => 60, 'payment_method' => $cash ? 'cash' : 'electronic',
-            'payment_due_at' => $cash ? null : now()->addMinutes((int) config('longa.session_rules.payment_window_minutes')),
             'modality' => 'in_person', 'municipality' => 'Talatona', 'neighborhood' => 'Talatona', 'latitude' => -8.9167, 'longitude' => 13.1833,
         ]);
-        $session->forceFill(['state' => $cash ? 'scheduled' : 'pending_payment'])->save();
-        Conversation::query()->create(['service_job_id' => $session->id]);
+        $session->forceFill([
+            'state' => RequestState::Accepted, 'provider_profile_id' => $provider->id, 'matched_at' => now(), 'commission_percent' => Commission::splitFor($split['amount'], $provider->id)['percent'],
+            'payment_status' => $cash ? null : ServiceRequest::PAYMENT_PENDING,
+            'payment_due_at' => $cash ? null : now()->addMinutes((int) config('longa.session_rules.payment_window_minutes')),
+        ])->save();
+        Conversation::query()->create(['service_request_id' => $session->id]);
 
         $this->info("Serviço #{$session->id} criado (".($cash ? 'em mão' : 'pagar em 10 minutos').').');
         $this->table(['Papel', 'Telefone', 'Abrir'], [

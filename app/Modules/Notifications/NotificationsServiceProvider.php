@@ -18,7 +18,6 @@ use App\Modules\Notifications\WhatsApp\WhatsAppProvider;
 use App\Modules\Requests\Events\OfferSent;
 use App\Modules\Requests\Events\RequestExpired;
 use App\Modules\Requests\Events\RequestMatched;
-use App\Modules\Sessions\Enums\SessionState;
 use App\Modules\Sessions\Events\DisputeOpened;
 use App\Modules\Sessions\Events\DisputeResolved;
 use App\Modules\Sessions\Events\QrIssued;
@@ -76,7 +75,7 @@ class NotificationsServiceProvider extends ServiceProvider
         });
 
         Event::listen(RequestMatched::class, function (RequestMatched $event) {
-            $event->request->client->notify(new RequestOutcomeNotification($event->request, RequestOutcomeNotification::MATCHED, $event->session->id));
+            $event->request->client->notify(new RequestOutcomeNotification($event->request, RequestOutcomeNotification::MATCHED, $event->request->id));
         });
 
         Event::listen(RequestExpired::class, function (RequestExpired $event) {
@@ -93,7 +92,7 @@ class NotificationsServiceProvider extends ServiceProvider
         });
         Event::listen(SessionConfirmed::class, fn (SessionConfirmed $e) => $e->session->provider->user->notify(new Update($e->session, Update::CONFIRMED)));
         Event::listen(SessionCancelled::class, function (SessionCancelled $e) {
-            $other = $e->session->state === SessionState::CancelledByClient ? $e->session->provider->user : $e->session->client;
+            $other = $e->session->closed_reason === 'cancelled_by_client' ? $e->session->provider->user : $e->session->client;
             $reason = $e->session->events()->where('type', 'cancelled')->latest('id')->first()?->metadata['reason'] ?? null;
             $other->notify(new Update($e->session, Update::CANCELLED, is_string($reason) ? $reason : null));
         });

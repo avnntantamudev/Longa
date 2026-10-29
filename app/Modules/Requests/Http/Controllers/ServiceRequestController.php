@@ -32,7 +32,7 @@ class ServiceRequestController extends Controller
     {
         $requests = ServiceRequest::query()
             ->where('client_id', $request->user()?->getAuthIdentifier())
-            ->with(['category', 'session'])
+            ->with(['category'])
             ->latest('id')
             ->paginate(20);
 
@@ -52,7 +52,7 @@ class ServiceRequestController extends Controller
 
         $created = $action->handle($user, $request->requestData());
 
-        return (new ClientRequestResource($created->load(['category', 'session'])))->response()->setStatusCode(201);
+        return (new ClientRequestResource($created->load(['category'])))->response()->setStatusCode(201);
     }
 
     /**
@@ -62,7 +62,7 @@ class ServiceRequestController extends Controller
     {
         Gate::authorize('view', $serviceRequest);
 
-        return new ClientRequestResource($serviceRequest->load(['category', 'session']));
+        return new ClientRequestResource($serviceRequest->load(['category']));
     }
 
     /**
@@ -76,7 +76,7 @@ class ServiceRequestController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        return new ClientRequestResource($action->handle($serviceRequest, $user, $data['reason'] ?? null)->load(['category', 'session']));
+        return new ClientRequestResource($action->handle($serviceRequest, $user, $data['reason'] ?? null)->load(['category']));
     }
 
     /**
@@ -94,6 +94,6 @@ class ServiceRequestController extends Controller
 
         $new = $action->handle($serviceRequest, $user, $request->validated('scheduled_at'), $amount === null ? null : (int) $amount);
 
-        return (new ClientRequestResource($new->load(['category', 'session'])))->response()->setStatusCode(201);
+        return (new ClientRequestResource($new->load(['category'])))->response()->setStatusCode(201);
     }
 }

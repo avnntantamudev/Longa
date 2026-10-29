@@ -2,83 +2,52 @@
 
 declare(strict_types=1);
 
+use App\Modules\Requests\Enums\RequestState;
 use App\Modules\Requests\Models\ServiceRequest;
-use App\Modules\Sessions\Enums\SessionState;
-use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Sessions\Models\SessionEvent;
 use App\Modules\Sessions\Services\SessionLifecycle;
-use App\Modules\Users\Models\ProviderProfile;
 use App\Support\StateMachine\InvalidTransition;
 
 /*
-| Matriz completa da máquina de estados do serviço (docs/state-machines.md).
+| Execução do pedido (o serviço é o próprio pedido): cada transição fica no histórico de estados (quem, evento) e
+| na linha do tempo (detalhes). A matriz completa das transições está em tests/Feature/Requests/StateMachineTest.php.
 */
 
-$allowed = [
-    'pending_payment' => ['scheduled', 'payment_failed'],
-    'payment_failed' => [],
-    'scheduled' => ['in_progress', 'cancelled_by_client', 'cancelled_by_provider', 'no_show_provider', 'no_show_client', 'awaiting_confirmation'],
-    'in_progress' => ['awaiting_confirmation'],
-    'awaiting_confirmation' => ['completed', 'disputed', 'refunded'],
-    'completed' => [],
-    'cancelled_by_client' => [],
-    'cancelled_by_provider' => [],
-    'no_show_provider' => ['disputed'],
-    'no_show_client' => ['disputed'],
-    'disputed' => ['completed', 'refunded', 'partially_refunded'],
-    'refunded' => [],
-    'partially_refunded' => [],
-];
-
-function makeSession(SessionState $state = SessionState::Scheduled): ServiceJob
+function makeSession(RequestState $state = RequestState::Accepted): ServiceRequest
 {
-    $request = ServiceRequest::factory()->create();
-    $session = ServiceJob::query()->create([
-        'service_request_id' => $request->id, 'client_id' => $request->client_id,
-        'provider_profile_id' => ProviderProfile::factory()->create()->id, 'category_id' => $request->category_id,
-        'title' => 'Serviço', 'amount' => 25000, 'commission' => 3750, 'provider_net' => 21250,
-        'scheduled_at' => now()->addDay(), 'duration_minutes' => 90, 'modality' => 'in_person',
-        'municipality' => 'Talatona', 'neighborhood' => 'Talatona', 'latitude' => -8.9167, 'longitude' => 13.1833,
-    ]);
+    $session = acceptedSession('cash', ['duration_minutes' => 90]);
     $session->forceFill(['state' => $state])->save();
 
     return $session;
 }
 
-it('define exatamente as transições documentadas', function () use ($allowed) {
-    expect(array_map(fn (SessionState $s) => $s->value, SessionState::cases()))->toEqualCanonicalizing(array_keys($allowed));
+it('cada transição grava o histórico do pedido e um evento na linha do tempo', function () {
+    $session = makeSession(RequestState::OnTheWay);
 
-    foreach (SessionState::cases() as $from) {
-        foreach (SessionState::cases() as $to) {
-            expect($from->canTransitionTo($to))->toBe(in_array($to->value, $allowed[$from->value], true), "{$from->value} → {$to->value}");
-        }
-    }
-});
+    app(SessionLifecycle::class)->transition($session, RequestState::InProgress, 'started', $session->provider->user, ['via' => 'teste'], ['started_at' => now()]);
 
-it('cada transição grava um evento na linha do tempo', function () {
-    $session = makeSession();
-
-    app(SessionLifecycle::class)->transition($session, SessionState::InProgress, 'started', $session->client, ['via' => 'teste'], ['started_at' => now()]);
-
-    $event = SessionEvent::query()->sole();
-    expect($session->fresh()?->state)->toBe(SessionState::InProgress)
+    $event = SessionEvent::query()->where('service_request_id', $session->id)->sole();
+    $transition = $session->transitions()->get()->last();
+    expect($session->fresh()?->state)->toBe(RequestState::InProgress)
         ->and($session->fresh()?->started_at)->not->toBeNull()
-        ->and($event->from_state)->toBe('scheduled')
-        ->and($event->to_state)->toBe('in_progress')
-        ->and($event->metadata)->toBe(['via' => 'teste']);
+        ->and([$event->from_state, $event->to_state, $event->metadata])->toBe(['on_the_way', 'in_progress', ['via' => 'teste']])
+        ->and([$transition?->to_state, $transition?->actor_id, $transition?->reason])->toBe([RequestState::InProgress, $session->provider->user_id, 'started']);
 });
 
-it('transições inválidas não mudam o estado nem gravam eventos', function (SessionState $from, SessionState $to) {
+it('transições inválidas não mudam o estado nem gravam eventos', function (RequestState $from, RequestState $to) {
     $session = makeSession($from);
+    $history = $session->transitions()->count();
 
     expect(fn () => app(SessionLifecycle::class)->transition($session, $to, 'x'))->toThrow(InvalidTransition::class);
-    expect($session->fresh()?->state)->toBe($from)->and(SessionEvent::query()->count())->toBe(0);
+    expect($session->fresh()?->state)->toBe($from)
+        ->and(SessionEvent::query()->where('service_request_id', $session->id)->count())->toBe(0)
+        ->and($session->transitions()->count())->toBe($history);
 })->with([
-    'concluída → em disputa' => [SessionState::Completed, SessionState::Disputed],
-    'agendada → concluída sem confirmação' => [SessionState::Scheduled, SessionState::Completed],
-    'em curso → cancelada' => [SessionState::InProgress, SessionState::CancelledByClient],
-    'pagamento pendente → em curso' => [SessionState::PendingPayment, SessionState::InProgress],
-    'reembolsada → concluída' => [SessionState::Refunded, SessionState::Completed],
+    'pago → em disputa' => [RequestState::Paid, RequestState::Disputed],
+    'aceite → concluído sem execução' => [RequestState::Accepted, RequestState::Completed],
+    'em execução → cancelado' => [RequestState::InProgress, RequestState::Cancelled],
+    'aceite → em execução sem ir a caminho' => [RequestState::Accepted, RequestState::InProgress],
+    'cancelado → pago' => [RequestState::Cancelled, RequestState::Paid],
 ]);
 
 it('a linha do tempo não aceita alterações', function () {

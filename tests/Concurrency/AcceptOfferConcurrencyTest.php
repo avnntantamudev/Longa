@@ -7,7 +7,6 @@ use App\Modules\Requests\Enums\OfferState;
 use App\Modules\Requests\Enums\RequestState;
 use App\Modules\Requests\Models\RequestOffer;
 use App\Modules\Requests\Models\ServiceRequest;
-use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Users\Models\Category;
 use App\Modules\Users\Models\ProviderProfile;
 use Database\Factories\ProviderProfileFactory;
@@ -73,7 +72,7 @@ it('só um técnico consegue o serviço quando vários aceitam ao mesmo tempo', 
     expect($winners)->toHaveCount(1, json_encode($results))
         ->and(array_unique(array_column($losers, 'code')))->toBe(['request_already_matched']);
 
-    expect(ServiceJob::query()->count())->toBe(1)
+    expect(ServiceRequest::query()->count())->toBe(1)
         ->and(RequestOffer::query()->where('state', OfferState::Accepted->value)->count())->toBe(1)
         ->and(RequestOffer::query()->where('state', OfferState::Lost->value)->count())->toBe(WORKERS - 1)
         ->and($this->request->fresh()?->state)->toBe(RequestState::Accepted);
@@ -86,5 +85,5 @@ it('é idempotente sob concorrência: o mesmo técnico a aceitar várias vezes r
 
     expect(array_column($results, 'ok'))->toBe([true, true, true, true, true])
         ->and(array_unique(array_column($results, 'session')))->toHaveCount(1)
-        ->and(ServiceJob::query()->count())->toBe(1);
+        ->and(ServiceRequest::query()->count())->toBe(1);
 });

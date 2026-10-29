@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use App\Modules\Payments\Models\EscrowHold;
 use App\Modules\Qr\Models\SessionQrToken;
-use App\Modules\Sessions\Enums\SessionState;
-use App\Modules\Sessions\Models\ServiceJob;
+use App\Modules\Requests\Enums\RequestState;
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Sessions\Models\SessionEvent;
 use App\Modules\Users\Models\User;
 use App\Modules\Wallet\Ledger\Accounts;
@@ -20,7 +20,7 @@ beforeEach(fn () => Cache::flush());
  *
  * @return list<array{token: string, code: string, valid_from: string, expires_at: string}>
  */
-function showQr(ServiceJob $session): array
+function showQr(ServiceRequest $session): array
 {
     test()->travelTo($session->scheduled_at->copy()->addMinutes(5));
     apiLogin($session->provider->user);
@@ -30,12 +30,12 @@ function showQr(ServiceJob $session): array
 
     return test()->postJson("/api/v1/sessions/{$session->id}/finish")
         ->assertOk()
-        ->assertJsonPath('data.state', 'awaiting_confirmation')
+        ->assertJsonPath('data.state', 'completed')
         ->assertHeader('Cache-Control', 'no-store, private')
         ->json('qr.tokens');
 }
 
-function confirmWith(ServiceJob $session, array $body, string $key = 'confirm-0001'): Illuminate\Testing\TestResponse
+function confirmWith(ServiceRequest $session, array $body, string $key = 'confirm-0001'): Illuminate\Testing\TestResponse
 {
     apiLogin($session->client);
 
@@ -52,7 +52,7 @@ it('o cliente lê o QR: serviço concluído e valor libertado para o técnico me
 
     confirmWith($session, ['token' => $tokens[0]['token']])
         ->assertOk()
-        ->assertJsonPath('data.state', 'completed')
+        ->assertJsonPath('data.state', 'paid')
         ->assertJsonPath('message', 'Serviço confirmado, Kz 25.000 libertados para o técnico.');
 
     $ledger = app(LedgerService::class);
@@ -60,7 +60,7 @@ it('o cliente lê o QR: serviço concluído e valor libertado para o técnico me
         ->and($ledger->balance(Accounts::providerAvailable($session->provider_profile_id)))->toBe(21250)
         ->and($ledger->balance(Accounts::PLATFORM_REVENUE))->toBe(3750)
         ->and(EscrowHold::query()->sole()->state)->toBe('released')
-        ->and(SessionEvent::query()->where('service_job_id', $session->id)->pluck('type')->all())
+        ->and(SessionEvent::query()->where('service_request_id', $session->id)->pluck('type')->all())
         ->toContain('started', 'finished', 'qr_issued', 'qr_scanned', 'confirmed');
 });
 
@@ -69,7 +69,7 @@ it('confirmar de novo devolve o mesmo resultado sem libertar o dinheiro outra ve
     $tokens = showQr($session);
 
     confirmWith($session, ['token' => $tokens[0]['token']], 'confirm-a-0001')->assertOk();
-    confirmWith($session, ['token' => $tokens[0]['token']], 'confirm-b-0002')->assertOk()->assertJsonPath('data.state', 'completed');
+    confirmWith($session, ['token' => $tokens[0]['token']], 'confirm-b-0002')->assertOk()->assertJsonPath('data.state', 'paid');
     confirmWith($session, ['code' => $tokens[1]['code']], 'confirm-c-0003')->assertOk();
 
     expect(LedgerTransaction::query()->where('type', 'escrow_release')->count())->toBe(1)
@@ -83,7 +83,7 @@ it('recusa um QR expirado', function () {
     $this->travel(46)->seconds(); // janela do 1.º token: 30 s + 15 s de margem
     confirmWith($session, ['token' => $tokens[0]['token']])->assertStatus(422)->assertJsonPath('error.code', 'qr_invalid');
 
-    expect($session->fresh()?->state)->toBe(SessionState::AwaitingConfirmation);
+    expect($session->fresh()?->state)->toBe(RequestState::Completed);
 });
 
 it('o QR roda: o token seguinte só vale na sua janela', function () {
@@ -93,14 +93,14 @@ it('o QR roda: o token seguinte só vale na sua janela', function () {
     confirmWith($session, ['token' => $tokens[1]['token']], 'confirm-early1')->assertStatus(422);
 
     $this->travel(31)->seconds();
-    confirmWith($session, ['token' => $tokens[1]['token']], 'confirm-ontime')->assertOk()->assertJsonPath('data.state', 'completed');
+    confirmWith($session, ['token' => $tokens[1]['token']], 'confirm-ontime')->assertOk()->assertJsonPath('data.state', 'paid');
 });
 
 it('aceita o código de 6 dígitos como alternativa ao QR', function () {
     $session = paidSession();
     $tokens = showQr($session);
 
-    confirmWith($session, ['code' => $tokens[0]['code']])->assertOk()->assertJsonPath('data.state', 'completed');
+    confirmWith($session, ['code' => $tokens[0]['code']])->assertOk()->assertJsonPath('data.state', 'paid');
     expect(SessionEvent::query()->where('type', 'confirmed')->sole()->metadata['method'])->toBe('code');
 });
 
@@ -126,7 +126,7 @@ it('só o cliente do serviço confirma: o técnico não se autoconfirma', functi
     apiLogin(User::factory()->create());
     $this->postJson("/api/v1/sessions/{$session->id}/confirm", ['token' => $tokens[0]['token']], ['Idempotency-Key' => 'other-confirm'])->assertForbidden();
 
-    expect($session->fresh()?->state)->toBe(SessionState::AwaitingConfirmation);
+    expect($session->fresh()?->state)->toBe(RequestState::Completed);
 });
 
 it('recusa a confirmação fora da janela de tempo', function () {
@@ -149,7 +149,7 @@ it('bloqueia após tentativas erradas, mesmo com o código certo', function () {
     }
 
     confirmWith($session, ['code' => $tokens[0]['code']], 'right-code-late')->assertStatus(429)->assertJsonPath('error.code', 'qr_locked');
-    expect(SessionQrToken::query()->where('service_job_id', $session->id)->sum('attempts'))->toBeGreaterThanOrEqual(5);
+    expect(SessionQrToken::query()->where('service_request_id', $session->id)->sum('attempts'))->toBeGreaterThanOrEqual(5);
 });
 
 it('regista sinal de risco se o cliente estiver longe do local, sem bloquear', function () {
@@ -179,5 +179,5 @@ it('não se inicia um serviço por pagar', function () {
     $this->travelTo($session->scheduled_at);
     apiLogin($session->provider->user);
 
-    $this->postJson("/api/v1/sessions/{$session->id}/start")->assertStatus(409)->assertJsonPath('error.code', 'session_not_startable');
+    $this->postJson("/api/v1/sessions/{$session->id}/start")->assertStatus(409)->assertJsonPath('error.code', 'payment_pending');
 });

@@ -8,11 +8,11 @@ use App\Modules\Notifications\Notifications\SessionReminderNotification;
 use App\Modules\Payments\Actions\ConfirmCashPayment;
 use App\Modules\Payments\Models\EscrowHold;
 use App\Modules\Payments\Services\SessionSettlement;
+use App\Modules\Requests\Enums\RequestState;
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Score\Models\ScoreEvent;
 use App\Modules\Score\Services\ScoreRecorder;
-use App\Modules\Sessions\Enums\SessionState;
 use App\Modules\Sessions\Events\SessionConfirmed;
-use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Sessions\Models\SessionEvent;
 use App\Support\StateMachine\InvalidTransition;
 use Closure;
@@ -24,6 +24,7 @@ use Throwable;
 /**
  * Regras automáticas do serviço, todas aqui e configuradas em config/longa.php → session_rules
  * (docs/state-machines.md). Corridas por `php artisan longa:sessions:tick` (scheduler, a cada minuto).
+ * Atuam sobre o estado único do pedido (os motivos de cancelamento ficam em closed_reason).
  * Cada regra é idempotente: bloqueia o serviço, volta a verificar o estado e usa transições condicionais.
  */
 class SessionTimeoutRules
@@ -36,6 +37,9 @@ class SessionTimeoutRules
         private readonly ConfirmCashPayment $confirmCash,
     ) {}
 
+    /** Motivos de cancelamento com prazo de contestação antes de mexer no dinheiro (R1 e R4) */
+    private const CONTESTABLE = ['no_show_provider', 'no_show_client', 'not_started'];
+
     /**
      * @return array<string, int> número de serviços afetados por regra
      */
@@ -43,44 +47,70 @@ class SessionTimeoutRules
     {
         return [
             'R3_payment_expired' => $this->expireUnpaid(),
-            'R1_not_started' => $this->moveToAwaiting(SessionState::Scheduled, 'not_started'),
-            'R2_no_qr' => $this->moveToAwaiting(SessionState::InProgress, 'no_qr'),
+            'R1_not_started' => $this->cancelNotStarted(),
+            'R2_no_qr' => $this->completeWithoutQr(),
             'reminders' => $this->remindPendingConfirmations(),
-            'R1R2_window_closed' => $this->closeConfirmationWindows(),
+            'R2_window_closed' => $this->closeConfirmationWindows(),
             'R4_no_show_settled' => $this->settleUncontestedNoShows(),
             'R5_cash_auto_confirmed' => $this->autoConfirmCash(),
         ];
     }
 
     /**
-     * R3: serviço à espera de pagamento com o prazo vencido → payment_failed (técnico libertado).
+     * R3: pedido aceite à espera do pagamento digital com o prazo vencido → cancelado (técnico libertado).
      */
     public function expireUnpaid(): int
     {
         return $this->each(
-            fn (Builder $q) => $q->where('state', SessionState::PendingPayment->value)->where('payment_due_at', '<=', now()),
-            function (ServiceJob $s) {
-                $this->lifecycle->transition($s, SessionState::PaymentFailed, 'payment_window_expired', null, ['rule' => 'R3']);
+            fn (Builder $q) => $q->where('state', RequestState::Accepted->value)
+                ->where('payment_status', ServiceRequest::PAYMENT_PENDING)
+                ->where('payment_due_at', '<=', now()),
+            function (ServiceRequest $s) {
+                $this->lifecycle->transition($s, RequestState::Cancelled, 'payment_window_expired', null, ['rule' => 'R3'], [
+                    'payment_status' => ServiceRequest::PAYMENT_FAILED, 'closed_reason' => 'payment_failed', 'cancelled_at' => now(),
+                ]);
             },
-            fn (ServiceJob $s) => $s->state === SessionState::PendingPayment,
+            fn (ServiceRequest $s) => $s->awaitingPayment(),
         );
     }
 
     /**
-     * R1 (nunca iniciada) e R2 (iniciada sem QR): N horas após o fim previsto → awaiting_confirmation.
+     * R1: o técnico nunca marcou o início e já passaram N horas do fim previsto → cancelado. O técnico pode
+     * contestar no prazo das faltas; sem contestação o cliente é reembolsado (R4).
      */
-    public function moveToAwaiting(SessionState $from, string $reason): int
+    public function cancelNotStarted(): int
     {
         $after = now()->subHours((int) config('longa.session_rules.auto_awaiting_after_end_hours'));
 
         return $this->each(
-            fn (Builder $q) => $q->where('state', $from->value)->where('ends_at', '<=', $after),
-            function (ServiceJob $s) use ($reason) {
-                $this->lifecycle->transition($s, SessionState::AwaitingConfirmation, 'auto_awaiting', null, [
-                    'rule' => $reason === 'not_started' ? 'R1' : 'R2', 'reason' => $reason,
-                ], ['awaiting_since' => now(), 'ended_at' => $s->ended_at ?? $s->ends_at]);
+            fn (Builder $q) => $q->whereIn('state', [RequestState::Accepted->value, RequestState::OnTheWay->value])
+                ->where(fn ($p) => $p->whereNull('payment_status')->orWhere('payment_status', ServiceRequest::PAYMENT_HELD))
+                ->where('ends_at', '<=', $after),
+            function (ServiceRequest $s) {
+                $contestUntil = now()->addHours((int) config('longa.session_rules.no_show_contest_hours'));
+                $this->lifecycle->transition($s, RequestState::Cancelled, 'auto_not_started', null, ['rule' => 'R1', 'contest_until' => $contestUntil->toIso8601String()], [
+                    'closed_reason' => 'not_started', 'no_show_contest_until' => $contestUntil, 'cancelled_at' => now(),
+                ]);
             },
-            fn (ServiceJob $s) => $s->state === $from,
+            fn (ServiceRequest $s) => in_array($s->state, [RequestState::Accepted, RequestState::OnTheWay], true) && ! $s->awaitingPayment(),
+        );
+    }
+
+    /**
+     * R2: iniciado e não concluído N horas após o fim previsto → concluído (começa a janela de confirmação).
+     */
+    public function completeWithoutQr(): int
+    {
+        $after = now()->subHours((int) config('longa.session_rules.auto_awaiting_after_end_hours'));
+
+        return $this->each(
+            fn (Builder $q) => $q->where('state', RequestState::InProgress->value)->where('ends_at', '<=', $after),
+            function (ServiceRequest $s) {
+                $this->lifecycle->transition($s, RequestState::Completed, 'auto_awaiting', null, ['rule' => 'R2', 'reason' => 'no_qr'], [
+                    'completed_at' => now(), 'ended_at' => $s->ended_at ?? $s->ends_at,
+                ]);
+            },
+            fn (ServiceRequest $s) => $s->state === RequestState::InProgress,
         );
     }
 
@@ -92,9 +122,9 @@ class SessionTimeoutRules
         $window = (int) config('longa.session_rules.confirmation_window_hours');
         $remindAt = now()->subHours(intdiv($window, 2));
 
-        $sessions = ServiceJob::query()
-            ->where('state', SessionState::AwaitingConfirmation->value)
-            ->where('awaiting_since', '<=', $remindAt)
+        $sessions = ServiceRequest::query()
+            ->where('state', RequestState::Completed->value)
+            ->where('completed_at', '<=', $remindAt)
             ->whereDoesntHave('events', fn ($q) => $q->where('type', 'reminder_sent'))
             ->with('client')
             ->limit(200)
@@ -109,53 +139,53 @@ class SessionTimeoutRules
     }
 
     /**
-     * Fim da janela de confirmação sem resposta do cliente:
-     *  - serviço nunca iniciado (R1) → refunded (reembolso total);
-     *  - serviço iniciado (R2) → completed (libertação para o técnico).
+     * Fim da janela de confirmação sem resposta nem disputa do cliente → pago (libertação para o técnico).
      */
     public function closeConfirmationWindows(): int
     {
         $before = now()->subHours((int) config('longa.session_rules.confirmation_window_hours'));
 
         return $this->each(
-            fn (Builder $q) => $q->where('state', SessionState::AwaitingConfirmation->value)->where('awaiting_since', '<=', $before),
-            function (ServiceJob $s) {
-                if ($s->started_at === null) {
-                    $this->lifecycle->transition($s, SessionState::Refunded, 'auto_refunded', null, ['rule' => 'R1', 'reason' => 'not_started_no_confirmation']);
-                    $this->settlement->split($s, 0, null, 'auto_not_started');
-                } else {
-                    $this->lifecycle->transition($s, SessionState::Completed, 'auto_completed', null, ['rule' => 'R2', 'reason' => 'no_dispute_in_window'], ['confirmed_at' => now()]);
-                    $this->settlement->complete($s, null, 'auto_no_dispute');
-                    SessionConfirmed::dispatch($s);
-                }
+            fn (Builder $q) => $q->where('state', RequestState::Completed->value)->where('completed_at', '<=', $before),
+            function (ServiceRequest $s) {
+                $this->lifecycle->transition($s, RequestState::Paid, 'auto_completed', null, ['rule' => 'R2', 'reason' => 'no_dispute_in_window'], ['confirmed_at' => now()]);
+                $this->settlement->complete($s, null, 'auto_no_dispute');
+                SessionConfirmed::dispatch($s);
             },
-            fn (ServiceJob $s) => $s->state === SessionState::AwaitingConfirmation,
+            fn (ServiceRequest $s) => $s->state === RequestState::Completed,
         );
     }
 
     /**
-     * R4: falta reportada sem contestação no prazo → liquidação conforme a política.
+     * R4 (e R1): falta ou serviço não iniciado sem contestação no prazo → liquidação conforme a política.
      */
     public function settleUncontestedNoShows(): int
     {
         return $this->each(
-            fn (Builder $q) => $q->whereIn('state', [SessionState::NoShowProvider->value, SessionState::NoShowClient->value])
+            fn (Builder $q) => $q->where('state', RequestState::Cancelled->value)
+                ->whereIn('closed_reason', self::CONTESTABLE)
                 ->where('no_show_contest_until', '<=', now())
+                ->whereDoesntHave('disputes')
                 ->whereDoesntHave('events', fn ($e) => $e->where('type', 'no_show_settled')),
-            function (ServiceJob $s) {
-                $providerFault = $s->state === SessionState::NoShowProvider;
-                $providerGross = $providerFault ? $this->policy->providerFault($s) : $this->policy->clientNoShow($s);
+            function (ServiceRequest $s) {
+                $providerFault = $s->closed_reason !== 'no_show_client';
+                $providerGross = match ($s->closed_reason) {
+                    'no_show_client' => $this->policy->clientNoShow($s),
+                    'no_show_provider' => $this->policy->providerFault($s),
+                    default => 0,
+                };
 
-                $this->lifecycle->record($s, 'no_show_settled', null, ['rule' => 'R4', 'provider_share' => $providerGross]);
-                if (! $s->isCash() && EscrowHold::query()->where('service_job_id', $s->id)->whereIn('state', EscrowHold::ACTIVE)->exists()) {
-                    $this->settlement->split($s, $providerGross, null, $providerFault ? 'no_show_provider' : 'no_show_client');
+                $this->lifecycle->record($s, 'no_show_settled', null, ['rule' => $s->closed_reason === 'not_started' ? 'R1' : 'R4', 'provider_share' => $providerGross]);
+                if (! $s->isCash() && EscrowHold::query()->where('service_request_id', $s->id)->whereIn('state', EscrowHold::ACTIVE)->exists()) {
+                    $this->settlement->split($s, $providerGross, null, (string) $s->closed_reason);
                 }
                 if ($providerFault) {
-                    $this->score->record($s->provider_profile_id, ScoreEvent::NO_SHOW, $s);
+                    $this->score->record((int) $s->provider_profile_id, ScoreEvent::NO_SHOW, $s);
                 }
             },
-            fn (ServiceJob $s) => in_array($s->state, [SessionState::NoShowProvider, SessionState::NoShowClient], true)
-                && ! SessionEvent::query()->where('service_job_id', $s->id)->where('type', 'no_show_settled')->exists(),
+            fn (ServiceRequest $s) => $s->state === RequestState::Cancelled && in_array($s->closed_reason, self::CONTESTABLE, true)
+                && ! $s->disputes()->exists()
+                && ! SessionEvent::query()->where('service_request_id', $s->id)->where('type', 'no_show_settled')->exists(),
         );
     }
 
@@ -166,8 +196,8 @@ class SessionTimeoutRules
     public function autoConfirmCash(): int
     {
         $before = now()->subHours((int) config('longa.session_rules.confirmation_window_hours'));
-        $sessions = ServiceJob::query()
-            ->where('state', SessionState::Completed->value)
+        $sessions = ServiceRequest::query()
+            ->where('state', RequestState::Paid->value)
             ->where('payment_method', 'cash')
             ->whereNull('cash_confirmed_at')
             ->where('confirmed_at', '<=', $before)
@@ -185,20 +215,20 @@ class SessionTimeoutRules
      * Aplica $apply a cada serviço selecionado, numa transação própria, com o serviço bloqueado e a condição
      * verificada outra vez (outro processo pode ter mudado o estado entretanto).
      *
-     * @param  Closure(Builder<ServiceJob>): Builder<ServiceJob>  $select
-     * @param  Closure(ServiceJob): void  $apply
-     * @param  Closure(ServiceJob): bool  $stillApplies
+     * @param  Closure(Builder<ServiceRequest>): Builder<ServiceRequest>  $select
+     * @param  Closure(ServiceRequest): void  $apply
+     * @param  Closure(ServiceRequest): bool  $stillApplies
      */
     private function each(Closure $select, Closure $apply, Closure $stillApplies): int
     {
         $count = 0;
-        $ids = $select(ServiceJob::query())->limit(200)->pluck('id');
+        $ids = $select(ServiceRequest::query())->limit(200)->pluck('id');
 
         foreach ($ids as $id) {
             try {
                 DB::transaction(function () use ($id, $apply, $stillApplies, &$count) {
-                    /** @var ServiceJob $session */
-                    $session = ServiceJob::query()->lockForUpdate()->findOrFail($id);
+                    /** @var ServiceRequest $session */
+                    $session = ServiceRequest::query()->lockForUpdate()->findOrFail($id);
                     if ($stillApplies($session)) {
                         $apply($session);
                         $count++;

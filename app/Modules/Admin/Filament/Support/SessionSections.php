@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Admin\Filament\Support;
 
-use App\Modules\Sessions\Enums\SessionState;
+use App\Modules\Requests\Enums\RequestState;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
@@ -22,7 +22,7 @@ class SessionSections
             ->schema([
                 TextEntry::make($prefix.'title')->label('Título'),
                 TextEntry::make($prefix.'state')->label('Estado')->badge()
-                    ->formatStateUsing(fn (SessionState $state) => $state->label()),
+                    ->formatStateUsing(fn (RequestState $state) => $state->label()),
                 TextEntry::make($prefix.'amount')->label('Valor')->formatStateUsing(fn (int $state) => self::kz($state)),
                 TextEntry::make($prefix.'client.name')->label('Cliente')->placeholder('—'),
                 TextEntry::make($prefix.'provider.user.name')->label('Técnico')->placeholder('—'),

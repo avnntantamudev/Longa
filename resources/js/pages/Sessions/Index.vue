@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { api } from '@/lib/api';
 import { kwanza, when } from '@/lib/format';
+import type { RequestState } from '@/lib/requestState';
 import { stateBadge } from '@/lib/session';
 import UserAvatar from '@/components/UserAvatar.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
@@ -9,7 +10,7 @@ import { computed, onMounted, ref } from 'vue';
 interface Session {
     id: number;
     title: string;
-    state: string;
+    state: RequestState;
     state_label: string;
     category: string;
     scheduled_at: string;

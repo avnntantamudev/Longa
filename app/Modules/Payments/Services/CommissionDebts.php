@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Payments\Services;
 
-use App\Modules\Sessions\Models\ServiceJob;
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Users\Models\User;
 use App\Modules\Wallet\Ledger\Accounts;
 use App\Modules\Wallet\Ledger\LedgerException;
@@ -25,7 +25,7 @@ class CommissionDebts
     /**
      * Devolve null quando a comissão arredonda para 0 Kz (serviços de 1 a 3 Kz): não há dívida a registar.
      */
-    public function register(ServiceJob $session, ?User $actor, string $reason): ?LedgerTransaction
+    public function register(ServiceRequest $session, ?User $actor, string $reason): ?LedgerTransaction
     {
         if ($session->commission === 0) {
             return null;

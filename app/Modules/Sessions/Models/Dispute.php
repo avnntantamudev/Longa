@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Sessions\Models;
 
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Users\Models\User;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * Disputa sobre um serviço. Só o admin a resolve; toda a decisão financeira gera uma transação no ledger.
  *
  * @property int $id
- * @property int $service_job_id
+ * @property int $service_request_id
  * @property int $opened_by
  * @property string $reason
  * @property string $description
@@ -25,11 +26,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int|null $resolved_by
  * @property \Illuminate\Support\Carbon|null $resolved_at
  * @property \Illuminate\Support\Carbon $created_at
- * @property-read ServiceJob $session
+ * @property-read ServiceRequest $session
  * @property-read User $opener
  * @property-read \Illuminate\Database\Eloquent\Collection<int, DisputeAttachment> $attachments
  */
-#[Fillable(['service_job_id', 'opened_by', 'reason', 'description'])]
+#[Fillable(['service_request_id', 'opened_by', 'reason', 'description'])]
 class Dispute extends Model
 {
     public const OPEN = 'open';
@@ -46,11 +47,11 @@ class Dispute extends Model
     }
 
     /**
-     * @return BelongsTo<ServiceJob, $this>
+     * @return BelongsTo<ServiceRequest, $this>
      */
     public function session(): BelongsTo
     {
-        return $this->belongsTo(ServiceJob::class, 'service_job_id');
+        return $this->belongsTo(ServiceRequest::class, 'service_request_id');
     }
 
     /**

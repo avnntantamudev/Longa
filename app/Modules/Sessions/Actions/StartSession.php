@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Modules\Sessions\Actions;
 
-use App\Modules\Sessions\Enums\SessionState;
+use App\Modules\Requests\Enums\RequestState;
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Sessions\Events\SessionStarted;
-use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Sessions\Services\SessionLifecycle;
 use App\Modules\Users\Models\User;
 use App\Support\Api\ApiException;
@@ -20,17 +20,21 @@ class StartSession
 {
     public function __construct(private readonly SessionLifecycle $lifecycle) {}
 
-    public function handle(ServiceJob $session, User $provider): ServiceJob
+    public function handle(ServiceRequest $session, User $provider): ServiceRequest
     {
         return DB::transaction(function () use ($session, $provider) {
-            /** @var ServiceJob $locked */
-            $locked = ServiceJob::query()->lockForUpdate()->findOrFail($session->id);
+            /** @var ServiceRequest $locked */
+            $locked = ServiceRequest::query()->lockForUpdate()->findOrFail($session->id);
 
-            if ($locked->state === SessionState::InProgress) {
+            if ($locked->state === RequestState::InProgress) {
                 return $locked;
             }
 
-            if ($locked->state !== SessionState::Scheduled) {
+            if ($locked->awaitingPayment()) {
+                throw new ApiException('payment_pending', 'O cliente ainda não pagou este serviço.', 409);
+            }
+
+            if (! in_array($locked->state, [RequestState::Accepted, RequestState::OnTheWay, RequestState::QuoteAccepted], true)) {
                 throw new ApiException('session_not_startable', 'Este serviço não pode ser iniciado no estado atual ('.$locked->state->label().').', 409);
             }
 
@@ -43,7 +47,10 @@ class StartSession
                 throw new ApiException('session_too_late', 'A hora prevista do serviço já terminou.', 409);
             }
 
-            $this->lifecycle->transition($locked, SessionState::InProgress, 'started', $provider, [], ['started_at' => now()]);
+            if ($locked->state === RequestState::Accepted) {
+                $this->lifecycle->transition($locked, RequestState::OnTheWay, 'on_the_way', $provider, [], ['on_the_way_at' => now()]);
+            }
+            $this->lifecycle->transition($locked, RequestState::InProgress, 'started', $provider, [], ['started_at' => now()]);
             SessionStarted::dispatch($locked);
 
             return $locked;

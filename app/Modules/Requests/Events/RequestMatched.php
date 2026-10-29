@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Modules\Requests\Events;
 
 use App\Modules\Requests\Models\ServiceRequest;
-use App\Modules\Sessions\Models\ServiceJob;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
@@ -26,7 +25,6 @@ class RequestMatched implements ShouldBroadcast, ShouldDispatchAfterCommit
      */
     public function __construct(
         public readonly ServiceRequest $request,
-        public readonly ServiceJob $session,
         public readonly array $loserUserIds = [],
     ) {}
 
@@ -53,6 +51,7 @@ class RequestMatched implements ShouldBroadcast, ShouldDispatchAfterCommit
      */
     public function broadcastWith(): array
     {
-        return ['request_id' => $this->request->id, 'session_id' => $this->session->id, 'state' => $this->request->state->value];
+        // session_id: o serviço é o próprio pedido (mantido para os ecrãs que abrem a execução)
+        return ['request_id' => $this->request->id, 'session_id' => $this->request->id, 'state' => $this->request->state->value];
     }
 }

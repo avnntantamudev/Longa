@@ -9,8 +9,8 @@ declare(strict_types=1);
 | Uso: php tests/Concurrency/confirm-worker.php <sessionId> <token> <startAtMicrotime>
 */
 
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Sessions\Actions\ConfirmSession;
-use App\Modules\Sessions\Models\ServiceJob;
 use App\Support\Api\ApiException;
 use Illuminate\Contracts\Console\Kernel;
 
@@ -21,7 +21,7 @@ $app->make(Kernel::class)->bootstrap();
 
 [$sessionId, $token, $startAt] = [(int) $argv[1], (string) $argv[2], (float) $argv[3]];
 
-$session = ServiceJob::query()->with('client')->findOrFail($sessionId);
+$session = ServiceRequest::query()->with('client')->findOrFail($sessionId);
 
 while (microtime(true) < $startAt) {
     usleep(500);

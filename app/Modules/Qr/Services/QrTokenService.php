@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Qr\Services;
 
 use App\Modules\Qr\Models\SessionQrToken;
-use App\Modules\Sessions\Models\ServiceJob;
+use App\Modules\Requests\Models\ServiceRequest;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -26,7 +26,7 @@ class QrTokenService
     /**
      * @return array{batch_id: string, rotation_seconds: int, tokens: list<array{token: string, code: string, valid_from: string, expires_at: string}>}
      */
-    public function issueBatch(ServiceJob $session): array
+    public function issueBatch(ServiceRequest $session): array
     {
         $rotation = (int) config('longa.session_rules.qr_rotation_seconds');
         $size = (int) config('longa.session_rules.qr_batch_size');
@@ -42,7 +42,7 @@ class QrTokenService
             $expiresAt = $validFrom->copy()->addSeconds($rotation + self::GRACE_SECONDS);
 
             $rows[] = [
-                'service_job_id' => $session->id,
+                'service_request_id' => $session->id,
                 'provider_profile_id' => $session->provider_profile_id,
                 'batch_id' => $batchId,
                 'token_hash' => $this->hashToken($token),
@@ -64,12 +64,12 @@ class QrTokenService
      * Encontra o token válido agora para este serviço (pelo QR ou pelo código), com bloqueio da linha.
      * Chamar dentro de uma transação.
      */
-    public function findValid(ServiceJob $session, ?string $token, ?string $code, ?Carbon $at = null): ?SessionQrToken
+    public function findValid(ServiceRequest $session, ?string $token, ?string $code, ?Carbon $at = null): ?SessionQrToken
     {
         $at ??= now();
 
         $query = SessionQrToken::query()
-            ->where('service_job_id', $session->id)
+            ->where('service_request_id', $session->id)
             ->where('status', SessionQrToken::ACTIVE)
             ->where('valid_from', '<=', $at)
             ->where('expires_at', '>', $at)
@@ -95,7 +95,7 @@ class QrTokenService
 
         // Os restantes tokens do serviço deixam de valer (capturas de ecrã antigas ou futuras)
         SessionQrToken::query()
-            ->where('service_job_id', $token->service_job_id)
+            ->where('service_request_id', $token->service_request_id)
             ->where('status', SessionQrToken::ACTIVE)
             ->update(['status' => SessionQrToken::REVOKED]);
 
@@ -105,10 +105,10 @@ class QrTokenService
     /**
      * Regista a tentativa falhada na janela atual (para auditoria; o bloqueio é feito pelo limitador).
      */
-    public function recordFailedAttempt(ServiceJob $session): void
+    public function recordFailedAttempt(ServiceRequest $session): void
     {
         DB::table('session_qr_tokens')
-            ->where('service_job_id', $session->id)
+            ->where('service_request_id', $session->id)
             ->where('status', SessionQrToken::ACTIVE)
             ->where('valid_from', '<=', now())
             ->where('expires_at', '>', now())

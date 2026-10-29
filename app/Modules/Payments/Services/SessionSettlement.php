@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Payments\Services;
 
 use App\Modules\Payments\Models\EscrowHold;
-use App\Modules\Sessions\Models\ServiceJob;
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Users\Models\User;
 use App\Modules\Wallet\Events\WalletUpdated;
 use App\Support\Api\ApiException;
@@ -21,7 +21,7 @@ class SessionSettlement
     /**
      * Serviço concluído: liberta o escrow para o técnico (pagamento eletrónico).
      */
-    public function complete(ServiceJob $session, ?User $actor, string $reason): void
+    public function complete(ServiceRequest $session, ?User $actor, string $reason): void
     {
         if ($session->isCash()) {
             // Dinheiro: o fluxo da comissão em dívida acontece quando o cliente confirma o pagamento em mão
@@ -38,7 +38,7 @@ class SessionSettlement
     /**
      * Parte do valor para o técnico (antes da comissão), o resto é reembolsado ao cliente.
      */
-    public function split(ServiceJob $session, int $providerGross, ?User $actor, string $reason): void
+    public function split(ServiceRequest $session, int $providerGross, ?User $actor, string $reason): void
     {
         if ($session->isCash()) {
             return;
@@ -59,9 +59,9 @@ class SessionSettlement
         }
     }
 
-    private function requireHold(ServiceJob $session): void
+    private function requireHold(ServiceRequest $session): void
     {
-        if (! EscrowHold::query()->where('service_job_id', $session->id)->exists()) {
+        if (! EscrowHold::query()->where('service_request_id', $session->id)->exists()) {
             throw new ApiException('no_escrow', 'Não há pagamento retido para este serviço.', 409);
         }
     }

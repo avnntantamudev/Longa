@@ -49,9 +49,8 @@ it('guarda a província e recusa províncias inexistentes', function () {
     $this->getJson('/api/v1/provinces')->assertOk()->assertJsonCount(21, 'data');
 });
 
-it('a província do pedido passa para o serviço', function () {
+it('o serviço guarda a província do pedido', function () {
     $session = acceptedSession('electronic');
 
-    expect($session->province)->toBe('Luanda')
-        ->and($session->request->province)->toBe('Luanda');
+    expect($session->province)->toBe('Luanda');
 });

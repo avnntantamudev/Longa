@@ -4,19 +4,13 @@ declare(strict_types=1);
 
 namespace App\Modules\Admin\Reports;
 
+use App\Modules\Requests\Enums\RequestState;
+
 /**
  * Converte os relatórios do admin em secções (título + tabela) para o ecrã e a exportação.
  */
 class AdminReportSections
 {
-    private const STATE_LABELS = [
-        'pending_payment' => 'À espera de pagamento', 'payment_failed' => 'Pagamento falhou', 'scheduled' => 'Agendada',
-        'in_progress' => 'Em curso', 'awaiting_confirmation' => 'À espera de confirmação', 'completed' => 'Concluída',
-        'cancelled_by_client' => 'Cancelada pelo cliente', 'cancelled_by_provider' => 'Cancelada pelo técnico',
-        'no_show_provider' => 'Falta do técnico', 'no_show_client' => 'Falta do cliente', 'disputed' => 'Em disputa',
-        'refunded' => 'Reembolsada', 'partially_refunded' => 'Reembolsada em parte',
-    ];
-
     /**
      * @param  array<string, mixed>  $report
      * @return list<array{title: string, headers: list<string>, rows: list<list<string|int|float|null>>}>
@@ -63,7 +57,7 @@ class AdminReportSections
                 ['Tempo médio até aceitar (hoje)', $avg === null ? '—' : gmdate($avg >= 3600 ? 'G\h i\m' : 'i\m s\s', $avg)],
             ]],
             ['title' => 'Serviços por estado', 'headers' => ['Estado', 'Serviços'],
-                'rows' => [...array_map(fn ($state, $n) => [self::STATE_LABELS[$state] ?? $state, $n], array_keys($report['sessions']['by_state']), $report['sessions']['by_state']),
+                'rows' => [...array_map(fn ($state, $n) => [RequestState::tryFrom((string) $state)?->label() ?? $state, $n], array_keys($report['sessions']['by_state']), $report['sessions']['by_state']),
                     ['Cancelamentos em cima da hora', $report['sessions']['late_cancellations']]]],
             ['title' => 'Disputas', 'headers' => ['Indicador', 'Valor'], 'rows' => [
                 ['Abertas no período', $report['disputes']['opened']], ['Por decidir agora', $report['disputes']['open_now']],

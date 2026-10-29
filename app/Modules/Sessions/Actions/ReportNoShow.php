@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Sessions\Actions;
 
-use App\Modules\Sessions\Enums\SessionState;
-use App\Modules\Sessions\Models\ServiceJob;
+use App\Modules\Requests\Enums\RequestState;
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Sessions\Services\SessionLifecycle;
 use App\Modules\Users\Models\User;
 use App\Support\Api\ApiException;
@@ -20,19 +20,19 @@ class ReportNoShow
 {
     public function __construct(private readonly SessionLifecycle $lifecycle) {}
 
-    public function handle(ServiceJob $session, User $reporter, ?string $note): ServiceJob
+    public function handle(ServiceRequest $session, User $reporter, ?string $note): ServiceRequest
     {
         return DB::transaction(function () use ($session, $reporter, $note) {
-            /** @var ServiceJob $locked */
-            $locked = ServiceJob::query()->lockForUpdate()->findOrFail($session->id);
+            /** @var ServiceRequest $locked */
+            $locked = ServiceRequest::query()->lockForUpdate()->findOrFail($session->id);
             $byClient = $locked->client_id === $reporter->id;
-            $target = $byClient ? SessionState::NoShowProvider : SessionState::NoShowClient;
+            $target = $byClient ? 'no_show_provider' : 'no_show_client';
 
-            if ($locked->state === $target) {
+            if ($locked->state === RequestState::Cancelled && $locked->closed_reason === $target) {
                 return $locked;
             }
 
-            if ($locked->state !== SessionState::Scheduled) {
+            if (! in_array($locked->state, [RequestState::Accepted, RequestState::OnTheWay], true) || $locked->awaitingPayment()) {
                 throw new ApiException('no_show_not_allowed', 'Só pode reportar falta num serviço que ainda não começou.', 409);
             }
 
@@ -43,9 +43,9 @@ class ReportNoShow
             }
 
             $contestUntil = now()->addHours((int) config('longa.session_rules.no_show_contest_hours'));
-            $this->lifecycle->transition($locked, $target, 'no_show_reported', $reporter, [
+            $this->lifecycle->transition($locked, RequestState::Cancelled, 'no_show_reported', $reporter, [
                 'note' => $note, 'contest_until' => $contestUntil->toIso8601String(),
-            ], ['no_show_contest_until' => $contestUntil]);
+            ], ['closed_reason' => $target, 'no_show_contest_until' => $contestUntil, 'cancelled_by' => $reporter->id, 'cancelled_at' => now()]);
 
             return $locked;
         });

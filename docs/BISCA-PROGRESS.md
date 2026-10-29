@@ -136,3 +136,17 @@ Respostas do cliente às dúvidas da Fase 1 (2026-10-29). Confirmado com o "ok":
 - `HasStateMachine` aceita regras extra por modelo (`transitionAllowed`) e um registo depois da transição
   (`afterTransition`), na mesma transação.
 - Enquanto `service_jobs` não for junto ao pedido (passo 2), o pedido fica em `accepted` durante a execução.
+
+### Notas do passo 2
+
+- Migração `2026_10_29_000002_merge_service_jobs_into_requests` (reversível; o down() recria `service_jobs` com
+  id = id do pedido): as colunas de execução passam para `service_requests`; `assigned_provider_profile_id` →
+  `provider_profile_id`; `awaiting_since` → `completed_at`; novas `payment_status`, `closed_reason` e
+  `on_the_way_at`. Conversas, disputas, escrow, cobranças, linha do tempo e QR passam a apontar para o pedido, tal
+  como as referências do livro-razão, da auditoria e do score.
+- O modelo `ServiceJob` e o enum `SessionState` deixam de existir. A API `/api/v1/sessions/{id}` continua, agora
+  com o id do pedido (os ecrãs novos chegam no passo 8).
+- Mudanças de regra: o técnico ou o cliente podem abrir disputa em execução ou depois de concluído; o serviço
+  nunca iniciado (R1) passa a cancelado com prazo de contestação, em vez de esperar pela confirmação do cliente.
+- Enquanto o passo 6 não existir, os pedidos de categorias por orçamento não podem passar a "em execução"
+  (exigem diagnóstico e orçamento aceite).

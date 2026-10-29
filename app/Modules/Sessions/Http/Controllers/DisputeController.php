@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace App\Modules\Sessions\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Sessions\Actions\OpenDispute;
 use App\Modules\Sessions\Actions\ResolveDispute;
 use App\Modules\Sessions\Http\Requests\OpenDisputeRequest;
 use App\Modules\Sessions\Http\Resources\DisputeResource;
 use App\Modules\Sessions\Models\Dispute;
 use App\Modules\Sessions\Models\DisputeAttachment;
-use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Users\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -34,7 +34,7 @@ class DisputeController extends Controller
      * Requer `Idempotency-Key`. O valor fica retido até à decisão do admin.
      * Erros: `dispute_not_allowed` (409).
      */
-    public function store(OpenDisputeRequest $request, ServiceJob $session, OpenDispute $action): JsonResponse
+    public function store(OpenDisputeRequest $request, ServiceRequest $session, OpenDispute $action): JsonResponse
     {
         Gate::authorize('view', $session);
 
@@ -52,7 +52,7 @@ class DisputeController extends Controller
     /**
      * Disputas de um serviço.
      */
-    public function index(ServiceJob $session): JsonResponse
+    public function index(ServiceRequest $session): JsonResponse
     {
         Gate::authorize('view', $session);
 

@@ -7,7 +7,6 @@ use App\Modules\Requests\Events\OfferSent;
 use App\Modules\Requests\Events\RequestMatched;
 use App\Modules\Requests\Models\RequestOffer;
 use App\Modules\Requests\Models\ServiceRequest;
-use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Users\Models\Category;
 use App\Modules\Users\Models\ProviderProfile;
 use Database\Factories\ProviderProfileFactory;
@@ -35,13 +34,11 @@ it('a oferta em tempo real vai só para o técnico e sem dados privados do clien
 
 it('o pedido aceite é anunciado ao cliente e aos técnicos que perderam', function () {
     $request = ServiceRequest::factory()->create();
-    $session = new ServiceJob;
-    $session->id = 99;
 
-    $event = new RequestMatched($request, $session, [11, 12]);
+    $event = new RequestMatched($request, [11, 12]);
 
     expect(array_map(fn ($c) => $c->name, $event->broadcastOn()))
         ->toBe(["private-request.{$request->id}", 'private-user.11', 'private-user.12'])
-        ->and($event->broadcastWith())->toBe(['request_id' => $request->id, 'session_id' => 99, 'state' => 'created']);
+        ->and($event->broadcastWith())->toBe(['request_id' => $request->id, 'session_id' => $request->id, 'state' => 'created']);
     expect(RequestOffer::query()->count())->toBe(0);
 });

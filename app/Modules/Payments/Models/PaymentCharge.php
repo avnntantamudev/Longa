@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Payments\Models;
 
-use App\Modules\Sessions\Models\ServiceJob;
+use App\Modules\Requests\Models\ServiceRequest;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * Pedido ao gateway (cobrança ou reembolso) e a respetiva resposta.
  *
  * @property int $id
- * @property int $service_job_id
+ * @property int $service_request_id
  * @property int $client_id
  * @property string $gateway
  * @property string $method
@@ -26,7 +26,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property array<string, mixed>|null $gateway_payload
  * @property \Illuminate\Support\Carbon|null $created_at
  */
-#[Fillable(['service_job_id', 'client_id', 'gateway', 'method', 'kind', 'amount', 'status', 'external_reference', 'idempotency_key', 'failure_reason', 'gateway_payload'])]
+#[Fillable(['service_request_id', 'client_id', 'gateway', 'method', 'kind', 'amount', 'status', 'external_reference', 'idempotency_key', 'failure_reason', 'gateway_payload'])]
 class PaymentCharge extends Model
 {
     protected function casts(): array
@@ -35,10 +35,10 @@ class PaymentCharge extends Model
     }
 
     /**
-     * @return BelongsTo<ServiceJob, $this>
+     * @return BelongsTo<ServiceRequest, $this>
      */
     public function session(): BelongsTo
     {
-        return $this->belongsTo(ServiceJob::class, 'service_job_id');
+        return $this->belongsTo(ServiceRequest::class, 'service_request_id');
     }
 }

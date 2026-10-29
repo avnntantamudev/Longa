@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 use App\Models\AuditLog;
 use App\Modules\Payments\Models\EscrowHold;
+use App\Modules\Requests\Enums\RequestState;
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Sessions\Actions\ResolveDispute;
 use App\Modules\Sessions\Actions\StartSession;
-use App\Modules\Sessions\Enums\SessionState;
 use App\Modules\Sessions\Events\DisputeOpened;
 use App\Modules\Sessions\Models\Dispute;
-use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Users\Enums\Role;
 use App\Modules\Users\Models\User;
 use Illuminate\Http\UploadedFile;
@@ -23,7 +23,7 @@ beforeEach(function () {
 });
 
 /** Serviço pago, iniciado e à espera de confirmação do cliente. */
-function awaitingSession(): ServiceJob
+function awaitingSession(): ServiceRequest
 {
     $session = paidSession();
     test()->travelTo($session->scheduled_at);
@@ -37,7 +37,7 @@ function awaitingSession(): ServiceJob
 /**
  * @param  array<string, mixed>  $body
  */
-function openDispute(ServiceJob $session, User $as, array $body = []): Illuminate\Testing\TestResponse
+function openDispute(ServiceRequest $session, User $as, array $body = []): Illuminate\Testing\TestResponse
 {
     apiLogin($as);
 
@@ -65,7 +65,7 @@ it('o cliente abre disputa com anexos: serviço em disputa e dinheiro retido', f
     ]])->assertCreated()->assertJsonPath('data.status', 'open')->assertJsonCount(2, 'data.attachments');
 
     $dispute = Dispute::query()->sole();
-    expect($session->fresh()?->state)->toBe(SessionState::Disputed)
+    expect($session->fresh()?->state)->toBe(RequestState::Disputed)
         ->and(EscrowHold::query()->sole()->state)->toBe(EscrowHold::DISPUTED)
         ->and(balances($session)['escrow'])->toBe(25000);
     foreach ($dispute->attachments as $attachment) {
@@ -76,7 +76,7 @@ it('o cliente abre disputa com anexos: serviço em disputa e dinheiro retido', f
     // Uma disputa aberta não fecha pelas regras automáticas
     $this->travel(5)->days();
     $this->artisan('longa:sessions:tick');
-    expect($session->fresh()?->state)->toBe(SessionState::Disputed);
+    expect($session->fresh()?->state)->toBe(RequestState::Disputed);
 });
 
 it('valida tipo, tamanho e número de anexos', function () {
@@ -94,11 +94,12 @@ it('valida tipo, tamanho e número de anexos', function () {
     expect(Dispute::query()->count())->toBe(0);
 });
 
-it('só o cliente abre disputa durante a confirmação; terceiros não veem o serviço', function () {
+it('o cliente ou o técnico abrem disputa durante a confirmação; terceiros não veem o serviço', function () {
     $session = awaitingSession();
 
-    openDispute($session, $session->provider->user)->assertStatus(409)->assertJsonPath('error.code', 'dispute_not_allowed');
     openDispute($session, User::factory()->withRole(Role::Client)->create())->assertForbidden();
+    openDispute($session, $session->provider->user)->assertCreated();
+    expect($session->fresh()?->state)->toBe(RequestState::Disputed);
 });
 
 it('não se abre disputa num serviço agendado ou já concluída', function () {
@@ -114,7 +115,8 @@ it('o técnico contesta a falta dentro de 24 h; depois já não', function () {
 
     openDispute($session, $session->client, ['reason' => 'no_show_contest'])->assertStatus(409);
     openDispute($session, $session->provider->user, ['reason' => 'no_show_contest'])->assertCreated();
-    expect($session->fresh()?->state)->toBe(SessionState::Disputed);
+    // O pedido continua cancelado (falta); a disputa retém o dinheiro até à decisão da equipa
+    expect($session->fresh()?->state)->toBe(RequestState::Cancelled);
 
     // Sem liquidação automática enquanto a disputa está aberta
     $this->travel(25)->hours();
@@ -139,7 +141,7 @@ it('o admin liberta ao técnico', function () {
 
     resolveAs($admin, Dispute::query()->sole(), ['decision' => 'released'])->assertOk()->assertJsonPath('data.resolution', 'released');
 
-    expect($session->fresh()?->state)->toBe(SessionState::Completed)
+    expect($session->fresh()?->state)->toBe(RequestState::Paid)
         ->and(balances($session))->toMatchArray(['escrow' => 0, 'provider' => 21250, 'revenue' => 3750])
         ->and(AuditLog::query()->where('action', 'disputes.resolved')->count())->toBe(1);
 });
@@ -150,7 +152,7 @@ it('o admin reembolsa tudo ao cliente', function () {
 
     resolveAs(User::factory()->withRole(Role::Admin)->create(), Dispute::query()->sole(), ['decision' => 'refunded'])->assertOk();
 
-    expect($session->fresh()?->state)->toBe(SessionState::Refunded)
+    expect($session->fresh()?->state)->toBe(RequestState::Cancelled)
         ->and(balances($session))->toBe(['escrow' => 0, 'provider' => 0, 'revenue' => 0, 'refunds' => 0, 'funds_in' => 0]);
 });
 
@@ -165,7 +167,7 @@ it('o admin reembolsa em parte: comissão só sobre a parte do técnico', functi
     resolveAs($admin, $dispute, ['decision' => 'partially_refunded', 'provider_share' => 10000])->assertOk();
 
     // 10.000 → comissão 1.500, técnico 8.500; reembolso 15.000
-    expect($session->fresh()?->state)->toBe(SessionState::PartiallyRefunded)
+    expect($session->fresh()?->state)->toBe(RequestState::Paid)
         ->and(balances($session))->toBe(['escrow' => 0, 'provider' => 8500, 'revenue' => 1500, 'refunds' => 0, 'funds_in' => -10000]);
 });
 

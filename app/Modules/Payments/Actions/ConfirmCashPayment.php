@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Payments\Actions;
 
 use App\Modules\Payments\Services\CommissionDebts;
-use App\Modules\Sessions\Enums\SessionState;
-use App\Modules\Sessions\Models\ServiceJob;
+use App\Modules\Requests\Enums\RequestState;
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Sessions\Services\SessionLifecycle;
 use App\Modules\Users\Models\User;
 use App\Modules\Wallet\Events\WalletUpdated;
@@ -25,11 +25,11 @@ class ConfirmCashPayment
         private readonly SessionLifecycle $lifecycle,
     ) {}
 
-    public function handle(ServiceJob $session, ?User $client, string $reason = 'client_confirmed'): ServiceJob
+    public function handle(ServiceRequest $session, ?User $client, string $reason = 'client_confirmed'): ServiceRequest
     {
         $result = DB::transaction(function () use ($session, $client, $reason) {
-            /** @var ServiceJob $locked */
-            $locked = ServiceJob::query()->lockForUpdate()->findOrFail($session->id);
+            /** @var ServiceRequest $locked */
+            $locked = ServiceRequest::query()->lockForUpdate()->findOrFail($session->id);
 
             if (! $locked->isCash()) {
                 throw new ApiException('not_cash_session', 'Este serviço não é paga em dinheiro.', 409);
@@ -39,7 +39,7 @@ class ConfirmCashPayment
                 return ['session' => $locked, 'new' => false];
             }
 
-            if ($locked->state !== SessionState::Completed) {
+            if ($locked->state !== RequestState::Paid) {
                 throw new ApiException('session_not_completed', 'Confirme primeiro o serviço com o QR do técnico.', 409);
             }
 

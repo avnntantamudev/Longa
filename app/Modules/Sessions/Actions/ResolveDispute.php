@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Modules\Sessions\Actions;
 
 use App\Modules\Payments\Services\SessionSettlement;
-use App\Modules\Sessions\Enums\SessionState;
+use App\Modules\Requests\Enums\RequestState;
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Sessions\Events\DisputeResolved;
 use App\Modules\Sessions\Models\Dispute;
-use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Sessions\Services\SessionLifecycle;
 use App\Modules\Users\Models\User;
 use App\Support\Api\ApiException;
@@ -41,8 +41,8 @@ class ResolveDispute
         return DB::transaction(function () use ($dispute, $admin, $decision, $providerShare, $note) {
             /** @var Dispute $locked */
             $locked = Dispute::query()->lockForUpdate()->findOrFail($dispute->id);
-            /** @var ServiceJob $session */
-            $session = ServiceJob::query()->lockForUpdate()->findOrFail($locked->service_job_id);
+            /** @var ServiceRequest $session */
+            $session = ServiceRequest::query()->lockForUpdate()->findOrFail($locked->service_request_id);
 
             if ($locked->status === Dispute::RESOLVED) {
                 if ($locked->resolution === $decision) {
@@ -63,15 +63,14 @@ class ResolveDispute
                 throw new ApiException('validation_failed', 'Os dados enviados são inválidos.', 422, ['provider_share' => ['A parte do técnico tem de estar entre 1 e '.($session->amount - 1).' Kz.']]);
             }
 
-            $target = match ($decision) {
-                self::RELEASE => SessionState::Completed,
-                self::REFUND => SessionState::Refunded,
-                default => SessionState::PartiallyRefunded,
-            };
-
-            $this->lifecycle->transition($session, $target, 'dispute_resolved', $admin, [
-                'dispute_id' => $locked->id, 'decision' => $decision, 'provider_share' => $gross, 'note' => $note,
-            ], $target === SessionState::Completed ? ['confirmed_at' => now()] : []);
+            $metadata = ['dispute_id' => $locked->id, 'decision' => $decision, 'provider_share' => $gross, 'note' => $note];
+            if ($session->state === RequestState::Disputed) {
+                $refund = $decision === self::REFUND;
+                $this->lifecycle->transition($session, $refund ? RequestState::Cancelled : RequestState::Paid, 'dispute_resolved', $admin, $metadata,
+                    $refund ? ['closed_reason' => 'refunded', 'cancelled_at' => now()] : ['confirmed_at' => now()]);
+            } else {
+                $this->lifecycle->record($session, 'dispute_resolved', $admin, $metadata);
+            }
 
             $this->settlement->split($session, $gross, $admin, "dispute:{$locked->id}:{$decision}");
 

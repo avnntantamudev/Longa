@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Modules\Sessions\Actions;
 
 use App\Modules\Payments\Services\SessionSettlement;
-use App\Modules\Sessions\Enums\SessionState;
+use App\Modules\Requests\Enums\RequestState;
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Sessions\Events\SessionConfirmed;
-use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Sessions\Services\SessionLifecycle;
 use App\Modules\Users\Models\User;
 use App\Support\Api\ApiException;
@@ -27,21 +27,21 @@ class ConfirmWithoutQr
         private readonly AuditLogger $audit,
     ) {}
 
-    public function handle(ServiceJob $session, User $client): ServiceJob
+    public function handle(ServiceRequest $session, User $client): ServiceRequest
     {
         return DB::transaction(function () use ($session, $client) {
-            /** @var ServiceJob $locked */
-            $locked = ServiceJob::query()->lockForUpdate()->findOrFail($session->id);
+            /** @var ServiceRequest $locked */
+            $locked = ServiceRequest::query()->lockForUpdate()->findOrFail($session->id);
 
-            if ($locked->state === SessionState::Completed) {
+            if ($locked->state === RequestState::Paid) {
                 return $locked;
             }
 
-            if ($locked->state !== SessionState::AwaitingConfirmation) {
+            if ($locked->state !== RequestState::Completed) {
                 throw new ApiException('session_not_awaiting', 'O serviço ainda não está à espera de confirmação. Use o QR do técnico.', 409);
             }
 
-            $this->lifecycle->transition($locked, SessionState::Completed, 'confirmed', $client, ['method' => 'manual'], ['confirmed_at' => now()]);
+            $this->lifecycle->transition($locked, RequestState::Paid, 'confirmed', $client, ['method' => 'manual'], ['confirmed_at' => now()]);
             $this->settlement->complete($locked, $client, 'client_confirmed_manually');
             SessionConfirmed::dispatch($locked);
             $this->audit->record('sessions.confirmed', $locked, ['method' => 'manual'], $client->id);

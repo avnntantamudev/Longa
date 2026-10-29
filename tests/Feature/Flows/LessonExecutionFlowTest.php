@@ -46,17 +46,17 @@ it('executa o serviço de ponta a ponta com QR e liberta o dinheiro uma vez', fu
 
     // 2. Pagamento dentro da janela: dinheiro retido
     apiLogin($client);
-    $this->getJson("/api/v1/sessions/{$sessionId}")->assertJsonPath('data.state', 'pending_payment')->assertJsonPath('data.actions', ['pay'])
+    $this->getJson("/api/v1/sessions/{$sessionId}")->assertJsonPath('data.state', 'accepted')->assertJsonPath('data.actions', ['pay'])
         ->assertJsonPath('data.duration_minutes', 90);
     $payKey = $key('pay');
-    $this->postJson("/api/v1/sessions/{$sessionId}/pay", ['method' => 'multicaixa_express'], $payKey)->assertOk()->assertJsonPath('data.state', 'scheduled');
+    $this->postJson("/api/v1/sessions/{$sessionId}/pay", ['method' => 'multicaixa_express'], $payKey)->assertOk()->assertJsonPath('data.state', 'accepted');
     $this->postJson("/api/v1/sessions/{$sessionId}/pay", ['method' => 'multicaixa_express'], $payKey)->assertOk()->assertHeader('Idempotent-Replayed', 'true');
 
     apiLogin($provider->user);
     $this->getJson('/api/v1/wallet')->assertJsonPath('data.pending', 20000)->assertJsonPath('data.available', 0);
 
     // 3. No dia: iniciar e terminar; o técnico recebe o lote de QR
-    $session = App\Modules\Sessions\Models\ServiceJob::query()->findOrFail($sessionId);
+    $session = App\Modules\Requests\Models\ServiceRequest::query()->findOrFail($sessionId);
     $this->travelTo($session->scheduled_at->copy()->subMinutes(5));
     $this->postJson("/api/v1/sessions/{$sessionId}/start")->assertOk()->assertJsonPath('data.state', 'in_progress');
     $this->travel(90)->minutes();
@@ -67,12 +67,12 @@ it('executa o serviço de ponta a ponta com QR e liberta o dinheiro uma vez', fu
     apiLogin($client);
     $confirmKey = $key('confirm');
     $this->postJson("/api/v1/sessions/{$sessionId}/confirm", ['token' => $qr['tokens'][0]['token'], 'latitude' => $lat, 'longitude' => $lng], $confirmKey)
-        ->assertOk()->assertJsonPath('data.state', 'completed')
+        ->assertOk()->assertJsonPath('data.state', 'paid')
         ->assertJsonPath('message', 'Serviço confirmado, Kz 25.000 libertados para o técnico.');
     // Repetição (rede instável) devolve a mesma resposta; outro token do lote já não serve
     $this->postJson("/api/v1/sessions/{$sessionId}/confirm", ['token' => $qr['tokens'][0]['token'], 'latitude' => $lat, 'longitude' => $lng], $confirmKey)
         ->assertOk()->assertHeader('Idempotent-Replayed', 'true');
-    $this->postJson("/api/v1/sessions/{$sessionId}/confirm", ['token' => $qr['tokens'][1]['token']], $key('confirm2'))->assertOk()->assertJsonPath('data.state', 'completed');
+    $this->postJson("/api/v1/sessions/{$sessionId}/confirm", ['token' => $qr['tokens'][1]['token']], $key('confirm2'))->assertOk()->assertJsonPath('data.state', 'paid');
 
     // 5. Carteira do técnico
     apiLogin($provider->user);
@@ -91,7 +91,7 @@ it('executa o serviço de ponta a ponta com QR e liberta o dinheiro uma vez', fu
     $this->travelBack();
     $this->artisan('longa:ledger:reconcile')->assertSuccessful();
 
-    expect(App\Modules\Sessions\Models\SessionEvent::query()->where('service_job_id', $sessionId)->pluck('type')->all())
+    expect(App\Modules\Sessions\Models\SessionEvent::query()->where('service_request_id', $sessionId)->pluck('type')->all())
         ->toContain('payment_requested', 'payment_confirmed', 'started', 'finished', 'qr_issued', 'qr_scanned', 'confirmed');
     expect(Notification::sent($client, SessionUpdateNotification::class))->toBeEmpty(); // eventos falsos: sem listeners
 });

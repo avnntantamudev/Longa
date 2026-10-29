@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Matching\Services;
 
 use App\Modules\Matching\Support\MatchCandidate;
+use App\Modules\Requests\Enums\RequestState;
 use App\Modules\Requests\Models\ServiceRequest;
-use App\Modules\Sessions\Enums\SessionState;
 use App\Modules\Users\Enums\UserStatus;
 use App\Modules\Users\Enums\VerificationStatus;
 use Illuminate\Support\Carbon;
@@ -66,9 +66,9 @@ class ProviderMatcher
             // Conflito: serviço ativa do técnico que se sobrepõe ao horário pedido (com folga)
             ->whereNotExists(function ($q) use ($start, $end) {
                 $q->selectRaw('1')
-                    ->from('service_jobs as s')
+                    ->from('service_requests as s')
                     ->whereColumn('s.provider_profile_id', 'tp.id')
-                    ->whereIn('s.state', array_map(fn (SessionState $st) => $st->value, SessionState::occupying()))
+                    ->whereIn('s.state', array_map(fn (RequestState $st) => $st->value, RequestState::occupying()))
                     ->where('s.scheduled_at', '<', $end)
                     ->where('s.ends_at', '>', $start);
             });

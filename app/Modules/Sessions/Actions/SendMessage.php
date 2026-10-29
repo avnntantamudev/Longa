@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Modules\Sessions\Actions;
 
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Sessions\Events\MessageSent;
 use App\Modules\Sessions\Models\Message;
-use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Sessions\Services\ContactMasker;
 use App\Modules\Users\Models\User;
 use Illuminate\Http\UploadedFile;
@@ -24,7 +24,7 @@ class SendMessage
 {
     public function __construct(private readonly ContactMasker $masker) {}
 
-    public function handle(ServiceJob $session, User $sender, ?string $body, ?UploadedFile $attachment, ?string $clientId): Message
+    public function handle(ServiceRequest $session, User $sender, ?string $body, ?UploadedFile $attachment, ?string $clientId): Message
     {
         $conversation = $session->conversation()->firstOrCreate([]);
 

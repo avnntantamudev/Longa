@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace App\Modules\Sessions\Actions;
 
 use App\Modules\Payments\Services\SessionSettlement;
+use App\Modules\Requests\Enums\RequestState;
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Score\Models\ScoreEvent;
 use App\Modules\Score\Services\ScoreRecorder;
-use App\Modules\Sessions\Enums\SessionState;
 use App\Modules\Sessions\Events\SessionCancelled;
-use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Sessions\Services\RefundPolicy;
 use App\Modules\Sessions\Services\SessionLifecycle;
 use App\Modules\Users\Models\User;
@@ -29,28 +29,28 @@ class CancelSession
         private readonly ScoreRecorder $score,
     ) {}
 
-    public function handle(ServiceJob $session, User $actor, ?string $reason): ServiceJob
+    public function handle(ServiceRequest $session, User $actor, ?string $reason): ServiceRequest
     {
         return DB::transaction(function () use ($session, $actor, $reason) {
-            /** @var ServiceJob $locked */
-            $locked = ServiceJob::query()->lockForUpdate()->findOrFail($session->id);
+            /** @var ServiceRequest $locked */
+            $locked = ServiceRequest::query()->lockForUpdate()->findOrFail($session->id);
             $byClient = $locked->client_id === $actor->id;
-            $target = $byClient ? SessionState::CancelledByClient : SessionState::CancelledByProvider;
+            $target = $byClient ? 'cancelled_by_client' : 'cancelled_by_provider';
 
-            if ($locked->state === $target) {
+            if ($locked->state === RequestState::Cancelled && $locked->closed_reason === $target) {
                 return $locked;
             }
 
-            if ($locked->state !== SessionState::Scheduled) {
+            if (! in_array($locked->state, [RequestState::Accepted, RequestState::OnTheWay], true) || $locked->awaitingPayment()) {
                 throw new ApiException('session_not_cancellable', 'Este serviço já não pode ser cancelado ('.$locked->state->label().').', 409);
             }
 
             $late = $this->policy->isLate($locked);
             $providerGross = $byClient ? $this->policy->clientCancellation($locked) : $this->policy->providerFault($locked);
 
-            $this->lifecycle->transition($locked, $target, 'cancelled', $actor, [
+            $this->lifecycle->transition($locked, RequestState::Cancelled, 'cancelled', $actor, [
                 'reason' => $reason, 'late' => $late, 'provider_share' => $providerGross, 'refund' => $locked->amount - $providerGross,
-            ]);
+            ], ['closed_reason' => $target, 'cancelled_by' => $actor->id, 'cancel_reason' => $reason, 'cancelled_at' => now()]);
 
             $this->settlement->split($locked, $providerGross, $actor, $byClient ? 'client_cancellation' : 'provider_cancellation');
 

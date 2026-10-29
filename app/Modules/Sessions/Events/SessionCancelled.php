@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Sessions\Events;
 
-use App\Modules\Sessions\Models\ServiceJob;
+use App\Modules\Requests\Models\ServiceRequest;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
@@ -20,7 +20,7 @@ class SessionCancelled implements ShouldBroadcast, ShouldDispatchAfterCommit
 
     public string $broadcastQueue = 'notifications';
 
-    public function __construct(public readonly ServiceJob $session) {}
+    public function __construct(public readonly ServiceRequest $session) {}
 
     public function broadcastOn(): PrivateChannel
     {

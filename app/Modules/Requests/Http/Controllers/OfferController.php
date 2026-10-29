@@ -35,7 +35,7 @@ class OfferController extends Controller
             ->where('provider_profile_id', $this->provider($request)->providerProfile?->id)
             ->whereIn('state', OfferState::open())
             ->where('expires_at', '>', now())
-            ->with(['request.category', 'request.session'])
+            ->with(['request.category'])
             ->latest('sent_at')
             ->get();
 
@@ -49,7 +49,7 @@ class OfferController extends Controller
     {
         Gate::authorize('respond', $offer);
 
-        return new ProviderOfferResource($offer->load(['request.category', 'request.session']));
+        return new ProviderOfferResource($offer->load(['request.category']));
     }
 
     /**
@@ -59,7 +59,7 @@ class OfferController extends Controller
     {
         Gate::authorize('respond', $offer);
 
-        return new ProviderOfferResource($action->view($offer)->load(['request.category', 'request.session']));
+        return new ProviderOfferResource($action->view($offer)->load(['request.category']));
     }
 
     /**
@@ -85,7 +85,7 @@ class OfferController extends Controller
     {
         Gate::authorize('respond', $offer);
 
-        return new ProviderOfferResource($action->decline($offer)->load(['request.category', 'request.session']));
+        return new ProviderOfferResource($action->decline($offer)->load(['request.category']));
     }
 
     private function provider(Request $request): User

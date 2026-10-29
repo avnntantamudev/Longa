@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Payments\Actions\ConfirmCashPayment;
 use App\Modules\Payments\Actions\PayForSession;
 use App\Modules\Payments\Models\EscrowHold;
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Requests\Services\Commission;
 use App\Modules\Sessions\Actions\CancelSession;
 use App\Modules\Sessions\Actions\ConfirmSession;
@@ -14,7 +15,6 @@ use App\Modules\Sessions\Actions\OpenDispute;
 use App\Modules\Sessions\Actions\ReportNoShow;
 use App\Modules\Sessions\Actions\ResolveDispute;
 use App\Modules\Sessions\Actions\StartSession;
-use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Users\Enums\Role;
 use App\Modules\Users\Models\User;
 use App\Modules\Wallet\Ledger\Accounts;
@@ -56,7 +56,7 @@ function runFlow(string $scenario, int $amount, ?int $providerProfileId): array
     $client = $session->client;
     $admin = fn () => User::factory()->withRole(Role::Admin)->create();
     $percent = fn (int $p) => min($amount, intdiv($amount * $p + 50, 100));
-    $refresh = fn (): ServiceJob => $session->fresh() ?? $session;
+    $refresh = fn (): ServiceRequest => $session->fresh() ?? $session;
     $tick = fn () => test()->artisan('longa:sessions:tick');
 
     if ($scenario === 'payment_failed') {
@@ -84,7 +84,7 @@ function runFlow(string $scenario, int $amount, ?int $providerProfileId): array
 
         return app(FinishSession::class)->handle($refresh(), $provider)['qr']['tokens'][0]['token'];
     };
-    $decide = function (ServiceJob $s) use ($admin, $amount): int {
+    $decide = function (ServiceRequest $s) use ($admin, $amount): int {
         $dispute = $s->disputes()->sole();
         $choice = $amount < 2 ? mt_rand(0, 1) : mt_rand(0, 2);
         $share = [ResolveDispute::RELEASE => $amount, ResolveDispute::REFUND => 0, ResolveDispute::PARTIAL => mt_rand(1, max(1, $amount - 1))];

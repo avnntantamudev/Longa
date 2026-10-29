@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Sessions\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Sessions\Enums\SessionState;
-use App\Modules\Sessions\Models\ServiceJob;
+use App\Modules\Requests\Models\ServiceRequest;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -21,7 +20,7 @@ class PageController extends Controller
         return Inertia::render('Sessions/Index');
     }
 
-    public function show(ServiceJob $session): Response
+    public function show(ServiceRequest $session): Response
     {
         Gate::authorize('view', $session);
 
@@ -29,7 +28,7 @@ class PageController extends Controller
     }
 
     /** QR de confirmação (técnico do serviço). */
-    public function qr(ServiceJob $session): Response
+    public function qr(ServiceRequest $session): Response
     {
         Gate::authorize('actAsProvider', $session);
 
@@ -37,7 +36,7 @@ class PageController extends Controller
     }
 
     /** Leitor do QR (cliente do serviço). */
-    public function scan(ServiceJob $session): Response
+    public function scan(ServiceRequest $session): Response
     {
         Gate::authorize('actAsClient', $session);
 
@@ -45,13 +44,13 @@ class PageController extends Controller
     }
 
     /** Abrir disputa ou contestar falta (participantes). */
-    public function dispute(ServiceJob $session): Response
+    public function dispute(ServiceRequest $session): Response
     {
         Gate::authorize('view', $session);
 
         return Inertia::render('Sessions/Dispute', [
             'sessionId' => $session->id,
-            'contest' => in_array($session->state, [SessionState::NoShowProvider, SessionState::NoShowClient], true),
+            'contest' => in_array($session->closed_reason, ['no_show_provider', 'no_show_client'], true),
         ]);
     }
 }

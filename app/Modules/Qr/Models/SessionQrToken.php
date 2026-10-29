@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Model;
  * Token de confirmação de um serviço (o valor em claro nunca é guardado).
  *
  * @property int $id
- * @property int $service_job_id
+ * @property int $service_request_id
  * @property int $provider_profile_id
  * @property string $batch_id
  * @property string $token_hash
@@ -24,7 +24,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int|null $used_by
  * @property int $attempts
  */
-#[Fillable(['service_job_id', 'provider_profile_id', 'batch_id', 'token_hash', 'code_hash', 'valid_from', 'expires_at'])]
+#[Fillable(['service_request_id', 'provider_profile_id', 'batch_id', 'token_hash', 'code_hash', 'valid_from', 'expires_at'])]
 #[Hidden(['token_hash', 'code_hash'])]
 class SessionQrToken extends Model
 {

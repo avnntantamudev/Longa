@@ -5,7 +5,7 @@ declare(strict_types=1);
 use App\Modules\Companies\Models\Company;
 use App\Modules\Companies\Models\CompanyEmployee;
 use App\Modules\Notifications\Notifications\CompanyConsentRequestNotification;
-use App\Modules\Sessions\Models\ServiceJob;
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Users\Enums\Role;
 use App\Modules\Users\Models\User;
 use Illuminate\Support\Facades\Notification;
@@ -15,7 +15,7 @@ beforeEach(fn () => Notification::fake());
 /**
  * Empresa com um gestor RH e um serviço concluído do cliente indicado.
  *
- * @return array{0: Company, 1: User, 2: ServiceJob}
+ * @return array{0: Company, 1: User, 2: ServiceRequest}
  */
 function companyWithLesson(): array
 {
@@ -24,7 +24,7 @@ function companyWithLesson(): array
     $company->managers()->attach($rh->id);
 
     $session = paidSession(['duration_minutes' => 90, 'scheduled_at' => now()->subDay()]);
-    $session->forceFill(['state' => 'completed'])->save();
+    $session->forceFill(['state' => 'paid'])->save();
 
     return [$company, $rh, $session->fresh() ?? $session];
 }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Sessions\Services;
 
-use App\Modules\Sessions\Models\ServiceJob;
+use App\Modules\Requests\Models\ServiceRequest;
 
 /**
  * Política de reembolso (config/longa.php → session_rules). Devolve a parte do valor que fica para o
@@ -15,7 +15,7 @@ class RefundPolicy
     /**
      * Cliente cancela: ≥ N horas antes → 0 para o técnico (reembolso total); depois → X% para o técnico.
      */
-    public function clientCancellation(ServiceJob $session): int
+    public function clientCancellation(ServiceRequest $session): int
     {
         return $this->isLate($session) ? $this->percentOf($session->amount, (int) config('longa.session_rules.late_cancel_provider_share_percent')) : 0;
     }
@@ -23,7 +23,7 @@ class RefundPolicy
     /**
      * Técnico cancela ou falta: reembolso total.
      */
-    public function providerFault(ServiceJob $session): int
+    public function providerFault(ServiceRequest $session): int
     {
         return 0;
     }
@@ -31,12 +31,12 @@ class RefundPolicy
     /**
      * Falta do cliente: X% para o técnico.
      */
-    public function clientNoShow(ServiceJob $session): int
+    public function clientNoShow(ServiceRequest $session): int
     {
         return $this->percentOf($session->amount, (int) config('longa.session_rules.no_show_client_provider_share_percent'));
     }
 
-    public function isLate(ServiceJob $session): bool
+    public function isLate(ServiceRequest $session): bool
     {
         return now()->gt($session->scheduled_at->copy()->subHours((int) config('longa.session_rules.late_cancel_hours')));
     }

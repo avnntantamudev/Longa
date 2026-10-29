@@ -21,7 +21,7 @@ class DisputeResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'session_id' => $this->service_job_id,
+            'session_id' => $this->service_request_id,
             'opened_by' => $this->opened_by,
             'reason' => $this->reason,
             'reason_label' => $this->reasonLabel(),

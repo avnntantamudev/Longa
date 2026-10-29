@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use App\Modules\Requests\Models\ServiceRequest;
-use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Users\Models\ProviderProfile;
 use App\Modules\Users\Models\User;
 
@@ -25,16 +24,9 @@ function authorizeChannel(string $channel): Illuminate\Testing\TestResponse
     return test()->postJson('/api/v1/broadcasting/auth', ['socket_id' => '1234.5678', 'channel_name' => 'private-'.$channel]);
 }
 
-function sessionBetween(User $client, ProviderProfile $provider): ServiceJob
+function sessionBetween(User $client, ProviderProfile $provider): ServiceRequest
 {
-    $request = ServiceRequest::factory()->create(['client_id' => $client->id]);
-
-    return ServiceJob::query()->create([
-        'service_request_id' => $request->id, 'client_id' => $client->id, 'provider_profile_id' => $provider->id,
-        'category_id' => $request->category_id, 'title' => 'Serviço', 'amount' => 25000, 'commission' => 3750, 'provider_net' => 21250,
-        'scheduled_at' => now()->addDay(), 'modality' => 'in_person', 'municipality' => 'Talatona', 'neighborhood' => 'Talatona',
-        'latitude' => -8.9167, 'longitude' => 13.1833,
-    ]);
+    return acceptedSession('electronic', ['client_id' => $client->id, 'provider_profile_id' => $provider->id]);
 }
 
 it('exige autenticação', function () {

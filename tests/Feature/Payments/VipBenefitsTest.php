@@ -8,7 +8,6 @@ use App\Modules\Payments\Models\EscrowHold;
 use App\Modules\Payments\Services\VipSubscriptions;
 use App\Modules\Requests\Models\RequestOffer;
 use App\Modules\Requests\Models\ServiceRequest;
-use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Users\Enums\Role;
 use App\Modules\Users\Models\Category;
 use App\Modules\Users\Models\ProviderProfile;
@@ -49,7 +48,7 @@ it('técnico VIP aceita com comissão de 10%: serviço, oferta e escrow coerente
     $this->getJson('/api/v1/offers')->assertJsonPath('data.0.commission_percent', 10)->assertJsonPath('data.0.provider_net', 22500);
     $sessionId = $this->postJson("/api/v1/offers/{$offer->id}/accept")->assertOk()->json('data.id');
 
-    $session = ServiceJob::query()->findOrFail($sessionId);
+    $session = ServiceRequest::query()->findOrFail($sessionId);
     expect([$session->commission, $session->provider_net, $session->commission_percent])->toBe([2500, 22500, 10]);
 
     app(PayForSession::class)->handle($session, $session->client, 'multicaixa_express');
@@ -66,7 +65,7 @@ it('técnico normal continua com 15%; a comissão fica fixa mesmo que o VIP come
     $sessionId = $this->postJson("/api/v1/offers/{$offer->id}/accept")->assertOk()->json('data.id');
     makeVip($provider);
 
-    expect(ServiceJob::query()->findOrFail($sessionId)->only(['commission', 'commission_percent']))->toBe(['commission' => 5000, 'commission_percent' => 20]);
+    expect(ServiceRequest::query()->findOrFail($sessionId)->only(['commission', 'commission_percent']))->toBe(['commission' => 5000, 'commission_percent' => 20]);
 });
 
 it('na 1.ª onda os VIP vêm primeiro, mesmo com pontuação mais baixa', function () {

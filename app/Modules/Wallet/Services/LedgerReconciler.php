@@ -58,7 +58,7 @@ class LedgerReconciler
             $issues[] = $this->issue('negative_provider_balance', 'critical', "Conta {$row->code} com saldo negativo ({$row->balance} Kz).", (array) $row);
         }
 
-        $overdue = EscrowHold::query()->whereIn('state', EscrowHold::ACTIVE)->where('expires_at', '<', now())->pluck('service_job_id');
+        $overdue = EscrowHold::query()->whereIn('state', EscrowHold::ACTIVE)->where('expires_at', '<', now())->pluck('service_request_id');
         if ($overdue->isNotEmpty()) {
             $issues[] = $this->issue('holds_overdue', 'warning', $overdue->count().' retenção(ões) sem destino depois do prazo máximo.', ['session_ids' => $overdue->all()]);
         }

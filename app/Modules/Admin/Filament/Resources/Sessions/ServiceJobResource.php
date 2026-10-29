@@ -7,8 +7,8 @@ namespace App\Modules\Admin\Filament\Resources\Sessions;
 use App\Modules\Admin\Filament\Resources\Sessions\Pages\ListServiceJobs;
 use App\Modules\Admin\Filament\Resources\Sessions\Pages\ViewServiceJob;
 use App\Modules\Admin\Filament\Support\SessionSections;
-use App\Modules\Sessions\Enums\SessionState;
-use App\Modules\Sessions\Models\ServiceJob;
+use App\Modules\Requests\Enums\RequestState;
+use App\Modules\Requests\Models\ServiceRequest;
 use BackedEnum;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Resource;
@@ -25,7 +25,7 @@ use UnitEnum;
  */
 class ServiceJobResource extends Resource
 {
-    protected static ?string $model = ServiceJob::class;
+    protected static ?string $model = ServiceRequest::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedAcademicCap;
 
@@ -41,7 +41,8 @@ class ServiceJobResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->with(['client', 'provider.user', 'escrowHold']);
+        // Serviços = pedidos com técnico atribuído
+        return parent::getEloquentQuery()->whereNotNull('provider_profile_id')->with(['client', 'provider.user', 'escrowHold']);
     }
 
     public static function canCreate(): bool
@@ -59,12 +60,12 @@ class ServiceJobResource extends Resource
                 TextColumn::make('client.name')->label('Cliente'),
                 TextColumn::make('provider.user.name')->label('Técnico'),
                 TextColumn::make('amount')->label('Valor')->formatStateUsing(fn (int $state) => SessionSections::kz($state)),
-                TextColumn::make('state')->label('Estado')->badge()->formatStateUsing(fn (SessionState $state) => $state->label()),
+                TextColumn::make('state')->label('Estado')->badge()->formatStateUsing(fn (RequestState $state) => $state->label()),
                 TextColumn::make('scheduled_at')->label('Data')->dateTime('d/m/Y H:i')->sortable(),
             ])
             ->filters([
                 SelectFilter::make('state')->label('Estado')
-                    ->options(collect(SessionState::cases())->mapWithKeys(fn (SessionState $s) => [$s->value => $s->label()])->all()),
+                    ->options(collect(RequestState::cases())->mapWithKeys(fn (RequestState $s) => [$s->value => $s->label()])->all()),
                 SelectFilter::make('payment_method')->label('Pagamento')->options(['electronic' => 'Eletrónico', 'cash' => 'Em mão']),
             ])
             ->recordActions([ViewAction::make()]);

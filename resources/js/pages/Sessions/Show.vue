@@ -5,7 +5,7 @@ import UserAvatar from '@/components/UserAvatar.vue';
 import { usePolling, usePrivateChannel } from '@/composables/useRealtime';
 import { api, ApiError, newIdempotencyKey } from '@/lib/api';
 import { kwanza, when } from '@/lib/format';
-import { eventLabel, stateBadge, type Session, type SessionAction, type SessionEventItem } from '@/lib/session';
+import { eventLabel, sessionPhase, stateBadge, type Session, type SessionAction, type SessionEventItem } from '@/lib/session';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { computed, onMounted, ref } from 'vue';
 
@@ -27,6 +27,7 @@ const meId = computed(() => page.props.auth.user?.id ?? 0);
 const isProvider = computed(() => session.value?.role === 'provider');
 const counterpart = computed(() => (session.value?.role === 'client' ? session.value.provider?.name : session.value?.client?.name) ?? '');
 const counterpartPhoto = computed(() => (session.value?.role === 'client' ? session.value.provider?.photo_url : session.value?.client?.photo_url) ?? null);
+const phase = computed(() => (session.value ? sessionPhase(session.value) : 'other'));
 const has = (action: SessionAction) => session.value?.actions.includes(action) ?? false;
 const late = computed(() => {
     if (!session.value) return false;
@@ -127,7 +128,7 @@ onMounted(load);
                 <div v-if="isProvider"><dt class="text-ink-muted">Recebe</dt><dd class="font-semibold">{{ kwanza(session.provider_net ?? 0) }}</dd></div>
                 <div><dt class="text-ink-muted">Pagamento</dt><dd class="font-semibold">{{ session.payment_method === 'cash' ? 'Em mão' : 'Pelo BISCA' }}</dd></div>
             </dl>
-            <div v-if="session.modality !== 'online' && ['scheduled', 'pending_payment', 'in_progress'].includes(session.state)" class="mt-3">
+            <div v-if="session.modality !== 'online' && ['scheduled', 'pending_payment', 'in_progress'].includes(phase)" class="mt-3">
                 <MiniMap :lat="session.latitude" :lng="session.longitude" :approximate="false" :label="session.neighborhood" />
             </div>
         </section>
@@ -138,7 +139,7 @@ onMounted(load);
             <p v-if="error" class="rounded-control bg-danger/10 p-3 text-caption font-semibold text-danger" role="alert">{{ error }}</p>
 
             <!-- Pagamento (cliente) -->
-            <template v-if="session.state === 'pending_payment'">
+            <template v-if="phase === 'pending_payment'">
                 <template v-if="!isProvider">
                     <p class="font-semibold">Pague para garantir o serviço</p>
                     <p class="text-caption text-ink-muted">
@@ -157,10 +158,10 @@ onMounted(load);
                 <p v-else class="text-caption text-ink-muted">À espera do pagamento do cliente (até 10 minutos).</p>
             </template>
 
-            <p v-else-if="session.state === 'payment_failed'" class="text-caption text-ink-muted">O pagamento não foi concluído e o serviço não foi marcado.</p>
+            <p v-else-if="phase === 'payment_failed'" class="text-caption text-ink-muted">O pagamento não foi concluído e o serviço não foi marcado.</p>
 
             <!-- Serviço agendado -->
-            <template v-else-if="session.state === 'scheduled'">
+            <template v-else-if="phase === 'scheduled'">
                 <p class="text-caption text-ink-muted">
                     {{ isProvider ? 'Inicie o serviço quando chegar (a partir de 15 minutos antes).' : 'O técnico inicia o serviço quando chegar.' }}
                 </p>
@@ -181,7 +182,7 @@ onMounted(load);
             </template>
 
             <!-- À espera de confirmação -->
-            <template v-else-if="session.state === 'awaiting_confirmation'">
+            <template v-else-if="phase === 'awaiting_confirmation'">
                 <template v-if="isProvider">
                     <p class="font-semibold">À espera da confirmação do cliente</p>
                     <p class="text-caption text-ink-muted">{{ kwanza(session.provider_net ?? 0) }} pendentes, libertados quando o cliente ler o QR.</p>
@@ -207,7 +208,7 @@ onMounted(load);
             </template>
 
             <!-- Concluída -->
-            <template v-else-if="session.state === 'completed'">
+            <template v-else-if="phase === 'completed'">
                 <p class="font-semibold text-success">Serviço concluído</p>
                 <p v-if="isProvider && session.payment_method === 'electronic'" class="text-caption text-ink-muted">{{ kwanza(session.provider_net ?? 0) }} na sua carteira.</p>
                 <template v-if="has('confirm_cash')">
@@ -217,8 +218,8 @@ onMounted(load);
             </template>
 
             <!-- Faltas -->
-            <template v-else-if="['no_show_provider', 'no_show_client'].includes(session.state)">
-                <p class="font-semibold">{{ session.state === 'no_show_provider' ? 'Falta do técnico reportada' : 'Falta do cliente reportada' }}</p>
+            <template v-else-if="['no_show_provider', 'no_show_client'].includes(phase)">
+                <p class="font-semibold">{{ phase === 'no_show_provider' ? 'Falta do técnico reportada' : 'Falta do cliente reportada' }}</p>
                 <p v-if="session.no_show_contest_until" class="text-caption text-ink-muted">Pode ser contestada até {{ when(session.no_show_contest_until) }}.</p>
                 <Link v-if="has('dispute')" :href="`/servicos/${session.id}/disputa`" class="btn-primary w-full">Contestar a falta</Link>
             </template>

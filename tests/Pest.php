@@ -58,26 +58,27 @@ pest()->extend(TestCase::class)
     ->in('Concurrency');
 
 /**
- * Serviço acabada de aceitar (como faria o TRIM TRIM): eletrónica em pending_payment, dinheiro em scheduled.
+ * Pedido acabado de aceitar (como faria o TRIM TRIM): o serviço é o próprio pedido, em "accepted";
+ * pagamento digital à espera (payment_status = pending), dinheiro sem pagamento antecipado.
  *
  * @param  array<string, mixed>  $overrides
  */
-function acceptedSession(string $paymentMethod = 'electronic', array $overrides = []): App\Modules\Sessions\Models\ServiceJob
+function acceptedSession(string $paymentMethod = 'electronic', array $overrides = []): App\Modules\Requests\Models\ServiceRequest
 {
-    $request = App\Modules\Requests\Models\ServiceRequest::factory()->create(['payment_method' => $paymentMethod]);
-    $provider = App\Modules\Users\Models\ProviderProfile::factory()->verified()->create();
+    $providerId = $overrides['provider_profile_id'] ?? App\Modules\Users\Models\ProviderProfile::factory()->verified()->create()->id;
+    unset($overrides['provider_profile_id']);
     $electronic = $paymentMethod === 'electronic';
 
-    $session = App\Modules\Sessions\Models\ServiceJob::query()->create([
-        'service_request_id' => $request->id, 'client_id' => $request->client_id, 'provider_profile_id' => $provider->id,
-        'category_id' => $request->category_id, 'title' => 'Serviço de SGME', 'amount' => 25000, 'commission' => 3750, 'commission_percent' => 15, 'provider_net' => 21250,
+    $session = App\Modules\Requests\Models\ServiceRequest::factory()->create([
+        'title' => 'Serviço de SGME', 'amount' => 25000, 'commission' => 3750, 'commission_percent' => 15, 'provider_net' => 21250,
         'scheduled_at' => now()->addDay()->setTime(14, 0), 'duration_minutes' => 60, 'payment_method' => $paymentMethod,
+        'payment_status' => $electronic ? App\Modules\Requests\Models\ServiceRequest::PAYMENT_PENDING : null,
         'payment_due_at' => $electronic ? now()->addMinutes(10) : null,
         'modality' => 'in_person', 'municipality' => 'Talatona', 'neighborhood' => 'Talatona', 'latitude' => -8.9167, 'longitude' => 13.1833,
         ...$overrides,
     ]);
-    $session->forceFill(['state' => $electronic ? 'pending_payment' : 'scheduled'])->save();
-    App\Modules\Sessions\Models\Conversation::query()->create(['service_job_id' => $session->id]);
+    $session->forceFill(['state' => 'accepted', 'provider_profile_id' => $providerId, 'matched_at' => now()])->save();
+    App\Modules\Sessions\Models\Conversation::query()->create(['service_request_id' => $session->id]);
 
     return $session->fresh() ?? $session;
 }
@@ -87,7 +88,7 @@ function acceptedSession(string $paymentMethod = 'electronic', array $overrides 
  *
  * @param  array<string, mixed>  $overrides
  */
-function paidSession(array $overrides = []): App\Modules\Sessions\Models\ServiceJob
+function paidSession(array $overrides = []): App\Modules\Requests\Models\ServiceRequest
 {
     $session = acceptedSession('electronic', $overrides);
     app(App\Modules\Payments\Actions\PayForSession::class)->handle($session, $session->client, 'multicaixa_express');
@@ -100,7 +101,7 @@ function paidSession(array $overrides = []): App\Modules\Sessions\Models\Service
  *
  * @return array{escrow: int, provider: int, revenue: int, refunds: int, funds_in: int}
  */
-function balances(App\Modules\Sessions\Models\ServiceJob $session): array
+function balances(App\Modules\Requests\Models\ServiceRequest $session): array
 {
     $ledger = app(App\Modules\Wallet\Ledger\LedgerService::class);
     $codes = [

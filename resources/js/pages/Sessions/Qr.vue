@@ -65,7 +65,7 @@ async function fetchBatch() {
 
 async function refreshSession() {
     session.value = (await api.get<{ data: Session }>(`/sessions/${props.sessionId}`)).data;
-    if (session.value.state === 'completed') confirmed.value = true;
+    if (session.value.state === 'paid') confirmed.value = true;
 }
 
 async function draw() {

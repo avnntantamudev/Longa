@@ -47,7 +47,7 @@ class ProviderOfferResource extends JsonResource
             'sent_at' => $this->sent_at->toIso8601String(),
             'expires_at' => $this->expires_at->toIso8601String(),
             'seconds_left' => $this->secondsLeft(),
-            'session_id' => $this->when($this->state->value === 'accepted', fn () => $serviceRequest->session?->id),
+            'session_id' => $this->when($this->state->value === 'accepted', fn () => $serviceRequest->id),
         ];
     }
 }

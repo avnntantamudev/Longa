@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace App\Modules\Sessions\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Sessions\Actions\SendMessage;
 use App\Modules\Sessions\Http\Requests\SendMessageRequest;
 use App\Modules\Sessions\Http\Resources\MessageResource;
 use App\Modules\Sessions\Http\Resources\SessionResource;
 use App\Modules\Sessions\Models\Message;
-use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Sessions\Models\SessionEvent;
 use App\Modules\Users\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -36,7 +36,8 @@ class SessionController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        $sessions = ServiceJob::query()
+        $sessions = ServiceRequest::query()
+            ->whereNotNull('provider_profile_id')
             ->where(fn ($q) => $q->where('client_id', $user->id)->orWhere('provider_profile_id', $user->providerProfile->id ?? 0))
             ->with(['provider.user', 'client', 'category', 'conversation'])
             ->orderBy('scheduled_at')
@@ -48,7 +49,7 @@ class SessionController extends Controller
     /**
      * Ver serviço.
      */
-    public function show(ServiceJob $session): SessionResource
+    public function show(ServiceRequest $session): SessionResource
     {
         Gate::authorize('view', $session);
 
@@ -60,12 +61,12 @@ class SessionController extends Controller
      *
      * Paginação por cursor: `before` (mensagens mais antigas) ou `after` (novas desde a última recebida).
      */
-    public function messages(Request $request, ServiceJob $session): AnonymousResourceCollection
+    public function messages(Request $request, ServiceRequest $session): AnonymousResourceCollection
     {
         Gate::authorize('chat', $session);
 
         $query = Message::query()
-            ->whereHas('conversation', fn ($q) => $q->where('service_job_id', $session->id))
+            ->whereHas('conversation', fn ($q) => $q->where('service_request_id', $session->id))
             ->with('sender');
 
         if ($request->filled('after')) {
@@ -86,7 +87,7 @@ class SessionController extends Controller
     /**
      * Enviar mensagem (texto e/ou PDF).
      */
-    public function send(SendMessageRequest $request, ServiceJob $session, SendMessage $action): JsonResponse
+    public function send(SendMessageRequest $request, ServiceRequest $session, SendMessage $action): JsonResponse
     {
         Gate::authorize('chat', $session);
 
@@ -101,7 +102,7 @@ class SessionController extends Controller
     /**
      * Linha do tempo do serviço (participantes).
      */
-    public function events(ServiceJob $session): JsonResponse
+    public function events(ServiceRequest $session): JsonResponse
     {
         Gate::authorize('view', $session);
 

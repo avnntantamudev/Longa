@@ -6631,7 +6631,8 @@
                         "type": [
                             "integer",
                             "null"
-                        ]
+                        ],
+                        "description": "O servi\u00e7o \u00e9 o pr\u00f3prio pedido: a execu\u00e7\u00e3o abre-se pelo mesmo id depois de um t\u00e9cnico aceitar"
                     },
                     "cancel_reason": {
                         "type": [
@@ -7446,10 +7447,7 @@
                         "type": "integer"
                     },
                     "session_id": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ]
+                        "type": "integer"
                     }
                 },
                 "required": [
@@ -7888,19 +7886,19 @@
                     "state_label": {
                         "type": "string",
                         "enum": [
-                            "A aguardar pagamento",
-                            "Pagamento falhou",
-                            "Agendada",
-                            "Em curso",
-                            "A aguardar confirma\u00e7\u00e3o",
-                            "Conclu\u00edda",
-                            "Cancelada pelo cliente",
-                            "Cancelada pelo t\u00e9cnico",
-                            "Falta do t\u00e9cnico",
-                            "Falta do cliente",
+                            "Criado",
+                            "\u00c0 procura de t\u00e9cnico",
+                            "Sem t\u00e9cnico dispon\u00edvel",
+                            "Aceite",
+                            "A caminho",
+                            "Em diagn\u00f3stico",
+                            "Or\u00e7amento enviado",
+                            "Or\u00e7amento aceite",
+                            "Em execu\u00e7\u00e3o",
+                            "Conclu\u00eddo",
+                            "Pago",
                             "Em disputa",
-                            "Reembolsada",
-                            "Reembolsada parcialmente"
+                            "Cancelado"
                         ]
                     },
                     "actions": {
@@ -7948,7 +7946,19 @@
                     "payment_method": {
                         "type": "string"
                     },
+                    "payment_status": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "payment_due_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "closed_reason": {
                         "type": [
                             "string",
                             "null"
@@ -7997,7 +8007,10 @@
                         "type": "integer"
                     },
                     "commission_percent": {
-                        "type": "integer"
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     },
                     "role": {
                         "type": "string",
@@ -8127,7 +8140,9 @@
                     "duration_minutes",
                     "ends_at",
                     "payment_method",
+                    "payment_status",
                     "payment_due_at",
+                    "closed_reason",
                     "started_at",
                     "ended_at",
                     "confirmed_at",

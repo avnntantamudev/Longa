@@ -88,6 +88,16 @@ enum RequestState: string implements StateEnum
     }
 
     /**
+     * Pedidos com técnico que ocupam o horário dele (conflitos no despacho).
+     *
+     * @return list<self>
+     */
+    public static function occupying(): array
+    {
+        return [self::Accepted, self::OnTheWay, self::Diagnosing, self::QuoteSent, self::QuoteAccepted, self::InProgress];
+    }
+
+    /**
      * Estados exclusivos dos serviços por orçamento.
      *
      * @return list<self>

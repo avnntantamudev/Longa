@@ -7,8 +7,8 @@ namespace App\Modules\Payments\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Payments\Actions\ConfirmCashPayment;
 use App\Modules\Payments\Services\CommissionDebts;
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Sessions\Http\Resources\SessionResource;
-use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Users\Models\ProviderProfile;
 use App\Modules\Users\Models\User;
 use App\Modules\Wallet\Ledger\LedgerException;
@@ -30,7 +30,7 @@ class CashController extends Controller
      * Requer `Idempotency-Key`. Só depois de o serviço estar concluído por QR. A comissão do BISCA fica em dívida
      * do técnico (descontada do saldo disponível dele, se houver).
      */
-    public function confirm(Request $request, ServiceJob $session, ConfirmCashPayment $action): SessionResource
+    public function confirm(Request $request, ServiceRequest $session, ConfirmCashPayment $action): SessionResource
     {
         Gate::authorize('actAsClient', $session);
 

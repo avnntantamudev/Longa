@@ -6,9 +6,9 @@ namespace App\Modules\Sessions\Actions;
 
 use App\Modules\Payments\Services\SessionSettlement;
 use App\Modules\Qr\Services\QrTokenService;
-use App\Modules\Sessions\Enums\SessionState;
+use App\Modules\Requests\Enums\RequestState;
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Sessions\Events\SessionConfirmed;
-use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Sessions\Services\SessionLifecycle;
 use App\Modules\Users\Models\User;
 use App\Support\Api\ApiException;
@@ -32,7 +32,7 @@ class ConfirmSession
         private readonly AuditLogger $audit,
     ) {}
 
-    public function handle(ServiceJob $session, User $client, ?string $token, ?string $code, ?float $latitude = null, ?float $longitude = null): ServiceJob
+    public function handle(ServiceRequest $session, User $client, ?string $token, ?string $code, ?float $latitude = null, ?float $longitude = null): ServiceRequest
     {
         $lockKey = "qr-failures:session:{$session->id}";
         $maxFailures = (int) config('longa.session_rules.qr_max_failed_attempts');
@@ -44,15 +44,15 @@ class ConfirmSession
         }
 
         $result = DB::transaction(function () use ($session, $client, $token, $code, $latitude, $longitude) {
-            /** @var ServiceJob $locked */
-            $locked = ServiceJob::query()->lockForUpdate()->findOrFail($session->id);
+            /** @var ServiceRequest $locked */
+            $locked = ServiceRequest::query()->lockForUpdate()->findOrFail($session->id);
 
             // Idempotência: já confirmada (por esta ou por uma leitura simultânea)
-            if ($locked->state === SessionState::Completed) {
+            if ($locked->state === RequestState::Paid) {
                 return ['session' => $locked, 'error' => null];
             }
 
-            if (! in_array($locked->state, [SessionState::InProgress, SessionState::AwaitingConfirmation], true)) {
+            if (! in_array($locked->state, [RequestState::InProgress, RequestState::Completed], true)) {
                 return ['session' => $locked, 'error' => new ApiException('session_not_confirmable', 'Este serviço não pode ser confirmado no estado atual ('.$locked->state->label().').', 409)];
             }
 
@@ -82,7 +82,10 @@ class ConfirmSession
                 $this->lifecycle->record($locked, 'risk_flagged', $client, ['reason' => 'far_from_location', 'distance_m' => $distance]);
             }
 
-            $this->lifecycle->transition($locked, SessionState::Completed, 'confirmed', $client, $metadata, ['confirmed_at' => now()]);
+            if ($locked->state === RequestState::InProgress) {
+                $this->lifecycle->transition($locked, RequestState::Completed, 'finished', $client, $metadata, ['ended_at' => now(), 'completed_at' => now()]);
+            }
+            $this->lifecycle->transition($locked, RequestState::Paid, 'confirmed', $client, $metadata, ['confirmed_at' => now()]);
             $this->settlement->complete($locked, $client, 'qr_confirmed');
 
             SessionConfirmed::dispatch($locked);
@@ -106,7 +109,7 @@ class ConfirmSession
         return $result['session'];
     }
 
-    private function distance(ServiceJob $session, ?float $latitude, ?float $longitude): ?int
+    private function distance(ServiceRequest $session, ?float $latitude, ?float $longitude): ?int
     {
         if ($latitude === null || $longitude === null) {
             return null;

@@ -10,7 +10,6 @@ use App\Modules\Requests\Events\RequestMatched;
 use App\Modules\Requests\Models\RequestOffer;
 use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Score\Models\ScoreEvent;
-use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Users\Models\Category;
 use App\Modules\Users\Models\ProviderProfile;
 use Database\Factories\ProviderProfileFactory;
@@ -54,16 +53,16 @@ it('aceita: cria o serviço, as outras ofertas perdem e o pedido fica matched', 
 
     $response = $this->postJson("/api/v1/offers/{$offer->id}/accept")->assertOk();
 
-    $response->assertJsonPath('data.state', 'pending_payment')
+    $response->assertJsonPath('data.state', 'accepted')
         ->assertJsonPath('data.role', 'provider')
         ->assertJsonPath('data.provider_net', 20000)
         ->assertJsonPath('data.latitude', ProviderProfileFactory::TALATONA[0]);
 
-    $session = ServiceJob::query()->sole();
+    $session = ServiceRequest::query()->sole();
     expect($session->payment_due_at)->not->toBeNull()
         ->and($session->conversation)->not->toBeNull()
         ->and($this->request->fresh()?->state)->toBe(RequestState::Accepted)
-        ->and($this->request->fresh()?->assigned_provider_profile_id)->toBe($this->providers[1]->id)
+        ->and($this->request->fresh()?->provider_profile_id)->toBe($this->providers[1]->id)
         ->and(RequestOffer::query()->where('state', 'lost')->count())->toBe(2)
         ->and(AuditLog::query()->where('action', 'requests.offer_accepted')->exists())->toBeTrue();
 
@@ -77,7 +76,7 @@ it('é idempotente para o técnico que ganhou', function () {
     $first = $this->postJson("/api/v1/offers/{$offer->id}/accept")->assertOk()->json('data.id');
     $second = $this->postJson("/api/v1/offers/{$offer->id}/accept")->assertOk()->json('data.id');
 
-    expect($second)->toBe($first)->and(ServiceJob::query()->count())->toBe(1);
+    expect($second)->toBe($first)->and(ServiceRequest::query()->count())->toBe(1);
 });
 
 it('responde ao perdedor que outro técnico aceitou primeiro', function () {
@@ -101,7 +100,7 @@ it('impõe o prazo de 60 s no servidor, mesmo antes do job de expiração correr
         ->assertStatus(410)
         ->assertJsonPath('error.code', 'offer_expired');
 
-    expect(ServiceJob::query()->count())->toBe(0)
+    expect(ServiceRequest::query()->whereNotNull('provider_profile_id')->count())->toBe(0)
         ->and($offer->fresh()?->state)->toBe(OfferState::Sent);
 });
 

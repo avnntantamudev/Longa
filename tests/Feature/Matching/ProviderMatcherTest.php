@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use App\Modules\Matching\Services\ProviderMatcher;
 use App\Modules\Requests\Models\ServiceRequest;
-use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Users\Enums\UserStatus;
 use App\Modules\Users\Models\Category;
 use App\Modules\Users\Models\ProviderProfile;
@@ -84,12 +83,9 @@ it('exclui técnicos com serviço marcado à mesma hora', function () {
     $busy = providerAt(200);
     $free = providerAt(300);
 
-    ServiceJob::query()->create([
-        'service_request_id' => ServiceRequest::factory()->create()->id, 'client_id' => $this->request->client_id,
-        'provider_profile_id' => $busy->id, 'category_id' => $this->sgme->id, 'title' => 'Outro serviço',
-        'amount' => 1000, 'commission' => 150, 'provider_net' => 850,
-        'scheduled_at' => $this->request->scheduled_at->copy()->addHour(), 'modality' => 'in_person',
-        'municipality' => 'Talatona', 'neighborhood' => 'Talatona', 'latitude' => -8.9, 'longitude' => 13.1,
+    acceptedSession('cash', [
+        'client_id' => $this->request->client_id, 'provider_profile_id' => $busy->id, 'category_id' => $this->sgme->id,
+        'scheduled_at' => $this->request->scheduled_at->copy()->addHour(),
     ]);
 
     expect(matchedIds())->toBe([$free->id]);

@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 use App\Modules\Payments\Actions\ConfirmCashPayment;
+use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Sessions\Actions\ConfirmSession;
 use App\Modules\Sessions\Actions\FinishSession;
 use App\Modules\Sessions\Actions\StartSession;
-use App\Modules\Sessions\Models\ServiceJob;
 use App\Modules\Users\Enums\Role;
 use App\Modules\Users\Models\User;
 use Illuminate\Support\Facades\Cache;
@@ -17,7 +17,7 @@ beforeEach(function () {
     Notification::fake();
 });
 
-function finishByQr(ServiceJob $session): void
+function finishByQr(ServiceRequest $session): void
 {
     test()->travelTo($session->scheduled_at);
     app(StartSession::class)->handle($session, $session->provider->user);

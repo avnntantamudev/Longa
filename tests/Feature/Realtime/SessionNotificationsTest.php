@@ -90,7 +90,7 @@ it('confirmação automática (R2) também avisa o técnico', function () {
 
 it('eventos em tempo real vão para canais privados e nunca levam tokens de QR', function () {
     $session = paidSession();
-    $dispute = new App\Modules\Sessions\Models\Dispute(['service_job_id' => $session->id]);
+    $dispute = new App\Modules\Sessions\Models\Dispute(['service_request_id' => $session->id]);
 
     $events = [
         new SessionStarted($session), new QrIssued($session), new SessionConfirmed($session),

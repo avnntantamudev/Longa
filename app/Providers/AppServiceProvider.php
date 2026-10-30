@@ -33,5 +33,12 @@ class AppServiceProvider extends ServiceProvider
             DevCommands::except('horizon', 'queue');
             DevCommands::artisan('queue:listen --queue=payments,notifications,default --tries=3 --timeout=0', 'queues');
         }
+
+        // `php artisan dev` também arranca o tempo real (sem ele o alerta do TRIM TRIM e o chat ao vivo não chegam)
+        // e as tarefas agendadas (rondas do despacho, confirmação automática, orçamentos expirados, lembretes)
+        if ($this->app->runningInConsole()) {
+            DevCommands::artisan('reverb:start --port='.config('reverb.servers.reverb.port'), 'reverb');
+            DevCommands::artisan('schedule:work', 'schedule');
+        }
     }
 }

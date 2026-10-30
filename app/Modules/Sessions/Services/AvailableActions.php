@@ -51,7 +51,7 @@ class AvailableActions
             RequestState::Diagnosing => ['send_quote' => $isProvider],
             RequestState::QuoteSent => ['answer_quote' => ! $isProvider],
             RequestState::QuoteAccepted => $session->awaitingPayment()
-                ? ['pay' => ! $isProvider && ($session->payment_due_at?->isFuture() ?? false)]
+                ? ['pay' => ! $isProvider]
                 : ['start' => $isProvider],
             RequestState::InProgress => [
                 // Pagamento por fases: o cliente paga a fase a pagar e confirma a fase paga (que não a última)

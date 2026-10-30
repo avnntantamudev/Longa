@@ -9,6 +9,7 @@ use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Sessions\Services\SessionLifecycle;
 use App\Modules\Users\Models\User;
 use App\Support\Api\ApiException;
+use App\Support\Audit\AuditLogger;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -18,7 +19,7 @@ use Illuminate\Support\Facades\DB;
  */
 class ReportNoShow
 {
-    public function __construct(private readonly SessionLifecycle $lifecycle) {}
+    public function __construct(private readonly SessionLifecycle $lifecycle, private readonly AuditLogger $audit) {}
 
     public function handle(ServiceRequest $session, User $reporter, ?string $note): ServiceRequest
     {
@@ -46,6 +47,7 @@ class ReportNoShow
             $this->lifecycle->transition($locked, RequestState::Cancelled, 'no_show_reported', $reporter, [
                 'note' => $note, 'contest_until' => $contestUntil->toIso8601String(),
             ], ['closed_reason' => $target, 'no_show_contest_until' => $contestUntil, 'cancelled_by' => $reporter->id, 'cancelled_at' => now()]);
+            $this->audit->record('sessions.no_show_reported', $locked, ['closed_reason' => $target, 'note' => $note], $reporter->id);
 
             return $locked;
         });

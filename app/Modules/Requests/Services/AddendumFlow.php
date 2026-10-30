@@ -98,6 +98,7 @@ class AddendumFlow
 
             return $addendum;
         });
+        $this->audit->record('addenda.client_approved', $result, ['amount' => $result->amount, 'status' => $result->status], $client->id);
         if ($result->status === QuoteAddendum::APPROVED) {
             $this->notifyDecision($result, true);
         }
@@ -118,6 +119,7 @@ class AddendumFlow
 
             return $addendum;
         });
+        $this->audit->record('addenda.client_rejected', $result, ['amount' => $result->amount], $client->id);
         $this->notifyDecision($result, false);
 
         return $result;
@@ -185,6 +187,7 @@ class AddendumFlow
             $this->escrow->topUp($request, $charge, $addendum->amount, "addendum:{$addendum->id}");
             $addendum->forceFill(['status' => QuoteAddendum::PAID])->save();
             $this->lifecycle->record($request, 'addendum_paid', $client, ['addendum_id' => $addendum->id, 'amount' => $addendum->amount, 'charge_id' => $charge->id]);
+            $this->audit->record('addenda.paid', $addendum, ['amount' => $addendum->amount, 'charge_id' => $charge->id], $client->id);
 
             return $addendum;
         });

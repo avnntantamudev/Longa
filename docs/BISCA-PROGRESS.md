@@ -237,7 +237,7 @@ Respostas do cliente às dúvidas da Fase 1 (2026-10-29). Confirmado com o "ok":
 - `tests/Feature/Flows/BiscaFlowsTest.php`: fluxo completo de preço fixo, fluxo completo por orçamento com adenda e
   corrida entre dois técnicos pelo mesmo pedido. Relatório da fase: `docs/BISCA-FASE2-RELATORIO.md`.
 
-## Fase 3 — Estado: PLANO (à espera de "ok")
+## Fase 3 — Plano (aprovado a 2026-10-30)
 
 Decisões (o cliente pediu "toma as melhores decisões", 2026-10-30). Todas editáveis no painel:
 1. **Saldo mínimo para receber pedidos:** conta o saldo líquido (disponível − comissões em dívida dos serviços em
@@ -268,7 +268,7 @@ Decisões (o cliente pediu "toma as melhores decisões", 2026-10-30). Todas edit
 | 7 | Notificações: novo pedido, aceite, a caminho, orçamento enviado e aceite, concluído, pagamento, disputa |
 | 8 | Testes de aceitação (saldo = soma dos movimentos, operação falhada sem movimentos parciais, fluxos em dinheiro e digital com reserva, libertação, comissão e disputa com reembolso, auditoria) e entrega final |
 
-## Fase 3 — Estado: EM CURSO (plano aprovado a 2026-10-30)
+## Fase 3 — Estado: CONCLUÍDA (entrega em docs/BISCA-ENTREGA-FINAL.md)
 
 ### Notas do passo 1
 
@@ -347,3 +347,13 @@ Decisões (o cliente pediu "toma as melhores decisões", 2026-10-30). Todas edit
   pagamento recebido, adenda proposta e decidida, início, conclusão (também a automática), confirmação, disputa.
 - Com push ativo vão por push; sem push, os urgentes (a caminho, orçamento enviado e aceite, pagamento, disputa) vão
   por SMS (`SmsChannel`, hoje em log) e os outros ficam na app.
+
+### Notas do passo 8
+
+- `tests/Feature/Flows/FinancialAcceptanceTest.php`: saldo = soma dos movimentos, operações falhadas sem movimentos
+  parciais, fluxos em dinheiro e digital, disputa com reembolso e auditoria.
+- Auditoria acrescentada: recusa de orçamento, comissão da taxa de visita, decisões do cliente sobre adendas,
+  pagamento de adendas, confirmação do dinheiro, cancelamentos e faltas.
+- Dois erros corrigidos nos orçamentos: a janela de pagamento deixava o pedido preso depois de 10 minutos (o orçamento
+  aceite deixa de ter prazo) e a execução usava a data original do pedido como fim previsto, o que podia libertar o
+  dinheiro antes do prazo do orçamento (o fim previsto passa a ser o início mais o prazo do orçamento).

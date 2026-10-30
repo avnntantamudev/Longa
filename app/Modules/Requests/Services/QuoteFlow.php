@@ -61,6 +61,7 @@ class QuoteFlow
 
             if ($locked->visit_fee > 0) {
                 $this->debts->registerVisitFee($locked, $provider);
+                $this->audit->record('payments.visit_fee_commission', $locked, ['visit_fee' => $locked->visit_fee], $provider->id);
             }
 
             return $locked;
@@ -136,7 +137,8 @@ class QuoteFlow
                 'provider_net' => $split['provider_net'],
                 'commission_percent' => $split['percent'],
                 'payment_status' => $electronic ? ServiceRequest::PAYMENT_PENDING : null,
-                'payment_due_at' => $electronic ? now()->addMinutes((int) config('longa.session_rules.payment_window_minutes')) : null,
+                // Sem prazo: o preço está bloqueado e "orçamento aceite" só pode seguir para "em execução"
+                'payment_due_at' => null,
             ]);
 
             return $locked;
@@ -180,6 +182,7 @@ class QuoteFlow
 
             return $locked;
         });
+        $this->audit->record('quotes.refused', $quote, ['total' => $quote->total, 'note' => $note], $client->id);
         $request->provider->user->notify(new SessionUpdateNotification($request, SessionUpdateNotification::QUOTE_REFUSED));
 
         return $request;

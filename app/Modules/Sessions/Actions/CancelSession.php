@@ -14,6 +14,7 @@ use App\Modules\Sessions\Services\RefundPolicy;
 use App\Modules\Sessions\Services\SessionLifecycle;
 use App\Modules\Users\Models\User;
 use App\Support\Api\ApiException;
+use App\Support\Audit\AuditLogger;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -27,6 +28,7 @@ class CancelSession
         private readonly SessionSettlement $settlement,
         private readonly RefundPolicy $policy,
         private readonly ScoreRecorder $score,
+        private readonly AuditLogger $audit,
     ) {}
 
     public function handle(ServiceRequest $session, User $actor, ?string $reason): ServiceRequest
@@ -58,6 +60,7 @@ class CancelSession
                 $this->score->record($locked->provider_profile_id, ScoreEvent::LATE_CANCELLATION, $locked, ['hours_before' => (int) now()->diffInHours($locked->scheduled_at)]);
             }
 
+            $this->audit->record('sessions.cancelled', $locked, ['reason' => $reason, 'closed_reason' => $target, 'provider_share' => $providerGross], $actor->id);
             SessionCancelled::dispatch($locked);
 
             return $locked;

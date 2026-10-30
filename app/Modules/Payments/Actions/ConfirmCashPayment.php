@@ -11,6 +11,7 @@ use App\Modules\Sessions\Services\SessionLifecycle;
 use App\Modules\Users\Models\User;
 use App\Modules\Wallet\Events\WalletUpdated;
 use App\Support\Api\ApiException;
+use App\Support\Audit\AuditLogger;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -23,6 +24,7 @@ class ConfirmCashPayment
     public function __construct(
         private readonly CommissionDebts $debts,
         private readonly SessionLifecycle $lifecycle,
+        private readonly AuditLogger $audit,
     ) {}
 
     public function handle(ServiceRequest $session, ?User $client, string $reason = 'client_confirmed'): ServiceRequest
@@ -46,6 +48,7 @@ class ConfirmCashPayment
             $this->debts->register($locked, $client, $reason);
             $locked->forceFill(['cash_confirmed_at' => now()])->save();
             $this->lifecycle->record($locked, 'cash_confirmed', $client, ['reason' => $reason, 'commission_due' => $locked->commission]);
+            $this->audit->record('payments.cash_confirmed', $locked, ['reason' => $reason, 'amount' => $locked->amount, 'commission_due' => $locked->commission], $client?->id);
 
             return ['session' => $locked, 'new' => true];
         });

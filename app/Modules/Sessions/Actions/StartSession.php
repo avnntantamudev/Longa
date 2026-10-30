@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Modules\Sessions\Actions;
 
+use App\Modules\Payments\Models\EscrowHold;
 use App\Modules\Requests\Enums\RequestState;
+use App\Modules\Requests\Models\Quote;
 use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Sessions\Events\SessionStarted;
 use App\Modules\Sessions\Services\SessionLifecycle;
@@ -51,7 +53,15 @@ class StartSession
             if ($locked->state === RequestState::Accepted) {
                 $this->lifecycle->transition($locked, RequestState::OnTheWay, 'on_the_way', $provider, [], ['on_the_way_at' => now()]);
             }
-            $this->lifecycle->transition($locked, RequestState::InProgress, 'started', $provider, [], ['started_at' => now()]);
+            $attributes = ['started_at' => now()];
+            if ($afterQuote) {
+                $days = (int) $locked->quotes()->where('status', Quote::ACCEPTED)->value('execution_days');
+                $attributes['ends_at'] = now()->addDays(max(1, $days));
+                EscrowHold::query()->where('service_request_id', $locked->id)->update([
+                    'expires_at' => $attributes['ends_at']->copy()->addDays((int) config('longa.session_rules.hold_max_days')),
+                ]);
+            }
+            $this->lifecycle->transition($locked, RequestState::InProgress, 'started', $provider, [], $attributes);
             SessionStarted::dispatch($locked);
 
             return $locked;

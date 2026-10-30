@@ -176,3 +176,47 @@ it('o painel lista os orçamentos e alerta os que estão fora do intervalo (oper
         ->filterTable('outside_reference', true)
         ->assertCanSeeTableRecords([$outlier]);
 });
+
+it('orçamento aceite: o cliente pode pagar mais tarde (sem prazo que deixe o pedido preso)', function () {
+    $session = quoteSession();
+    asProvider($session);
+    $this->postJson("/api/v1/sessions/{$session->id}/diagnosis", [], ['Idempotency-Key' => 'diag-late-pay'])->assertOk();
+    $quote = sendQuote($session)->assertCreated()->json('data.id');
+    apiLogin($session->client);
+    quoteAction($quote, 'accept')->assertOk();
+
+    $this->travel(3)->days();
+    $this->artisan('longa:sessions:tick');
+    apiLogin($session->client);
+
+    $this->getJson("/api/v1/sessions/{$session->id}")->assertJsonPath('data.state', 'quote_accepted')->assertJsonPath('data.actions', ['pay']);
+    $this->postJson("/api/v1/sessions/{$session->id}/pay", ['method' => 'multicaixa_express'], ['Idempotency-Key' => 'pay-late-0001'])
+        ->assertOk()->assertJsonPath('data.payment_status', 'held');
+});
+
+it('a execução usa o prazo do orçamento: não é dada como concluída pela data original do pedido', function () {
+    $session = quoteSession();
+    asProvider($session);
+    $this->postJson("/api/v1/sessions/{$session->id}/diagnosis", [], ['Idempotency-Key' => 'diag-deadline'])->assertOk();
+    $quote = sendQuote($session, ['execution_days' => 10])->assertCreated()->json('data.id');
+    apiLogin($session->client);
+    quoteAction($quote, 'accept')->assertOk();
+    $this->postJson("/api/v1/sessions/{$session->id}/pay", ['method' => 'multicaixa_express'], ['Idempotency-Key' => 'pay-deadline1'])->assertOk();
+
+    // Começa dias depois da data original do pedido
+    $this->travel(5)->days();
+    asProvider($session);
+    $this->postJson("/api/v1/sessions/{$session->id}/start")->assertOk();
+
+    $this->travel(1)->hours();
+    $this->artisan('longa:sessions:tick');
+    $this->travel(3)->days();
+    $this->artisan('longa:sessions:tick');
+    expect($session->fresh()?->state)->toBe(RequestState::InProgress)
+        ->and(balances($session)['provider'])->toBe(0);
+
+    // Depois do prazo do orçamento segue a regra normal: concluído e janela de confirmação
+    $this->travel(8)->days();
+    $this->artisan('longa:sessions:tick');
+    expect($session->fresh()?->state)->toBe(RequestState::Completed);
+});

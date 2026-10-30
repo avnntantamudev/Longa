@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Requests\Services;
 
+use App\Modules\Notifications\Notifications\SessionUpdateNotification;
 use App\Modules\Payments\Services\CommissionDebts;
 use App\Modules\Payments\Services\PhasedPayments;
 use App\Modules\Requests\Enums\RequestState;
@@ -102,6 +103,7 @@ class QuoteFlow
         });
 
         $this->audit->record('quotes.sent', $quote, ['total' => $quote->total, 'outside_reference' => $quote->outside_reference], $provider->id);
+        $quote->request->client->notify(new SessionUpdateNotification($quote->request, SessionUpdateNotification::QUOTE_SENT, (string) $quote->amountDue()));
 
         return $quote;
     }
@@ -141,13 +143,14 @@ class QuoteFlow
         });
 
         $this->audit->record('quotes.accepted', $quote, ['total' => $quote->total], $client->id);
+        $request->provider->user->notify(new SessionUpdateNotification($request, SessionUpdateNotification::QUOTE_ACCEPTED));
 
         return $request;
     }
 
     public function requestRevision(Quote $quote, User $client, ?string $note): ServiceRequest
     {
-        return DB::transaction(function () use ($quote, $client, $note) {
+        $request = DB::transaction(function () use ($quote, $client, $note) {
             [$locked, $quote] = $this->lockWithQuote($quote);
             $this->ensureOpen($locked, $quote);
 
@@ -156,6 +159,9 @@ class QuoteFlow
 
             return $locked;
         });
+        $request->provider->user->notify(new SessionUpdateNotification($request, SessionUpdateNotification::QUOTE_REVISION, $note));
+
+        return $request;
     }
 
     /**
@@ -163,7 +169,7 @@ class QuoteFlow
      */
     public function refuse(Quote $quote, User $client, ?string $note): ServiceRequest
     {
-        return DB::transaction(function () use ($quote, $client, $note) {
+        $request = DB::transaction(function () use ($quote, $client, $note) {
             [$locked, $quote] = $this->lockWithQuote($quote);
             $this->ensureOpen($locked, $quote);
 
@@ -174,6 +180,9 @@ class QuoteFlow
 
             return $locked;
         });
+        $request->provider->user->notify(new SessionUpdateNotification($request, SessionUpdateNotification::QUOTE_REFUSED));
+
+        return $request;
     }
 
     /**

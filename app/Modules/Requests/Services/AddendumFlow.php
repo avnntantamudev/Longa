@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Requests\Services;
 
+use App\Modules\Notifications\Notifications\SessionUpdateNotification;
 use App\Modules\Payments\Contracts\PaymentProvider;
 use App\Modules\Payments\Models\PaymentCharge;
 use App\Modules\Payments\Services\EscrowService;
@@ -71,6 +72,7 @@ class AddendumFlow
         });
 
         $this->audit->record('addenda.submitted', $addendum, ['amount' => $amount, 'percent_of_quote' => $addendum->percent_of_quote], $provider->id);
+        $request->client->notify(new SessionUpdateNotification($request, SessionUpdateNotification::ADDENDUM_PROPOSED, (string) $amount));
 
         return $addendum;
     }
@@ -80,7 +82,7 @@ class AddendumFlow
      */
     public function clientApprove(QuoteAddendum $addendum, User $client): QuoteAddendum
     {
-        return DB::transaction(function () use ($addendum, $client) {
+        $result = DB::transaction(function () use ($addendum, $client) {
             [$request, $addendum] = $this->lock($addendum);
             if ($addendum->status !== QuoteAddendum::PENDING_CLIENT) {
                 return $this->unchangedOrFail($addendum, [QuoteAddendum::PENDING_TEAM, QuoteAddendum::APPROVED, QuoteAddendum::PAID]);
@@ -96,11 +98,16 @@ class AddendumFlow
 
             return $addendum;
         });
+        if ($result->status === QuoteAddendum::APPROVED) {
+            $this->notifyDecision($result, true);
+        }
+
+        return $result;
     }
 
     public function clientReject(QuoteAddendum $addendum, User $client, ?string $note): QuoteAddendum
     {
-        return DB::transaction(function () use ($addendum, $client, $note) {
+        $result = DB::transaction(function () use ($addendum, $client, $note) {
             [$request, $addendum] = $this->lock($addendum);
             if ($addendum->status !== QuoteAddendum::PENDING_CLIENT) {
                 return $this->unchangedOrFail($addendum, [QuoteAddendum::REJECTED]);
@@ -111,6 +118,9 @@ class AddendumFlow
 
             return $addendum;
         });
+        $this->notifyDecision($result, false);
+
+        return $result;
     }
 
     /**
@@ -136,6 +146,7 @@ class AddendumFlow
         });
 
         $this->audit->record($approve ? 'addenda.team_approved' : 'addenda.team_rejected', $result, ['note' => $note, 'amount' => $result->amount], $reviewer->id);
+        $this->notifyDecision($result, $approve);
 
         return $result;
     }
@@ -177,6 +188,12 @@ class AddendumFlow
 
             return $addendum;
         });
+    }
+
+    private function notifyDecision(QuoteAddendum $addendum, bool $approved): void
+    {
+        $request = $addendum->request;
+        $request->provider->user->notify(new SessionUpdateNotification($request, SessionUpdateNotification::ADDENDUM_DECIDED, $approved ? 'approved' : 'rejected'));
     }
 
     /**

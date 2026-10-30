@@ -114,6 +114,7 @@ class SessionTimeoutRules
                 $this->lifecycle->transition($s, RequestState::Completed, 'auto_awaiting', null, ['rule' => 'R2', 'reason' => 'no_qr'], [
                     'completed_at' => now(), 'ended_at' => $s->ended_at ?? $s->ends_at,
                 ]);
+                $s->client->notify(new SessionUpdateNotification($s, SessionUpdateNotification::COMPLETED));
             },
             fn (ServiceRequest $s) => $s->state === RequestState::InProgress,
         );

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Modules\Notifications\Notifications;
 
+use App\Modules\Notifications\Channels\SmsChannel;
+use App\Modules\Notifications\Contracts\SmsNotification;
+use App\Modules\Notifications\Support\Formats;
 use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Users\Models\User;
 use Illuminate\Bus\Queueable;
@@ -16,11 +19,31 @@ use NotificationChannels\WebPush\WebPushMessage;
  * Avisos da execução do serviço (push + na app). Complementa os eventos em tempo real, que só chegam
  * com a app aberta.
  */
-class SessionUpdateNotification extends Notification implements ShouldQueue
+class SessionUpdateNotification extends Notification implements ShouldQueue, SmsNotification
 {
     use Queueable;
 
     public const ON_THE_WAY = 'on_the_way';
+
+    public const QUOTE_SENT = 'quote_sent';
+
+    public const QUOTE_ACCEPTED = 'quote_accepted';
+
+    public const QUOTE_REFUSED = 'quote_refused';
+
+    public const QUOTE_REVISION = 'quote_revision';
+
+    /** Concluído automaticamente (sem o técnico o marcar): começa a janela de confirmação */
+    public const COMPLETED = 'completed';
+
+    public const PAYMENT_RECEIVED = 'payment_received';
+
+    public const ADDENDUM_PROPOSED = 'addendum_proposed';
+
+    public const ADDENDUM_DECIDED = 'addendum_decided';
+
+    /** Sem push ativo, estes avisos vão por SMS (custam dinheiro: só os que não podem esperar) */
+    private const SMS_FALLBACK = [self::ON_THE_WAY, self::QUOTE_SENT, self::QUOTE_ACCEPTED, self::PAYMENT_RECEIVED, self::DISPUTE_OPENED];
 
     public const STARTED = 'started';
 
@@ -47,7 +70,18 @@ class SessionUpdateNotification extends Notification implements ShouldQueue
      */
     public function via(User $notifiable): array
     {
-        return $notifiable->pushSubscriptions()->exists() ? ['database', WebPushChannel::class] : ['database'];
+        if ($notifiable->pushSubscriptions()->exists()) {
+            return ['database', WebPushChannel::class];
+        }
+
+        return in_array($this->kind, self::SMS_FALLBACK, true) ? ['database', SmsChannel::class] : ['database'];
+    }
+
+    public function toSms(object $notifiable): string
+    {
+        [$title, $body] = $this->content();
+
+        return "BISCA: {$title}. {$body}";
     }
 
     public function toWebPush(User $notifiable, Notification $notification): WebPushMessage
@@ -80,6 +114,14 @@ class SessionUpdateNotification extends Notification implements ShouldQueue
         $title = "\"{$this->session->title}\"";
 
         return match ($this->kind) {
+            self::QUOTE_SENT => ['Orçamento recebido', "{$title}: o técnico enviou o orçamento (".Formats::kwanza((int) $this->detail).'). Veja e responda na app.'],
+            self::QUOTE_ACCEPTED => ['Orçamento aceite', "{$title}: o cliente aceitou o orçamento. O preço fica bloqueado."],
+            self::QUOTE_REFUSED => ['Orçamento recusado', "{$title}: o cliente recusou o orçamento."],
+            self::QUOTE_REVISION => ['Revisão do orçamento', "{$title}: o cliente pediu uma revisão do orçamento.".($this->detail ? " Nota: {$this->detail}" : '')],
+            self::COMPLETED => ['Serviço concluído', "{$title} foi dado como concluído. Confirme na app ou abra uma disputa dentro do prazo."],
+            self::PAYMENT_RECEIVED => ['Pagamento recebido', "{$title}: o cliente pagou ".Formats::kwanza((int) $this->detail).'. O valor fica retido até à confirmação.'],
+            self::ADDENDUM_PROPOSED => ['Trabalho extra proposto', "{$title}: o técnico propôs trabalho extra (".Formats::kwanza((int) $this->detail).'). Aprove ou recuse na app.'],
+            self::ADDENDUM_DECIDED => ['Trabalho extra', "{$title}: ".($this->detail === 'approved' ? 'o trabalho extra foi aprovado.' : 'o trabalho extra foi recusado.')],
             self::ON_THE_WAY => ['O técnico está a caminho', "{$title}: o técnico já saiu para o local."],
             self::STARTED => ['O serviço começou', "{$title} foi iniciado pelo técnico."],
             self::REMINDER => ['Lembrete do serviço', "{$title} é ".($this->detail === '1h' ? 'daqui a 1 hora' : 'amanhã').', às '.$this->session->scheduled_at->format('H:i')

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Payments\Actions;
 
+use App\Modules\Notifications\Notifications\SessionUpdateNotification;
 use App\Modules\Payments\Contracts\PaymentProvider;
 use App\Modules\Payments\Models\EscrowHold;
 use App\Modules\Payments\Models\PaymentCharge;
@@ -111,6 +112,10 @@ class PayForSession
         // Fora da transação: o cancelamento por pagamento recusado fica gravado antes de responder com o erro
         if ($charge->status === ProviderResult::FAILED) {
             throw new ApiException('payment_failed', 'O pagamento não foi aceite: '.($charge->failure_reason ?? 'tente outro meio.'), 402);
+        }
+
+        if ($charge->status === ProviderResult::SUCCEEDED) {
+            $locked->provider->user->notify(new SessionUpdateNotification($locked, SessionUpdateNotification::PAYMENT_RECEIVED, (string) $charge->amount));
         }
 
         return $locked;

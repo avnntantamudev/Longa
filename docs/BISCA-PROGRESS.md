@@ -340,3 +340,10 @@ Decisões (o cliente pediu "toma as melhores decisões", 2026-10-30). Todas edit
 - **Finanças:** o painel inicial soma os saldos das carteiras e os levantamentos pendentes à receita, ao escrow e às
   comissões a receber.
 - **Finanças → Auditoria** (só admin): registo das ações da equipa e das operações financeiras, com filtros.
+
+### Notas do passo 7
+
+- Avisos de cada passo: novo pedido, pedido aceite, a caminho, orçamento enviado, aceite, recusado e revisão pedida,
+  pagamento recebido, adenda proposta e decidida, início, conclusão (também a automática), confirmação, disputa.
+- Com push ativo vão por push; sem push, os urgentes (a caminho, orçamento enviado e aceite, pagamento, disputa) vão
+  por SMS (`SmsChannel`, hoje em log) e os outros ficam na app.

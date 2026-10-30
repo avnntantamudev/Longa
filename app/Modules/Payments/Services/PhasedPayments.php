@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Payments\Services;
 
+use App\Modules\Notifications\Notifications\SessionUpdateNotification;
 use App\Modules\Payments\Contracts\PaymentProvider;
 use App\Modules\Payments\Models\EscrowHold;
 use App\Modules\Payments\Models\PaymentCharge;
@@ -103,7 +104,7 @@ class PhasedPayments
             throw new ApiException('payment_failed', 'O pagamento não foi aceite: '.($charge->failure_reason ?? 'tente outro meio.'), 402);
         }
 
-        return DB::transaction(function () use ($request, $phase, $charge, $client) {
+        $paid = DB::transaction(function () use ($request, $phase, $charge, $client) {
             /** @var ServiceRequest $locked */
             $locked = ServiceRequest::query()->lockForUpdate()->findOrFail($request->id);
             /** @var PaymentPhase $phase */
@@ -124,6 +125,9 @@ class PhasedPayments
 
             return $locked;
         });
+        $paid->provider->user->notify(new SessionUpdateNotification($paid, SessionUpdateNotification::PAYMENT_RECEIVED, (string) $phase->amount));
+
+        return $paid;
     }
 
     /**

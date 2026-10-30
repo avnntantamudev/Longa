@@ -19,7 +19,8 @@ export type SessionAction =
     | 'answer_quote'
     | 'addendum'
     | 'on_the_way'
-    | 'confirm_phase';
+    | 'confirm_phase'
+    | 'rate';
 
 /** Adenda ao orçamento (GET /sessions/{id}/addenda) */
 export interface Addendum {

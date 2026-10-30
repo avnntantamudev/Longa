@@ -65,6 +65,10 @@ class Settings extends Page
                 $field('dispatch_initial_radius_m'), $field('dispatch_radius_step_m'), $field('dispatch_max_radius_m'),
                 $field('dispatch_search_minutes'), $field('dispatch_min_balance'),
             ]),
+            Section::make('Avaliações')->columns(3)->schema([
+                $field('rating_window_days'), $field('rating_warn_below_tenths'), $field('rating_suspend_below_tenths'),
+                $field('rating_remove_below_tenths'), $field('rating_suspension_days'),
+            ]),
             Section::make('Carteira')->schema([$field('withdrawal_min_amount')]),
             Section::make('Orçamentos e adendas')->columns(3)->schema([
                 $field('quote_validity_days'), $field('quote_outlier_percent'), $field('addendum_review_percent'), $field('phased_min_total'),

@@ -6,9 +6,11 @@ namespace App\Modules\Sessions\Services;
 
 use App\Modules\Payments\Models\PaymentPhase;
 use App\Modules\Payments\Services\PhasedPayments;
+use App\Modules\Ratings\Services\RatingService;
 use App\Modules\Requests\Enums\RequestState;
 use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Users\Enums\PricingMode;
+use App\Modules\Users\Models\User;
 
 /**
  * Ações que o participante pode fazer agora (a app só mostra estes botões).
@@ -71,7 +73,10 @@ class AvailableActions
                 'no_show_client' => ! $isProvider,
                 default => false,
             }],
-            RequestState::Paid => ['confirm_cash' => ! $isProvider && $session->isCash() && $session->cash_confirmed_at === null],
+            RequestState::Paid => [
+                'confirm_cash' => ! $isProvider && $session->isCash() && $session->cash_confirmed_at === null,
+                'rate' => ($viewer = request()->user()) instanceof User && app(RatingService::class)->canRate($session, $viewer),
+            ],
             default => [],
         };
 

@@ -60,6 +60,13 @@ const duePhase = computed(() => session.value?.phases.find((p) => p.status === '
 const paidPhase = computed(() => session.value?.phases.slice(0, -1).find((p) => p.status === 'paid') ?? null);
 const quoteNote = ref('');
 
+// Avaliação depois de pago (1 a 5 estrelas)
+const rating = reactive({ stars: 0, comment: '' });
+
+async function rate(): Promise<void> {
+    await call('rate', `/sessions/${props.sessionId}/ratings`, { stars: rating.stars, comment: rating.comment || null }, 'Obrigado pela avaliação.');
+}
+
 // Adendas (trabalho extra durante a execução)
 const addenda = ref<Addendum[]>([]);
 const addendumForm = reactive({ description: '', amount: null as number | null });
@@ -373,6 +380,26 @@ onMounted(load);
             <!-- Concluída -->
             <template v-else-if="phase === 'completed'">
                 <p class="font-semibold text-success">Serviço concluído</p>
+                <form v-if="has('rate')" class="grid gap-2 rounded-control bg-navy-50 p-3" @submit.prevent="rate">
+                    <p class="text-caption font-semibold">{{ isProvider ? 'Como foi o cliente?' : 'Como foi o técnico?' }}</p>
+                    <div class="flex gap-1" role="radiogroup" aria-label="Estrelas">
+                        <button
+                            v-for="n in 5"
+                            :key="n"
+                            type="button"
+                            role="radio"
+                            :aria-checked="rating.stars === n"
+                            :aria-label="`${n} ${n === 1 ? 'estrela' : 'estrelas'}`"
+                            class="text-2xl"
+                            :class="n <= rating.stars ? 'text-orange-500' : 'text-ink-muted'"
+                            @click="rating.stars = n"
+                        >
+                            ★
+                        </button>
+                    </div>
+                    <textarea v-model="rating.comment" class="input min-h-16 py-2" maxlength="1000" placeholder="Comentário (opcional)" />
+                    <button type="submit" class="btn-primary w-full" :disabled="busy !== null || rating.stars === 0">Enviar avaliação</button>
+                </form>
                 <p v-if="isProvider && session.payment_method === 'electronic'" class="text-caption text-ink-muted">{{ kwanza(session.provider_net ?? 0) }} na sua carteira.</p>
                 <template v-if="has('confirm_cash')">
                     <p class="text-caption text-ink-muted">Confirme que pagou {{ kwanza(session.amount) }} ao técnico em mão.</p>

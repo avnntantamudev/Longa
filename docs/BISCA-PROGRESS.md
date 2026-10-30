@@ -296,3 +296,16 @@ Decisões (o cliente pediu "toma as melhores decisões", 2026-10-30). Todas edit
   comissão retida (`EscrowService::releasePart`) e a seguinte fica a pagar. A última é libertada na confirmação
   do serviço; o técnico só conclui com as fases em ordem. Disputas decidem sobre o que ainda está retido.
 - Em dinheiro não há fases: o cliente paga ao técnico em mão à medida que o trabalho avança.
+
+### Notas do passo 3
+
+- Migração `2026_10_30_000003_create_ratings` (reversível): `ratings` (uma por pessoa e pedido, nos dois sentidos) e
+  `provider_sanctions`.
+- Avaliar (`POST /sessions/{id}/ratings`, 1 a 5 estrelas e comentário) só depois de pago e durante 7 dias. O técnico
+  vê a média do cliente; o cliente vê a do técnico.
+- **Reputação:** média das últimas 20 avaliações em `provider_profiles.rating_average`; com 3 ou mais avaliações entra
+  na ordem do despacho (média entre o score e as estrelas × 20).
+- **Regras graduais** (limites em Definições → Avaliações): aviso abaixo de 3,5 (≥ 5 avaliações, um por mês);
+  suspensão de 7 dias abaixo de 3,0 (≥ 10) — o técnico fica "suspenso" e volta sozinho no fim; remoção abaixo de 2,5
+  (≥ 20) ou à 3.ª suspensão, pendente até a equipa confirmar ou cancelar (Operações → Sanções por avaliações), com
+  nota e auditoria. O técnico é avisado por notificação.

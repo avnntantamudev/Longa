@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Events\PingBroadcast;
 use App\Modules\Matching\Services\MatchingCoordinator;
+use App\Modules\Ratings\Services\RatingService;
 use App\Modules\Wallet\Services\LedgerReconciler;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
@@ -42,6 +43,9 @@ Schedule::command('longa:matching-tick')->everyTenSeconds()->withoutOverlapping(
 
 // Regras automáticas dos serviços (R1–R5)
 Schedule::command('longa:sessions:tick')->everyMinute()->withoutOverlapping(5);
+
+// Suspensões por avaliações que terminaram: o técnico volta a receber pedidos
+Schedule::call(fn () => app(RatingService::class)->liftExpiredSuspensions())->everyFiveMinutes()->name('ratings-lift-suspensions')->withoutOverlapping(5);
 
 // Avisos de fim da subscrição VIP
 Schedule::command('longa:vip:reminders')->dailyAt('09:00')->withoutOverlapping(30);

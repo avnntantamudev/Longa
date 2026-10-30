@@ -6,6 +6,7 @@ namespace App\Modules\Requests\Models;
 
 use App\Modules\Payments\Models\EscrowHold;
 use App\Modules\Payments\Models\PaymentPhase;
+use App\Modules\Ratings\Models\Rating;
 use App\Modules\Requests\Enums\RequestState;
 use App\Modules\Sessions\Models\Conversation;
 use App\Modules\Sessions\Models\Dispute;
@@ -286,6 +287,16 @@ class ServiceRequest extends Model
     public function phases(): HasMany
     {
         return $this->hasMany(PaymentPhase::class)->orderBy('sequence');
+    }
+
+    /**
+     * Avaliações do pedido (uma do cliente e uma do técnico).
+     *
+     * @return HasMany<Rating, $this>
+     */
+    public function ratings(): HasMany
+    {
+        return $this->hasMany(Rating::class);
     }
 
     /**

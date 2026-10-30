@@ -6004,6 +6004,127 @@
                 }
             }
         },
+        "/sessions/{session}/ratings": {
+            "get": {
+                "operationId": "sessions.ratings.index",
+                "summary": "Avalia\u00e7\u00f5es do pedido (participantes)",
+                "tags": [
+                    "Rating"
+                ],
+                "parameters": [
+                    {
+                        "name": "session",
+                        "in": "path",
+                        "required": true,
+                        "description": "The session ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "sessions.ratings.store",
+                "summary": "Avaliar o pedido (1 a 5 estrelas e coment\u00e1rio). Uma avalia\u00e7\u00e3o por pessoa; repetir devolve a mesma",
+                "tags": [
+                    "Rating"
+                ],
+                "parameters": [
+                    {
+                        "name": "session",
+                        "in": "path",
+                        "required": true,
+                        "description": "The session ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "stars": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 5
+                                    },
+                                    "comment": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 1000
+                                    }
+                                },
+                                "required": [
+                                    "stars"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/request-media/{media}": {
             "get": {
                 "operationId": "request-media.link",
@@ -9798,12 +9919,16 @@
                                     "string",
                                     "null"
                                 ]
+                            },
+                            "rating": {
+                                "type": "string"
                             }
                         },
                         "required": [
                             "name",
                             "photo_url",
-                            "photo_thumb_url"
+                            "photo_thumb_url",
+                            "rating"
                         ]
                     },
                     "provider": {
@@ -9856,6 +9981,12 @@
                             },
                             "score": {
                                 "type": "integer"
+                            },
+                            "rating_average": {
+                                "type": "number"
+                            },
+                            "rating_count": {
+                                "type": "integer"
                             }
                         },
                         "required": [
@@ -9868,7 +9999,9 @@
                             "neighborhood",
                             "verified",
                             "vip",
-                            "score"
+                            "score",
+                            "rating_average",
+                            "rating_count"
                         ]
                     },
                     "created_at": {

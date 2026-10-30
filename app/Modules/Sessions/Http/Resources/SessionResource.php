@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Sessions\Http\Resources;
 
 use App\Modules\Payments\Services\VipSubscriptions;
+use App\Modules\Ratings\Services\RatingService;
 use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Sessions\Services\AvailableActions;
 use Illuminate\Http\Request;
@@ -65,7 +66,7 @@ class SessionResource extends JsonResource
             'commission_percent' => $this->when($isProvider, $this->commission_percent),
             'role' => $isProvider ? 'provider' : 'client',
             'conversation_id' => $this->conversation?->id,
-            'client' => $this->when($isProvider, fn () => ['name' => $this->client->name, ...$this->client->photoUrls()]),
+            'client' => $this->when($isProvider, fn () => ['name' => $this->client->name, ...$this->client->photoUrls(), 'rating' => app(RatingService::class)->clientAverage($this->client)]),
             'provider' => $this->when(! $isProvider, fn () => [
                 'id' => $this->provider->id,
                 'name' => $this->provider->user->name,
@@ -76,6 +77,8 @@ class SessionResource extends JsonResource
                 'verified' => $this->provider->isVerified(),
                 'vip' => app(VipSubscriptions::class)->isVip($this->provider),
                 'score' => $this->provider->score,
+                'rating_average' => $this->provider->rating_average,
+                'rating_count' => $this->provider->rating_count,
             ]),
             'created_at' => $this->created_at->toIso8601String(),
         ];

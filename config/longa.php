@@ -75,6 +75,21 @@ return [
         'min_topup' => (int) env('LONGA_WALLET_MIN_TOPUP', 1000),
     ],
 
+    // Avaliações e sanções graduais (BISCA, Fase 3.3; médias e prazos editáveis no painel → Definições)
+    'ratings' => [
+        'window_days' => (int) env('LONGA_RATING_WINDOW_DAYS', 7),
+        // Média das últimas N avaliações (reputação e regras)
+        'sample_size' => (int) env('LONGA_RATING_SAMPLE_SIZE', 20),
+        // Médias em décimas (35 = 3,5)
+        'warn_below_tenths' => (int) env('LONGA_RATING_WARN_BELOW', 35),
+        'suspend_below_tenths' => (int) env('LONGA_RATING_SUSPEND_BELOW', 30),
+        'remove_below_tenths' => (int) env('LONGA_RATING_REMOVE_BELOW', 25),
+        'suspension_days' => (int) env('LONGA_RATING_SUSPENSION_DAYS', 7),
+        // Avaliações mínimas para cada regra e suspensões até à remoção
+        'min_ratings' => ['warning' => 5, 'suspension' => 10, 'removal' => 20],
+        'max_suspensions' => (int) env('LONGA_RATING_MAX_SUSPENSIONS', 3),
+    ],
+
     // Orçamentos e adendas (BISCA, Fase 2.5; editáveis no painel → Definições)
     'quotes' => [
         'validity_days' => (int) env('LONGA_QUOTE_VALIDITY_DAYS', 7),

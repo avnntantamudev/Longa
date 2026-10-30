@@ -28,7 +28,8 @@ use Illuminate\Support\Facades\DB;
  *  - sem serviço ativa que se sobreponha ao horário pedido (com folga configurável);
  *  - não é o próprio cliente e ainda não recebeu oferta deste pedido.
  *
- * Ordenação: peso_score × score/100 + peso_distância × (1 − distância/raio), desempate pela distância.
+ * Reputação = score; com 3 ou mais avaliações, a média entre o score e as estrelas (média × 20).
+ * Ordenação: peso_score × reputação/100 + peso_distância × (1 − distância/raio), desempate pela distância.
  * Online: sem filtro de distância; ordena só pelo score.
  */
 class ProviderMatcher
@@ -63,6 +64,7 @@ class ProviderMatcher
         $start = $request->scheduled_at->copy()->subMinutes($buffer);
         $end = $request->scheduled_at->copy()->addMinutes($request->duration_minutes + $buffer);
         $online = $request->modality === 'online';
+        $reputation = '(CASE WHEN tp.rating_count >= 3 THEN (tp.score + tp.rating_average * 20) / 2 ELSE tp.score END)';
 
         // POINT(longitude, latitude) com SRID 4326 (ordem verificada, ver docs/database.md)
         $point = 'ST_SRID(POINT(?, ?), 4326)';
@@ -111,7 +113,7 @@ class ProviderMatcher
         )->orderByDesc('is_vip');
 
         if ($online) {
-            $query->selectRaw('(tp.score / 100) as rank_score')
+            $query->selectRaw("({$reputation} / 100) as rank_score")
                 ->orderByDesc('rank_score');
         } else {
             if ($scheduled) {
@@ -129,7 +131,7 @@ class ProviderMatcher
 
             $query
                 ->selectRaw(
-                    "(? * tp.score / 100 + ? * (1 - ST_Distance_Sphere(tp.location, {$point}) / ?)) as rank_score",
+                    "(? * {$reputation} / 100 + ? * (1 - ST_Distance_Sphere(tp.location, {$point}) / ?)) as rank_score",
                     [$weightScore, $weightDistance, ...$pointBindings, $radius],
                 )
                 ->orderByDesc('rank_score')

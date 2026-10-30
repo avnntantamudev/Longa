@@ -17,7 +17,8 @@ interface Message {
     client_id: string | null;
     sender: { id: number; name: string | null };
     body: string | null;
-    attachment: { name: string; size: number } | null;
+    attachment: { name: string; size: number; kind?: 'photo' | 'pdf' } | null;
+    read_at?: string | null;
     created_at: string;
     status?: 'sending' | 'failed';
     file?: File | null;
@@ -49,6 +50,16 @@ async function load(): Promise<void> {
     const after = lastId();
     const { data } = await api.get<{ data: Message[] }>(`/sessions/${props.sessionId}/messages${after ? `?after=${after}` : ''}`);
     merge(data);
+    await markRead();
+}
+
+/** Estado de leitura: marca como lidas as mensagens da outra parte que ainda não estavam */
+async function markRead(): Promise<void> {
+    if (!messages.value.some((m) => m.id !== null && m.sender.id !== props.meId && !m.read_at)) return;
+    await api.post(`/sessions/${props.sessionId}/messages/read`).catch(() => undefined);
+    messages.value.forEach((m) => {
+        if (m.sender.id !== props.meId && !m.read_at) m.read_at = new Date().toISOString();
+    });
 }
 
 async function send(message: Message): Promise<void> {
@@ -85,7 +96,7 @@ function submit(file: File | null = null): void {
         client_id: crypto.randomUUID(),
         sender: { id: props.meId, name: null },
         body: body || null,
-        attachment: file ? { name: file.name, size: file.size } : null,
+        attachment: file ? { name: file.name, size: file.size, kind: file.type.startsWith('image/') ? 'photo' : 'pdf' } : null,
         created_at: new Date().toISOString(),
         file,
     };
@@ -122,7 +133,17 @@ function size(bytes: number): string {
 }
 
 usePrivateChannel(`session.${props.sessionId}`, {
-    'message.sent': (payload: { message: Message }) => merge([payload.message]),
+    'message.sent': (payload: { message: Message }) => {
+        merge([payload.message]);
+        void markRead();
+    },
+    // A outra parte leu as minhas mensagens
+    'messages.read': (payload: { reader_id: number; last_message_id: number }) => {
+        if (payload.reader_id === props.meId) return;
+        messages.value.forEach((m) => {
+            if (m.sender.id === props.meId && m.id !== null && m.id <= payload.last_message_id && !m.read_at) m.read_at = new Date().toISOString();
+        });
+    },
 });
 usePolling(load, 10000);
 onMounted(load);
@@ -149,13 +170,13 @@ onMounted(load);
                     <AppIcon name="download" :size="18" class="text-orange-600" />
                     <span class="min-w-0">
                         <span class="block truncate font-semibold">{{ message.attachment.name }}</span>
-                        <span class="text-ink-muted">{{ size(message.attachment.size) }} · PDF</span>
+                        <span class="text-ink-muted">{{ size(message.attachment.size) }} · {{ message.attachment.kind === 'photo' ? 'Foto' : 'PDF' }}</span>
                     </span>
                 </button>
                 <p class="mt-1 text-right text-[0.6875rem]" :class="message.sender.id === meId ? 'text-white/80' : 'text-ink-subtle'">
                     <template v-if="message.status === 'sending'">a enviar…</template>
                     <button v-else-if="message.status === 'failed'" type="button" class="font-semibold underline" @click="send(message)">não enviada · tentar de novo</button>
-                    <template v-else>{{ time(message.created_at) }}</template>
+                    <template v-else>{{ time(message.created_at) }}<template v-if="message.sender.id === meId"> · {{ message.read_at ? 'lida' : 'enviada' }}</template></template>
                 </p>
             </div>
         </div>
@@ -163,8 +184,8 @@ onMounted(load);
         <p v-if="error" class="px-4 text-caption text-danger" role="alert">{{ error }}</p>
 
         <form class="flex items-end gap-2 border-t border-border p-3" @submit.prevent="submit()">
-            <input ref="fileInput" type="file" accept="application/pdf" class="hidden" @change="onFile" />
-            <button type="button" class="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-navy-50 text-navy-900" aria-label="Anexar PDF" @click="fileInput?.click()">
+            <input ref="fileInput" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" class="hidden" @change="onFile" />
+            <button type="button" class="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-navy-50 text-navy-900" aria-label="Anexar foto ou PDF" @click="fileInput?.click()">
                 <AppIcon name="paperclip" :size="20" />
             </button>
             <textarea

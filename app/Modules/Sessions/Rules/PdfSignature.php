@@ -16,7 +16,8 @@ class PdfSignature implements ValidationRule
 {
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (! $value instanceof UploadedFile) {
+        // Só os PDF (as fotos do chat são verificadas pelo tipo de conteúdo)
+        if (! $value instanceof UploadedFile || str_starts_with((string) $value->getMimeType(), 'image/')) {
             return;
         }
 

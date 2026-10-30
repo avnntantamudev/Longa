@@ -7,6 +7,7 @@ namespace App\Modules\Sessions\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Sessions\Actions\SendMessage;
+use App\Modules\Sessions\Events\MessagesRead;
 use App\Modules\Sessions\Http\Requests\SendMessageRequest;
 use App\Modules\Sessions\Http\Resources\MessageResource;
 use App\Modules\Sessions\Http\Resources\SessionResource;
@@ -100,6 +101,29 @@ class SessionController extends Controller
     }
 
     /**
+     * Marcar como lidas as mensagens da outra parte (estado de leitura). A outra parte é avisada em tempo real.
+     */
+    public function markRead(Request $request, ServiceRequest $session): JsonResponse
+    {
+        Gate::authorize('chat', $session);
+
+        /** @var User $user */
+        $user = $request->user();
+        $unread = Message::query()
+            ->whereHas('conversation', fn ($q) => $q->where('service_request_id', $session->id))
+            ->where('sender_id', '!=', $user->id)
+            ->whereNull('read_at');
+        $lastId = (int) (clone $unread)->max('id');
+        $count = $unread->update(['read_at' => now()]);
+
+        if ($count > 0) {
+            MessagesRead::dispatch($session->id, $user->id, $lastId);
+        }
+
+        return response()->json(['data' => ['marked' => $count]]);
+    }
+
+    /**
      * Linha do tempo do serviço (participantes).
      */
     public function events(ServiceRequest $session): JsonResponse
@@ -148,8 +172,9 @@ class SessionController extends Controller
     {
         abort_unless($message->hasAttachment() && Storage::disk('local')->exists((string) $message->attachment_path), 404);
 
-        return Storage::disk('local')->download((string) $message->attachment_path, $message->attachment_name ?? 'documento.pdf', [
-            'Content-Type' => 'application/pdf',
+        return Storage::disk('local')->download((string) $message->attachment_path, $message->attachment_name ?? 'anexo', [
+            'Content-Type' => $message->attachment_mime ?? 'application/pdf',
+            'Content-Security-Policy' => "default-src 'none'",
             'X-Content-Type-Options' => 'nosniff',
             'Cache-Control' => 'private, no-store',
         ]);

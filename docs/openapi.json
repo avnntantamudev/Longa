@@ -6769,6 +6769,64 @@
                 }
             }
         },
+        "/sessions/{session}/messages/read": {
+            "post": {
+                "operationId": "sessions.messages.read",
+                "summary": "Marcar como lidas as mensagens da outra parte (estado de leitura). A outra parte \u00e9 avisada em tempo real",
+                "tags": [
+                    "Servi\u00e7os e chat",
+                    "Session"
+                ],
+                "parameters": [
+                    {
+                        "name": "session",
+                        "in": "path",
+                        "required": true,
+                        "description": "The session ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "marked": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "marked"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/messages/{message}/attachment": {
             "get": {
                 "operationId": "messages.attachment",
@@ -8818,12 +8876,27 @@
                                     "integer",
                                     "null"
                                 ]
+                            },
+                            "kind": {
+                                "type": "string",
+                                "enum": [
+                                    "photo",
+                                    "pdf"
+                                ]
                             }
                         },
                         "required": [
                             "name",
-                            "size"
+                            "size",
+                            "kind"
                         ]
+                    },
+                    "read_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Lida pela outra parte (estado de leitura)"
                     },
                     "created_at": {
                         "type": "string"
@@ -8835,6 +8908,7 @@
                     "sender",
                     "body",
                     "attachment",
+                    "read_at",
                     "created_at"
                 ],
                 "title": "MessageResource"
@@ -9724,7 +9798,7 @@
                         ],
                         "format": "binary",
                         "contentMediaType": "application/octet-stream",
-                        "description": "PDF at\u00e9 10 MB; o tipo \u00e9 verificado pelo conte\u00fado do ficheiro."
+                        "description": "PDF at\u00e9 10 MB ou foto (JPG, PNG, WebP) at\u00e9 5 MB; o tipo \u00e9 verificado pelo conte\u00fado do ficheiro."
                     },
                     "client_id": {
                         "type": [

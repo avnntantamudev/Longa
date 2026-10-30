@@ -166,6 +166,7 @@ return [
 
     'chat' => [
         'max_attachment_kb' => (int) env('LONGA_CHAT_MAX_ATTACHMENT_KB', 10240),
+        'max_photo_kb' => (int) env('LONGA_CHAT_MAX_PHOTO_KB', 5120),
         'attachment_link_minutes' => (int) env('LONGA_CHAT_ATTACHMENT_LINK_MINUTES', 10),
         // Esconde telefones/e-mails escritos no chat (comunicação fica no BISCA nesta fase) [AJUSTAR]
         'mask_contacts' => (bool) env('LONGA_CHAT_MASK_CONTACTS', true),

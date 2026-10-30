@@ -309,3 +309,15 @@ Decisões (o cliente pediu "toma as melhores decisões", 2026-10-30). Todas edit
   suspensão de 7 dias abaixo de 3,0 (≥ 10) — o técnico fica "suspenso" e volta sozinho no fim; remoção abaixo de 2,5
   (≥ 20) ou à 3.ª suspensão, pendente até a equipa confirmar ou cancelar (Operações → Sanções por avaliações), com
   nota e auditoria. O técnico é avisado por notificação.
+
+### Notas do passo 4
+
+- Migração `2026_10_30_000004_add_chat_photos_read_and_flags` (reversível): tipo do anexo, `read_at`, sinalização
+  (motivos, texto original só para a equipa, estado da revisão).
+- **Fotos** no chat (JPG, PNG, WebP até 5 MB) além de PDF, abertas por link temporário.
+- **Estado de leitura:** `POST /sessions/{id}/messages/read` marca como lidas as mensagens da outra parte, que recebe
+  o evento `messages.read` em tempo real ("enviada" / "lida").
+- **Sinalização** (`ChatFlagger`): telefones (também com pontos ou espaços), e-mails, links de contacto (WhatsApp,
+  Telegram, redes sociais) e frases de desvio ("por fora", "paga-me directo", "sem comissão", ...). A outra parte vê
+  o texto mascarado; a equipa vê o original em Operações → Mensagens sinalizadas e marca-as como revistas (auditado).
+- As chamadas, quando existirem, terão de passar por intermediação da plataforma (fora do âmbito: sem telefonia).

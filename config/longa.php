@@ -90,6 +90,13 @@ return [
         'max_suspensions' => (int) env('LONGA_RATING_MAX_SUSPENSIONS', 3),
     ],
 
+    // Alertas do painel: padrão de desvio (N cancelamentos até H horas depois de aceitar, em D dias)
+    'alerts' => [
+        'cancel_count' => (int) env('LONGA_ALERT_CANCEL_COUNT', 3),
+        'cancel_window_hours' => (int) env('LONGA_ALERT_CANCEL_WINDOW_HOURS', 2),
+        'cancel_days' => (int) env('LONGA_ALERT_CANCEL_DAYS', 30),
+    ],
+
     // Orçamentos e adendas (BISCA, Fase 2.5; editáveis no painel → Definições)
     'quotes' => [
         'validity_days' => (int) env('LONGA_QUOTE_VALIDITY_DAYS', 7),

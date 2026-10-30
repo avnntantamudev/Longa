@@ -329,3 +329,14 @@ Decisões (o cliente pediu "toma as melhores decisões", 2026-10-30). Todas edit
   Os ficheiros abrem por links assinados temporários.
 - A decisão (libertar, reembolsar, dividir) continua só do admin e gera os movimentos. Com pagamento por fases,
   decide sobre o que ainda está retido (as fases confirmadas já foram pagas ao técnico).
+
+### Notas do passo 6
+
+- **Operações → Pedidos:** todos os pedidos, a atualizar de 10 em 10 segundos, com filtros por estado, categoria,
+  modo de preço, província e município ou bairro.
+- **Operações → Alertas** (equipa): contadores do que está por rever (orçamentos fora do intervalo, mensagens
+  sinalizadas, adendas, remoções), padrão de desvio (3 ou mais cancelamentos até 2 h depois de aceitar, em 30 dias;
+  `longa.alerts`) e técnicos com saldo negativo, a indicar quem já não recebe pedidos.
+- **Finanças:** o painel inicial soma os saldos das carteiras e os levantamentos pendentes à receita, ao escrow e às
+  comissões a receber.
+- **Finanças → Auditoria** (só admin): registo das ações da equipa e das operações financeiras, com filtros.

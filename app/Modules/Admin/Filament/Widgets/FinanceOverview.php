@@ -38,6 +38,10 @@ class FinanceOverview extends StatsOverviewWidget
             Stat::make('Retido em escrow', SessionSections::kz($ledger->balance(Accounts::ESCROW))),
             Stat::make('Receita (comissões)', SessionSections::kz($ledger->balance(Accounts::PLATFORM_REVENUE))),
             Stat::make('Comissões a receber em mão', SessionSections::kz($commissionsDue)),
+            Stat::make('Saldos das carteiras', SessionSections::kz((int) LedgerAccountBalance::query()
+                ->whereHas('account', fn ($q) => $q->where('type', Accounts::PROVIDER_AVAILABLE))
+                ->sum('balance'))),
+            Stat::make('Levantamentos pendentes', SessionSections::kz($ledger->balance(Accounts::WITHDRAWALS_PENDING))),
             Stat::make('Disputas abertas', (string) Dispute::query()->where('status', Dispute::OPEN)->count()),
             Stat::make('Última reconciliação', $last === null ? 'Nunca' : ($last->isOk() ? 'OK' : 'Diferenças'))
                 ->description($last?->checked_at->diffForHumans())

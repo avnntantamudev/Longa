@@ -236,3 +236,34 @@ Respostas do cliente às dúvidas da Fase 1 (2026-10-29). Confirmado com o "ok":
 
 - `tests/Feature/Flows/BiscaFlowsTest.php`: fluxo completo de preço fixo, fluxo completo por orçamento com adenda e
   corrida entre dois técnicos pelo mesmo pedido. Relatório da fase: `docs/BISCA-FASE2-RELATORIO.md`.
+
+## Fase 3 — Estado: PLANO (à espera de "ok")
+
+Decisões (o cliente pediu "toma as melhores decisões", 2026-10-30). Todas editáveis no painel:
+1. **Saldo mínimo para receber pedidos:** conta o saldo líquido (disponível − comissões em dívida dos serviços em
+   dinheiro). O técnico deixa de receber pedidos quando deve mais de **5.000 Kz** e volta a recebê-los quando
+   recarrega ou o saldo cobre a dívida. Assim nenhum técnico novo fica bloqueado por ter carteira a zero.
+2. **Pagamento por fases:** o técnico pode propor fases nos orçamentos a partir de **150.000 Kz**; por omissão
+   **30% / 40% / 30%**. Cada fase é paga e retida à parte e libertada quando o cliente confirma essa fase, com a
+   comissão retida em cada uma.
+3. **Avaliações** (1 a 5 estrelas, nos dois sentidos, abertas 7 dias depois de pago; só a média das últimas 20):
+   - **aviso** quando a média desce abaixo de **3,5** (com pelo menos 5 avaliações);
+   - **suspensão de 7 dias** abaixo de **3,0** (com pelo menos 10);
+   - **remoção** (revista pela equipa antes de aplicar) abaixo de **2,5** com pelo menos 20, ou à **3.ª suspensão**.
+4. **Levantamentos:** mínimo 5.000 Kz, aprovados e pagos pela equipa (admin), com o valor retido enquanto esperam.
+5. **Sinalização no chat:** números de telefone, e-mails, links de contacto e frases como "paga-me por fora" ficam
+   marcados para revisão (o texto continua mascarado para a outra parte).
+6. **Padrões de desvio:** alerta quando um técnico tem 3 ou mais cancelamentos nas 2 h seguintes à aceitação em 30 dias.
+
+### Passos (um commit cada)
+
+| # | Passo |
+|---|---|
+| 1 | Carteira: movimentos por tipo (crédito de serviço, débito de comissão, recarga, levantamento, estorno, ajuste) sobre o livro-razão; recarga; levantamentos com aprovação; ajustes da equipa por estorno/ajuste; saldo mínimo ligado |
+| 2 | Interface de pagamentos: Multicaixa Express, referência e cartão simulados (mesma interface), dinheiro real; pagamento por fases nos orçamentos grandes |
+| 3 | Avaliações nos dois sentidos, reputação no despacho, regras de aviso, suspensão e remoção |
+| 4 | Chat: fotos, estado de leitura, sinalização de mensagens suspeitas |
+| 5 | Disputas: a equipa vê chat, fotos, orçamento aceite, adendas e histórico; decisões com movimentos |
+| 6 | Painel: pedidos em tempo real (filtros por estado, zona e categoria), finanças, alertas, auditoria |
+| 7 | Notificações: novo pedido, aceite, a caminho, orçamento enviado e aceite, concluído, pagamento, disputa |
+| 8 | Testes de aceitação (saldo = soma dos movimentos, operação falhada sem movimentos parciais, fluxos em dinheiro e digital com reserva, libertação, comissão e disputa com reembolso, auditoria) e entrega final |

@@ -321,3 +321,11 @@ Decisões (o cliente pediu "toma as melhores decisões", 2026-10-30). Todas edit
   Telegram, redes sociais) e frases de desvio ("por fora", "paga-me directo", "sem comissão", ...). A outra parte vê
   o texto mascarado; a equipa vê o original em Operações → Mensagens sinalizadas e marca-as como revistas (auditado).
 - As chamadas, quando existirem, terão de passar por intermediação da plataforma (fora do âmbito: sem telefonia).
+
+### Notas do passo 5
+
+- Página da disputa no backoffice (`DisputeEvidence`): histórico de estados (quem e quando), respostas e fotos do
+  pedido, orçamento aceite e adendas, e o chat completo com o texto original das mensagens sinalizadas e os anexos.
+  Os ficheiros abrem por links assinados temporários.
+- A decisão (libertar, reembolsar, dividir) continua só do admin e gera os movimentos. Com pagamento por fases,
+  decide sobre o que ainda está retido (as fases confirmadas já foram pagas ao técnico).

@@ -6,6 +6,7 @@ namespace App\Modules\Admin\Filament\Resources\Disputes;
 
 use App\Modules\Admin\Filament\Resources\Disputes\Pages\ListDisputes;
 use App\Modules\Admin\Filament\Resources\Disputes\Pages\ViewDispute;
+use App\Modules\Admin\Filament\Support\DisputeEvidence;
 use App\Modules\Admin\Filament\Support\SessionSections;
 use App\Modules\Sessions\Models\Dispute;
 use App\Modules\Sessions\Models\DisputeAttachment;
@@ -99,6 +100,7 @@ class DisputeResource extends Resource
                     TextEntry::make('resolution_note')->label('Nota da decisão')->placeholder('—'),
                 ]),
             SessionSections::details('session.'),
+            ...DisputeEvidence::sections('session'),
             SessionSections::timeline('session.'),
             SessionSections::ledger('session.'),
         ]);

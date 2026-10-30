@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppIcon from '@/components/AppIcon.vue';
 import { usePolling, usePrivateChannel } from '@/composables/useRealtime';
-import { api, ApiError } from '@/lib/api';
+import { api, ApiError, randomId } from '@/lib/api';
 import { nextTick, onMounted, ref } from 'vue';
 
 /**
@@ -93,7 +93,7 @@ function submit(file: File | null = null): void {
     }
     const message: Message = {
         id: null,
-        client_id: crypto.randomUUID(),
+        client_id: randomId(),
         sender: { id: props.meId, name: null },
         body: body || null,
         attachment: file ? { name: file.name, size: file.size, kind: file.type.startsWith('image/') ? 'photo' : 'pdf' } : null,

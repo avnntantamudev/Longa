@@ -91,3 +91,15 @@ it('a mensagem sinalizada aparece mascarada à outra parte e com o texto origina
     expect($message->fresh()?->flag_status)->toBe(Message::FLAG_REVIEWED)
         ->and(App\Models\AuditLog::query()->where('action', 'chat.flag_reviewed')->exists())->toBeTrue();
 });
+
+it('sem servidor de tempo real, a mensagem é gravada na mesma e não dá erro', function () {
+    $events = Mockery::spy(app('events'));
+    $events->shouldReceive('dispatch')->with(Mockery::type(MessageSent::class))
+        ->andThrow(new Illuminate\Broadcasting\BroadcastException('Servidor de tempo real desligado'));
+    Event::swap($events);
+
+    chat('client', ['body' => 'Bom dia'])->assertCreated()->assertJsonPath('data.body', 'Bom dia');
+
+    expect(Message::query()->where('body', 'Bom dia')->exists())->toBeTrue();
+    $events->shouldHaveReceived('dispatch')->with(Mockery::type(MessageSent::class));
+});

@@ -10,6 +10,7 @@ use App\Modules\Sessions\Models\Message;
 use App\Modules\Sessions\Services\ChatFlagger;
 use App\Modules\Sessions\Services\ContactMasker;
 use App\Modules\Users\Models\User;
+use Illuminate\Broadcasting\BroadcastException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
 
@@ -62,7 +63,12 @@ class SendMessage
             'flag_status' => $reasons === [] ? null : Message::FLAG_PENDING,
         ]);
 
-        MessageSent::dispatch($message->setRelation('sender', $sender), $session->id);
+        // A mensagem já está gravada: sem servidor de tempo real, a outra parte recebe-a na atualização periódica
+        try {
+            MessageSent::dispatch($message->setRelation('sender', $sender), $session->id);
+        } catch (BroadcastException $e) {
+            report($e);
+        }
 
         return $message;
     }

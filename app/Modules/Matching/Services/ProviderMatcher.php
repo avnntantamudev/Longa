@@ -12,6 +12,7 @@ use App\Modules\Users\Enums\UserStatus;
 use App\Modules\Users\Enums\VerificationStatus;
 use App\Modules\Wallet\Ledger\Accounts;
 use App\Support\Settings\PlatformSettings;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -23,7 +24,7 @@ use Illuminate\Support\Facades\DB;
  *  - trabalha na categoria do pedido e aceita a modalidade (presencial/online);
  *  - presencial: a ≤ raio da ronda do despacho do local do pedido E o pedido dentro do raio de atuação do técnico;
  *  - hora/pacote: com preço por hora na categoria ≤ preço máximo do cliente;
- *  - com saldo disponível ≥ saldo mínimo, quando configurado (Definições → Despacho; 0 = desligado);
+ *  - com saldo líquido (disponível − comissões em dívida) ≥ saldo mínimo (Definições → Despacho; −5.000 Kz por omissão);
  *  - sem serviço ativa que se sobreponha ao horário pedido (com folga configurável);
  *  - não é o próprio cliente e ainda não recebeu oferta deste pedido.
  *
@@ -33,6 +34,19 @@ use Illuminate\Support\Facades\DB;
 class ProviderMatcher
 {
     public function __construct(private readonly PlatformSettings $settings) {}
+
+    /**
+     * Técnicos com contas na carteira, agrupados para somar o saldo líquido (disponível + dívida).
+     */
+    private function netBalances(): Builder
+    {
+        return DB::table('ledger_accounts as a')
+            ->join('ledger_account_balances as b', 'b.ledger_account_id', '=', 'a.id')
+            ->whereIn('a.type', [Accounts::PROVIDER_AVAILABLE, Accounts::PROVIDER_COMMISSION_DUE])
+            ->whereNotNull('a.owner_id')
+            ->groupBy('a.owner_id')
+            ->select('a.owner_id');
+    }
 
     /**
      * @param  list<int>  $excludeProviderIds
@@ -74,11 +88,12 @@ class ProviderMatcher
             // Hora/pacote: preço por hora do técnico definido e dentro do máximo do cliente
             ->when($request->pricing_mode === PricingMode::HourlyPackage && $request->max_hourly_rate !== null, fn ($q) => $q
                 ->whereNotNull('stp.hourly_rate')->where('stp.hourly_rate', '<=', $request->max_hourly_rate))
-            // Saldo mínimo (carteira do técnico no livro-razão; sem conta = 0)
-            ->when($minBalance > 0, fn ($q) => $q->whereRaw(
-                "COALESCE((SELECT b.balance FROM ledger_accounts a JOIN ledger_account_balances b ON b.ledger_account_id = a.id WHERE a.code = CONCAT(?, ':', tp.id)), 0) >= ?",
-                [Accounts::PROVIDER_AVAILABLE, $minBalance],
-            ))
+            // Saldo mínimo: saldo líquido = disponível + dívida de comissões (negativa); sem contas = 0.
+            // O conjunto de técnicos abaixo (ou acima) do mínimo calcula-se uma vez, não por técnico.
+            ->when($minBalance <= 0,
+                fn ($q) => $q->whereNotIn('tp.id', $this->netBalances()->havingRaw('SUM(b.balance) < ?', [$minBalance])),
+                fn ($q) => $q->whereIn('tp.id', $this->netBalances()->havingRaw('SUM(b.balance) >= ?', [$minBalance])),
+            )
             // Conflito: serviço ativa do técnico que se sobrepõe ao horário pedido (com folga)
             ->whereNotExists(function ($q) use ($start, $end) {
                 $q->selectRaw('1')

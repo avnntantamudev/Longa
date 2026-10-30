@@ -27,6 +27,8 @@ class WalletMovementResource extends JsonResource
             'id' => $this->id,
             'bucket' => $this->account->type === 'provider_available' ? 'available' : 'commission_due',
             'type' => $tx->type,
+            /** service_credit | commission_debit | topup | withdrawal | reversal | adjustment */
+            'kind' => self::kind($tx->type),
             'label' => self::label($tx->type),
             'amount' => $this->amount,
             'session_id' => $tx->reference_type === ServiceRequest::class ? $tx->reference_id : null,
@@ -34,9 +36,30 @@ class WalletMovementResource extends JsonResource
         ];
     }
 
+    /**
+     * Tipo do movimento da carteira (crédito de serviço, débito de comissão, recarga, levantamento, estorno, ajuste).
+     */
+    public static function kind(string $type): string
+    {
+        return match ($type) {
+            'escrow_release', 'refund_partial' => 'service_credit',
+            'cash_commission_due', 'commission_offset', 'cash_commission_received' => 'commission_debit',
+            'wallet_topup' => 'topup',
+            'withdrawal_requested', 'withdrawal_paid' => 'withdrawal',
+            'reversal', 'withdrawal_rejected' => 'reversal',
+            'adjustment' => 'adjustment',
+            default => 'other',
+        };
+    }
+
     public static function label(string $type): string
     {
         return match ($type) {
+            'wallet_topup' => 'Recarga da carteira',
+            'withdrawal_requested' => 'Levantamento pedido',
+            'withdrawal_paid' => 'Levantamento pago',
+            'withdrawal_rejected' => 'Levantamento recusado (estorno)',
+            'adjustment' => 'Ajuste do BISCA',
             'escrow_release' => 'Serviço confirmado',
             'refund_partial' => 'Parte de serviço cancelado ou em disputa',
             'cash_commission_due' => 'Comissão de serviço pago em mão',

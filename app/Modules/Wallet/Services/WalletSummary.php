@@ -10,6 +10,8 @@ use App\Modules\Wallet\Ledger\Accounts;
 use App\Modules\Wallet\Ledger\LedgerService;
 use App\Modules\Wallet\Models\LedgerAccount;
 use App\Modules\Wallet\Models\LedgerEntry;
+use App\Modules\Wallet\Models\Withdrawal;
+use App\Support\Settings\PlatformSettings;
 use Illuminate\Contracts\Pagination\CursorPaginator;
 
 /**
@@ -17,10 +19,10 @@ use Illuminate\Contracts\Pagination\CursorPaginator;
  */
 class WalletSummary
 {
-    public function __construct(private readonly LedgerService $ledger) {}
+    public function __construct(private readonly LedgerService $ledger, private readonly PlatformSettings $settings) {}
 
     /**
-     * @return array{available: int, pending: int, total_earned: int, commission_due: int, currency: string}
+     * @return array{available: int, pending: int, total_earned: int, commission_due: int, net_balance: int, min_balance: int, receiving_requests: bool, pending_withdrawals: int, currency: string}
      */
     public function summary(ProviderProfile $provider): array
     {
@@ -33,6 +35,11 @@ class WalletSummary
             // Tudo o que entrou na carteira (antes de compensações de comissão e levantamentos)
             'total_earned' => $availableId === null ? 0 : (int) LedgerEntry::query()->where('ledger_account_id', $availableId)->where('amount', '>', 0)->sum('amount'),
             'commission_due' => -$this->ledger->balance(Accounts::providerCommissionDue($provider)),
+            // Saldo líquido (disponível − dívida) e se chega para receber pedidos (Definições → saldo mínimo)
+            'net_balance' => $net = $this->ledger->balance(Accounts::providerAvailable($provider)) + $this->ledger->balance(Accounts::providerCommissionDue($provider)),
+            'min_balance' => $min = $this->settings->int('dispatch_min_balance'),
+            'receiving_requests' => $net >= $min,
+            'pending_withdrawals' => (int) Withdrawal::query()->where('provider_profile_id', $provider->id)->where('status', Withdrawal::REQUESTED)->sum('amount'),
             'currency' => 'AOA',
         ];
     }

@@ -69,6 +69,12 @@ return [
         ],
     ],
 
+    // Carteira do técnico (BISCA, Fase 3.1)
+    'wallet' => [
+        'min_withdrawal' => (int) env('LONGA_WALLET_MIN_WITHDRAWAL', 5000),
+        'min_topup' => (int) env('LONGA_WALLET_MIN_TOPUP', 1000),
+    ],
+
     // Orçamentos e adendas (BISCA, Fase 2.5; editáveis no painel → Definições)
     'quotes' => [
         'validity_days' => (int) env('LONGA_QUOTE_VALIDITY_DAYS', 7),
@@ -88,8 +94,9 @@ return [
         'radius_step_m' => (int) env('LONGA_DISPATCH_RADIUS_STEP_M', 3000),
         'max_radius_m' => (int) env('LONGA_DISPATCH_MAX_RADIUS_M', 15000),
         'search_minutes' => (int) env('LONGA_DISPATCH_SEARCH_MINUTES', 60),
-        // Saldo mínimo na carteira do técnico para receber pedidos (Kz; 0 = desligado até à Fase 3)
-        'min_balance' => (int) env('LONGA_DISPATCH_MIN_BALANCE', 0),
+        // Saldo mínimo do técnico para receber pedidos: saldo líquido (disponível − comissões em dívida) em Kz.
+        // Negativo = dívida tolerada: com −5000, deixa de receber pedidos quando deve mais de 5.000 Kz.
+        'min_balance' => (int) env('LONGA_DISPATCH_MIN_BALANCE', -5000),
         // Máximo de técnicos novos por ronda
         'round_size' => (int) env('LONGA_DISPATCH_ROUND_SIZE', 25),
         // Pedidos para outro dia: raio da oferta (metros)

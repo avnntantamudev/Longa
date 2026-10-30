@@ -33,12 +33,24 @@ final class Accounts
     /** Receita das subscrições VIP (separada das comissões) */
     public const SUBSCRIPTION_REVENUE = 'subscription_revenue';
 
+    /** Levantamentos pedidos pelos técnicos e ainda por pagar */
+    public const WITHDRAWALS_PENDING = 'withdrawals_pending';
+
+    /** Dinheiro que saiu da plataforma para os técnicos (levantamentos pagos) */
+    public const PAYOUTS = 'payouts';
+
+    /** Contrapartida dos ajustes feitos pela equipa às carteiras */
+    public const ADJUSTMENTS = 'adjustments';
+
     public const PROVIDER_AVAILABLE = 'provider_available';
 
     public const PROVIDER_COMMISSION_DUE = 'provider_commission_due';
 
     /** @var list<string> */
-    public const SYSTEM = [self::FUNDS_IN, self::ESCROW, self::PLATFORM_REVENUE, self::REFUNDS_PAYABLE, self::CASH_SETTLEMENT, self::SUBSCRIPTION_REVENUE];
+    public const SYSTEM = [
+        self::FUNDS_IN, self::ESCROW, self::PLATFORM_REVENUE, self::REFUNDS_PAYABLE, self::CASH_SETTLEMENT, self::SUBSCRIPTION_REVENUE,
+        self::WITHDRAWALS_PENDING, self::PAYOUTS, self::ADJUSTMENTS,
+    ];
 
     public static function providerAvailable(ProviderProfile|int $provider): string
     {

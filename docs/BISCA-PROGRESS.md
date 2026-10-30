@@ -267,3 +267,20 @@ Decisões (o cliente pediu "toma as melhores decisões", 2026-10-30). Todas edit
 | 6 | Painel: pedidos em tempo real (filtros por estado, zona e categoria), finanças, alertas, auditoria |
 | 7 | Notificações: novo pedido, aceite, a caminho, orçamento enviado e aceite, concluído, pagamento, disputa |
 | 8 | Testes de aceitação (saldo = soma dos movimentos, operação falhada sem movimentos parciais, fluxos em dinheiro e digital com reserva, libertação, comissão e disputa com reembolso, auditoria) e entrega final |
+
+## Fase 3 — Estado: EM CURSO (plano aprovado a 2026-10-30)
+
+### Notas do passo 1
+
+- A tabela `movimentos_carteira` do prompt corresponde às linhas imutáveis do livro-razão (`ledger_entries`): cada
+  movimento tem tipo, valor, pedido associado (referência), data, utilizador responsável (`created_by`) e descrição
+  (metadados). A API dá o tipo do BISCA em `kind`: `service_credit`, `commission_debit`, `topup`, `withdrawal`,
+  `reversal`, `adjustment`.
+- Migração `2026_10_30_000001_create_wallet_withdrawals` (reversível): `withdrawals`; as cobranças podem não ter
+  pedido (recargas).
+- **Recarga** (`POST /wallet/top-ups`): pagamento (simulado) → saldo; as comissões em dívida são descontadas logo.
+- **Levantamento** (`POST /wallet/withdrawals`, mínimo 5.000 Kz): o valor passa para "levantamentos pendentes";
+  o admin paga (sai da plataforma) ou recusa (estorno) em Finanças → Levantamentos.
+- **Ajuste** (Finanças → Livro-razão → "Ajuste à carteira", só admin): movimento novo com motivo e auditoria.
+- **Saldo mínimo:** saldo líquido (disponível − dívida) ≥ −5.000 Kz para receber pedidos; o resumo da carteira diz
+  se o técnico está a receber pedidos. Calculado uma vez por despacho (conjunto dos técnicos em dívida).

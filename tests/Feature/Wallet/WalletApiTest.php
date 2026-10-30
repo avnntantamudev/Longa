@@ -26,7 +26,10 @@ it('carteira vazia de um técnico novo', function () {
     apiLogin($provider->user);
 
     $this->getJson('/api/v1/wallet')->assertOk()
-        ->assertExactJson(['data' => ['available' => 0, 'pending' => 0, 'total_earned' => 0, 'commission_due' => 0, 'currency' => 'AOA']]);
+        ->assertExactJson(['data' => [
+            'available' => 0, 'pending' => 0, 'total_earned' => 0, 'commission_due' => 0,
+            'net_balance' => 0, 'min_balance' => -5000, 'receiving_requests' => true, 'pending_withdrawals' => 0, 'currency' => 'AOA',
+        ]]);
     $this->getJson('/api/v1/wallet/movements')->assertOk()->assertJsonCount(0, 'data');
 });
 

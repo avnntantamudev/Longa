@@ -18,7 +18,8 @@ export type SessionAction =
     | 'send_quote'
     | 'answer_quote'
     | 'addendum'
-    | 'on_the_way';
+    | 'on_the_way'
+    | 'confirm_phase';
 
 /** Adenda ao orçamento (GET /sessions/{id}/addenda) */
 export interface Addendum {
@@ -64,6 +65,7 @@ export interface Session {
     closed_reason: string | null;
     pricing_mode: 'fixed' | 'quote' | 'hourly_package';
     visit_fee: number;
+    phases: Array<{ id: number; sequence: number; percent: number; amount: number; status: 'pending' | 'due' | 'paid' | 'released' }>;
     started_at: string | null;
     ended_at: string | null;
     confirmed_at: string | null;
@@ -166,6 +168,8 @@ export function eventLabel(type: string): string {
         payment_failed: 'Pagamento falhou',
         payment_window_expired: 'Prazo de pagamento terminou',
         on_the_way: 'Técnico a caminho',
+        phase_paid: 'Fase paga (retida pelo BISCA)',
+        phase_confirmed: 'Fase confirmada e paga ao técnico',
         diagnosis_started: 'Diagnóstico no local',
         quote_sent: 'Orçamento enviado',
         quote_revision_requested: 'Revisão do orçamento pedida',

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Payments\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Payments\Enums\PaymentMethod;
 use App\Modules\Payments\Models\ProviderSubscription;
 use App\Modules\Payments\Services\VipSubscriptions;
 use App\Modules\Users\Models\ProviderProfile;
@@ -13,6 +14,7 @@ use App\Support\Api\ApiException;
 use App\Support\Settings\PlatformSettings;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 /**
  * Técnico VIP (subscrição anual).
@@ -56,7 +58,7 @@ class VipController extends Controller
     {
         $data = $request->validate([
             /** @example multicaixa_express */
-            'method' => ['required', 'in:multicaixa_express,reference'],
+            'method' => ['required', Rule::in(PaymentMethod::digitalValues())],
             'accept_terms' => ['accepted'],
         ], ['accept_terms.accepted' => 'Confirme que leu as condições (sem reembolso a meio do período).']);
 

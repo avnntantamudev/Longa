@@ -50,6 +50,8 @@ class SessionResource extends JsonResource
             'payment_due_at' => $this->payment_due_at?->toIso8601String(),
             'closed_reason' => $this->closed_reason,
             'pricing_mode' => $this->pricing_mode->value,
+            /** Pagamento por fases: sequência, %, valor e estado (pending | due | paid | released) */
+            'phases' => $this->phases()->get(['id', 'sequence', 'percent', 'amount', 'status'])->toArray(),
             'visit_fee' => $this->visit_fee,
             'started_at' => $this->started_at?->toIso8601String(),
             'ended_at' => $this->ended_at?->toIso8601String(),

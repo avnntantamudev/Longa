@@ -15,6 +15,7 @@ Route::middleware(['auth:sanctum', 'auth.session', 'onboarded'])->group(function
 });
 
 Route::middleware(['auth:sanctum', 'auth.session', 'onboarded'])->group(function () {
+    Route::post('phases/{phase}/confirm', [PaymentController::class, 'confirmPhase'])->middleware('idempotent')->name('api.phases.confirm');
     Route::post('sessions/{session}/confirm-cash', [CashController::class, 'confirm'])->middleware('idempotent')->name('api.sessions.confirm-cash');
 
     // Técnico VIP

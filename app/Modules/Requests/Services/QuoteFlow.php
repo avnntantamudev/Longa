@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Requests\Services;
 
 use App\Modules\Payments\Services\CommissionDebts;
+use App\Modules\Payments\Services\PhasedPayments;
 use App\Modules\Requests\Enums\RequestState;
 use App\Modules\Requests\Models\Quote;
 use App\Modules\Requests\Models\ServiceRequest;
@@ -36,6 +37,7 @@ class QuoteFlow
         private readonly CommissionDebts $debts,
         private readonly PlatformSettings $settings,
         private readonly AuditLogger $audit,
+        private readonly PhasedPayments $phased,
     ) {}
 
     public function startDiagnosis(ServiceRequest $request, User $provider): ServiceRequest
@@ -65,7 +67,7 @@ class QuoteFlow
     }
 
     /**
-     * @param  array{labour_amount: int, materials_amount?: int, materials?: list<array{descricao: string, quantidade: int, valor: int}>|null, execution_days: int, notes?: string|null}  $data
+     * @param  array{labour_amount: int, materials_amount?: int, materials?: list<array{descricao: string, quantidade: int, valor: int}>|null, execution_days: int, notes?: string|null, phased?: bool, phases?: list<int>|null}  $data
      */
     public function submit(ServiceRequest $request, User $provider, array $data): Quote
     {
@@ -81,7 +83,8 @@ class QuoteFlow
             $total = $data['labour_amount'] + ($data['materials_amount'] ?? 0);
 
             $quote = Quote::query()->create([
-                ...$data,
+                ...collect($data)->except(['phased', 'phases'])->all(),
+                'phases' => $this->phased->phasesFor($total, (bool) ($data['phased'] ?? false), $data['phases'] ?? null),
                 'service_request_id' => $locked->id,
                 'provider_profile_id' => (int) $locked->provider_profile_id,
                 'revision' => ($previous->revision ?? 0) + 1,
@@ -122,6 +125,7 @@ class QuoteFlow
             $electronic = ! $locked->isCash() && $amount > 0;
 
             $quote->forceFill(['status' => Quote::ACCEPTED, 'responded_at' => now()])->save();
+            $this->phased->createFor($locked, $quote);
             $this->lifecycle->transition($locked, RequestState::QuoteAccepted, 'quote_accepted', $client, [
                 'quote_id' => $quote->id, 'total' => $quote->total, 'amount_due' => $amount,
             ], [

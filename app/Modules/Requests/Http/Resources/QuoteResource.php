@@ -33,6 +33,8 @@ class QuoteResource extends JsonResource
             'visit_fee_deducted' => $this->visit_fee_deducted,
             'amount_due' => $this->amountDue(),
             'execution_days' => $this->execution_days,
+            /** Percentagens das fases de pagamento (null = pagamento único) */
+            'phases' => $this->phases,
             'notes' => $this->notes,
             'valid_until' => $this->valid_until->toIso8601String(),
             'client_note' => $this->client_note,

@@ -7,7 +7,9 @@ namespace App\Modules\Payments\Actions;
 use App\Modules\Payments\Contracts\PaymentProvider;
 use App\Modules\Payments\Models\EscrowHold;
 use App\Modules\Payments\Models\PaymentCharge;
+use App\Modules\Payments\Models\PaymentPhase;
 use App\Modules\Payments\Services\EscrowService;
+use App\Modules\Payments\Services\PhasedPayments;
 use App\Modules\Payments\Support\ProviderResult;
 use App\Modules\Requests\Enums\RequestState;
 use App\Modules\Requests\Models\ServiceRequest;
@@ -34,12 +36,18 @@ class PayForSession
         private readonly EscrowService $escrow,
         private readonly SessionLifecycle $lifecycle,
         private readonly AuditLogger $audit,
+        private readonly PhasedPayments $phases,
     ) {}
 
     public function handle(ServiceRequest $session, User $client, string $method): ServiceRequest
     {
         if ($session->isCash()) {
             throw new ApiException('cash_session', 'Este serviço é pago em dinheiro ao técnico.', 409);
+        }
+
+        // Pagamento por fases: paga-se a fase que está a pagar
+        if (PaymentPhase::query()->where('service_request_id', $session->id)->exists()) {
+            return $this->phases->pay($session, $client, $method);
         }
 
         if (EscrowHold::query()->where('service_request_id', $session->id)->exists()) {

@@ -23,6 +23,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $total
  * @property int $visit_fee_deducted
  * @property int $execution_days
+ * @property list<int>|null $phases percentagens das fases de pagamento
  * @property string|null $notes
  * @property \Illuminate\Support\Carbon $valid_until
  * @property string $status
@@ -35,7 +36,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 #[Fillable([
     'service_request_id', 'provider_profile_id', 'revision', 'labour_amount', 'materials_amount', 'materials', 'total',
-    'visit_fee_deducted', 'execution_days', 'notes', 'valid_until', 'outside_reference',
+    'visit_fee_deducted', 'execution_days', 'phases', 'notes', 'valid_until', 'outside_reference',
 ])]
 class Quote extends Model
 {
@@ -57,6 +58,7 @@ class Quote extends Model
     {
         return [
             'materials' => 'array',
+            'phases' => 'array',
             'valid_until' => 'datetime',
             'responded_at' => 'datetime',
             'outside_reference' => 'boolean',

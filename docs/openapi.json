@@ -4123,7 +4123,8 @@
                                         "type": "string",
                                         "enum": [
                                             "multicaixa_express",
-                                            "reference"
+                                            "reference",
+                                            "card"
                                         ]
                                     }
                                 },
@@ -4158,6 +4159,67 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/phases/{phase}/confirm": {
+            "post": {
+                "operationId": "phases.confirm",
+                "summary": "Confirmar uma fase do servi\u00e7o (cliente; pagamento por fases). A fase \u00e9 libertada ao t\u00e9cnico com a comiss\u00e3o\ne a seguinte fica a pagar. A \u00faltima confirma-se com a confirma\u00e7\u00e3o do servi\u00e7o",
+                "tags": [
+                    "Pagamentos",
+                    "Payment"
+                ],
+                "parameters": [
+                    {
+                        "name": "phase",
+                        "in": "path",
+                        "required": true,
+                        "description": "The phase ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "description": "Chave \u00fanica por a\u00e7\u00e3o (8\u2013100 caracteres: letras, n\u00fameros, \"-\" e \"_\"). Repetir o mesmo pedido com a mesma chave devolve a resposta guardada (24 h, cabe\u00e7alho `Idempotent-Replayed: true`); a mesma chave com outro corpo d\u00e1 422 `idempotency_key_reused`; um pedido ainda em curso d\u00e1 409 `request_in_progress`.",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z0-9_-]{8,100}$"
+                        },
+                        "example": "3f1c9a2e-7b4d-4e8a-9c1f-2a6b8d0e4f13"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`SessionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/SessionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
@@ -5658,6 +5720,24 @@
                                             "null"
                                         ],
                                         "maxLength": 1000
+                                    },
+                                    "phased": {
+                                        "type": "boolean",
+                                        "description": "Pagamento por fases (or\u00e7amentos grandes; por omiss\u00e3o 30/40/30)."
+                                    },
+                                    "phases": {
+                                        "type": [
+                                            "array",
+                                            "null"
+                                        ],
+                                        "description": "Percentagens das fases (opcional), ex.: [50, 50].",
+                                        "items": {
+                                            "type": "integer",
+                                            "minimum": 10,
+                                            "maximum": 90
+                                        },
+                                        "minItems": 2,
+                                        "maxItems": 5
                                     }
                                 },
                                 "required": [
@@ -7141,7 +7221,8 @@
                                         "type": "string",
                                         "enum": [
                                             "multicaixa_express",
-                                            "reference"
+                                            "reference",
+                                            "card"
                                         ],
                                         "examples": [
                                             "multicaixa_express"
@@ -9396,6 +9477,16 @@
                     "execution_days": {
                         "type": "integer"
                     },
+                    "phases": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "description": "Percentagens das fases de pagamento (null = pagamento \u00fanico)",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
                     "notes": {
                         "type": [
                             "string",
@@ -9426,6 +9517,7 @@
                     "visit_fee_deducted",
                     "amount_due",
                     "execution_days",
+                    "phases",
                     "notes",
                     "valid_until",
                     "client_note",
@@ -9617,6 +9709,11 @@
                     "pricing_mode": {
                         "type": "string"
                     },
+                    "phases": {
+                        "type": "array",
+                        "description": "Pagamento por fases: sequ\u00eancia, %, valor e estado (pending | due | paid | released)",
+                        "items": {}
+                    },
                     "visit_fee": {
                         "type": "integer"
                     },
@@ -9800,6 +9897,7 @@
                     "payment_due_at",
                     "closed_reason",
                     "pricing_mode",
+                    "phases",
                     "visit_fee",
                     "started_at",
                     "ended_at",

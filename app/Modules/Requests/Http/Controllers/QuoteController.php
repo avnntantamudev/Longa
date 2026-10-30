@@ -61,13 +61,18 @@ class QuoteController extends Controller
             /** Prazo de execução (dias). @example 1 */
             'execution_days' => ['required', 'integer', 'min:1', 'max:365'],
             'notes' => ['nullable', 'string', 'max:1000'],
+            /** Pagamento por fases (orçamentos grandes; por omissão 30/40/30). */
+            'phased' => ['sometimes', 'boolean'],
+            /** Percentagens das fases (opcional), ex.: [50, 50]. */
+            'phases' => ['nullable', 'array', 'min:2', 'max:5'],
+            'phases.*' => ['integer', 'min:10', 'max:90'],
         ]);
 
         if (($data['labour_amount'] + ($data['materials_amount'] ?? 0)) <= 0) {
             return response()->json(['error' => ['code' => 'validation_failed', 'message' => 'Os dados enviados são inválidos.', 'details' => ['labour_amount' => ['O orçamento tem de ter valor.']]]], 422);
         }
 
-        /** @var array{labour_amount: int, materials_amount?: int, materials?: list<array{descricao: string, quantidade: int, valor: int}>|null, execution_days: int, notes?: string|null} $data */
+        /** @var array{labour_amount: int, materials_amount?: int, materials?: list<array{descricao: string, quantidade: int, valor: int}>|null, execution_days: int, notes?: string|null, phased?: bool, phases?: list<int>|null} $data */
         $quote = $flow->submit($session, $this->user($request), $data);
 
         return (new QuoteResource($quote))->response()->setStatusCode(201);

@@ -17,7 +17,7 @@ const events = ref<SessionEventItem[]>([]);
 const busy = ref<SessionAction | null>(null);
 const error = ref('');
 const notice = ref('');
-const payMethod = ref<'multicaixa_express' | 'reference'>('multicaixa_express');
+const payMethod = ref<'multicaixa_express' | 'reference' | 'card'>('multicaixa_express');
 const cancelReason = ref('');
 const confirming = ref<SessionAction | null>(null);
 // Uma chave por ação: repetir depois de falha de rede não duplica a operação
@@ -54,7 +54,10 @@ async function load() {
 // Orçamentos: o mais recente primeiro; formulário do técnico e nota do cliente
 const quotes = ref<Quote[]>([]);
 const latestQuote = computed(() => quotes.value[0] ?? null);
-const quoteForm = reactive({ labour_amount: null as number | null, materials_amount: null as number | null, execution_days: 1, notes: '' });
+const quoteForm = reactive({ labour_amount: null as number | null, materials_amount: null as number | null, execution_days: 1, notes: '', phased: false });
+const quoteTotal = computed(() => (quoteForm.labour_amount ?? 0) + (quoteForm.materials_amount ?? 0));
+const duePhase = computed(() => session.value?.phases.find((p) => p.status === 'due') ?? null);
+const paidPhase = computed(() => session.value?.phases.slice(0, -1).find((p) => p.status === 'paid') ?? null);
 const quoteNote = ref('');
 
 // Adendas (trabalho extra durante a execução)
@@ -212,6 +215,7 @@ onMounted(load);
                     <div v-if="has('pay')" class="flex gap-2">
                         <button type="button" class="chip" :class="{ 'chip-active': payMethod === 'multicaixa_express' }" @click="payMethod = 'multicaixa_express'">Multicaixa Express</button>
                         <button type="button" class="chip" :class="{ 'chip-active': payMethod === 'reference' }" @click="payMethod = 'reference'">Referência</button>
+                        <button type="button" class="chip" :class="{ 'chip-active': payMethod === 'card' }" @click="payMethod = 'card'">Cartão</button>
                     </div>
                     <button v-if="has('pay')" class="btn-primary w-full" :disabled="busy !== null" @click="run('pay', 'pay', { method: payMethod }, 'Pagamento confirmado. O serviço está agendado.')">
                         {{ busy === 'pay' ? 'A processar…' : `Pagar ${kwanza(session.amount)}` }}
@@ -242,6 +246,9 @@ onMounted(load);
                             <input v-model.number="quoteForm.execution_days" class="input mt-1" type="number" min="1" max="365" />
                         </label>
                         <textarea v-model="quoteForm.notes" class="input min-h-20 py-3" maxlength="1000" placeholder="O que vai fazer e que materiais usa" />
+                        <label v-if="quoteTotal >= 150000 && session.payment_method === 'electronic'" class="flex items-center gap-2 text-caption">
+                            <input v-model="quoteForm.phased" type="checkbox" /> Pagamento por fases (30% / 40% / 30%)
+                        </label>
                         <button type="submit" class="btn-primary w-full" :disabled="busy !== null || !quoteForm.labour_amount">
                             {{ busy === 'send_quote' ? 'A enviar…' : 'Enviar orçamento' }}
                         </button>
@@ -296,6 +303,20 @@ onMounted(load);
                 <p class="text-caption text-ink-muted">
                     {{ isProvider ? 'No fim, toque em "Terminar serviço" e mostre o QR ao cliente.' : 'No fim, o técnico mostra-lhe um QR para confirmar o serviço.' }}
                 </p>
+                <!-- Pagamento por fases -->
+                <div v-if="session.phases.length" class="grid gap-1 rounded-control bg-navy-50 p-3 text-caption">
+                    <p class="font-semibold">Pagamento por fases</p>
+                    <p v-for="p in session.phases" :key="p.id" class="flex justify-between">
+                        <span>Fase {{ p.sequence }} ({{ p.percent }}%) · {{ { pending: 'por vir', due: 'a pagar', paid: 'paga, retida', released: 'paga ao técnico' }[p.status] }}</span>
+                        <strong>{{ kwanza(p.amount) }}</strong>
+                    </p>
+                    <button v-if="has('pay') && duePhase" class="btn-primary mt-1 w-full" :disabled="busy !== null" @click="run('pay', 'pay', { method: payMethod }, 'Fase paga. O valor fica retido até a confirmar.')">
+                        Pagar a fase {{ duePhase.sequence }} ({{ kwanza(duePhase.amount) }})
+                    </button>
+                    <button v-if="has('confirm_phase') && paidPhase" class="btn-outline mt-1 w-full" :disabled="busy !== null" @click="call('confirm_phase', `/phases/${paidPhase.id}/confirm`, {}, 'Fase confirmada. O técnico recebeu esta parte.')">
+                        Confirmar a fase {{ paidPhase.sequence }}
+                    </button>
+                </div>
                 <button v-if="has('finish')" class="btn-primary w-full" :disabled="busy !== null" @click="finishLesson">
                     {{ busy === 'finish' ? 'A terminar…' : 'Terminar serviço' }}
                 </button>

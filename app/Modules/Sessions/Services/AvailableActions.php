@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Sessions\Services;
 
+use App\Modules\Payments\Models\PaymentPhase;
+use App\Modules\Payments\Services\PhasedPayments;
 use App\Modules\Requests\Enums\RequestState;
 use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Users\Enums\PricingMode;
@@ -24,6 +26,9 @@ class AvailableActions
         $start = $session->scheduled_at;
         $end = $session->ends_at ?? $start->copy()->addMinutes($session->duration_minutes);
         $contestOpen = $session->no_show_contest_until?->isFuture() ?? false;
+
+        $phases = $session->phases()->get();
+        $phases = $phases->isEmpty() ? null : $phases;
 
         $beforeStart = [
             'start' => $isProvider && $now->between($start->copy()->subMinutes((int) $rules['start_early_minutes']), $end),
@@ -47,7 +52,10 @@ class AvailableActions
                 ? ['pay' => ! $isProvider && ($session->payment_due_at?->isFuture() ?? false)]
                 : ['start' => $isProvider],
             RequestState::InProgress => [
-                'finish' => $isProvider,
+                // Pagamento por fases: o cliente paga a fase a pagar e confirma a fase paga (que não a última)
+                'pay' => ! $isProvider && $phases?->contains('status', PaymentPhase::DUE),
+                'confirm_phase' => ! $isProvider && $phases !== null && $phases->slice(0, -1)->contains('status', PaymentPhase::PAID),
+                'finish' => $isProvider && ($phases === null || app(PhasedPayments::class)->readyToFinish($session)),
                 'dispute' => true,
                 // Orçamento aceite: o técnico pode propor trabalho extra (adenda)
                 'addendum' => $isProvider && $session->pricing_mode === PricingMode::Quote,

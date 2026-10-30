@@ -284,3 +284,15 @@ Decisões (o cliente pediu "toma as melhores decisões", 2026-10-30). Todas edit
 - **Ajuste** (Finanças → Livro-razão → "Ajuste à carteira", só admin): movimento novo com motivo e auditoria.
 - **Saldo mínimo:** saldo líquido (disponível − dívida) ≥ −5.000 Kz para receber pedidos; o resumo da carteira diz
   se o técnico está a receber pedidos. Calculado uma vez por despacho (conjunto dos técnicos em dívida).
+
+### Notas do passo 2
+
+- **Interface de pagamentos:** `PaymentGatewayRouter` (implementa `PaymentProvider`) escolhe o fornecedor pelo meio:
+  Multicaixa Express, referência (devolve entidade e referência) e cartão, hoje simulados (`Gateways/*`, a mesma
+  interface que o fornecedor real); o dinheiro não tem cobrança eletrónica. Meios aceites em `PaymentMethod`.
+- **Pagamento por fases** (migração `2026_10_30_000002_create_payment_phases`): nos orçamentos com pagamento digital a
+  partir de 150.000 Kz (parâmetro), o técnico propõe fases (por omissão 30/40/30). Cada fase é paga e retida antes
+  do trabalho dessa fase; quando o cliente a confirma (`POST /phases/{id}/confirm`) é libertada ao técnico com a
+  comissão retida (`EscrowService::releasePart`) e a seguinte fica a pagar. A última é libertada na confirmação
+  do serviço; o técnico só conclui com as fases em ordem. Disputas decidem sobre o que ainda está retido.
+- Em dinheiro não há fases: o cliente paga ao técnico em mão à medida que o trabalho avança.

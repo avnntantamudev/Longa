@@ -37,26 +37,34 @@ class EscrowService
         private readonly AuditLogger $audit,
     ) {}
 
-    public function hold(ServiceRequest $session, PaymentCharge $charge): EscrowHold
+    /**
+     * Abre a retenção do serviço. Sem $amount retém o valor total; com fases, só a 1.ª fase (as seguintes juntam-se
+     * com topUp()).
+     */
+    public function hold(ServiceRequest $session, PaymentCharge $charge, ?int $amount = null): EscrowHold
     {
-        return DB::transaction(function () use ($session, $charge) {
+        return DB::transaction(function () use ($session, $charge, $amount) {
+            $amount ??= $session->amount;
+            $split = $amount === $session->amount
+                ? ['commission' => $session->commission, 'provider_net' => $session->provider_net]
+                : Commission::split($amount, $session->commission_percent);
             $existing = EscrowHold::query()->where('service_request_id', $session->id)->lockForUpdate()->first();
             if ($existing !== null) {
                 return $existing;
             }
 
             $transaction = $this->ledger->post('escrow_hold', "escrow:hold:session:{$session->id}", [
-                Accounts::ESCROW => $session->amount,
-                Accounts::FUNDS_IN => -$session->amount,
+                Accounts::ESCROW => $amount,
+                Accounts::FUNDS_IN => -$amount,
             ], $session, ['charge_id' => $charge->id, 'reference' => $charge->external_reference]);
 
             $hold = EscrowHold::query()->create([
                 'service_request_id' => $session->id,
                 'client_id' => $session->client_id,
                 'provider_profile_id' => $session->provider_profile_id,
-                'amount' => $session->amount,
-                'commission' => $session->commission,
-                'provider_net' => $session->provider_net,
+                'amount' => $amount,
+                'commission' => $split['commission'],
+                'provider_net' => $split['provider_net'],
                 'commission_percent' => $session->commission_percent,
                 // Prazo máximo esperado para a retenção ter destino (alerta da reconciliação se ultrapassado)
                 'expires_at' => $session->ends_at?->copy()->addHours((int) config('longa.session_rules.hold_max_days') * 24),
@@ -96,6 +104,38 @@ class EscrowService
             $hold->forceFill(['amount' => $total, 'commission' => $split['commission'], 'provider_net' => $split['provider_net']])->save();
 
             $this->audit->record('escrow.topped_up', $hold, ['amount' => $amount, 'total' => $total, 'key' => $key]);
+
+            return $hold;
+        });
+    }
+
+    /**
+     * Liberta parte da retenção ao técnico (ex.: uma fase confirmada), com a comissão retida sobre essa parte.
+     * A retenção continua ativa com o resto (pode ficar a 0 até a fase seguinte ser paga). Idempotente pela chave.
+     */
+    public function releasePart(ServiceRequest $session, int $amount, string $key, ?User $actor = null): EscrowHold
+    {
+        return DB::transaction(function () use ($session, $amount, $key, $actor) {
+            /** @var EscrowHold $hold */
+            $hold = EscrowHold::query()->where('service_request_id', $session->id)->lockForUpdate()->firstOrFail();
+            if (LedgerTransaction::query()->where('idempotency_key', "escrow:release:{$key}")->exists()) {
+                return $hold;
+            }
+            if (! $hold->isActive() || $amount <= 0 || $amount > $hold->amount) {
+                throw new LedgerException("Libertação parcial inválida: {$amount} Kz de {$hold->amount} Kz.");
+            }
+
+            $split = Commission::split($amount, $hold->commission_percent);
+            $this->ledger->post('escrow_release', "escrow:release:{$key}", [
+                Accounts::ESCROW => -$amount,
+                Accounts::providerAvailable($hold->provider_profile_id) => $split['provider_net'],
+                Accounts::PLATFORM_REVENUE => $split['commission'],
+            ], $session, ['partial' => $key], $actor?->id);
+
+            $rest = $hold->amount - $amount;
+            $restSplit = Commission::split($rest, $hold->commission_percent);
+            $hold->forceFill(['amount' => $rest, 'commission' => $restSplit['commission'], 'provider_net' => $restSplit['provider_net']])->save();
+            $this->audit->record('escrow.partially_released', $hold, ['amount' => $amount, 'rest' => $rest, 'key' => $key]);
 
             return $hold;
         });

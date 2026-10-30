@@ -143,6 +143,9 @@ return [
     'payments' => [
         // Gateway: só 'mock' nesta fase (o real será integrado depois de o cliente o escolher)
         'provider' => env('PAYMENT_PROVIDER', 'mock'),
+        // Pagamento por fases (orçamentos grandes): percentagens por omissão
+        'default_phases' => array_map('intval', explode(',', (string) env('LONGA_PAYMENT_DEFAULT_PHASES', '30,40,30'))),
+        'phased_min_total' => (int) env('LONGA_PAYMENT_PHASED_MIN_TOTAL', 150000),
         'mock_outcome' => env('PAYMENT_MOCK_OUTCOME', 'succeeded'),
     ],
 

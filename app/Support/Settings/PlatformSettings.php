@@ -36,6 +36,7 @@ class PlatformSettings
         'dispatch_search_minutes' => ['config' => 'longa.matching.search_minutes', 'type' => 'int', 'min' => 5, 'max' => 240, 'label' => 'Despacho: tempo para um técnico aceitar (minutos)'],
         'dispatch_min_balance' => ['config' => 'longa.matching.min_balance', 'type' => 'int', 'min' => -10_000_000, 'max' => 10_000_000, 'label' => 'Saldo mínimo do técnico para receber pedidos (Kz, saldo menos dívidas; negativo = dívida tolerada)'],
         'withdrawal_min_amount' => ['config' => 'longa.wallet.min_withdrawal', 'type' => 'int', 'min' => 0, 'max' => 10_000_000, 'label' => 'Levantamento mínimo (Kz)'],
+        'phased_min_total' => ['config' => 'longa.payments.phased_min_total', 'type' => 'int', 'min' => 0, 'max' => 100_000_000, 'label' => 'Pagamento por fases a partir de (Kz)'],
         'quote_validity_days' => ['config' => 'longa.quotes.validity_days', 'type' => 'int', 'min' => 1, 'max' => 60, 'label' => 'Orçamentos: validade (dias)'],
         'quote_outlier_percent' => ['config' => 'longa.quotes.outlier_percent', 'type' => 'int', 'min' => 0, 'max' => 500, 'label' => 'Orçamentos: alerta quando sai do intervalo de referência em mais de (%)'],
         'addendum_review_percent' => ['config' => 'longa.quotes.addendum_review_percent', 'type' => 'int', 'min' => 0, 'max' => 500, 'label' => 'Adendas: revisão da equipa acima de (% do orçamento original)'],

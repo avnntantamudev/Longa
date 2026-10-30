@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Requests\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Payments\Enums\PaymentMethod;
 use App\Modules\Requests\Http\Resources\AddendumResource;
 use App\Modules\Requests\Models\QuoteAddendum;
 use App\Modules\Requests\Models\ServiceRequest;
@@ -76,7 +77,7 @@ class AddendumController extends Controller
     public function pay(Request $request, QuoteAddendum $addendum, AddendumFlow $flow): AddendumResource
     {
         Gate::authorize('pay', $addendum->request);
-        $method = $request->validate(['method' => ['required', Rule::in(['multicaixa_express', 'reference', 'card'])]])['method'];
+        $method = $request->validate(['method' => ['required', Rule::in(PaymentMethod::digitalValues())]])['method'];
 
         return new AddendumResource($flow->pay($addendum, $this->user($request), (string) $method));
     }

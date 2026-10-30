@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Requests\Models;
 
 use App\Modules\Payments\Models\EscrowHold;
+use App\Modules\Payments\Models\PaymentPhase;
 use App\Modules\Requests\Enums\RequestState;
 use App\Modules\Sessions\Models\Conversation;
 use App\Modules\Sessions\Models\Dispute;
@@ -275,6 +276,16 @@ class ServiceRequest extends Model
     public function addenda(): HasMany
     {
         return $this->hasMany(QuoteAddendum::class);
+    }
+
+    /**
+     * Fases de pagamento (orçamentos grandes com pagamento por fases).
+     *
+     * @return HasMany<PaymentPhase, $this>
+     */
+    public function phases(): HasMany
+    {
+        return $this->hasMany(PaymentPhase::class)->orderBy('sequence');
     }
 
     /**

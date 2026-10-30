@@ -7,7 +7,7 @@ namespace App\Modules\Payments\Contracts;
 use App\Modules\Payments\Support\ProviderResult;
 
 /**
- * Gateway de pagamento. Nesta fase só existe o mock (MockPaymentProvider).
+ * Gateway de pagamento de um meio digital. Implementações: Gateways\* (simuladas) e o PaymentGatewayRouter, que escolhe o fornecedor pelo meio.
  * O gateway real (ex.: EMIS GPO para Multicaixa Express, ProxyPay para referências) implementa esta
  * interface depois de o cliente o escolher.
  *

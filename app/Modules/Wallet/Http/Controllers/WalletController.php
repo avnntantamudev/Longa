@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Wallet\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Payments\Enums\PaymentMethod;
 use App\Modules\Users\Models\ProviderProfile;
 use App\Modules\Users\Models\User;
 use App\Modules\Wallet\Http\Resources\WalletMovementResource;
@@ -52,7 +53,7 @@ class WalletController extends Controller
         $data = $request->validate([
             /** Kz. @example 10000 */
             'amount' => ['required', 'integer', 'min:1', 'max:10000000'],
-            'method' => ['required', Rule::in(['multicaixa_express', 'reference', 'card'])],
+            'method' => ['required', Rule::in(PaymentMethod::digitalValues())],
         ]);
         $provider = $this->provider($request);
         $wallet->topUp($provider, (int) $data['amount'], (string) $data['method'], (string) $request->header('Idempotency-Key'));

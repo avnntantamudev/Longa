@@ -52,15 +52,17 @@ class ResolveDispute
                 throw new ApiException('dispute_already_resolved', 'Esta disputa já foi resolvida por outro administrador.', 409);
             }
 
+            // Em dinheiro o valor é o do serviço; no digital, o que ainda está retido (fases já libertadas não contam)
+            $disputed = $session->isCash() ? $session->amount : $this->settlement->heldAmount($session);
             $gross = match ($decision) {
-                self::RELEASE => $session->amount,
+                self::RELEASE => $disputed,
                 self::REFUND => 0,
                 self::PARTIAL => $providerShare ?? throw new ApiException('validation_failed', 'Os dados enviados são inválidos.', 422, ['provider_share' => ['Indique a parte do técnico.']]),
                 default => throw new ApiException('validation_failed', 'Os dados enviados são inválidos.', 422, ['decision' => ['Decisão inválida.']]),
             };
 
-            if ($decision === self::PARTIAL && ($gross <= 0 || $gross >= $session->amount)) {
-                throw new ApiException('validation_failed', 'Os dados enviados são inválidos.', 422, ['provider_share' => ['A parte do técnico tem de estar entre 1 e '.($session->amount - 1).' Kz.']]);
+            if ($decision === self::PARTIAL && ($gross <= 0 || $gross >= $disputed)) {
+                throw new ApiException('validation_failed', 'Os dados enviados são inválidos.', 422, ['provider_share' => ['A parte do técnico tem de estar entre 1 e '.($disputed - 1).' Kz.']]);
             }
 
             $metadata = ['dispute_id' => $locked->id, 'decision' => $decision, 'provider_share' => $gross, 'note' => $note];

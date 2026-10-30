@@ -67,7 +67,7 @@ class Settings extends Page
             ]),
             Section::make('Carteira')->schema([$field('withdrawal_min_amount')]),
             Section::make('Orçamentos e adendas')->columns(3)->schema([
-                $field('quote_validity_days'), $field('quote_outlier_percent'), $field('addendum_review_percent'),
+                $field('quote_validity_days'), $field('quote_outlier_percent'), $field('addendum_review_percent'), $field('phased_min_total'),
             ]),
             Section::make('Pedidos para outro dia')->schema([$field('scheduled_request_close_hours')]),
         ]);

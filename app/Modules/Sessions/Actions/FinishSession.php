@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Sessions\Actions;
 
+use App\Modules\Payments\Services\PhasedPayments;
 use App\Modules\Qr\Services\QrTokenService;
 use App\Modules\Requests\Enums\RequestState;
 use App\Modules\Requests\Models\ServiceRequest;
@@ -29,6 +30,10 @@ class FinishSession
         return DB::transaction(function () use ($session, $provider) {
             /** @var ServiceRequest $locked */
             $locked = ServiceRequest::query()->lockForUpdate()->findOrFail($session->id);
+
+            if ($locked->state === RequestState::InProgress && ! app(PhasedPayments::class)->readyToFinish($locked)) {
+                throw new ApiException('phases_pending', 'Há fases por pagar ou por confirmar antes de concluir o serviço.', 409);
+            }
 
             if ($locked->state === RequestState::InProgress) {
                 $this->lifecycle->transition($locked, RequestState::Completed, 'finished', $provider, [], [

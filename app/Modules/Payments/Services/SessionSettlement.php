@@ -29,7 +29,8 @@ class SessionSettlement
         }
 
         $this->requireHold($session);
-        $this->escrow->settle($session, $session->amount, EscrowHold::RELEASED, $reason, $actor);
+        // O que ainda está retido (com pagamento por fases, as fases confirmadas já foram libertadas)
+        $this->escrow->settle($session, $this->heldAmount($session), EscrowHold::RELEASED, $reason, $actor);
         // Comissões em dívida (serviços pagos em dinheiro) descontadas do novo saldo
         $this->debts->offset($session->provider_profile_id, "release:session:{$session->id}");
         WalletUpdated::dispatch($session->provider->user_id, 'session_completed', $session->id);
@@ -46,7 +47,7 @@ class SessionSettlement
 
         $this->requireHold($session);
         $outcome = match (true) {
-            $providerGross === $session->amount => EscrowHold::RELEASED,
+            $providerGross === $this->heldAmount($session) => EscrowHold::RELEASED,
             $providerGross === 0 => EscrowHold::REFUNDED,
             default => EscrowHold::PARTIALLY_REFUNDED,
         };
@@ -57,6 +58,14 @@ class SessionSettlement
             $this->debts->offset($session->provider_profile_id, "release:session:{$session->id}");
             WalletUpdated::dispatch($session->provider->user_id, $reason, $session->id);
         }
+    }
+
+    /**
+     * Valor ainda retido no escrow para o serviço (0 se não houver retenção).
+     */
+    public function heldAmount(ServiceRequest $session): int
+    {
+        return (int) EscrowHold::query()->where('service_request_id', $session->id)->value('amount');
     }
 
     private function requireHold(ServiceRequest $session): void

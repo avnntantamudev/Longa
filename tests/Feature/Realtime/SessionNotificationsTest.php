@@ -46,7 +46,9 @@ it('fluxo QR: cliente avisado do início e do QR; técnico avisado da confirmaç
         ->and(notified($provider, 'confirmed'))->toBeTrue()
         ->and(notified($provider, 'started'))->toBeFalse();
 
-    $push = Notification::sent($provider, SessionUpdateNotification::class)->first();
+    // O técnico é avisado do pagamento e, no fim, da confirmação com o valor
+    expect(notified($provider, 'payment_received'))->toBeTrue();
+    $push = Notification::sent($provider, SessionUpdateNotification::class)->first(fn ($n) => $n->kind === 'confirmed');
     expect($push->toArray($provider)['body'])->toContain('Kz 21.250 disponíveis na sua carteira');
 });
 
@@ -57,7 +59,7 @@ it('cancelamento avisa a outra parte com o motivo', function () {
     $sent = Notification::sent($session->client, SessionUpdateNotification::class)->first();
     expect($sent?->kind)->toBe('cancelled')
         ->and($sent?->toArray($session->client)['body'])->toContain('Motivo: Doença');
-    Notification::assertNotSentTo($session->provider->user, SessionUpdateNotification::class);
+    expect(notified($session->provider->user, 'cancelled'))->toBeFalse();
 });
 
 it('disputa aberta avisa a outra parte; decisão avisa ambos', function () {

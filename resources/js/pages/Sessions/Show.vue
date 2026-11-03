@@ -67,6 +67,32 @@ async function rate(): Promise<void> {
     await call('rate', `/sessions/${props.sessionId}/ratings`, { stars: rating.stars, comment: rating.comment || null }, 'Obrigado pela avaliação.');
 }
 
+// Pacotes: desistir, procurar outro técnico e remarcar aulas
+const confirmPackageCancel = ref(false);
+const rescheduleOpen = ref(false);
+const rescheduleTo = ref('');
+async function cancelPackage(): Promise<void> {
+    await call('package_cancel', `/packages/${props.sessionId}/cancel`, {}, isProvider.value ? 'Desistiu do pacote. As aulas que faltavam foram devolvidas ao cliente.' : 'Pacote cancelado.');
+    confirmPackageCancel.value = false;
+}
+async function replacePackage(): Promise<void> {
+    error.value = '';
+    busy.value = 'package_replace';
+    try {
+        const { data } = await api.post<{ data: { request_id: number } }>(`/packages/${props.sessionId}/replace`, {}, { idempotencyKey: newIdempotencyKey() });
+        router.visit(`/pedidos/${data.request_id}`);
+    } catch (e) {
+        error.value = e instanceof ApiError ? e.message : 'Sem ligação. Tente de novo.';
+    } finally {
+        busy.value = null;
+    }
+}
+async function proposeReschedule(): Promise<void> {
+    if (!rescheduleTo.value) return;
+    await call('reschedule', `/sessions/${props.sessionId}/reschedule`, { scheduled_at: new Date(rescheduleTo.value).toISOString() }, 'Proposta enviada. A outra parte tem de aceitar.');
+    rescheduleOpen.value = false;
+}
+
 // Voltar a chamar o mesmo técnico: VIP = pedido direto; sem VIP = só regista o interesse (o técnico é avisado)
 const rebookBusy = ref(false);
 const rebookUrl = computed(() =>
@@ -224,6 +250,71 @@ onMounted(load);
             </div>
         </section>
 
+        <!-- Pacote: as aulas, desistir e procurar outro técnico -->
+        <section v-if="session.package" class="card mt-4 grid gap-3" data-testid="package-lessons">
+            <p class="font-semibold">Pacote de {{ session.package.lessons.length || '' }} aulas</p>
+            <p v-if="session.package.lessons.length === 0" class="text-caption text-ink-muted">As aulas aparecem aqui depois do pagamento.</p>
+            <ol class="grid gap-2">
+                <li v-for="l in session.package.lessons" :key="l.id">
+                    <Link :href="`/servicos/${l.id}`" class="flex items-center justify-between gap-3 rounded-control bg-navy-50 p-3 text-caption">
+                        <span><strong>Aula {{ l.sequence }}</strong> · {{ when(l.scheduled_at) }}</span>
+                        <span class="badge shrink-0" :class="stateBadge(l.state)">{{ l.closed_reason === 'provider_withdrew' ? 'Devolvida' : l.state_label }}</span>
+                    </Link>
+                </li>
+            </ol>
+            <template v-if="session.package.closed_reason === 'provider_withdrew'">
+                <p class="text-caption text-ink-muted">O técnico desistiu. As aulas que faltavam foram devolvidas{{ isProvider ? ' ao cliente' : '' }}.</p>
+                <button v-if="session.package.replaceable" class="btn-primary w-full" :disabled="busy !== null" @click="replacePackage">
+                    {{ busy === 'package_replace' ? 'A procurar…' : 'Procurar outro técnico para as aulas que faltam' }}
+                </button>
+            </template>
+            <template v-if="session.package.can_cancel && session.package.lessons.length > 0">
+                <button v-if="!confirmPackageCancel" class="btn-outline w-full" @click="confirmPackageCancel = true">{{ isProvider ? 'Desistir do pacote' : 'Cancelar o pacote' }}</button>
+                <div v-else class="grid gap-2 rounded-control bg-danger/10 p-3">
+                    <p class="text-caption">
+                        <template v-if="isProvider">As aulas que ainda não começaram são devolvidas ao cliente. Desistir a meio pesa como dois cancelamentos tardios na sua pontuação.</template>
+                        <template v-else>As aulas que ainda não começaram são devolvidas. Se a próxima for daqui a menos de 24 horas, essa conta como dada.</template>
+                    </p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button class="btn-outline" @click="confirmPackageCancel = false">Voltar</button>
+                        <button class="btn-primary" :disabled="busy !== null" @click="cancelPackage">{{ busy === 'package_cancel' ? 'A cancelar…' : 'Confirmar' }}</button>
+                    </div>
+                </div>
+            </template>
+        </section>
+
+        <!-- Aula de um pacote: posição e remarcação -->
+        <section v-if="session.lesson" class="card mt-4 grid gap-3" data-testid="lesson-info">
+            <div class="flex items-center justify-between gap-3">
+                <p class="font-semibold">Aula {{ session.lesson.sequence }} de {{ session.lesson.total }}</p>
+                <Link :href="`/servicos/${session.lesson.package_id}`" class="text-caption font-semibold text-orange-600 underline">Ver o pacote</Link>
+            </div>
+            <template v-if="session.lesson.reschedule_to">
+                <p class="rounded-control bg-warning-soft p-3 text-caption">
+                    {{ session.lesson.reschedule_by_me ? 'Propôs mudar esta aula para' : `${counterpart} propõe mudar esta aula para` }}
+                    <strong>{{ when(session.lesson.reschedule_to) }}</strong>.{{ session.lesson.reschedule_by_me ? ' A aguardar resposta.' : '' }}
+                </p>
+                <div v-if="has('answer_reschedule')" class="grid grid-cols-2 gap-2">
+                    <button class="btn-outline" :disabled="busy !== null" @click="call('answer_reschedule', `/sessions/${session.id}/reschedule/reject`, {}, 'A aula mantém a hora.')">Recusar</button>
+                    <button class="btn-primary" :disabled="busy !== null" @click="call('answer_reschedule', `/sessions/${session.id}/reschedule/accept`, {}, 'Aula remarcada.')">Aceitar</button>
+                </div>
+            </template>
+            <template v-else-if="has('reschedule')">
+                <button v-if="!rescheduleOpen" class="btn-outline w-full" @click="rescheduleOpen = true">Propor outra hora ({{ session.lesson.reschedules_left }} restantes no pacote)</button>
+                <form v-else class="grid gap-2" @submit.prevent="proposeReschedule">
+                    <label class="grid gap-1 text-caption font-semibold">
+                        Nova data e hora
+                        <input v-model="rescheduleTo" type="datetime-local" class="input" required />
+                    </label>
+                    <p class="text-caption text-ink-muted">A outra parte tem de aceitar. Pelo menos 12 horas de antecedência.</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" class="btn-outline" @click="rescheduleOpen = false">Voltar</button>
+                        <button type="submit" class="btn-primary" :disabled="busy !== null || !rescheduleTo">Enviar proposta</button>
+                    </div>
+                </form>
+            </template>
+        </section>
+
         <!-- Estado e próximos passos -->
         <section class="card mt-4 grid gap-3" aria-live="polite">
             <p v-if="notice" class="rounded-control bg-success/10 p-3 text-caption font-semibold text-success">{{ notice }}</p>
@@ -304,6 +395,11 @@ onMounted(load);
                     <p v-else class="text-caption text-ink-muted">À espera da resposta do cliente.</p>
                 </template>
             </template>
+
+            <!-- Pacote pago: as aulas fazem-se uma a uma -->
+            <p v-else-if="session.package && phase === 'scheduled'" class="text-caption text-ink-muted">
+                O pacote está pago. Cada aula faz-se na sua página (lista acima): o técnico inicia, termina e o cliente confirma com o QR.
+            </p>
 
             <!-- Serviço agendado -->
             <template v-else-if="phase === 'scheduled'">

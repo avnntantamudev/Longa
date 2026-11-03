@@ -81,6 +81,7 @@ onMounted(load);
                 <li>⚡ <strong>Prioridade</strong>: recebe os pedidos TRIM TRIM antes dos outros técnicos.</li>
                 <li>💰 <strong>Comissão de {{ vip.commission_percent }}%</strong> em vez de {{ vip.standard_commission_percent }}% nos serviços aceites enquanto for VIP.</li>
                 <li>🔁 <strong>Pedidos diretos</strong>: os clientes que já serviu podem pedir-lhe de novo, só a si.</li>
+                <li>📚 <strong>Pacotes de várias aulas</strong>: recebe primeiro os pacotes (ex.: formações de uma semana), com todas as aulas para si.</li>
                 <li>🏅 <strong>Selo VIP</strong> visível aos clientes.</li>
             </ul>
         </section>

@@ -18,6 +18,8 @@ interface Session {
     amount: number;
     provider_net?: number;
     role: 'client' | 'provider';
+    /** Pedido-contrato de um pacote (as aulas aparecem à parte, com "aula N/total" no título) */
+    package?: { lessons: unknown[] } | null;
     provider?: { name: string; photo_thumb_url: string | null };
     client?: { name: string; photo_thumb_url: string | null };
 }
@@ -50,7 +52,9 @@ onMounted(async () => {
                     :src="session.role === 'client' ? session.provider?.photo_thumb_url : session.client?.photo_thumb_url"
                 />
                 <div class="min-w-0 flex-1">
-                    <p class="truncate font-semibold">{{ session.title }}</p>
+                    <p class="truncate font-semibold">
+                        <span v-if="session.package" class="badge badge-brand mr-1">Pacote · {{ session.package.lessons.length }} aulas</span>{{ session.title }}
+                    </p>
                     <p class="text-caption text-ink-muted">
                         {{ when(session.scheduled_at) }} · {{ session.neighborhood }} ·
                         {{ session.role === 'client' ? `com ${session.provider?.name}` : `cliente ${session.client?.name}` }}

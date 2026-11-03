@@ -48,6 +48,11 @@ Todas são reversíveis. Cada uma foi testada a descer e a subir na base local, 
 | `2026_10_30_000002_create_payment_phases` | `payment_phases`, `quotes.phases` |
 | `2026_10_30_000003_create_ratings` | `ratings`, `provider_sanctions` |
 | `2026_10_30_000004_add_chat_photos_read_and_flags` | Tipo de anexo, estado de leitura e sinalização nas mensagens |
+| `2026_11_03_000001_add_service_packages_base` | Categorias com pacotes; aulas ligadas ao pacote (`package_id`, `package_sequence`) |
+| `2026_11_03_000002_add_direct_requests` | `direct_provider_id`; `provider_rebook_interests` |
+| `2026_11_03_000003_add_lesson_schedule` | Datas das aulas no pacote |
+| `2026_11_03_000004_add_package_vip_window` | Janela só VIP dos pacotes |
+| `2026_11_03_000005_add_lesson_reschedules` | Remarcações das aulas |
 
 Desde o início do BISCA (`a16b12d`) mudaram 461 ficheiros: cerca de 20.800 linhas acrescentadas e 7.300 removidas.
 Os módulos com mais alterações são `Requests`, `Sessions`, `Payments`, `Wallet`, `Ratings`, `Matching` e `Admin`.
@@ -123,7 +128,7 @@ pacotes de aulas (4/8/12 aulas a 5/10/15% em Educação), campos do formulário,
 9. Numa disputa de um serviço com adenda aprovada mas não paga, a decisão só incide sobre o que está retido.
 
 **Limitações conhecidas:**
-- Cada pacote de aulas é um só pedido: as datas combinam-se no chat e a confirmação é no fim.
+- Pacotes de várias aulas e "pedir ao mesmo técnico" (técnicos VIP): ver `docs/BISCA-PACOTES.md`. O catálogo de cursos publicados pelo técnico ainda não existe.
 - O despacho usa a base do técnico. A última localização e as zonas de atuação são guardadas mas ainda não contam.
 - O vídeo das aulas online e as chamadas intermediadas não existem. Sem chamadas, o contacto é só pelo chat.
 - Vários orçamentos por pedido estão preparados mas não ligados.

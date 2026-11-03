@@ -20,7 +20,11 @@ export type SessionAction =
     | 'addendum'
     | 'on_the_way'
     | 'confirm_phase'
-    | 'rate';
+    | 'rate'
+    | 'reschedule'
+    | 'answer_reschedule'
+    | 'package_cancel'
+    | 'package_replace';
 
 /** Adenda ao orçamento (GET /sessions/{id}/addenda) */
 export interface Addendum {
@@ -54,6 +58,22 @@ export interface Session {
     id: number;
     /** Voltar a chamar o técnico (cliente, serviço pago): direct = técnico VIP; interest = técnico sem VIP */
     rebook?: { mode: 'direct' | 'interest'; category_id: number; interest_sent: boolean } | null;
+    /** Aula de um pacote */
+    lesson?: {
+        package_id: number;
+        sequence: number;
+        total: number;
+        reschedule_to: string | null;
+        reschedule_by_me: boolean;
+        reschedules_left: number;
+    } | null;
+    /** Pedido-contrato de um pacote */
+    package?: {
+        lessons: Array<{ id: number; sequence: number; scheduled_at: string; state: RequestState; state_label: string; closed_reason: string | null }>;
+        can_cancel: boolean;
+        replaceable: boolean;
+        closed_reason: string | null;
+    } | null;
     state: RequestState;
     state_label: string;
     actions: SessionAction[];

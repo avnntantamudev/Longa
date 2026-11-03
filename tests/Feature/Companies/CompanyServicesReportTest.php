@@ -120,3 +120,27 @@ it('a página da equipa abre para o RH (e /empresa leva lá); outros perfis não
     loginWeb(User::factory()->withRole(Role::Client)->create());
     $this->get('/empresa/equipa')->assertForbidden();
 });
+
+it('mostra à parte os serviços que o colaborador prestou como técnico (faturado e líquido), sem o cliente', function () {
+    [$company, $rh, $session] = companyWithLesson();
+    $technician = $session->provider->user;
+    $employeeId = addEmployee($company, $rh, $technician->phone, 'Técnicos');
+
+    apiLogin($technician);
+    $this->postJson("/api/v1/me/company-links/{$employeeId}", ['decision' => 'accepted'])->assertOk();
+
+    apiLogin($rh);
+    $from = now()->subWeek()->toDateString();
+    $data = $this->getJson("/api/v1/companies/{$company->id}/reports/services?from={$from}")->assertOk()->json('data');
+
+    $net = (int) ($session->provider_net ?? $session->amount - $session->commission);
+    expect($data['totals']['lessons'])->toBe(0) // não pediu nada como cliente
+        ->and($data['provided']['totals'])->toMatchArray(['services' => 1, 'hours' => 1.5, 'amount' => 25000, 'net' => $net])
+        ->and($net)->toBeLessThan(25000)
+        ->and($data['provided']['by_employee'][0])->toMatchArray(['department' => 'Técnicos', 'services' => 1])
+        ->and(array_keys($data['provided']['services'][0]))->toBe(['date', 'employee', 'department', 'category', 'hours', 'amount', 'net'])
+        ->and(json_encode($data))->not->toContain($session->client->name);
+
+    $csv = $this->get("/api/v1/companies/{$company->id}/reports/services/export?format=csv&from={$from}")->assertOk()->streamedContent();
+    expect($csv)->toContain('Serviços prestados')->toContain('Líquido');
+});

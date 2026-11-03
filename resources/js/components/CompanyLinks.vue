@@ -36,7 +36,7 @@ onMounted(load);
         <div v-for="link in links" :key="link.id" class="grid gap-2 rounded-control bg-navy-50 p-3">
             <p class="text-caption">
                 <strong>{{ link.company }}</strong>
-                <template v-if="link.consent_status === 'pending'"> quer acompanhar os seus serviços no BISCA: serviços concluídos, horas e custos (nunca o chat).</template>
+                <template v-if="link.consent_status === 'pending'"> quer acompanhar os seus serviços no BISCA: os que pede e os que presta como técnico, horas e valores (nunca o chat nem os seus clientes).</template>
                 <template v-else-if="link.consent_status === 'accepted'"> acompanha os seus serviços.</template>
                 <template v-else> não tem acesso aos seus serviços.</template>
             </p>

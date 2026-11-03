@@ -2979,6 +2979,80 @@
                                                             "cost"
                                                         ]
                                                     }
+                                                },
+                                                "provided": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "totals": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "services": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "hours": {
+                                                                    "type": "number"
+                                                                },
+                                                                "amount": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "net": {
+                                                                    "type": "integer"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "services",
+                                                                "hours",
+                                                                "amount",
+                                                                "net"
+                                                            ]
+                                                        },
+                                                        "by_employee": {
+                                                            "type": "string"
+                                                        },
+                                                        "services": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "date": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "employee": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "department": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "category": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "hours": {
+                                                                        "type": "number"
+                                                                    },
+                                                                    "amount": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "net": {
+                                                                        "type": "integer"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "date",
+                                                                    "employee",
+                                                                    "department",
+                                                                    "category",
+                                                                    "hours",
+                                                                    "amount",
+                                                                    "net"
+                                                                ]
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "totals",
+                                                        "by_employee",
+                                                        "services"
+                                                    ]
                                                 }
                                             },
                                             "required": [
@@ -2987,7 +3061,8 @@
                                                 "totals",
                                                 "by_employee",
                                                 "by_department",
-                                                "lessons"
+                                                "lessons",
+                                                "provided"
                                             ]
                                         }
                                     },

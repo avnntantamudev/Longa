@@ -189,7 +189,7 @@ onMounted(async () => {
 
     <h1 class="text-display">Funcionários</h1>
     <p class="mt-1 text-caption text-ink-muted">
-        Adicione os funcionários com o telefone que usam no BISCA. Cada um decide na app se autoriza a empresa a ver os seus serviços concluídos, horas e custos (nunca o chat).
+        Adicione os funcionários com o telefone que usam no BISCA. Cada um decide na app se autoriza a empresa a ver os serviços que pede e que presta como técnico, horas e valores (nunca o chat nem os clientes).
     </p>
 
     <p v-if="!loading && companies.length === 0" class="card mt-4 text-ink-muted">

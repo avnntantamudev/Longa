@@ -46,7 +46,7 @@ return [
     'consents' => [
         'location' => env('LONGA_LOCATION_CONSENT_VERSION', '2026-10'),
         // Autorização para a empresa (RH) ver os serviços do colaborador
-        'company_reports' => env('LONGA_COMPANY_REPORTS_CONSENT_VERSION', '2026-10'),
+        'company_reports' => env('LONGA_COMPANY_REPORTS_CONSENT_VERSION', '2026-11'),
     ],
 
     // Pedidos de serviço e matching TRIM TRIM (Fase 2). Valores [AJUSTAR] com o cliente.

@@ -84,6 +84,8 @@ use Illuminate\Support\Facades\Auth;
  * @property string|null $closed_reason
  * @property \Illuminate\Support\Carbon|null $cancelled_at
  * @property int|null $republished_from_id
+ * @property int|null $package_id
+ * @property int|null $package_sequence
  * @property \Illuminate\Support\Carbon $created_at
  * @property-read User $client
  * @property-read Category $category
@@ -95,7 +97,7 @@ use Illuminate\Support\Facades\Auth;
 #[Fillable([
     'client_id', 'category_id', 'pricing_mode', 'title', 'description', 'answers', 'max_hourly_rate', 'category_package_id', 'amount', 'commission', 'provider_net', 'commission_percent',
     'scheduled_at', 'duration_minutes', 'ends_at', 'payment_method', 'payment_status', 'payment_due_at', 'escrow_reference', 'modality',
-    'province', 'municipality', 'neighborhood', 'latitude', 'longitude', 'republished_from_id',
+    'province', 'municipality', 'neighborhood', 'latitude', 'longitude', 'republished_from_id', 'package_id', 'package_sequence',
 ])]
 #[Hidden(['location'])]
 #[UseFactory(ServiceRequestFactory::class)]
@@ -169,6 +171,7 @@ class ServiceRequest extends Model
             'diagnosis_started_at' => 'datetime',
             'scheduled' => 'boolean',
             'provider_net' => 'integer',
+            'package_sequence' => 'integer',
         ];
     }
 
@@ -355,6 +358,32 @@ class ServiceRequest extends Model
     public function republishedFrom(): BelongsTo
     {
         return $this->belongsTo(self::class, 'republished_from_id');
+    }
+
+    /**
+     * Aula de um pacote: o pedido-contrato a que pertence.
+     *
+     * @return BelongsTo<self, $this>
+     */
+    public function package(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'package_id');
+    }
+
+    /**
+     * Pedido-contrato de um pacote: as aulas, pela ordem.
+     *
+     * @return HasMany<self, $this>
+     */
+    public function lessons(): HasMany
+    {
+        return $this->hasMany(self::class, 'package_id')->orderBy('package_sequence');
+    }
+
+    /** Aula de um pacote (tem um pedido-contrato acima). */
+    public function isPackageLesson(): bool
+    {
+        return $this->package_id !== null;
     }
 
     /**

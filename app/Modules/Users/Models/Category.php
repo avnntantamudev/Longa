@@ -28,6 +28,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property string|null $icon
  * @property string|null $area
  * @property PricingMode $pricing_mode
+ * @property bool|null $packages_enabled
  * @property list<string>|null $modalities
  * @property list<string>|null $required_documents
  * @property int $sort_order
@@ -37,7 +38,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property-read Collection<int, CategoryField> $fields
  * @property-read CategoryPrice|null $price
  */
-#[Fillable(['parent_id', 'name', 'slug', 'description', 'icon', 'area', 'pricing_mode', 'modalities', 'required_documents', 'sort_order', 'active'])]
+#[Fillable(['parent_id', 'name', 'slug', 'description', 'icon', 'area', 'pricing_mode', 'packages_enabled', 'modalities', 'required_documents', 'sort_order', 'active'])]
 class Category extends Model
 {
     /** Profundidade máxima da árvore (proteção contra ciclos nas subidas). */
@@ -48,6 +49,7 @@ class Category extends Model
         return [
             'active' => 'boolean',
             'pricing_mode' => PricingMode::class,
+            'packages_enabled' => 'boolean',
             'modalities' => 'array',
             'required_documents' => 'array',
             'sort_order' => 'integer',
@@ -200,6 +202,20 @@ class Category extends Model
         }
 
         return array_values(array_unique($docs));
+    }
+
+    /**
+     * Aceita pacotes de várias aulas: a própria categoria ou o antepassado mais próximo que o defina.
+     */
+    public function acceptsPackages(): bool
+    {
+        foreach ([$this, ...array_reverse($this->ancestors())] as $node) {
+            if ($node->packages_enabled !== null) {
+                return $node->packages_enabled;
+            }
+        }
+
+        return false;
     }
 
     /**

@@ -83,6 +83,9 @@ class CategoryResource extends Resource
                         }
                     }),
                 Select::make('pricing_mode')->label('Modo de preço')->required()->default(PricingMode::Quote->value)->options($modes),
+                Select::make('packages_enabled')->label('Pacotes de várias aulas (técnicos VIP)')
+                    ->placeholder('Como a categoria-pai')->options([1 => 'Aceita pacotes', 0 => 'Não aceita'])
+                    ->helperText('O cliente pede várias aulas com o mesmo técnico. Vazio = segue a categoria-pai.'),
                 CheckboxList::make('modalities')->label('Modalidades (vazio = as da categoria-pai)')
                     ->options(['in_person' => 'Presencial', 'online' => 'Online'])->columns(2),
                 TagsInput::make('required_documents')->label('Documentos exigidos ao técnico')

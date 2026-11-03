@@ -46,6 +46,13 @@ class PlatformSettings
         'quote_outlier_percent' => ['config' => 'longa.quotes.outlier_percent', 'type' => 'int', 'min' => 0, 'max' => 500, 'label' => 'Orçamentos: alerta quando sai do intervalo de referência em mais de (%)'],
         'addendum_review_percent' => ['config' => 'longa.quotes.addendum_review_percent', 'type' => 'int', 'min' => 0, 'max' => 500, 'label' => 'Adendas: revisão da equipa acima de (% do orçamento original)'],
         'scheduled_request_close_hours' => ['config' => 'longa.scheduled_requests.close_hours_before', 'type' => 'int', 'min' => 1, 'max' => 48, 'label' => 'Pedidos para outro dia: fecham X horas antes do serviço'],
+        'packages_vip_window_minutes' => ['config' => 'longa.packages.vip_window_minutes', 'type' => 'int', 'min' => 0, 'max' => 1440, 'label' => 'Pacotes: minutos só para técnicos VIP antes de abrir a todos'],
+        'packages_vip_only' => ['config' => 'longa.packages.vip_only', 'type' => 'int', 'min' => 0, 'max' => 1, 'label' => 'Pacotes: só VIP (1 = nunca abre a todos; 0 = VIP primeiro, depois todos)'],
+        'packages_min_rating_tenths' => ['config' => 'longa.packages.min_rating_tenths', 'type' => 'int', 'min' => 0, 'max' => 50, 'label' => 'Pacotes: avaliação mínima do técnico (décimas: 40 = 4,0)'],
+        'packages_min_rating_count' => ['config' => 'longa.packages.min_rating_count', 'type' => 'int', 'min' => 1, 'max' => 100, 'label' => 'Pacotes: a avaliação mínima conta a partir de N avaliações'],
+        'packages_max_sessions' => ['config' => 'longa.packages.max_sessions', 'type' => 'int', 'min' => 2, 'max' => 60, 'label' => 'Pacotes: máximo de aulas'],
+        'packages_max_weeks' => ['config' => 'longa.packages.max_weeks', 'type' => 'int', 'min' => 1, 'max' => 12, 'label' => 'Pacotes: duração máxima (semanas)'],
+        'direct_request_minutes' => ['config' => 'longa.packages.direct_request_minutes', 'type' => 'int', 'min' => 5, 'max' => 240, 'label' => 'Pedir ao mesmo técnico: minutos para o técnico VIP aceitar'],
     ];
 
     public function __construct(private readonly AuditLogger $audit) {}

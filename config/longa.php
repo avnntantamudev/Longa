@@ -188,6 +188,27 @@ return [
         'reminder_days' => [30, 7, 1],
     ],
 
+    // Pacotes de várias aulas com o mesmo técnico e "pedir ao mesmo técnico" (só técnicos VIP)
+    'packages' => [
+        'min_sessions' => (int) env('LONGA_PACKAGES_MIN_SESSIONS', 2),
+        'max_sessions' => (int) env('LONGA_PACKAGES_MAX_SESSIONS', 20),
+        'max_weeks' => (int) env('LONGA_PACKAGES_MAX_WEEKS', 4),
+        // Janela só para VIP; depois abre a todos (vip_only = 1: nunca abre)
+        'vip_window_minutes' => (int) env('LONGA_PACKAGES_VIP_WINDOW_MINUTES', 20),
+        'vip_only' => (int) env('LONGA_PACKAGES_VIP_ONLY', 0),
+        // Avaliação mínima (décimas: 40 = 4,0) para técnicos com pelo menos min_rating_count avaliações
+        'min_rating_tenths' => (int) env('LONGA_PACKAGES_MIN_RATING_TENTHS', 40),
+        'min_rating_count' => (int) env('LONGA_PACKAGES_MIN_RATING_COUNT', 5),
+        'reschedule_max' => (int) env('LONGA_PACKAGES_RESCHEDULE_MAX', 2),
+        'reschedule_notice_hours' => (int) env('LONGA_PACKAGES_RESCHEDULE_NOTICE_HOURS', 12),
+        // Cliente desiste: a próxima aula conta como dada se faltar menos do que isto
+        'client_cancel_notice_hours' => (int) env('LONGA_PACKAGES_CLIENT_CANCEL_NOTICE_HOURS', 24),
+        // Técnico desiste a meio: conta como N cancelamentos nas sanções
+        'provider_cancel_weight' => (int) env('LONGA_PACKAGES_PROVIDER_CANCEL_WEIGHT', 2),
+        // "Pedir ao mesmo técnico": tempo para o técnico VIP aceitar
+        'direct_request_minutes' => (int) env('LONGA_DIRECT_REQUEST_MINUTES', 30),
+    ],
+
     // Pedidos para outro dia (não hoje): ficam abertos até X horas antes do serviço
     'scheduled_requests' => [
         'close_hours_before' => (int) env('LONGA_SCHEDULED_CLOSE_HOURS', 2),

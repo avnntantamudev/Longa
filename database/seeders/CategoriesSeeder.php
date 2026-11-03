@@ -38,6 +38,10 @@ class CategoriesSeeder extends Seeder
 
         // Educação › Aulas e explicações (por hora ou pacote, presencial e online)
         $edu = $this->node('educacao', 'Educação', null, PricingMode::HourlyPackage, ['in_person', 'online'], icon: 'academic-cap');
+        // Pacotes de várias aulas com o mesmo técnico: no lançamento só Educação (não apaga uma escolha do painel)
+        if ($edu->packages_enabled === null) {
+            $edu->forceFill(['packages_enabled' => true])->save();
+        }
         $lessons = $this->node('aulas-e-explicacoes', 'Aulas e explicações', $edu, PricingMode::HourlyPackage, description: 'Explicações escolares, formação profissional e línguas.');
         $this->price($lessons, ['hourly_min' => 1500, 'hourly_max' => 20000]);
         // Pacotes de aulas (editáveis no painel): 4, 8 e 12 aulas com 5%, 10% e 15% de desconto

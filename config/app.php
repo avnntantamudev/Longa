@@ -73,6 +73,12 @@ return [
     'timezone' => env('APP_TIMEZONE', 'Africa/Luanda'),
 
     /*
+    | Proxies de confiança (túnel HTTPS, balanceador): '*' ou IPs separados por vírgulas. Vazio = nenhum.
+    | Com proxy de confiança, o Laravel usa o esquema (https) e o IP do cliente que o proxy indica.
+    */
+    'trusted_proxies' => env('TRUSTED_PROXIES'),
+
+    /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------

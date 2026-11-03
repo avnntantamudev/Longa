@@ -7,6 +7,7 @@ namespace App\Providers;
 use App\Support\Api\IdempotencyHeaderDocumentation;
 use Dedoc\Scramble\Scramble;
 use Illuminate\Foundation\DevCommands;
+use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -24,6 +25,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Atrás de um túnel HTTPS ou balanceador: confiar nos cabeçalhos X-Forwarded-* desse proxy
+        $proxies = (string) config('app.trusted_proxies');
+        if ($proxies !== '') {
+            TrustProxies::at($proxies === '*' ? '*' : array_map(trim(...), explode(',', $proxies)));
+        }
+
         // OpenAPI: documentar o cabeçalho Idempotency-Key nas rotas que o exigem
         Scramble::configure()->withOperationTransformers(IdempotencyHeaderDocumentation::class);
 

@@ -163,16 +163,18 @@ class ProviderMatcher
     }
 
     /**
-     * Pedido direto ("pedir ao mesmo técnico"): o técnico indicado, se for VIP e puder fazer o pedido.
+     * Pedido direto ("pedir ao mesmo técnico"): o técnico indicado, se puder fazer o pedido (e for VIP, se as
+     * Definições reservarem os pedidos diretos aos VIP).
      * Sem limite de distância (o cliente já o conhece); o resto das regras é o do despacho normal.
      */
     public function directCandidate(ServiceRequest $request, int $providerProfileId): ?MatchCandidate
     {
         $row = $this->eligibleFor($request)
             ->where('tp.id', $providerProfileId)
-            ->whereExists(fn ($q) => $q->selectRaw('1')->from('provider_subscriptions as ts')
+            // Só VIP, se os pedidos diretos estiverem reservados aos VIP nas Definições
+            ->when($this->settings->int('direct_requests_vip_only') === 1, fn ($q) => $q->whereExists(fn ($s) => $s->selectRaw('1')->from('provider_subscriptions as ts')
                 ->whereColumn('ts.provider_profile_id', 'tp.id')->where('ts.status', 'active')
-                ->where('ts.starts_at', '<=', now())->where('ts.ends_at', '>', now()))
+                ->where('ts.starts_at', '<=', now())->where('ts.ends_at', '>', now())))
             ->select(['tp.id', 'tp.user_id', 'tp.score'])
             ->selectRaw('ROUND(ST_Distance_Sphere(tp.location, ST_SRID(POINT(?, ?), 4326))) as distance_m', [$request->longitude, $request->latitude])
             ->first();

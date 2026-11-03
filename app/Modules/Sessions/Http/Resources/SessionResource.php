@@ -11,6 +11,7 @@ use App\Modules\Requests\Models\ProviderRebookInterest;
 use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Requests\Services\LessonReschedules;
 use App\Modules\Requests\Services\PackageCancellation;
+use App\Modules\Requests\Services\VipFeatureAccess;
 use App\Modules\Sessions\Services\AvailableActions;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -123,7 +124,7 @@ class SessionResource extends JsonResource
         }
 
         return [
-            'mode' => app(VipSubscriptions::class)->isVip($this->provider) ? 'direct' : 'interest',
+            'mode' => app(VipFeatureAccess::class)->acceptsDirect((int) $this->provider_profile_id) ? 'direct' : 'interest',
             'category_id' => $this->category_id,
             'interest_sent' => ProviderRebookInterest::forProvider((int) $this->provider_profile_id)->where('client_id', $this->client_id)->exists(),
         ];

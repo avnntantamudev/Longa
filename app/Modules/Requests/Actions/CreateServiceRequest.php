@@ -6,12 +6,12 @@ namespace App\Modules\Requests\Actions;
 
 use App\Modules\Matching\Services\MatchingCoordinator;
 use App\Modules\Matching\Services\ProviderMatcher;
-use App\Modules\Payments\Services\VipSubscriptions;
 use App\Modules\Requests\Enums\RequestState;
 use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Requests\Models\ServiceRequestMedia;
 use App\Modules\Requests\Services\Commission;
 use App\Modules\Requests\Services\HourlyPricing;
+use App\Modules\Requests\Services\VipFeatureAccess;
 use App\Modules\Users\Enums\PricingMode;
 use App\Modules\Users\Models\Category;
 use App\Modules\Users\Models\CategoryPackage;
@@ -35,7 +35,7 @@ class CreateServiceRequest
         private readonly MatchingCoordinator $matching,
         private readonly AuditLogger $audit,
         private readonly ProviderMatcher $matcher,
-        private readonly VipSubscriptions $vip,
+        private readonly VipFeatureAccess $access,
     ) {}
 
     /**
@@ -173,7 +173,7 @@ class CreateServiceRequest
     }
 
     /**
-     * Pedir ao mesmo técnico: só técnicos VIP que já fizeram um serviço pago para este cliente.
+     * Pedir ao mesmo técnico: técnicos que já fizeram um serviço pago para este cliente (só VIP, conforme as Definições).
      */
     private function ensureDirectAllowed(User $client, int $providerProfileId): void
     {
@@ -186,7 +186,7 @@ class CreateServiceRequest
         if (! $servedBefore) {
             throw new ApiException('direct_not_allowed', 'Só pode pedir diretamente a um técnico que já fez um serviço para si.', 403);
         }
-        if (! $this->vip->isVip($providerProfileId)) {
+        if (! $this->access->acceptsDirect($providerProfileId)) {
             throw new ApiException('direct_not_vip', 'Este técnico não aceita pedidos diretos. Envie o pedido a todos os técnicos.', 409);
         }
     }

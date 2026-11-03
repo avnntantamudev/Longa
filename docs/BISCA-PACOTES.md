@@ -5,7 +5,8 @@ se mudam os parâmetros.
 
 ## 1. Pedir ao mesmo técnico
 
-- Depois de um serviço pago, o cliente vê **"Pedir de novo a [técnico]"** se o técnico for VIP.
+- Depois de um serviço pago, o cliente vê **"Pedir de novo a [técnico]"** se o técnico for VIP (ou qualquer técnico,
+  se nas Definições os pedidos diretos estiverem abertos a todos).
 - O pedido vai **só para esse técnico**, que tem **30 minutos** para aceitar (sem rondas, sem limite de distância).
 - Se o técnico recusar, não responder ou já não puder (hora ocupada, outra área, preço, saldo), o pedido fica
   "sem técnico" e o cliente pode **enviá-lo a todos** com os mesmos dados.
@@ -24,7 +25,7 @@ se mudam os parâmetros.
 ### Quem recebe
 - Só técnicos **livres em todas as datas**.
 - Técnicos com 5 ou mais avaliações precisam de média **≥ 4,0** (os mais novos ainda não têm histórico).
-- Durante **20 minutos só técnicos VIP**; depois abre a todos (ou fica só VIP, se o interruptor estiver ligado).
+- Durante **20 minutos só técnicos VIP**; depois abre a todos. Nas Definições pode abrir-se logo a todos ou ficar só VIP.
 - Ao aceitar, volta a confirmar-se que o técnico continua livre em todas as aulas.
 - O técnico vê na oferta o calendário completo, a duração e o total.
 
@@ -51,10 +52,14 @@ Cada aula devolvida gera **uma devolução própria**, paga uma só vez (chave p
 
 ## 3. Parâmetros (painel → Definições → "Pacotes e pedir ao mesmo técnico")
 
+Pode abrir estas funcionalidades a todos os técnicos numa primeira fase e reservá-las aos VIP depois, sem mudar código.
+A página VIP só anuncia como vantagem o que estiver de facto reservado aos VIP.
+
 | Definição | Valor inicial |
 |---|---|
-| Minutos só para VIP antes de abrir a todos | 20 |
-| Só VIP (1 = nunca abre a todos) | 0 |
+| Pacotes, quem recebe: 0 = todos os técnicos; 1 = VIP primeiro, depois todos; 2 = só VIP | 1 |
+| Minutos só para VIP antes de abrir a todos (no modo 1) | 20 |
+| Pedir ao mesmo técnico: 1 = só técnicos VIP; 0 = qualquer técnico que já serviu o cliente | 1 |
 | Avaliação mínima (décimas) / a partir de N avaliações | 40 / 5 |
 | Máximo de aulas / semanas | 20 / 4 |
 | Minutos para o técnico aceitar um pedido direto | 30 |

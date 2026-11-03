@@ -7766,6 +7766,13 @@
                                                     "description": "Clientes que quiseram voltar a chamar o t\u00e9cnico (pedido direto s\u00f3 com VIP)",
                                                     "minimum": 0
                                                 },
+                                                "packages_benefit": {
+                                                    "type": "string",
+                                                    "description": "Vantagens que dependem das Defini\u00e7\u00f5es (abertas a todos numa fase de lan\u00e7amento)"
+                                                },
+                                                "direct_requests_benefit": {
+                                                    "type": "string"
+                                                },
                                                 "history": {
                                                     "type": "array",
                                                     "items": {
@@ -7812,6 +7819,8 @@
                                                 "standard_commission_percent",
                                                 "refundable",
                                                 "rebook_interests",
+                                                "packages_benefit",
+                                                "direct_requests_benefit",
                                                 "history"
                                             ]
                                         }

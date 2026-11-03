@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Modules\Requests\Actions;
 
 use App\Modules\Notifications\Notifications\RebookInterestNotification;
-use App\Modules\Payments\Services\VipSubscriptions;
 use App\Modules\Requests\Enums\RequestState;
 use App\Modules\Requests\Models\ProviderRebookInterest;
 use App\Modules\Requests\Models\ServiceRequest;
+use App\Modules\Requests\Services\VipFeatureAccess;
 use App\Modules\Users\Models\User;
 use App\Support\Api\ApiException;
 
@@ -18,7 +18,7 @@ use App\Support\Api\ApiException;
  */
 class RecordRebookInterest
 {
-    public function __construct(private readonly VipSubscriptions $vip) {}
+    public function __construct(private readonly VipFeatureAccess $access) {}
 
     /**
      * @return int quantos clientes diferentes já quiseram voltar a chamar este técnico
@@ -28,7 +28,7 @@ class RecordRebookInterest
         if ($request->client_id !== $client->id || $request->state !== RequestState::Paid || $request->provider_profile_id === null) {
             throw new ApiException('rebook_not_available', 'Só pode voltar a chamar o técnico de um serviço seu já pago.', 409);
         }
-        if ($this->vip->isVip($request->provider_profile_id)) {
+        if ($this->access->acceptsDirect($request->provider_profile_id)) {
             throw new ApiException('rebook_use_direct', 'Este técnico aceita pedidos diretos: use "Pedir de novo".', 409);
         }
 

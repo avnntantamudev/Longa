@@ -193,9 +193,11 @@ return [
         'min_sessions' => (int) env('LONGA_PACKAGES_MIN_SESSIONS', 2),
         'max_sessions' => (int) env('LONGA_PACKAGES_MAX_SESSIONS', 20),
         'max_weeks' => (int) env('LONGA_PACKAGES_MAX_WEEKS', 4),
-        // Janela só para VIP; depois abre a todos (vip_only = 1: nunca abre)
+        // Quem recebe pacotes: 0 = todos; 1 = VIP primeiro (durante a janela), depois todos; 2 = só VIP
+        'access' => (int) env('LONGA_PACKAGES_ACCESS', 1),
         'vip_window_minutes' => (int) env('LONGA_PACKAGES_VIP_WINDOW_MINUTES', 20),
-        'vip_only' => (int) env('LONGA_PACKAGES_VIP_ONLY', 0),
+        // Pedidos diretos ("pedir ao mesmo técnico"): 1 = só técnicos VIP; 0 = qualquer técnico que já serviu o cliente
+        'direct_vip_only' => (int) env('LONGA_DIRECT_REQUESTS_VIP_ONLY', 1),
         // Avaliação mínima (décimas: 40 = 4,0) para técnicos com pelo menos min_rating_count avaliações
         'min_rating_tenths' => (int) env('LONGA_PACKAGES_MIN_RATING_TENTHS', 40),
         'min_rating_count' => (int) env('LONGA_PACKAGES_MIN_RATING_COUNT', 5),

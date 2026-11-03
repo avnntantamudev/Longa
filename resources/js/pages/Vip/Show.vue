@@ -14,6 +14,9 @@ interface Vip {
     standard_commission_percent: number;
     /** Clientes que quiseram voltar a chamá-lo (pedidos diretos só com VIP) */
     rebook_interests: number;
+    /** Vantagens que podem estar abertas a todos (Definições) */
+    packages_benefit?: boolean;
+    direct_requests_benefit?: boolean;
     history: { id: number; source: string; amount: number; starts_at: string; ends_at: string }[];
 }
 
@@ -69,7 +72,7 @@ onMounted(load);
             <p class="mt-1 text-display">{{ kwanza(vip.price) }} <span class="text-caption text-navy-200">/ {{ vip.duration_days }} dias</span></p>
         </section>
 
-        <p v-if="!vip.is_vip && vip.rebook_interests > 0" class="card mt-4 bg-orange-50 text-caption" data-testid="rebook-interests">
+        <p v-if="!vip.is_vip && vip.rebook_interests > 0 && vip.direct_requests_benefit !== false" class="card mt-4 bg-orange-50 text-caption" data-testid="rebook-interests">
             <strong>{{ vip.rebook_interests === 1 ? 'Um cliente quis' : `${vip.rebook_interests} clientes quiseram` }} voltar a chamá-lo.</strong>
             Com o VIP, os clientes que já serviu podem pedir-lhe diretamente, sem o pedido ir para outros técnicos.
         </p>
@@ -80,8 +83,8 @@ onMounted(load);
                 <li>⭐ <strong>Pedidos de outro dia em toda a província</strong>, não só a 5 km.</li>
                 <li>⚡ <strong>Prioridade</strong>: recebe os pedidos TRIM TRIM antes dos outros técnicos.</li>
                 <li>💰 <strong>Comissão de {{ vip.commission_percent }}%</strong> em vez de {{ vip.standard_commission_percent }}% nos serviços aceites enquanto for VIP.</li>
-                <li>🔁 <strong>Pedidos diretos</strong>: os clientes que já serviu podem pedir-lhe de novo, só a si.</li>
-                <li>📚 <strong>Pacotes de várias aulas</strong>: recebe primeiro os pacotes (ex.: formações de uma semana), com todas as aulas para si.</li>
+                <li v-if="vip.direct_requests_benefit !== false">🔁 <strong>Pedidos diretos</strong>: os clientes que já serviu podem pedir-lhe de novo, só a si.</li>
+                <li v-if="vip.packages_benefit !== false">📚 <strong>Pacotes de várias aulas</strong>: recebe primeiro os pacotes (ex.: formações de uma semana), com todas as aulas para si.</li>
                 <li>🏅 <strong>Selo VIP</strong> visível aos clientes.</li>
             </ul>
         </section>

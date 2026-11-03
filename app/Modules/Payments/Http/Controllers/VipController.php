@@ -9,6 +9,7 @@ use App\Modules\Payments\Enums\PaymentMethod;
 use App\Modules\Payments\Models\ProviderSubscription;
 use App\Modules\Payments\Services\VipSubscriptions;
 use App\Modules\Requests\Models\ProviderRebookInterest;
+use App\Modules\Requests\Services\VipFeatureAccess;
 use App\Modules\Users\Models\ProviderProfile;
 use App\Modules\Users\Models\User;
 use App\Support\Api\ApiException;
@@ -42,6 +43,9 @@ class VipController extends Controller
             'refundable' => false,
             // Clientes que quiseram voltar a chamar o técnico (pedido direto só com VIP)
             'rebook_interests' => ProviderRebookInterest::forProvider($provider->id)->count(),
+            // Vantagens que dependem das Definições (abertas a todos numa fase de lançamento)
+            'packages_benefit' => app(VipFeatureAccess::class)->packagesAreVipBenefit(),
+            'direct_requests_benefit' => app(VipFeatureAccess::class)->directRequiresVip(),
             'history' => ProviderSubscription::query()->where('provider_profile_id', $provider->id)->where('status', ProviderSubscription::ACTIVE)
                 ->latest('id')->limit(10)->get()
                 ->map(fn (ProviderSubscription $s) => [

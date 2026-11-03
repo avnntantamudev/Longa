@@ -74,11 +74,13 @@ class Settings extends Page
                 $field('quote_validity_days'), $field('quote_outlier_percent'), $field('addendum_review_percent'), $field('phased_min_total'),
             ]),
             Section::make('Pedidos para outro dia')->schema([$field('scheduled_request_close_hours')]),
-            Section::make('Pacotes e pedir ao mesmo técnico (técnicos VIP)')->columns(3)->schema([
-                $field('packages_vip_window_minutes'), $field('packages_vip_only'), $field('packages_min_rating_tenths'),
-                $field('packages_min_rating_count'), $field('packages_max_sessions'), $field('packages_max_weeks'),
-                $field('direct_request_minutes'),
-            ]),
+            Section::make('Pacotes e pedir ao mesmo técnico')
+                ->description('Pode abrir estas funcionalidades a todos os técnicos numa primeira fase e reservá-las aos VIP depois.')
+                ->columns(3)->schema([
+                    $field('packages_access'), $field('packages_vip_window_minutes'), $field('direct_requests_vip_only'),
+                    $field('packages_min_rating_tenths'), $field('packages_min_rating_count'), $field('direct_request_minutes'),
+                    $field('packages_max_sessions'), $field('packages_max_weeks'),
+                ]),
         ]);
     }
 

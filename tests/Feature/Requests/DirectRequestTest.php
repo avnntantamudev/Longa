@@ -213,3 +213,16 @@ it('o formulário vem preenchido com o técnico só quando o cliente lhe pode pe
         ->where('directProvider.name', $this->provider->user->name)
         ->where('initialCategoryId', $this->sgme->id));
 });
+
+it('com os pedidos diretos abertos a todos, qualquer técnico que já o serviu os recebe (e a página VIP não os anuncia)', function () {
+    config(['longa.packages.direct_vip_only' => 0]);
+    $past = directTestPastService($this->client, $this->provider, $this->sgme); // técnico sem VIP
+    apiLogin($this->client);
+
+    $this->getJson("/api/v1/sessions/{$past->id}")->assertJsonPath('data.rebook.mode', 'direct');
+    $id = $this->postJson('/api/v1/service-requests', directTestPayload($this->sgme, ['direct_provider_id' => $this->provider->id]))->assertCreated()->json('data.id');
+    expect(RequestOffer::query()->where('service_request_id', $id)->pluck('provider_profile_id')->all())->toBe([$this->provider->id]);
+
+    apiLogin($this->provider->user);
+    $this->getJson('/api/v1/me/vip')->assertJsonPath('data.direct_requests_benefit', false)->assertJsonPath('data.packages_benefit', true);
+});

@@ -101,13 +101,21 @@ it('primeiro só técnicos VIP livres em todas as aulas e com boa avaliação; d
 });
 
 it('com "só VIP" ligado, o pacote nunca abre aos outros técnicos', function () {
-    config(['longa.packages.vip_only' => 1]);
+    config(['longa.packages.access' => 2]);
     $request = pkgDispatchCreate($this->sgme);
 
     $this->travel(3)->hours();
     app(MatchingCoordinator::class)->sweep();
 
     expect(pkgDispatchOffered($request))->toBe([$this->vip->id]);
+});
+
+it('em lançamento (todos os técnicos), o pacote vai logo a todos os elegíveis', function () {
+    config(['longa.packages.access' => 0]);
+    $request = pkgDispatchCreate($this->sgme);
+
+    expect($request->vip_only_until)->toBeNull()
+        ->and(pkgDispatchOffered($request))->toBe([$this->vip->id, $this->regular->id]);
 });
 
 it('a oferta mostra o calendário das aulas ao técnico', function () {

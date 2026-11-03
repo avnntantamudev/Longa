@@ -12,6 +12,7 @@ use App\Modules\Requests\Events\OfferSent;
 use App\Modules\Requests\Events\RequestExpired;
 use App\Modules\Requests\Models\RequestOffer;
 use App\Modules\Requests\Models\ServiceRequest;
+use App\Modules\Requests\Services\VipFeatureAccess;
 use App\Modules\Score\Models\ScoreEvent;
 use App\Modules\Score\Services\ScoreRecorder;
 use App\Support\Settings\PlatformSettings;
@@ -59,8 +60,7 @@ class MatchingCoordinator
             'wave' => 0,
             'next_wave_at' => null,
             // Pacote: primeiro só técnicos VIP (durante a janela; com "só VIP", até ao fecho)
-            'vip_only_until' => ! $request->isPackage() ? null
-                : ($this->settings->int('packages_vip_only') === 1 ? $expiresAt : now()->addMinutes($this->settings->int('packages_vip_window_minutes'))->min($expiresAt)),
+            'vip_only_until' => $request->isPackage() ? app(VipFeatureAccess::class)->packageVipUntil($expiresAt) : null,
         ]);
 
         return $this->sendNextWave($request);

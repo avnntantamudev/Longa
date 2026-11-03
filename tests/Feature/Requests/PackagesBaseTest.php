@@ -45,7 +45,8 @@ it('as regras dos pacotes são editáveis no painel com os valores combinados', 
     $settings = app(PlatformSettings::class);
 
     expect($settings->int('packages_vip_window_minutes'))->toBe(20)
-        ->and($settings->int('packages_vip_only'))->toBe(0)
+        ->and($settings->int('packages_access'))->toBe(1)
+        ->and($settings->int('direct_requests_vip_only'))->toBe(1)
         ->and($settings->int('packages_min_rating_tenths'))->toBe(40)
         ->and($settings->int('packages_min_rating_count'))->toBe(5)
         ->and($settings->int('packages_max_sessions'))->toBe(20)

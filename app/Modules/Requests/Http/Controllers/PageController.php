@@ -6,10 +6,10 @@ namespace App\Modules\Requests\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Matching\Services\ProviderMatcher;
-use App\Modules\Payments\Services\VipSubscriptions;
 use App\Modules\Requests\Enums\RequestState;
 use App\Modules\Requests\Models\RequestOffer;
 use App\Modules\Requests\Models\ServiceRequest;
+use App\Modules\Requests\Services\VipFeatureAccess;
 use App\Modules\Users\Http\Resources\CategoryResource;
 use App\Modules\Users\Models\Category;
 use App\Modules\Users\Models\ProviderProfile;
@@ -25,7 +25,7 @@ use Inertia\Response;
  */
 class PageController extends Controller
 {
-    public function createRequest(Request $request, ProviderMatcher $matcher, VipSubscriptions $vip): Response
+    public function createRequest(Request $request, ProviderMatcher $matcher): Response
     {
         // Só os serviços com pelo menos um técnico qualificado: um pedido sem técnicos expirava sem resposta.
         // (O onboarding do técnico continua a mostrar todos, para os serviços novos poderem ter o primeiro.)
@@ -35,7 +35,7 @@ class PageController extends Controller
         // Pedir de novo ao mesmo técnico (?tecnico=ID&categoria=ID): só técnicos VIP que já serviram este cliente
         $directProvider = null;
         $providerId = $request->integer('tecnico');
-        if ($providerId > 0 && $vip->isVip($providerId)) {
+        if ($providerId > 0 && app(VipFeatureAccess::class)->acceptsDirect($providerId)) {
             $served = ServiceRequest::query()->where('client_id', $request->user()?->getAuthIdentifier())
                 ->where('provider_profile_id', $providerId)->where('state', RequestState::Paid->value)->exists();
             $provider = $served ? ProviderProfile::query()->with('user')->find($providerId) : null;

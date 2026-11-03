@@ -34,6 +34,8 @@ class CategoryResource extends JsonResource
             'pricing_mode' => $this->pricing_mode->value,
             /** @var list<string> */
             'modalities' => $this->effectiveModalities(),
+            /** Aceita pacotes de várias aulas com o mesmo técnico (técnicos VIP) */
+            'accepts_packages' => $this->acceptsPackages(),
         ];
     }
 }

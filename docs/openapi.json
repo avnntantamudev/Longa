@@ -8342,6 +8342,10 @@
                         "items": {
                             "type": "string"
                         }
+                    },
+                    "accepts_packages": {
+                        "type": "boolean",
+                        "description": "Aceita pacotes de v\u00e1rias aulas com o mesmo t\u00e9cnico (t\u00e9cnicos VIP)"
                     }
                 },
                 "required": [
@@ -8352,7 +8356,8 @@
                     "path",
                     "group",
                     "pricing_mode",
-                    "modalities"
+                    "modalities",
+                    "accepts_packages"
                 ],
                 "title": "CategoryResource"
             },
@@ -8439,6 +8444,16 @@
                     },
                     "sessions": {
                         "type": "integer"
+                    },
+                    "lesson_schedule": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "description": "Pacote de v\u00e1rias aulas com o mesmo t\u00e9cnico: data e hora de cada aula (ISO 8601). null = um s\u00f3 servi\u00e7o.",
+                        "items": {
+                            "type": "string"
+                        }
                     },
                     "discount_percent": {
                         "type": "integer"
@@ -8583,6 +8598,7 @@
                     "max_hourly_rate",
                     "hourly_rate",
                     "sessions",
+                    "lesson_schedule",
                     "discount_percent",
                     "answers",
                     "media",
@@ -10344,6 +10360,15 @@
                     "category_package_id": {
                         "type": "string",
                         "description": "Hora/pacote: pacote de aulas (GET /api/v1/categories/{id}/form \u2192 packages). Sem pacote: uma aula."
+                    },
+                    "lesson_dates": {
+                        "type": "array",
+                        "description": "Pacote de v\u00e1rias aulas com o mesmo t\u00e9cnico (categorias que aceitam pacotes): data e hora de cada aula\n(ISO 8601), a partir de amanh\u00e3 e dentro do prazo m\u00e1ximo. O desconto vem dos pacotes da categoria.\nCom aulas, scheduled_at e category_package_id n\u00e3o se enviam.",
+                        "items": {
+                            "type": "string",
+                            "format": "date-time"
+                        },
+                        "uniqueItems": true
                     },
                     "answers": {
                         "type": [

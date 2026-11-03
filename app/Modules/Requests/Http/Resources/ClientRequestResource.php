@@ -36,6 +36,8 @@ class ClientRequestResource extends JsonResource
             'max_hourly_rate' => $this->max_hourly_rate,
             'hourly_rate' => $this->hourly_rate,
             'sessions' => $this->sessions,
+            /** Pacote de várias aulas com o mesmo técnico: data e hora de cada aula (ISO 8601). null = um só serviço. */
+            'lesson_schedule' => $this->lesson_schedule,
             'discount_percent' => $this->discount_percent,
             ...$this->formSummary(),
             'scheduled_at' => $this->scheduled_at->toIso8601String(),

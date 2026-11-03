@@ -2,6 +2,7 @@
 import CategoryPicker from '@/components/CategoryPicker.vue';
 import LocationPicker from '@/components/LocationPicker.vue';
 import FormField from '@/components/FormField.vue';
+import LessonScheduler from '@/components/LessonScheduler.vue';
 import UserAvatar from '@/components/UserAvatar.vue';
 import { api, ApiError } from '@/lib/api';
 import { kwanza, toLocalInput } from '@/lib/format';
@@ -19,6 +20,7 @@ const props = defineProps<{
     /** Pedir de novo ao mesmo técnico (VIP que já o serviu) */
     directProvider?: { id: number; name: string; photo_url: string | null } | null;
     initialCategoryId?: number | null;
+    packageLimits?: { min: number; max: number; weeks: number };
 }>();
 
 /** Formulário da categoria (GET /api/v1/categories/{id}/form) */
@@ -71,11 +73,24 @@ const mode = computed(() => category.value?.pricing_mode ?? null);
 const modalities = computed<Array<'in_person' | 'online'>>(() => category.value?.modalities ?? ['in_person']);
 const price = computed(() => categoryForm.value?.price ?? null);
 const selectedPackage = computed(() => categoryForm.value?.packages.find((p) => p.id === form.category_package_id) ?? null);
+
+// Pacote de várias aulas com o mesmo técnico (categorias que aceitam pacotes; técnicos VIP)
+const canPackage = computed(() => mode.value === 'hourly_package' && category.value?.accepts_packages === true && !props.directProvider);
+const lessonMode = ref<'single' | 'package'>('single');
+const isPackage = computed(() => canPackage.value && lessonMode.value === 'package');
+const lessonDates = ref<string[]>([]);
+const limits = computed(() => props.packageLimits ?? { min: 2, max: 20, weeks: 4 });
+/** Desconto do maior pacote da categoria que não passa do nº de aulas (como no servidor) */
+const packageDiscount = computed(() =>
+    Math.max(0, ...(categoryForm.value?.packages ?? []).filter((p) => p.sessions <= lessonDates.value.length).map((p) => p.discount_percent)),
+);
+const lessonError = computed(() => errors.value.lesson_dates ?? Object.entries(errors.value).find(([k]) => k.startsWith('lesson_dates.'))?.[1]);
+
 /** Estimativa ao preço máximo (o total final usa o preço por hora do técnico que aceitar, nunca acima disto) */
 const estimate = computed(() => {
     if (mode.value !== 'hourly_package' || !form.max_hourly_rate) return null;
-    const sessions = selectedPackage.value?.sessions ?? 1;
-    const discount = selectedPackage.value?.discount_percent ?? 0;
+    const sessions = isPackage.value ? lessonDates.value.length : (selectedPackage.value?.sessions ?? 1);
+    const discount = isPackage.value ? packageDiscount.value : (selectedPackage.value?.discount_percent ?? 0);
     return Math.round((form.max_hourly_rate * form.duration_minutes * sessions * (100 - discount)) / 6000);
 });
 
@@ -109,19 +124,22 @@ function body(): FormData | Record<string, unknown> {
         ...form,
         title: form.title || null,
         max_hourly_rate: mode.value === 'hourly_package' ? form.max_hourly_rate : undefined,
-        category_package_id: mode.value === 'hourly_package' ? form.category_package_id : undefined,
-        scheduled_at: new Date(form.scheduled_at).toISOString(),
+        category_package_id: mode.value === 'hourly_package' && !isPackage.value ? form.category_package_id : undefined,
+        scheduled_at: isPackage.value ? undefined : new Date(form.scheduled_at).toISOString(),
+        payment_method: isPackage.value ? 'electronic' : form.payment_method,
         direct_provider_id: props.directProvider?.id ?? undefined,
     };
     const filled = Object.fromEntries(Object.entries(answers).filter(([, v]) => v !== null && v !== ''));
     const hasFiles = Object.values(files).some((list) => list.length > 0);
-    if (!hasFiles) return { ...base, answers: filled };
+    const lessons = isPackage.value ? [...lessonDates.value].sort().map((d) => new Date(d).toISOString()) : null;
+    if (!hasFiles) return { ...base, answers: filled, ...(lessons ? { lesson_dates: lessons } : {}) };
 
     const data = new FormData();
     for (const [key, value] of Object.entries(base)) {
         if (value !== null && value !== undefined) data.append(key, String(value));
     }
     for (const [key, value] of Object.entries(filled)) data.append(`answers[${key}]`, String(value));
+    lessons?.forEach((d) => data.append('lesson_dates[]', d));
     for (const field of categoryForm.value?.fields ?? []) {
         const list = files[field.key] ?? [];
         if (field.type === 'video' && list[0]) data.append(`answers[${field.key}]`, list[0]);
@@ -235,7 +253,25 @@ function fileError(key: string): string | undefined {
         </FormField>
 
         <template v-if="mode === 'hourly_package' && categoryForm">
-            <fieldset v-if="categoryForm.packages.length" class="grid gap-2">
+            <fieldset v-if="canPackage" class="grid gap-2" data-testid="lesson-mode">
+                <legend class="mb-1 text-caption font-semibold">Quantas aulas?</legend>
+                <div class="flex flex-wrap gap-2">
+                    <button type="button" class="chip" :class="{ 'chip-active': lessonMode === 'single' }" @click="lessonMode = 'single'">Uma aula</button>
+                    <button type="button" class="chip" :class="{ 'chip-active': lessonMode === 'package' }" @click="lessonMode = 'package'">Várias aulas com o mesmo técnico</button>
+                </div>
+                <p v-if="isPackage" class="text-caption text-ink-muted">
+                    Um só técnico dá todas as aulas, pela ordem. Paga o pacote no início; o técnico recebe cada aula depois de a confirmar.
+                </p>
+            </fieldset>
+            <LessonScheduler
+                v-if="isPackage"
+                v-model="lessonDates"
+                :min-sessions="limits.min"
+                :max-sessions="limits.max"
+                :max-weeks="limits.weeks"
+                :error="lessonError"
+            />
+            <fieldset v-if="categoryForm.packages.length && !canPackage" class="grid gap-2">
                 <legend class="mb-1 text-caption font-semibold">Aulas</legend>
                 <div class="flex flex-wrap gap-2">
                     <button type="button" class="chip" :class="{ 'chip-active': form.category_package_id === null }" @click="form.category_package_id = null">1 aula</button>
@@ -262,7 +298,7 @@ function fileError(key: string): string | undefined {
             </FormField>
         </template>
 
-        <div class="grid gap-3 sm:grid-cols-2">
+        <div v-if="!isPackage" class="grid gap-3 sm:grid-cols-2">
             <FormField label="Quando" for="when" :error="errors.scheduled_at">
                 <input id="when" v-model="form.scheduled_at" class="input" type="datetime-local" :min="minDate" />
             </FormField>
@@ -278,10 +314,12 @@ function fileError(key: string): string | undefined {
             <legend class="mb-1 text-caption font-semibold">Pagamento</legend>
             <div class="flex gap-2">
                 <button type="button" class="chip" :class="{ 'chip-active': form.payment_method === 'electronic' }" @click="form.payment_method = 'electronic'">Pelo BISCA</button>
-                <button type="button" class="chip" :class="{ 'chip-active': form.payment_method === 'cash' }" @click="form.payment_method = 'cash'">Em mão</button>
+                <button v-if="!isPackage" type="button" class="chip" :class="{ 'chip-active': form.payment_method === 'cash' }" @click="form.payment_method = 'cash'">Em mão</button>
             </div>
             <p class="text-caption text-ink-muted">
-                {{ form.payment_method === 'electronic'
+                {{ isPackage
+                    ? 'Pacotes pagam-se pelo BISCA: o valor fica retido e o técnico recebe cada aula depois de a confirmar.'
+                    : form.payment_method === 'electronic'
                     ? 'O valor fica retido pelo BISCA e só é libertado depois de confirmar o serviço.'
                     : 'Paga ao técnico no dia do serviço. Confirma na app depois do serviço.' }}
             </p>
@@ -304,12 +342,13 @@ function fileError(key: string): string | undefined {
         </fieldset>
 
         <p v-if="estimate" class="text-caption text-ink-muted" data-testid="estimate">
-            Paga no máximo {{ kwanza(estimate) }}{{ selectedPackage ? ` pelas ${selectedPackage.sessions} aulas` : '' }}. O total final usa o preço por hora do técnico que
+            Paga no máximo {{ kwanza(estimate)
+            }}{{ isPackage ? ` pelas ${lessonDates.length} aulas${packageDiscount ? ` (−${packageDiscount}%)` : ''}` : selectedPackage ? ` pelas ${selectedPackage.sessions} aulas` : '' }}. O total final usa o preço por hora do técnico que
             aceitar e aparece antes de pagar. A comissão do BISCA ({{ commissionPercent }}%) é descontada ao técnico.
         </p>
 
         <p v-if="errors.general" class="text-caption text-danger" role="alert">{{ errors.general }}</p>
-        <button type="submit" class="btn-primary w-full" :disabled="saving || !hasLocation || !form.category_id || loadingForm">
+        <button type="submit" class="btn-primary w-full" :disabled="saving || !hasLocation || !form.category_id || loadingForm || (isPackage && lessonDates.length < limits.min)">
             {{ saving ? 'A publicar…' : 'Procurar técnico' }}
         </button>
     </form>

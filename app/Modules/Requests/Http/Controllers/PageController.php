@@ -45,6 +45,12 @@ class PageController extends Controller
 
         return Inertia::render('Requests/Create', [
             'directProvider' => $directProvider,
+            // Pacotes de várias aulas (categorias que os aceitam)
+            'packageLimits' => [
+                'min' => (int) config('longa.packages.min_sessions'),
+                'max' => app(PlatformSettings::class)->int('packages_max_sessions'),
+                'weeks' => app(PlatformSettings::class)->int('packages_max_weeks'),
+            ],
             'initialCategoryId' => $initialCategoryId,
             'categories' => CategoryResource::collection($categories)->resolve(),
             'zones' => config('locations.zones'),

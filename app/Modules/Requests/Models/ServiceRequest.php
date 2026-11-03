@@ -87,6 +87,7 @@ use Illuminate\Support\Facades\Auth;
  * @property int|null $package_id
  * @property int|null $package_sequence
  * @property int|null $direct_provider_id
+ * @property list<string>|null $lesson_schedule
  * @property \Illuminate\Support\Carbon $created_at
  * @property-read User $client
  * @property-read Category $category
@@ -98,7 +99,7 @@ use Illuminate\Support\Facades\Auth;
 #[Fillable([
     'client_id', 'category_id', 'pricing_mode', 'title', 'description', 'answers', 'max_hourly_rate', 'category_package_id', 'amount', 'commission', 'provider_net', 'commission_percent',
     'scheduled_at', 'duration_minutes', 'ends_at', 'payment_method', 'payment_status', 'payment_due_at', 'escrow_reference', 'modality',
-    'province', 'municipality', 'neighborhood', 'latitude', 'longitude', 'republished_from_id', 'package_id', 'package_sequence', 'direct_provider_id',
+    'province', 'municipality', 'neighborhood', 'latitude', 'longitude', 'republished_from_id', 'package_id', 'package_sequence', 'direct_provider_id', 'lesson_schedule',
 ])]
 #[Hidden(['location'])]
 #[UseFactory(ServiceRequestFactory::class)]
@@ -173,6 +174,7 @@ class ServiceRequest extends Model
             'scheduled' => 'boolean',
             'provider_net' => 'integer',
             'package_sequence' => 'integer',
+            'lesson_schedule' => 'array',
         ];
     }
 
@@ -394,6 +396,12 @@ class ServiceRequest extends Model
     public function lessons(): HasMany
     {
         return $this->hasMany(self::class, 'package_id')->orderBy('package_sequence');
+    }
+
+    /** Pedido-contrato de um pacote de várias aulas (tem as datas das aulas). */
+    public function isPackage(): bool
+    {
+        return $this->lesson_schedule !== null && $this->package_id === null;
     }
 
     /** Aula de um pacote (tem um pedido-contrato acima). */

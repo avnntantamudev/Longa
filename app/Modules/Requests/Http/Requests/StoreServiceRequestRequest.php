@@ -8,9 +8,12 @@ use App\Modules\Users\Enums\FieldType;
 use App\Modules\Users\Enums\PricingMode;
 use App\Modules\Users\Models\Category;
 use App\Modules\Users\Rules\InAngola;
+use App\Support\Settings\PlatformSettings;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 /**
  * Pedido do cliente (BISCA, Fase 2.1): categoria, respostas ao formulário da categoria (com fotos ou vídeo quando
@@ -30,6 +33,9 @@ class StoreServiceRequestRequest extends FormRequest
         $lead = (int) config('longa.requests.min_lead_minutes');
         $category = $this->category();
         $price = $category?->effectivePrice();
+        $packages = $category?->pricing_mode === PricingMode::HourlyPackage && $category->acceptsPackages();
+        $settings = app(PlatformSettings::class);
+        $isPackage = $packages && $this->filled('lesson_dates');
 
         return [
             'category_id' => ['required', 'integer', Rule::exists('categories', 'id')->where('active', true)],
@@ -43,18 +49,27 @@ class StoreServiceRequestRequest extends FormRequest
                 ? ['required', 'integer', 'min:'.($price->hourly_min ?? 500), 'max:'.($price->hourly_max ?? 1_000_000)]
                 : ['prohibited'],
             /** Hora/pacote: pacote de aulas (GET /api/v1/categories/{id}/form → packages). Sem pacote: uma aula. */
-            'category_package_id' => $category?->pricing_mode === PricingMode::HourlyPackage
+            'category_package_id' => $category?->pricing_mode === PricingMode::HourlyPackage && ! $isPackage
                 ? ['nullable', 'integer', Rule::in(array_map(fn ($p) => $p->id, $category->effectivePackages()))]
                 : ['prohibited'],
+            /**
+             * Pacote de várias aulas com o mesmo técnico (categorias que aceitam pacotes): data e hora de cada aula
+             * (ISO 8601), a partir de amanhã e dentro do prazo máximo. O desconto vem dos pacotes da categoria.
+             * Com aulas, scheduled_at e category_package_id não se enviam.
+             */
+            'lesson_dates' => $packages
+                ? ['nullable', 'array', 'min:'.(int) config('longa.packages.min_sessions'), 'max:'.$settings->int('packages_max_sessions')]
+                : ['prohibited'],
+            'lesson_dates.*' => ['date', 'distinct', 'after_or_equal:'.now('Africa/Luanda')->addDay()->startOfDay()->toIso8601String()],
             /** Respostas ao formulário da categoria (GET /api/v1/categories/{id}/form), por chave do campo. */
             'answers' => ['nullable', 'array'],
             ...$this->answerRules($category),
             /** Data e hora pretendidas (ISO 8601). @example 2026-10-24T14:00:00+01:00 */
-            'scheduled_at' => ['required', 'date', 'after:'.now()->addMinutes($lead)->toDateTimeString()],
+            'scheduled_at' => $isPackage ? ['prohibited'] : ['required', 'date', 'after:'.now()->addMinutes($lead)->toDateTimeString()],
             /** Duração do serviço em minutos (30 a 480). @example 60 */
             'duration_minutes' => ['sometimes', 'integer', 'min:30', 'max:480', 'multiple_of:15'],
             /** "electronic" (Multicaixa, retido em escrow) ou "cash" (pago em mão ao técnico). */
-            'payment_method' => ['sometimes', Rule::in(['electronic', 'cash'])],
+            'payment_method' => ['sometimes', Rule::in($isPackage ? ['electronic'] : ['electronic', 'cash'])],
             /** Só as modalidades que a categoria permite. */
             'modality' => ['required', Rule::in($category?->effectiveModalities() ?? ['in_person', 'online'])],
             /** Província (lista de 21). Sem valor: Luanda. @example Luanda */
@@ -97,6 +112,48 @@ class StoreServiceRequestRequest extends FormRequest
         }
 
         return $rules;
+    }
+
+    /**
+     * Pacote: as aulas cabem no prazo máximo e não se sobrepõem (cada uma dura duration_minutes).
+     *
+     * @return list<callable(Validator): void>
+     */
+    public function after(): array
+    {
+        return [function (Validator $validator) {
+            if ($validator->errors()->isNotEmpty() || ! $this->filled('lesson_dates')) {
+                return;
+            }
+            $dates = $this->lessonDates();
+            $weeks = app(PlatformSettings::class)->int('packages_max_weeks');
+            if ($dates[0]->copy()->addWeeks($weeks)->lt(end($dates))) {
+                $validator->errors()->add('lesson_dates', "As aulas têm de caber em {$weeks} semanas.");
+            }
+            $duration = (int) ($this->input('duration_minutes') ?? 60);
+            foreach (array_slice($dates, 1) as $i => $date) {
+                if ($dates[$i]->copy()->addMinutes($duration)->gt($date)) {
+                    $validator->errors()->add('lesson_dates', 'Duas aulas sobrepõem-se. Deixe pelo menos a duração da aula entre elas.');
+
+                    return;
+                }
+            }
+        }];
+    }
+
+    /**
+     * Datas das aulas por ordem.
+     *
+     * @return list<Carbon>
+     */
+    public function lessonDates(): array
+    {
+        /** @var list<string> $raw */
+        $raw = (array) $this->input('lesson_dates', []);
+        $dates = array_map(fn (string $d) => Carbon::parse($d), $raw);
+        usort($dates, fn (Carbon $a, Carbon $b) => $a <=> $b);
+
+        return $dates;
     }
 
     public function category(): ?Category
@@ -158,7 +215,9 @@ class StoreServiceRequestRequest extends FormRequest
             'max_hourly_rate' => $maxRate === null ? null : (int) $maxRate,
             'category_package_id' => $package === null ? null : (int) $package,
             'answers' => $this->textAnswers(),
-            'scheduled_at' => (string) $this->validated('scheduled_at'),
+            // Pacote: o serviço começa na primeira aula
+            'scheduled_at' => $this->filled('lesson_dates') ? $this->lessonDates()[0]->toIso8601String() : (string) $this->validated('scheduled_at'),
+            'lesson_dates' => $this->filled('lesson_dates') ? array_map(fn (Carbon $d) => $d->toIso8601String(), $this->lessonDates()) : null,
             'duration_minutes' => (int) ($this->validated('duration_minutes') ?? 60),
             'payment_method' => (string) ($this->validated('payment_method') ?? 'electronic'),
             'modality' => (string) $this->validated('modality'),

@@ -46,6 +46,8 @@ export interface Category {
     group: string | null;
     pricing_mode: 'fixed' | 'quote' | 'hourly_package';
     modalities: Array<'in_person' | 'online'>;
+    /** Aceita pacotes de várias aulas com o mesmo técnico */
+    accepts_packages?: boolean;
 }
 
 export interface Zone {

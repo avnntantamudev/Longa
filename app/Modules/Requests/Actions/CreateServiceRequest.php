@@ -39,7 +39,7 @@ class CreateServiceRequest
     ) {}
 
     /**
-     * @param  array{category_id: int, title?: string|null, description?: string|null, max_hourly_rate?: int|null, category_package_id?: int|null, answers?: array<string, mixed>, scheduled_at: string, duration_minutes?: int, payment_method?: string, modality: string, province: string, municipality: string, neighborhood: string, latitude: float, longitude: float, direct_provider_id?: int|null}  $data
+     * @param  array{category_id: int, title?: string|null, description?: string|null, max_hourly_rate?: int|null, category_package_id?: int|null, answers?: array<string, mixed>, scheduled_at: string, duration_minutes?: int, payment_method?: string, modality: string, province: string, municipality: string, neighborhood: string, latitude: float, longitude: float, direct_provider_id?: int|null, lesson_dates?: list<string>|null}  $data
      * @param  array<string, list<UploadedFile>>  $media  fotos e vídeos por campo do formulário
      */
     public function handle(User $client, array $data, ?ServiceRequest $republishedFrom = null, array $media = []): ServiceRequest
@@ -47,8 +47,10 @@ class CreateServiceRequest
         $scheduledAt = Carbon::parse($data['scheduled_at']);
         $category = Category::query()->findOrFail((int) $data['category_id']);
         $package = isset($data['category_package_id']) ? CategoryPackage::query()->find($data['category_package_id']) : null;
-        $sessions = $package->sessions ?? 1;
-        $discount = $package->discount_percent ?? 0;
+        $lessonDates = $data['lesson_dates'] ?? null;
+        unset($data['lesson_dates']);
+        $sessions = $lessonDates !== null ? count($lessonDates) : ($package->sessions ?? 1);
+        $discount = $lessonDates !== null ? $this->packageDiscount($category, $sessions) : ($package->discount_percent ?? 0);
         $amount = $this->amountFor($category, $data['max_hourly_rate'] ?? null, (int) ($data['duration_minutes'] ?? 60), $sessions, $discount);
         $directProviderId = $data['direct_provider_id'] ?? null;
         if ($directProviderId !== null) {
@@ -56,7 +58,7 @@ class CreateServiceRequest
         }
         $stored = $this->storeMedia($media);
 
-        $request = DB::transaction(function () use ($client, $data, $scheduledAt, $republishedFrom, $category, $amount, $stored, $sessions, $discount) {
+        $request = DB::transaction(function () use ($client, $data, $scheduledAt, $republishedFrom, $category, $amount, $stored, $sessions, $discount, $lessonDates) {
             // Serializa os pedidos do mesmo cliente para os limites não serem contornados em paralelo
             User::query()->whereKey($client->id)->lockForUpdate()->first();
 
@@ -80,6 +82,7 @@ class CreateServiceRequest
             // Modo de preço da categoria no envio: decide se o pedido passa por diagnóstico e orçamento
             $request->pricing_mode = $category->pricing_mode;
             $request->sessions = $sessions;
+            $request->lesson_schedule = $lessonDates;
             // Orçamentos: taxa de visita da categoria no envio (paga em mão no diagnóstico)
             $request->visit_fee = $category->pricing_mode === PricingMode::Quote ? (int) ($category->effectivePrice()->visit_fee ?? 0) : 0;
             $request->discount_percent = $discount;
@@ -151,6 +154,22 @@ class CreateServiceRequest
         }
 
         return $stored;
+    }
+
+    /**
+     * Desconto de um pacote com N aulas: o do maior pacote da categoria que não passa de N
+     * (ex.: pacotes de 4, 8 e 12 aulas; 10 aulas = desconto do de 8).
+     */
+    private function packageDiscount(Category $category, int $sessions): int
+    {
+        $best = 0;
+        foreach ($category->effectivePackages() as $package) {
+            if ($package->sessions <= $sessions) {
+                $best = max($best, $package->discount_percent);
+            }
+        }
+
+        return $best;
     }
 
     /**

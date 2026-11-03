@@ -86,6 +86,7 @@ use Illuminate\Support\Facades\Auth;
  * @property int|null $republished_from_id
  * @property int|null $package_id
  * @property int|null $package_sequence
+ * @property int|null $direct_provider_id
  * @property \Illuminate\Support\Carbon $created_at
  * @property-read User $client
  * @property-read Category $category
@@ -97,7 +98,7 @@ use Illuminate\Support\Facades\Auth;
 #[Fillable([
     'client_id', 'category_id', 'pricing_mode', 'title', 'description', 'answers', 'max_hourly_rate', 'category_package_id', 'amount', 'commission', 'provider_net', 'commission_percent',
     'scheduled_at', 'duration_minutes', 'ends_at', 'payment_method', 'payment_status', 'payment_due_at', 'escrow_reference', 'modality',
-    'province', 'municipality', 'neighborhood', 'latitude', 'longitude', 'republished_from_id', 'package_id', 'package_sequence',
+    'province', 'municipality', 'neighborhood', 'latitude', 'longitude', 'republished_from_id', 'package_id', 'package_sequence', 'direct_provider_id',
 ])]
 #[Hidden(['location'])]
 #[UseFactory(ServiceRequestFactory::class)]
@@ -250,6 +251,21 @@ class ServiceRequest extends Model
     public function provider(): BelongsTo
     {
         return $this->belongsTo(ProviderProfile::class, 'provider_profile_id');
+    }
+
+    /**
+     * Pedido direto ("pedir ao mesmo técnico"): o técnico VIP a quem o pedido foi enviado.
+     *
+     * @return BelongsTo<ProviderProfile, $this>
+     */
+    public function directProvider(): BelongsTo
+    {
+        return $this->belongsTo(ProviderProfile::class, 'direct_provider_id');
+    }
+
+    public function isDirect(): bool
+    {
+        return $this->direct_provider_id !== null;
     }
 
     /**

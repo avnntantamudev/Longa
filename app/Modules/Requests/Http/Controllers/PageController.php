@@ -6,12 +6,16 @@ namespace App\Modules\Requests\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Matching\Services\ProviderMatcher;
+use App\Modules\Payments\Services\VipSubscriptions;
+use App\Modules\Requests\Enums\RequestState;
 use App\Modules\Requests\Models\RequestOffer;
 use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Users\Http\Resources\CategoryResource;
 use App\Modules\Users\Models\Category;
+use App\Modules\Users\Models\ProviderProfile;
 use App\Modules\Users\Services\CategoryTree;
 use App\Support\Settings\PlatformSettings;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -21,14 +25,27 @@ use Inertia\Response;
  */
 class PageController extends Controller
 {
-    public function createRequest(ProviderMatcher $matcher): Response
+    public function createRequest(Request $request, ProviderMatcher $matcher, VipSubscriptions $vip): Response
     {
         // Só os serviços com pelo menos um técnico qualificado: um pedido sem técnicos expirava sem resposta.
         // (O onboarding do técnico continua a mostrar todos, para os serviços novos poderem ter o primeiro.)
         $withProviders = array_flip($matcher->categoryIdsWithProviders());
         $categories = app(CategoryTree::class)->leaves()->filter(fn (Category $c) => isset($withProviders[$c->id]))->values();
 
+        // Pedir de novo ao mesmo técnico (?tecnico=ID&categoria=ID): só técnicos VIP que já serviram este cliente
+        $directProvider = null;
+        $providerId = $request->integer('tecnico');
+        if ($providerId > 0 && $vip->isVip($providerId)) {
+            $served = ServiceRequest::query()->where('client_id', $request->user()?->getAuthIdentifier())
+                ->where('provider_profile_id', $providerId)->where('state', RequestState::Paid->value)->exists();
+            $provider = $served ? ProviderProfile::query()->with('user')->find($providerId) : null;
+            $directProvider = $provider === null ? null : ['id' => $provider->id, 'name' => $provider->user->name, ...$provider->user->photoUrls()];
+        }
+        $initialCategoryId = $categories->firstWhere('id', $request->integer('categoria'))?->id;
+
         return Inertia::render('Requests/Create', [
+            'directProvider' => $directProvider,
+            'initialCategoryId' => $initialCategoryId,
             'categories' => CategoryResource::collection($categories)->resolve(),
             'zones' => config('locations.zones'),
             'provinces' => config('locations.provinces'),

@@ -82,36 +82,25 @@ class ProviderMatcher
     }
 
     /**
-     * @param  list<int>  $excludeProviderIds
-     * @return list<MatchCandidate>
+     * Técnicos que podem fazer ESTE pedido (sem distância nem ordenação): qualificados, da categoria, disponíveis,
+     * na modalidade, dentro do preço por hora do cliente, com o saldo mínimo e sem outro serviço à mesma hora.
+     * Partilhado pelo despacho normal e pelo pedido direto ao mesmo técnico.
      */
-    public function candidates(ServiceRequest $request, int $limit, array $excludeProviderIds = [], bool $scheduled = false, ?int $radiusM = null): array
+    public function eligibleFor(ServiceRequest $request): Builder
     {
-        $config = config('longa.matching');
-        $radius = $radiusM ?? (int) $config['radius_m'];
         $minBalance = $this->settings->int('dispatch_min_balance');
-        $weightScore = (float) $config['weight_score'];
-        $weightDistance = (float) $config['weight_distance'];
-        $buffer = (int) $config['conflict_buffer_minutes'];
+        $buffer = (int) config('longa.matching.conflict_buffer_minutes');
         $start = $request->scheduled_at->copy()->subMinutes($buffer);
         $end = $request->scheduled_at->copy()->addMinutes($request->duration_minutes + $buffer);
         $online = $request->modality === 'online';
-        $reputation = '(CASE WHEN tp.rating_count >= 3 THEN (tp.score + tp.rating_average * 20) / 2 ELSE tp.score END)';
 
-        // POINT(longitude, latitude) com SRID 4326 (ordem verificada, ver docs/database.md)
-        $point = 'ST_SRID(POINT(?, ?), 4326)';
-        $pointBindings = [$request->longitude, $request->latitude];
-
-        $query = $this->qualified()
+        return $this->qualified()
             ->join('category_provider_profile as stp', function ($join) use ($request) {
                 $join->on('stp.provider_profile_id', '=', 'tp.id')->where('stp.category_id', '=', $request->category_id);
             })
-            ->select(['tp.id', 'tp.user_id', 'tp.score'])
-            ->selectRaw("ROUND(ST_Distance_Sphere(tp.location, {$point})) as distance_m", $pointBindings)
             ->where('tp.user_id', '!=', $request->client_id)
             ->where('tp.is_available', true)
             ->whereRaw('JSON_CONTAINS(tp.modalities, ?)', [json_encode($online ? 'online' : 'in_person')])
-            ->when($excludeProviderIds !== [], fn ($q) => $q->whereNotIn('tp.id', $excludeProviderIds))
             // Hora/pacote: preço por hora do técnico definido e dentro do máximo do cliente
             ->when($request->pricing_mode === PricingMode::HourlyPackage && $request->max_hourly_rate !== null, fn ($q) => $q
                 ->whereNotNull('stp.hourly_rate')->where('stp.hourly_rate', '<=', $request->max_hourly_rate))
@@ -121,7 +110,7 @@ class ProviderMatcher
                 fn ($q) => $q->whereNotIn('tp.id', $this->netBalances()->havingRaw('SUM(b.balance) < ?', [$minBalance])),
                 fn ($q) => $q->whereIn('tp.id', $this->netBalances()->havingRaw('SUM(b.balance) >= ?', [$minBalance])),
             )
-            // Conflito: serviço ativa do técnico que se sobrepõe ao horário pedido (com folga)
+            // Conflito: serviço ativo do técnico que se sobrepõe ao horário pedido (com folga)
             ->whereNotExists(function ($q) use ($start, $end) {
                 $q->selectRaw('1')
                     ->from('service_requests as s')
@@ -130,6 +119,53 @@ class ProviderMatcher
                     ->where('s.scheduled_at', '<', $end)
                     ->where('s.ends_at', '>', $start);
             });
+    }
+
+    /**
+     * Pedido direto ("pedir ao mesmo técnico"): o técnico indicado, se for VIP e puder fazer o pedido.
+     * Sem limite de distância (o cliente já o conhece); o resto das regras é o do despacho normal.
+     */
+    public function directCandidate(ServiceRequest $request, int $providerProfileId): ?MatchCandidate
+    {
+        $row = $this->eligibleFor($request)
+            ->where('tp.id', $providerProfileId)
+            ->whereExists(fn ($q) => $q->selectRaw('1')->from('provider_subscriptions as ts')
+                ->whereColumn('ts.provider_profile_id', 'tp.id')->where('ts.status', 'active')
+                ->where('ts.starts_at', '<=', now())->where('ts.ends_at', '>', now()))
+            ->select(['tp.id', 'tp.user_id', 'tp.score'])
+            ->selectRaw('ROUND(ST_Distance_Sphere(tp.location, ST_SRID(POINT(?, ?), 4326))) as distance_m', [$request->longitude, $request->latitude])
+            ->first();
+
+        return $row === null ? null : new MatchCandidate(
+            providerProfileId: (int) $row->id,
+            userId: (int) $row->user_id,
+            distanceM: (int) $row->distance_m,
+            score: (int) $row->score,
+            rankScore: 1.0,
+        );
+    }
+
+    /**
+     * @param  list<int>  $excludeProviderIds
+     * @return list<MatchCandidate>
+     */
+    public function candidates(ServiceRequest $request, int $limit, array $excludeProviderIds = [], bool $scheduled = false, ?int $radiusM = null): array
+    {
+        $config = config('longa.matching');
+        $radius = $radiusM ?? (int) $config['radius_m'];
+        $weightScore = (float) $config['weight_score'];
+        $weightDistance = (float) $config['weight_distance'];
+        $online = $request->modality === 'online';
+        $reputation = '(CASE WHEN tp.rating_count >= 3 THEN (tp.score + tp.rating_average * 20) / 2 ELSE tp.score END)';
+
+        // POINT(longitude, latitude) com SRID 4326 (ordem verificada, ver docs/database.md)
+        $point = 'ST_SRID(POINT(?, ?), 4326)';
+        $pointBindings = [$request->longitude, $request->latitude];
+
+        $query = $this->eligibleFor($request)
+            ->select(['tp.id', 'tp.user_id', 'tp.score'])
+            ->selectRaw("ROUND(ST_Distance_Sphere(tp.location, {$point})) as distance_m", $pointBindings)
+            ->when($excludeProviderIds !== [], fn ($q) => $q->whereNotIn('tp.id', $excludeProviderIds));
 
         // VIP primeiro (dentro do raio), depois a ordenação normal
         $query->selectRaw(

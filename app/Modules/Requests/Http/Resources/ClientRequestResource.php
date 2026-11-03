@@ -55,6 +55,11 @@ class ClientRequestResource extends JsonResource
             'session_id' => $this->provider_profile_id !== null ? $this->id : null,
             'cancel_reason' => $this->cancel_reason,
             'republished_from_id' => $this->republished_from_id,
+            /** Pedido direto ("pedir ao mesmo técnico"): o técnico escolhido. */
+            'direct_provider' => $this->direct_provider_id === null ? null : [
+                'id' => $this->direct_provider_id,
+                'name' => $this->directProvider?->user?->name,
+            ],
             'created_at' => $this->created_at->toIso8601String(),
         ];
     }

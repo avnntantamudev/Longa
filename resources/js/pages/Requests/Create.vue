@@ -2,13 +2,24 @@
 import CategoryPicker from '@/components/CategoryPicker.vue';
 import LocationPicker from '@/components/LocationPicker.vue';
 import FormField from '@/components/FormField.vue';
+import UserAvatar from '@/components/UserAvatar.vue';
 import { api, ApiError } from '@/lib/api';
 import { kwanza, toLocalInput } from '@/lib/format';
 import type { Category, Zone } from '@/types/global';
 import { Head, router } from '@inertiajs/vue3';
-import { computed, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 
-const props = defineProps<{ categories: Category[]; zones: Zone[]; minAmount: number; minLeadMinutes: number; commissionPercent: number; provinces: string[] }>();
+const props = defineProps<{
+    categories: Category[];
+    zones: Zone[];
+    minAmount: number;
+    minLeadMinutes: number;
+    commissionPercent: number;
+    provinces: string[];
+    /** Pedir de novo ao mesmo técnico (VIP que já o serviu) */
+    directProvider?: { id: number; name: string; photo_url: string | null } | null;
+    initialCategoryId?: number | null;
+}>();
 
 /** Formulário da categoria (GET /api/v1/categories/{id}/form) */
 interface FormFieldDef {
@@ -30,7 +41,7 @@ const suggested = new Date(Date.now() + 2 * 3600_000);
 suggested.setMinutes(0, 0, 0);
 
 const form = reactive({
-    category_id: null as number | null,
+    category_id: (props.initialCategoryId ?? null) as number | null,
     title: '',
     description: '',
     max_hourly_rate: null as number | null,
@@ -100,6 +111,7 @@ function body(): FormData | Record<string, unknown> {
         max_hourly_rate: mode.value === 'hourly_package' ? form.max_hourly_rate : undefined,
         category_package_id: mode.value === 'hourly_package' ? form.category_package_id : undefined,
         scheduled_at: new Date(form.scheduled_at).toISOString(),
+        direct_provider_id: props.directProvider?.id ?? undefined,
     };
     const filled = Object.fromEntries(Object.entries(answers).filter(([, v]) => v !== null && v !== ''));
     const hasFiles = Object.values(files).some((list) => list.length > 0);
@@ -117,6 +129,11 @@ function body(): FormData | Record<string, unknown> {
     }
     return data;
 }
+
+// Pedir de novo: a categoria vem preenchida, por isso carrega já o formulário dela
+onMounted(() => {
+    if (form.category_id !== null) onCategory();
+});
 
 async function submit(): Promise<void> {
     saving.value = true;
@@ -143,8 +160,17 @@ function fileError(key: string): string | undefined {
 <template>
     <Head title="Pedir serviço" />
 
-    <h1 class="text-display">Pedir serviço</h1>
-    <p class="mt-1 text-ink-muted">Enviamos o pedido aos técnicos verificados perto de si. O primeiro que aceitar fica com o serviço.</p>
+    <template v-if="directProvider">
+        <h1 class="text-display">Pedir a {{ directProvider.name }}</h1>
+        <div class="card mt-3 flex items-center gap-3" data-testid="direct-banner">
+            <UserAvatar :name="directProvider.name" :src="directProvider.photo_url" />
+            <p class="text-caption">O pedido vai só para {{ directProvider.name }}, que tem algum tempo para responder. Se não puder, pode enviá-lo a todos os técnicos.</p>
+        </div>
+    </template>
+    <template v-else>
+        <h1 class="text-display">Pedir serviço</h1>
+        <p class="mt-1 text-ink-muted">Enviamos o pedido aos técnicos verificados perto de si. O primeiro que aceitar fica com o serviço.</p>
+    </template>
 
     <form class="mt-6 grid gap-4" novalidate @submit.prevent="submit">
         <FormField label="Que serviço precisa?" for="category" :error="errors.category_id">

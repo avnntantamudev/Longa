@@ -63,6 +63,8 @@ class StoreServiceRequestRequest extends FormRequest
             'neighborhood' => ['required', 'string', 'max:80'],
             'latitude' => ['required', 'numeric', new InAngola],
             'longitude' => ['required', 'numeric'],
+            /** Pedir ao mesmo técnico: id do técnico VIP que já fez um serviço pago para si. Sem valor: envio normal. */
+            'direct_provider_id' => ['nullable', 'integer', Rule::exists('provider_profiles', 'id')],
         ];
     }
 
@@ -165,6 +167,7 @@ class StoreServiceRequestRequest extends FormRequest
             'neighborhood' => (string) $this->validated('neighborhood'),
             'latitude' => (float) $this->validated('latitude'),
             'longitude' => (float) $this->validated('longitude'),
+            'direct_provider_id' => $this->validated('direct_provider_id') === null ? null : (int) $this->validated('direct_provider_id'),
         ];
     }
 

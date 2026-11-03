@@ -7,6 +7,7 @@ namespace App\Modules\Requests\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Requests\Actions\CancelServiceRequest;
 use App\Modules\Requests\Actions\CreateServiceRequest;
+use App\Modules\Requests\Actions\RecordRebookInterest;
 use App\Modules\Requests\Actions\RepublishServiceRequest;
 use App\Modules\Requests\Actions\RetryServiceRequest;
 use App\Modules\Requests\Http\Requests\RepublishServiceRequestRequest;
@@ -78,6 +79,21 @@ class ServiceRequestController extends Controller
         $user = $request->user();
 
         return new ClientRequestResource($action->handle($serviceRequest, $user, $data['reason'] ?? null)->load(['category']));
+    }
+
+    /**
+     * Quero voltar a chamar este técnico (técnico que não é VIP).
+     *
+     * O técnico não aceita pedidos diretos: fica registado e o técnico é avisado (sem o nome do cliente).
+     * Para técnicos VIP use o pedido normal com direct_provider_id.
+     */
+    public function rebookInterest(Request $request, ServiceRequest $serviceRequest, RecordRebookInterest $action): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+        $action->handle($serviceRequest, $user);
+
+        return response()->json(['data' => ['interest_sent' => true]]);
     }
 
     /**

@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Payments\Enums\PaymentMethod;
 use App\Modules\Payments\Models\ProviderSubscription;
 use App\Modules\Payments\Services\VipSubscriptions;
+use App\Modules\Requests\Models\ProviderRebookInterest;
 use App\Modules\Users\Models\ProviderProfile;
 use App\Modules\Users\Models\User;
 use App\Support\Api\ApiException;
@@ -39,6 +40,8 @@ class VipController extends Controller
             'commission_percent' => $settings->int('vip_commission_percent'),
             'standard_commission_percent' => $settings->int('commission_percent'),
             'refundable' => false,
+            // Clientes que quiseram voltar a chamar o técnico (pedido direto só com VIP)
+            'rebook_interests' => ProviderRebookInterest::forProvider($provider->id)->count(),
             'history' => ProviderSubscription::query()->where('provider_profile_id', $provider->id)->where('status', ProviderSubscription::ACTIVE)
                 ->latest('id')->limit(10)->get()
                 ->map(fn (ProviderSubscription $s) => [

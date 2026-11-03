@@ -21,7 +21,7 @@ class RequestExpired implements ShouldBroadcast, ShouldDispatchAfterCommit
     public string $broadcastQueue = 'notifications';
 
     /**
-     * @param  'no_providers'|'timeout'  $reason
+     * @param  'no_providers'|'timeout'|'direct_timeout'|'direct_declined'|'direct_unavailable'  $reason
      */
     public function __construct(public readonly ServiceRequest $request, public readonly string $reason) {}
 

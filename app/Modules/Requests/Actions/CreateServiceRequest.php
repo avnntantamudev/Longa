@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Requests\Actions;
 
 use App\Modules\Matching\Services\MatchingCoordinator;
+use App\Modules\Matching\Services\ProviderMatcher;
+use App\Modules\Payments\Services\VipSubscriptions;
 use App\Modules\Requests\Enums\RequestState;
 use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Requests\Models\ServiceRequestMedia;
@@ -29,10 +31,15 @@ use Illuminate\Support\Str;
  */
 class CreateServiceRequest
 {
-    public function __construct(private readonly MatchingCoordinator $matching, private readonly AuditLogger $audit) {}
+    public function __construct(
+        private readonly MatchingCoordinator $matching,
+        private readonly AuditLogger $audit,
+        private readonly ProviderMatcher $matcher,
+        private readonly VipSubscriptions $vip,
+    ) {}
 
     /**
-     * @param  array{category_id: int, title?: string|null, description?: string|null, max_hourly_rate?: int|null, category_package_id?: int|null, answers?: array<string, mixed>, scheduled_at: string, duration_minutes?: int, payment_method?: string, modality: string, province: string, municipality: string, neighborhood: string, latitude: float, longitude: float}  $data
+     * @param  array{category_id: int, title?: string|null, description?: string|null, max_hourly_rate?: int|null, category_package_id?: int|null, answers?: array<string, mixed>, scheduled_at: string, duration_minutes?: int, payment_method?: string, modality: string, province: string, municipality: string, neighborhood: string, latitude: float, longitude: float, direct_provider_id?: int|null}  $data
      * @param  array<string, list<UploadedFile>>  $media  fotos e vídeos por campo do formulário
      */
     public function handle(User $client, array $data, ?ServiceRequest $republishedFrom = null, array $media = []): ServiceRequest
@@ -43,6 +50,10 @@ class CreateServiceRequest
         $sessions = $package->sessions ?? 1;
         $discount = $package->discount_percent ?? 0;
         $amount = $this->amountFor($category, $data['max_hourly_rate'] ?? null, (int) ($data['duration_minutes'] ?? 60), $sessions, $discount);
+        $directProviderId = $data['direct_provider_id'] ?? null;
+        if ($directProviderId !== null) {
+            $this->ensureDirectAllowed($client, $directProviderId);
+        }
         $stored = $this->storeMedia($media);
 
         $request = DB::transaction(function () use ($client, $data, $scheduledAt, $republishedFrom, $category, $amount, $stored, $sessions, $discount) {
@@ -72,6 +83,10 @@ class CreateServiceRequest
             // Orçamentos: taxa de visita da categoria no envio (paga em mão no diagnóstico)
             $request->visit_fee = $category->pricing_mode === PricingMode::Quote ? (int) ($category->effectivePrice()->visit_fee ?? 0) : 0;
             $request->discount_percent = $discount;
+            // Pedido direto: o técnico tem de poder fazer ESTE pedido (categoria, hora, preço, saldo)
+            if ($request->isDirect() && $this->matcher->directCandidate($request, (int) $request->direct_provider_id) === null) {
+                throw new ApiException('direct_provider_unavailable', 'Este técnico não pode fazer este pedido (hora ocupada, outra área ou preço por hora). Escolha outra hora ou envie o pedido a todos.', 409);
+            }
             $request->save();
 
             foreach ($stored as $file) {
@@ -136,6 +151,25 @@ class CreateServiceRequest
         }
 
         return $stored;
+    }
+
+    /**
+     * Pedir ao mesmo técnico: só técnicos VIP que já fizeram um serviço pago para este cliente.
+     */
+    private function ensureDirectAllowed(User $client, int $providerProfileId): void
+    {
+        $servedBefore = ServiceRequest::query()
+            ->where('client_id', $client->id)
+            ->where('provider_profile_id', $providerProfileId)
+            ->where('state', RequestState::Paid->value)
+            ->exists();
+
+        if (! $servedBefore) {
+            throw new ApiException('direct_not_allowed', 'Só pode pedir diretamente a um técnico que já fez um serviço para si.', 403);
+        }
+        if (! $this->vip->isVip($providerProfileId)) {
+            throw new ApiException('direct_not_vip', 'Este técnico não aceita pedidos diretos. Envie o pedido a todos os técnicos.', 409);
+        }
     }
 
     private function ensureWithinActiveLimit(User $client): void

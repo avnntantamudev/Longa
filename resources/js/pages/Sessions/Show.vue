@@ -67,6 +67,24 @@ async function rate(): Promise<void> {
     await call('rate', `/sessions/${props.sessionId}/ratings`, { stars: rating.stars, comment: rating.comment || null }, 'Obrigado pela avaliação.');
 }
 
+// Voltar a chamar o mesmo técnico: VIP = pedido direto; sem VIP = só regista o interesse (o técnico é avisado)
+const rebookBusy = ref(false);
+const rebookUrl = computed(() =>
+    session.value?.rebook && session.value.provider ? `/pedidos/novo?tecnico=${session.value.provider.id}&categoria=${session.value.rebook.category_id}` : '',
+);
+async function sendRebookInterest(): Promise<void> {
+    rebookBusy.value = true;
+    error.value = '';
+    try {
+        await api.post(`/service-requests/${props.sessionId}/rebook-interest`);
+        if (session.value?.rebook) session.value.rebook.interest_sent = true;
+    } catch (e) {
+        error.value = e instanceof ApiError ? e.message : 'Sem ligação. Tente de novo.';
+    } finally {
+        rebookBusy.value = false;
+    }
+}
+
 // Adendas (trabalho extra durante a execução)
 const addenda = ref<Addendum[]>([]);
 const addendumForm = reactive({ description: '', amount: null as number | null });
@@ -405,6 +423,21 @@ onMounted(load);
                     <p class="text-caption text-ink-muted">Confirme que pagou {{ kwanza(session.amount) }} ao técnico em mão.</p>
                     <button class="btn-primary w-full" :disabled="busy !== null" @click="run('confirm_cash', 'confirm-cash', undefined, 'Pagamento em mão confirmado.')">Confirmei que paguei</button>
                 </template>
+
+                <!-- Voltar a chamar o mesmo técnico -->
+                <div v-if="session.rebook" class="grid gap-2 rounded-control bg-navy-50 p-3" data-testid="rebook">
+                    <template v-if="session.rebook.mode === 'direct'">
+                        <p class="text-caption">Gostou de {{ counterpart }}? Peça-lhe diretamente o próximo serviço.</p>
+                        <Link :href="rebookUrl" class="btn-primary w-full">Pedir de novo a {{ counterpart }}</Link>
+                    </template>
+                    <template v-else-if="session.rebook.interest_sent">
+                        <p class="text-caption">Avisámos {{ counterpart }} de que quer voltar a chamá-lo. Por agora, os pedidos vão para todos os técnicos.</p>
+                    </template>
+                    <template v-else>
+                        <p class="text-caption">{{ counterpart }} ainda não aceita pedidos diretos. Pode dizer-lhe que gostava de voltar a chamá-lo.</p>
+                        <button type="button" class="btn-outline w-full" :disabled="rebookBusy" @click="sendRebookInterest">Quero voltar a chamar este técnico</button>
+                    </template>
+                </div>
             </template>
 
             <!-- Faltas -->

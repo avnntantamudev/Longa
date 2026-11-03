@@ -52,6 +52,8 @@ export interface Quote {
 
 export interface Session {
     id: number;
+    /** Voltar a chamar o técnico (cliente, serviço pago): direct = técnico VIP; interest = técnico sem VIP */
+    rebook?: { mode: 'direct' | 'interest'; category_id: number; interest_sent: boolean } | null;
     state: RequestState;
     state_label: string;
     actions: SessionAction[];
@@ -83,7 +85,7 @@ export interface Session {
     provider_net?: number;
     role: 'client' | 'provider';
     client?: { name: string | null; photo_url: string | null; photo_thumb_url: string | null };
-    provider?: { name: string | null; photo_url: string | null; photo_thumb_url: string | null; bio: string | null; years_experience: number | null; neighborhood: string | null; verified: boolean; vip: boolean; score: number };
+    provider?: { id: number; name: string | null; photo_url: string | null; photo_thumb_url: string | null; bio: string | null; years_experience: number | null; neighborhood: string | null; verified: boolean; vip: boolean; score: number };
 }
 
 export interface QrToken {

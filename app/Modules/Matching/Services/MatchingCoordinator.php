@@ -29,7 +29,9 @@ use Illuminate\Support\Facades\DB;
  *               online ou para outro dia: oferta a todos os elegíveis de uma vez (sem perímetro no online);
  *  advance()    chamado pelo job atrasado de cada ronda e pela varredura do scheduler: abre a ronda seguinte e
  *               passa o pedido a "sem técnico disponível" quando acaba o tempo;
- *  retry()      nova tentativa de um pedido "sem técnico disponível" (volta a oferecer a quem não respondeu).
+ *  retry()      nova tentativa de um pedido "sem técnico disponível" (volta a oferecer a quem não respondeu);
+ *  startDirect() pedido direto ao mesmo técnico (VIP): uma só oferta, durante X minutos, sem rondas. Se o técnico
+ *               recusar ou não responder, o pedido fica "sem técnico" e a nova tentativa envia-o a todos.
  *
  * Todas as operações são idempotentes e seguras em concorrência (lock na linha do pedido +
  * transições condicionais), por isso o job e a varredura podem correr ao mesmo tempo.
@@ -45,6 +47,10 @@ class MatchingCoordinator
 
     public function start(ServiceRequest $request): int
     {
+        if ($request->isDirect()) {
+            return $this->startDirect($request);
+        }
+
         $request->transitionTo(RequestState::Searching, [
             'expires_at' => $request->scheduled
                 ? $request->scheduled_at->copy()->subHours($this->settings->int('scheduled_request_close_hours'))
@@ -63,6 +69,11 @@ class MatchingCoordinator
      */
     public function sendNextWave(ServiceRequest $request): int
     {
+        // Pedido direto: só o técnico escolhido, sem rondas
+        if ($request->isDirect()) {
+            return 0;
+        }
+
         if ($request->scheduled || $request->modality === 'online') {
             return $this->sendScheduledOffers($request);
         }
@@ -175,6 +186,8 @@ class MatchingCoordinator
                 'expires_at' => now()->addMinutes($this->settings->int('dispatch_search_minutes')),
                 'wave' => 0,
                 'next_wave_at' => null,
+                // Pedido direto sem resposta: a nova tentativa envia a todos
+                'direct_provider_id' => null,
             ]);
             $request->setRawAttributes($locked->getAttributes(), true);
 
@@ -191,6 +204,67 @@ class MatchingCoordinator
         }
 
         return count($reopened) + $this->sendNextWave($request);
+    }
+
+    /**
+     * Pedido direto: uma só oferta ao técnico escolhido, válida X minutos (Definições). Se ele já não puder
+     * (ficou ocupado, sem saldo, deixou de ser VIP), o pedido fica logo "sem técnico" para o cliente enviar a todos.
+     *
+     * @return int ofertas enviadas (0 ou 1)
+     */
+    public function startDirect(ServiceRequest $request): int
+    {
+        $offer = DB::transaction(function () use ($request): ?RequestOffer {
+            /** @var ServiceRequest $locked */
+            $locked = ServiceRequest::query()->lockForUpdate()->findOrFail($request->id);
+            $expiresAt = now()->addMinutes($this->settings->int('direct_request_minutes'))->min($locked->scheduled_at);
+            $locked->transitionTo(RequestState::Searching, ['expires_at' => $expiresAt, 'wave' => 1, 'next_wave_at' => $expiresAt]);
+            $request->setRawAttributes($locked->getAttributes(), true);
+
+            $candidate = $this->matcher->directCandidate($locked, (int) $locked->direct_provider_id);
+            if ($candidate === null) {
+                $this->expire($locked, 'direct_unavailable');
+                $request->setRawAttributes($locked->getAttributes(), true);
+
+                return null;
+            }
+
+            return RequestOffer::query()->create([
+                'service_request_id' => $locked->id,
+                'provider_profile_id' => $candidate->providerProfileId,
+                'wave' => 1,
+                'rank' => 1,
+                'distance_m' => $candidate->distanceM,
+                'score_snapshot' => $candidate->score,
+                'state' => OfferState::Sent->value,
+                'sent_at' => now(),
+                'expires_at' => $expiresAt,
+            ])->load(['provider', 'request.category']);
+        });
+
+        if ($offer === null) {
+            return 0;
+        }
+
+        OfferSent::dispatch($offer);
+        AdvanceMatching::dispatch($request->id)->delay($offer->expires_at->copy()->addSecond());
+
+        return 1;
+    }
+
+    /**
+     * O técnico de um pedido direto recusou: não faz o cliente esperar pelo fim do prazo.
+     */
+    public function closeDeclinedDirect(ServiceRequest $request): void
+    {
+        DB::transaction(function () use ($request) {
+            /** @var ServiceRequest $locked */
+            $locked = ServiceRequest::query()->lockForUpdate()->findOrFail($request->id);
+            if ($locked->isDirect() && $locked->state === RequestState::Searching
+                && ! $locked->offers()->whereIn('state', OfferState::open())->exists()) {
+                $this->expire($locked, 'direct_declined');
+            }
+        });
     }
 
     /**
@@ -265,7 +339,11 @@ class MatchingCoordinator
                 /** @var ServiceRequest $locked */
                 $locked = ServiceRequest::query()->lockForUpdate()->findOrFail($request->id);
                 if ($locked->state === RequestState::Searching) {
-                    $this->expire($locked, $locked->offers()->exists() ? 'timeout' : 'no_providers');
+                    $this->expire($locked, match (true) {
+                        $locked->isDirect() => 'direct_timeout',
+                        $locked->offers()->exists() => 'timeout',
+                        default => 'no_providers',
+                    });
                 }
             });
 
@@ -325,7 +403,7 @@ class MatchingCoordinator
     /**
      * searching → no_provider; ofertas ainda abertas → lost. Chamar com a linha do pedido bloqueada.
      *
-     * @param  'no_providers'|'timeout'  $reason
+     * @param  'no_providers'|'timeout'|'direct_timeout'|'direct_declined'|'direct_unavailable'  $reason
      */
     private function expire(ServiceRequest $request, string $reason): void
     {

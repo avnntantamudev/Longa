@@ -4901,6 +4901,62 @@
                 }
             }
         },
+        "/service-requests/{serviceRequest}/rebook-interest": {
+            "post": {
+                "operationId": "service-requests.rebook-interest",
+                "description": "O t\u00e9cnico n\u00e3o aceita pedidos diretos: fica registado e o t\u00e9cnico \u00e9 avisado (sem o nome do cliente).\nPara t\u00e9cnicos VIP use o pedido normal com direct_provider_id.",
+                "summary": "Quero voltar a chamar este t\u00e9cnico (t\u00e9cnico que n\u00e3o \u00e9 VIP)",
+                "tags": [
+                    "Pedidos de servi\u00e7o",
+                    "ServiceRequest"
+                ],
+                "parameters": [
+                    {
+                        "name": "serviceRequest",
+                        "in": "path",
+                        "required": true,
+                        "description": "The service request ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "interest_sent": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "interest_sent"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/me/photo": {
             "post": {
                 "operationId": "me.photo",
@@ -7380,6 +7436,11 @@
                                                 "refundable": {
                                                     "type": "boolean"
                                                 },
+                                                "rebook_interests": {
+                                                    "type": "integer",
+                                                    "description": "Clientes que quiseram voltar a chamar o t\u00e9cnico (pedido direto s\u00f3 com VIP)",
+                                                    "minimum": 0
+                                                },
                                                 "history": {
                                                     "type": "array",
                                                     "items": {
@@ -7425,6 +7486,7 @@
                                                 "commission_percent",
                                                 "standard_commission_percent",
                                                 "refundable",
+                                                "rebook_interests",
                                                 "history"
                                             ]
                                         }
@@ -8481,6 +8543,31 @@
                             "null"
                         ]
                     },
+                    "direct_provider": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "description": "Pedido direto (\"pedir ao mesmo t\u00e9cnico\"): o t\u00e9cnico escolhido.",
+                        "properties": {
+                            "id": {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ]
+                            },
+                            "name": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "name"
+                        ]
+                    },
                     "created_at": {
                         "type": "string"
                     }
@@ -8514,6 +8601,7 @@
                     "session_id",
                     "cancel_reason",
                     "republished_from_id",
+                    "direct_provider",
                     "created_at"
                 ],
                 "title": "ClientRequestResource"
@@ -10153,6 +10241,33 @@
                             "rating_count"
                         ]
                     },
+                    "rebook": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "description": "Voltar a chamar o t\u00e9cnico (cliente, servi\u00e7o pago): \"direct\" = t\u00e9cnico VIP, pedido direto;\n\"interest\" = t\u00e9cnico sem VIP, s\u00f3 regista o interesse. null = n\u00e3o dispon\u00edvel.",
+                        "properties": {
+                            "mode": {
+                                "type": "string",
+                                "enum": [
+                                    "direct",
+                                    "interest"
+                                ]
+                            },
+                            "category_id": {
+                                "type": "integer"
+                            },
+                            "interest_sent": {
+                                "type": "boolean"
+                            }
+                        },
+                        "required": [
+                            "mode",
+                            "category_id",
+                            "interest_sent"
+                        ]
+                    },
                     "created_at": {
                         "type": "string"
                     }
@@ -10190,6 +10305,7 @@
                     "amount",
                     "role",
                     "conversation_id",
+                    "rebook",
                     "created_at"
                 ],
                 "title": "SessionResource"
@@ -10306,6 +10422,13 @@
                     },
                     "longitude": {
                         "type": "number"
+                    },
+                    "direct_provider_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "Pedir ao mesmo t\u00e9cnico: id do t\u00e9cnico VIP que j\u00e1 fez um servi\u00e7o pago para si. Sem valor: envio normal."
                     }
                 },
                 "required": [

@@ -72,9 +72,18 @@ class RequestOutcomeNotification extends Notification implements ShouldQueue
 
     private function body(): string
     {
-        return $this->outcome === self::MATCHED
-            ? "O seu serviço \"{$this->request->title}\" está marcado. Veja os dados do técnico."
-            : "Ninguém aceitou \"{$this->request->title}\" a tempo. Pode republicar o pedido, com outro valor ou hora.";
+        if ($this->outcome === self::MATCHED) {
+            return "O seu serviço \"{$this->request->title}\" está marcado. Veja os dados do técnico.";
+        }
+
+        // Pedido direto: o técnico escolhido não aceitou; o cliente pode enviar a todos
+        if ($this->request->isDirect()) {
+            $name = $this->request->directProvider?->user->name ?? 'O técnico';
+
+            return "{$name} não pode fazer \"{$this->request->title}\". Pode enviar o pedido a todos os técnicos.";
+        }
+
+        return "Ninguém aceitou \"{$this->request->title}\" a tempo. Pode republicar o pedido, com outro valor ou hora.";
     }
 
     private function url(): string

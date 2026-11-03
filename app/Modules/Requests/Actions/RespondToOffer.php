@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Requests\Actions;
 
+use App\Modules\Matching\Services\MatchingCoordinator;
 use App\Modules\Requests\Enums\OfferState;
 use App\Modules\Requests\Models\RequestOffer;
 use App\Modules\Score\Models\ScoreEvent;
@@ -16,7 +17,7 @@ use App\Support\StateMachine\InvalidTransition;
  */
 class RespondToOffer
 {
-    public function __construct(private readonly ScoreRecorder $score) {}
+    public function __construct(private readonly ScoreRecorder $score, private readonly MatchingCoordinator $matching) {}
 
     public function view(RequestOffer $offer): RequestOffer
     {
@@ -50,6 +51,11 @@ class RespondToOffer
         $this->score->record($offer->provider_profile_id, ScoreEvent::OFFER_DECLINED, $offer, [
             'seconds_to_respond' => (int) $offer->sent_at->diffInSeconds(now()),
         ]);
+
+        // Pedido direto recusado: o cliente pode logo enviar a todos
+        if ($offer->request->isDirect()) {
+            $this->matching->closeDeclinedDirect($offer->request);
+        }
 
         return $offer;
     }

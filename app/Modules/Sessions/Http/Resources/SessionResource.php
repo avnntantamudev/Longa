@@ -6,6 +6,8 @@ namespace App\Modules\Sessions\Http\Resources;
 
 use App\Modules\Payments\Services\VipSubscriptions;
 use App\Modules\Ratings\Services\RatingService;
+use App\Modules\Requests\Enums\RequestState;
+use App\Modules\Requests\Models\ProviderRebookInterest;
 use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Sessions\Services\AvailableActions;
 use Illuminate\Http\Request;
@@ -80,7 +82,28 @@ class SessionResource extends JsonResource
                 'rating_average' => $this->provider->rating_average,
                 'rating_count' => $this->provider->rating_count,
             ]),
+            /**
+             * Voltar a chamar o técnico (cliente, serviço pago): "direct" = técnico VIP, pedido direto;
+             * "interest" = técnico sem VIP, só regista o interesse. null = não disponível.
+             */
+            'rebook' => $this->rebook($isProvider),
             'created_at' => $this->created_at->toIso8601String(),
+        ];
+    }
+
+    /**
+     * @return array{mode: 'direct'|'interest', category_id: int, interest_sent: bool}|null
+     */
+    private function rebook(bool $isProvider): ?array
+    {
+        if ($isProvider || $this->state !== RequestState::Paid || $this->isPackageLesson()) {
+            return null;
+        }
+
+        return [
+            'mode' => app(VipSubscriptions::class)->isVip($this->provider) ? 'direct' : 'interest',
+            'category_id' => $this->category_id,
+            'interest_sent' => ProviderRebookInterest::forProvider((int) $this->provider_profile_id)->where('client_id', $this->client_id)->exists(),
         ];
     }
 }

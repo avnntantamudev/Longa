@@ -20,6 +20,7 @@ Route::middleware(['auth:sanctum', 'auth.session', 'onboarded', 'role:client'])
         Route::post('{serviceRequest}/cancel', [ServiceRequestController::class, 'cancel'])->name('cancel');
         Route::post('{serviceRequest}/retry', [ServiceRequestController::class, 'retry'])->middleware('throttle:service-requests')->name('retry');
         Route::post('{serviceRequest}/republish', [ServiceRequestController::class, 'republish'])->middleware('throttle:service-requests')->name('republish');
+        Route::post('{serviceRequest}/rebook-interest', [ServiceRequestController::class, 'rebookInterest'])->middleware('throttle:10,1,requests-service-requests-rebook-interest-api')->name('rebook-interest');
     });
 
 Route::middleware(['auth:sanctum', 'auth.session', 'onboarded', 'role:provider'])

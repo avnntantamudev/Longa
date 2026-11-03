@@ -24,6 +24,8 @@ interface ServiceRequest {
     expires_at: string | null;
     wave: number;
     open_offers: number;
+    /** Pedido direto ("pedir ao mesmo técnico") */
+    direct_provider: { id: number; name: string | null } | null;
     session_id: number | null;
 }
 
@@ -111,6 +113,12 @@ async function republish(): Promise<void> {
                 <span class="absolute inset-3 rounded-full bg-orange-500/20" />
                 <span class="relative inline-flex size-16 items-center justify-center rounded-full bg-orange-500"><AppIcon name="search" :size="30" /></span>
             </div>
+            <template v-if="request.direct_provider">
+                <h1 class="mt-6 text-title">À espera de {{ request.direct_provider.name }}</h1>
+                <p class="mt-1 text-navy-200">Enviámos o pedido só a este técnico. Se não puder, pode enviá-lo a todos.</p>
+                <p class="mt-4 text-caption text-navy-300">Tempo para responder {{ minutesLeft }}</p>
+            </template>
+            <template v-else>
             <h1 class="mt-6 text-title">{{ request.scheduled ? 'Pedido enviado aos técnicos' : 'A procurar técnicos perto de si…' }}</h1>
             <p class="mt-1 text-navy-200">
                 {{ request.open_offers > 0 ? `${request.open_offers} técnico(es) a ver o seu pedido agora` : 'A preparar o próximo envio' }}
@@ -119,9 +127,17 @@ async function republish(): Promise<void> {
                 Serviço noutro dia: técnicos perto de si e técnicos VIP da província podem aceitar até {{ request.expires_at ? when(request.expires_at) : '' }}. Avisamos quando alguém aceitar.
             </p>
             <p v-else class="mt-4 text-caption text-navy-300">Tempo restante {{ minutesLeft }} · envio {{ request.wave }}</p>
+            </template>
         </section>
 
         <!-- Sem técnicos -->
+        <section v-else-if="request.state === 'no_provider' && request.direct_provider" class="card text-center" data-testid="direct-unanswered">
+            <p class="text-title">{{ request.direct_provider.name }} não pode fazer este pedido</p>
+            <p class="mt-1 text-ink-muted">Pode enviá-lo agora a todos os técnicos disponíveis, com os mesmos dados.</p>
+            <button type="button" class="btn-primary mt-4 w-full" :disabled="busy" @click="retry">Enviar a todos os técnicos</button>
+            <button type="button" class="btn-secondary mt-2 w-full" :disabled="busy" @click="republish">Republicar com outra hora</button>
+        </section>
+
         <section v-else-if="request.state === 'no_provider'" class="card text-center">
             <p class="text-title">Sem técnicos disponíveis</p>
             <p class="mt-1 text-ink-muted">Ninguém aceitou a tempo. Pode tentar de novo agora ou mudar a hora.</p>

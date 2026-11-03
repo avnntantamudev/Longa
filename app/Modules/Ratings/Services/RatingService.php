@@ -66,8 +66,23 @@ class RatingService
         return $rating;
     }
 
+    /**
+     * Aula do meio de um pacote com pelo menos 4 aulas (ex.: 2.ª de 4, 3.ª de 5): avaliação intermédia opcional.
+     */
+    public function isMidLesson(ServiceRequest $lesson): bool
+    {
+        $total = (int) ServiceRequest::query()->whereKey($lesson->package_id)->value('sessions');
+
+        return $total >= 4 && $lesson->package_sequence === (int) ceil($total / 2);
+    }
+
     public function canRate(ServiceRequest $request, User $user): bool
     {
+        // Pacotes: avalia-se o pacote no fim (o pedido-contrato) e, opcionalmente, a aula do meio
+        if ($request->isPackageLesson() && ! $this->isMidLesson($request)) {
+            return false;
+        }
+
         return $request->state === RequestState::Paid
             && $request->confirmed_at !== null
             && $request->confirmed_at->copy()->addDays($this->settings->int('rating_window_days'))->isFuture()

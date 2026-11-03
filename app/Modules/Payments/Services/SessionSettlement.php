@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Payments\Services;
 
+use App\Modules\Notifications\Notifications\PackageUpdateNotification;
 use App\Modules\Payments\Models\EscrowHold;
 use App\Modules\Requests\Enums\RequestState;
 use App\Modules\Requests\Models\ServiceRequest;
@@ -136,9 +137,13 @@ class SessionSettlement
         }
 
         if ($package->state === RequestState::Accepted) {
-            $anyPaid
-                ? $package->by($actor?->id, 'package_completed')->transitionTo(RequestState::Paid, ['confirmed_at' => now()])
-                : $package->by($actor?->id, 'package_cancelled')->transitionTo(RequestState::Cancelled, ['cancelled_at' => now(), 'closed_reason' => $package->closed_reason ?? 'package_cancelled']);
+            if ($anyPaid) {
+                $package->by($actor?->id, 'package_completed')->transitionTo(RequestState::Paid, ['confirmed_at' => now()]);
+                $package->client->notify(new PackageUpdateNotification('completed', 'Pacote terminado',
+                    "Terminou \"{$package->title}\". Diga-nos como correu: avalie o técnico.", "/servicos/{$package->id}"));
+            } else {
+                $package->by($actor?->id, 'package_cancelled')->transitionTo(RequestState::Cancelled, ['cancelled_at' => now(), 'closed_reason' => $package->closed_reason ?? 'package_cancelled']);
+            }
         }
     }
 

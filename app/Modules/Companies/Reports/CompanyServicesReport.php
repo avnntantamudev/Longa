@@ -46,6 +46,7 @@ class CompanyServicesReport
             ->join('users as tu', 'tu.id', '=', 'tp.user_id')
             ->join('categories as k', 'k.id', '=', 's.category_id')
             ->where('s.state', 'paid')
+            ->where(fn ($q) => $q->whereNull('s.lesson_schedule')->orWhereNotNull('s.package_id')) // pacotes: contam as aulas
             ->whereBetween('s.scheduled_at', [$from, $to])
             ->orderBy('s.scheduled_at')
             ->get(['s.scheduled_at', 'ce.name', 'ce.department', 'k.name as category', 'tu.name as provider', 's.duration_minutes', 's.amount'])
@@ -65,6 +66,7 @@ class CompanyServicesReport
             ->join('service_requests as s', 's.provider_profile_id', '=', 'tp.id')
             ->join('categories as k', 'k.id', '=', 's.category_id')
             ->where('s.state', 'paid')
+            ->where(fn ($q) => $q->whereNull('s.lesson_schedule')->orWhereNotNull('s.package_id')) // pacotes: contam as aulas
             ->whereBetween('s.scheduled_at', [$from, $to])
             ->orderBy('s.scheduled_at')
             ->get(['s.scheduled_at', 'ce.name', 'ce.department', 'k.name as category', 's.duration_minutes', 's.amount', 's.commission', 's.provider_net'])

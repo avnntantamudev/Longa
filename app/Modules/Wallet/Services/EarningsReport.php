@@ -26,6 +26,8 @@ class EarningsReport
 
         $lessons = DB::table('service_requests')
             ->where('provider_profile_id', $provider->id)->where('state', 'paid')->whereYear('scheduled_at', $year)
+            // Pacotes: contam as aulas, não o pedido-contrato
+            ->where(fn ($q) => $q->whereNull('lesson_schedule')->orWhereNotNull('package_id'))
             ->selectRaw("MONTH(scheduled_at) as m, COUNT(*) as lessons, SUM(payment_method = 'cash') as cash_lessons, SUM(CASE WHEN payment_method = 'cash' THEN amount ELSE 0 END) as cash_received")
             ->groupBy('m')->get();
         foreach ($lessons as $row) {

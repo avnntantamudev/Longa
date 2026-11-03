@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Route;
 // Prefixo /api/v1 (ModuleServiceProvider). Endpoints financeiros exigem Idempotency-Key.
 Route::middleware(['auth:sanctum', 'auth.session', 'onboarded'])->group(function () {
     Route::post('sessions/{session}/pay', [PaymentController::class, 'pay'])
-        ->middleware(['pin.recent', 'idempotent', 'throttle:10,1'])
+        ->middleware(['pin.recent', 'idempotent', 'throttle:10,1,payments-sessions-session-pay-api'])
         ->name('api.sessions.pay');
 });
 
@@ -21,7 +21,7 @@ Route::middleware(['auth:sanctum', 'auth.session', 'onboarded'])->group(function
     // Técnico VIP
     Route::get('me/vip', [VipController::class, 'show'])->middleware('role:provider')->name('api.vip.show');
     Route::post('me/vip/purchase', [VipController::class, 'purchase'])
-        ->middleware(['role:provider', 'pin.recent', 'idempotent', 'throttle:5,1'])
+        ->middleware(['role:provider', 'pin.recent', 'idempotent', 'throttle:5,1,payments-me-vip-purchase-api'])
         ->name('api.vip.purchase');
 
     Route::post('admin/providers/{provider}/commission-payments', [CashController::class, 'receive'])

@@ -20,9 +20,9 @@ Route::prefix('auth')->name('api.auth.')->group(function () {
         Route::get('sessions', [SessionController::class, 'index'])->name('sessions.index');
         Route::delete('sessions/{session}', [SessionController::class, 'destroy'])->name('sessions.destroy');
 
-        Route::post('pin/setup', [PinController::class, 'setup'])->middleware('throttle:10,1')->name('pin.setup');
-        Route::post('pin/change', [PinController::class, 'change'])->middleware('throttle:10,1')->name('pin.change');
-        Route::post('pin/verify', [PinController::class, 'verify'])->middleware('throttle:20,1')->name('pin.verify');
+        Route::post('pin/setup', [PinController::class, 'setup'])->middleware('throttle:10,1,auth-pin-setup-api')->name('pin.setup');
+        Route::post('pin/change', [PinController::class, 'change'])->middleware('throttle:10,1,auth-pin-change-api')->name('pin.change');
+        Route::post('pin/verify', [PinController::class, 'verify'])->middleware('throttle:20,1,auth-pin-verify-api')->name('pin.verify');
         Route::get('devices', [PinController::class, 'devices'])->name('devices.index');
         Route::delete('devices/{device}', [PinController::class, 'revokeDevice'])->name('devices.destroy');
     });

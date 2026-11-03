@@ -124,6 +124,16 @@ it('limita a criação de pedidos por hora', function () {
     $this->postJson('/api/v1/service-requests', payload(['title' => 'Mais uma']))->assertStatus(429);
 });
 
+it('um pedido com erros no formulário não gasta o limite por hora', function () {
+    config(['longa.requests.create_per_hour' => 1, 'longa.requests.max_active_per_client' => 10]);
+    apiLogin($this->client);
+
+    $this->postJson('/api/v1/service-requests', payload(['answers' => []]))->assertUnprocessable();
+    $this->postJson('/api/v1/service-requests', payload(['answers' => []]))->assertUnprocessable();
+    $this->postJson('/api/v1/service-requests', payload())->assertCreated();
+    $this->postJson('/api/v1/service-requests', payload(['title' => 'Outra']))->assertStatus(429);
+});
+
 it('só clientes publicam pedidos', function () {
     apiLogin(ProviderProfile::factory()->create()->user);
 

@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Route;
 // Prefixo /api/v1 (ModuleServiceProvider)
 Route::middleware(['auth:sanctum', 'auth.session'])->prefix('companies')->name('api.companies.')->group(function () {
     Route::get('/', [CompanyController::class, 'index'])->name('index');
-    Route::post('/', [CompanyController::class, 'store'])->middleware('throttle:10,60')->name('store');
+    Route::post('/', [CompanyController::class, 'store'])->middleware('throttle:10,60,companies-companies-api')->name('store');
     Route::get('{company}', [CompanyController::class, 'show'])->name('show');
     Route::patch('{company}', [CompanyController::class, 'update'])->name('update');
 
@@ -20,11 +20,11 @@ Route::middleware(['auth:sanctum', 'auth.session'])->prefix('companies')->name('
 
     // Relatório RH (só colaboradores que autorizaram)
     Route::get('{company}/reports/services', [CompanyReportController::class, 'show'])->name('reports.services');
-    Route::get('{company}/reports/services/export', [CompanyReportController::class, 'export'])->middleware('throttle:20,1')->name('reports.services.export');
+    Route::get('{company}/reports/services/export', [CompanyReportController::class, 'export'])->middleware('throttle:20,1,companies-companies-company-reports-services-export-api')->name('reports.services.export');
 });
 
 // O colaborador decide se a empresa vê os seus serviços
 Route::middleware(['auth:sanctum', 'auth.session'])->group(function () {
     Route::get('me/company-links', [CompanyReportController::class, 'myLinks'])->name('api.me.company-links');
-    Route::post('me/company-links/{employee}', [CompanyReportController::class, 'decide'])->middleware('throttle:20,1')->name('api.me.company-links.decide');
+    Route::post('me/company-links/{employee}', [CompanyReportController::class, 'decide'])->middleware('throttle:20,1,companies-companies-me-company-links-employee-api')->name('api.me.company-links.decide');
 });

@@ -25,7 +25,7 @@ Route::middleware(['auth:sanctum', 'auth.session'])->group(function () {
     Route::get('me/legal', [LegalController::class, 'pending'])->name('api.me.legal');
     Route::post('me/legal/accept', [LegalController::class, 'accept'])->name('api.me.legal.accept');
     Route::patch('me', [ProfileController::class, 'updateMe'])->name('api.me.update');
-    Route::post('me/photo', [PhotoController::class, 'store'])->middleware('throttle:10,1')->name('api.me.photo');
+    Route::post('me/photo', [PhotoController::class, 'store'])->middleware('throttle:10,1,users-me-photo-api')->name('api.me.photo');
     Route::delete('me/photo', [PhotoController::class, 'destroy'])->name('api.me.photo.destroy');
     Route::post('onboarding', [ProfileController::class, 'onboarding'])->name('api.onboarding');
 
@@ -35,7 +35,7 @@ Route::middleware(['auth:sanctum', 'auth.session'])->group(function () {
     Route::put('me/provider-profile/details', [ProfileController::class, 'providerDetails'])->name('api.me.provider.details');
     Route::put('me/provider-profile/categories', [ProfileController::class, 'providerCategories'])->name('api.me.provider.categories');
     Route::get('me/provider-profile/category-suggestions', [CategorySuggestionController::class, 'index'])->name('api.me.provider.category-suggestions');
-    Route::post('me/provider-profile/category-suggestions', [CategorySuggestionController::class, 'store'])->middleware('throttle:10,1')->name('api.me.provider.category-suggestions.store');
+    Route::post('me/provider-profile/category-suggestions', [CategorySuggestionController::class, 'store'])->middleware('throttle:10,1,users-me-provider-profile-category-suggestions-api')->name('api.me.provider.category-suggestions.store');
     Route::put('me/provider-profile/location', [ProfileController::class, 'providerLocation'])->name('api.me.provider.location');
     Route::put('me/provider-profile/availability', AvailabilityController::class)->middleware('role:provider')->name('api.me.provider.availability');
 });

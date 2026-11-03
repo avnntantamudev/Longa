@@ -17,9 +17,9 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware(['auth', 'auth.session'])->group(function () {
     Route::get('/pin/criar', [WebPinController::class, 'setupPage'])->name('pin.setup');
-    Route::post('/pin/criar', [WebPinController::class, 'setup'])->middleware('throttle:10,1')->name('pin.setup.store');
+    Route::post('/pin/criar', [WebPinController::class, 'setup'])->middleware('throttle:10,1,auth-pin-criar-web')->name('pin.setup.store');
     Route::get('/desbloquear', [WebPinController::class, 'unlockPage'])->name('pin.unlock');
-    Route::post('/desbloquear', [WebPinController::class, 'unlock'])->middleware('throttle:20,1')->name('pin.unlock.store');
+    Route::post('/desbloquear', [WebPinController::class, 'unlock'])->middleware('throttle:20,1,auth-desbloquear-web')->name('pin.unlock.store');
 });
 
 Route::middleware(['auth', 'auth.session'])->group(function () {

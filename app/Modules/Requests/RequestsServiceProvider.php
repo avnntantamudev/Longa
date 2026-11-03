@@ -8,14 +8,16 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Symfony\Component\HttpFoundation\Response;
 
 class RequestsServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
-        // Publicar/republicar pedidos: por cliente
+        // Publicar/republicar pedidos: por cliente. Só contam os que são aceites (um erro no formulário não gasta o limite)
         RateLimiter::for('service-requests', fn (Request $request) => Limit::perHour((int) config('longa.requests.create_per_hour'))
-            ->by('service-requests:'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
+            ->by('service-requests:'.($request->user()?->getAuthIdentifier() ?? $request->ip()))
+            ->after(fn (Response $response) => $response->isSuccessful()));
 
         // Aceitar/recusar ofertas: por técnico
         RateLimiter::for('offer-responses', fn (Request $request) => Limit::perMinute((int) config('longa.matching.accept_per_minute'))

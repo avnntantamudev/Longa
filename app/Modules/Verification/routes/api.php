@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth:sanctum', 'auth.session'])->group(function () {
     Route::get('me/verifications', [VerificationController::class, 'mine'])->name('api.verifications.mine');
     Route::post('me/verifications', [VerificationController::class, 'store'])
-        ->middleware(['role:provider', 'throttle:10,60'])
+        ->middleware(['role:provider', 'throttle:10,60,verification-me-verifications-api'])
         ->name('api.verifications.store');
 
     Route::prefix('admin')->middleware(['role:admin|operator', 'audit:admin.access'])->name('api.admin.')->group(function () {

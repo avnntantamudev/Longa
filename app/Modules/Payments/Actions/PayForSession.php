@@ -14,6 +14,7 @@ use App\Modules\Payments\Services\PhasedPayments;
 use App\Modules\Payments\Support\ProviderResult;
 use App\Modules\Requests\Enums\RequestState;
 use App\Modules\Requests\Models\ServiceRequest;
+use App\Modules\Requests\Services\PackageLessons;
 use App\Modules\Sessions\Services\SessionLifecycle;
 use App\Modules\Users\Models\User;
 use App\Support\Api\ApiException;
@@ -103,6 +104,9 @@ class PayForSession
                     'charge_id' => $charge->id, 'amount' => $charge->amount, 'method' => $charge->method,
                 ]);
             }
+
+            // Pacote pago: cria as aulas, já marcadas com o técnico
+            app(PackageLessons::class)->createFor($locked);
 
             $this->audit->record('payments.charged', $charge, ['amount' => $charge->amount], $client->id);
 

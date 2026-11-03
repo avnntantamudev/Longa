@@ -20,7 +20,8 @@ $requestAllowed = [
     'created' => ['searching'],
     'searching' => ['accepted', 'no_provider', 'cancelled'],
     'no_provider' => ['searching', 'cancelled'],
-    'accepted' => ['on_the_way', 'cancelled'],
+    // accepted → paid: só o pedido-contrato de um pacote (ver o teste abaixo)
+    'accepted' => ['on_the_way', 'cancelled', 'paid'],
     'on_the_way' => ['diagnosing', 'in_progress', 'cancelled'],
     'diagnosing' => ['quote_sent'],
     'quote_sent' => ['quote_accepted', 'diagnosing', 'cancelled'],
@@ -73,7 +74,9 @@ it('aplica cada transição válida na base de dados e regista-a no histórico',
         foreach ($targets as $to) {
             // Diagnóstico só nos orçamentos; "a caminho → em execução" só nos outros modos
             $mode = $from === 'on_the_way' && $to === 'in_progress' ? PricingMode::Fixed : PricingMode::Quote;
-            $request = ServiceRequest::factory()->create(['pricing_mode' => $mode]);
+            // Aceite → pago só existe no pedido-contrato de um pacote (tem as datas das aulas)
+            $package = $from === 'accepted' && $to === 'paid' ? ['lesson_schedule' => [now()->addDay()->toIso8601String()]] : [];
+            $request = ServiceRequest::factory()->create(['pricing_mode' => $mode, ...$package]);
             $request->forceFill(['state' => $from])->save();
 
             $request->by(null, 'teste')->transitionTo(RequestState::from($to));
@@ -171,4 +174,11 @@ it('uma oferta terminada não volta a mudar', function () {
     $offer->transitionTo(OfferState::Declined, ['responded_at' => now()]);
 
     expect(fn () => $offer->transitionTo(OfferState::Accepted))->toThrow(InvalidTransition::class);
+});
+
+it('só o pedido-contrato de um pacote passa de aceite a pago (sem a caminho nem execução)', function () {
+    $request = ServiceRequest::factory()->create();
+    $request->forceFill(['state' => 'accepted'])->save();
+
+    expect(fn () => $request->transitionTo(RequestState::Paid))->toThrow(InvalidTransition::class);
 });

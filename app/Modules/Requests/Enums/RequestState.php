@@ -45,7 +45,8 @@ enum RequestState: string implements StateEnum
             self::Created => [self::Searching],
             self::Searching => [self::Accepted, self::NoProvider, self::Cancelled],
             self::NoProvider => [self::Searching, self::Cancelled],
-            self::Accepted => [self::OnTheWay, self::Cancelled],
+            // Accepted → Paid: só o pedido-contrato de um pacote, quando a última aula fica paga
+            self::Accepted => [self::OnTheWay, self::Cancelled, self::Paid],
             self::OnTheWay => [self::Diagnosing, self::InProgress, self::Cancelled],
             self::Diagnosing => [self::QuoteSent],
             self::QuoteSent => [self::QuoteAccepted, self::Diagnosing, self::Cancelled],

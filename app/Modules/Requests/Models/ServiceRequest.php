@@ -22,6 +22,7 @@ use Database\Factories\ServiceRequestFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -197,6 +198,11 @@ class ServiceRequest extends Model
      */
     protected function transitionAllowed(StateEnum $from, StateEnum $to): bool
     {
+        // O pedido-contrato de um pacote não se executa (as aulas é que sim): fecha como pago no fim das aulas
+        if ($from === RequestState::Accepted && $to === RequestState::Paid) {
+            return $this->isPackage();
+        }
+
         $quote = $this->pricing_mode === PricingMode::Quote;
 
         if (in_array($to, RequestState::quoteOnly(), true)) {
@@ -398,6 +404,16 @@ class ServiceRequest extends Model
     public function lessons(): HasMany
     {
         return $this->hasMany(self::class, 'package_id')->orderBy('package_sequence');
+    }
+
+    /**
+     * Pedidos que se executam (a caminho, início, QR): todos menos o pedido-contrato de um pacote.
+     *
+     * @param  Builder<self>  $query
+     */
+    public function scopeExecutable(Builder $query): void
+    {
+        $query->where(fn (Builder $q) => $q->whereNull('lesson_schedule')->orWhereNotNull('package_id'));
     }
 
     /** Pedido-contrato de um pacote de várias aulas (tem as datas das aulas). */

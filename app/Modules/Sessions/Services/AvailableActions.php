@@ -43,6 +43,17 @@ class AvailableActions
             $beforeStart = [...$beforeStart, 'start' => false, 'diagnosis' => $isProvider];
         }
 
+        // Aula de um pacote: desistências e faltas seguem as regras do pacote (não se cancela uma aula sozinha)
+        if ($session->isPackageLesson()) {
+            $beforeStart = [...$beforeStart, 'cancel' => false, 'no_show' => false];
+        }
+
+        // Pedido-contrato de um pacote: só o pagamento; o resto faz-se em cada aula
+        if ($session->isPackage()) {
+            return $session->state === RequestState::Accepted && $session->awaitingPayment() && ! $isProvider && ($session->payment_due_at?->isFuture() ?? false)
+                ? ['pay'] : [];
+        }
+
         $actions = match ($session->state) {
             RequestState::Accepted => $session->awaitingPayment()
                 ? ['pay' => ! $isProvider && ($session->payment_due_at?->isFuture() ?? false)]

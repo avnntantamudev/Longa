@@ -88,7 +88,7 @@ class SessionTimeoutRules
         $after = now()->subHours((int) config('longa.session_rules.auto_awaiting_after_end_hours'));
 
         return $this->each(
-            fn (Builder $q) => $q->whereIn('state', [RequestState::Accepted->value, RequestState::OnTheWay->value])
+            fn (Builder $q) => $q->executable()->whereIn('state', [RequestState::Accepted->value, RequestState::OnTheWay->value])
                 ->where(fn ($p) => $p->whereNull('payment_status')->orWhere('payment_status', ServiceRequest::PAYMENT_HELD))
                 ->where('ends_at', '<=', $after),
             function (ServiceRequest $s) {
@@ -128,7 +128,7 @@ class SessionTimeoutRules
     {
         $sent = 0;
         foreach (['24h' => 24, '1h' => 1] as $label => $hours) {
-            $requests = ServiceRequest::query()
+            $requests = ServiceRequest::query()->executable()
                 ->whereIn('state', [RequestState::Accepted->value, RequestState::OnTheWay->value])
                 ->where('scheduled_at', '>', now())
                 ->where('scheduled_at', '<=', now()->addHours($hours))

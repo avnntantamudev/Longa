@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import AppIcon from '@/components/AppIcon.vue';
 import FormField from '@/components/FormField.vue';
 import LocationPicker from '@/components/LocationPicker.vue';
 import PhotoPicker from '@/components/PhotoPicker.vue';
 import { api, ApiError } from '@/lib/api';
+import { matchesSearch } from '@/lib/search';
 import type { Category, Zone } from '@/types/global';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import { computed, onMounted, reactive, ref } from 'vue';
@@ -80,13 +82,19 @@ const page = usePage();
 const photo = ref<string | null>(page.props.auth.user?.photo_url ?? null);
 
 
+const categorySearch = ref('');
+
 const categoriesByGroup = computed(() => {
     const groups: Record<string, Category[]> = {};
     for (const category of props.categories) {
+        if (!matchesSearch(categorySearch.value, category.name, category.path)) continue;
         (groups[category.group ?? 'Outras'] ??= []).push(category);
     }
     return groups;
 });
+
+/** Áreas escolhidas, sempre visíveis mesmo quando a pesquisa as esconde da lista */
+const chosenCategories = computed(() => props.categories.filter((c) => selectedCategories.value.includes(c.id)));
 
 onMounted(async () => {
     const { data } = await api.get<{ data: ProviderProfile }>('/me/provider-profile');
@@ -214,6 +222,34 @@ function submitVerification(): Promise<unknown> {
         <template v-else-if="step === 1">
             <h1 class="text-title">Que serviços faz?</h1>
             <p class="-mt-3 text-caption text-ink-muted">Escolha até 10 áreas. Só recebe pedidos destas áreas.</p>
+            <div class="relative">
+                <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-ink-muted"><AppIcon name="search" :size="18" /></span>
+                <input
+                    v-model="categorySearch"
+                    type="search"
+                    class="input pl-10"
+                    placeholder="Pesquisar área (ex.: electricidade, explicações)"
+                    aria-label="Pesquisar área"
+                    autocomplete="off"
+                    enterkeyhint="search"
+                />
+            </div>
+            <div v-if="chosenCategories.length" class="grid gap-2" data-testid="chosen-categories">
+                <p class="text-caption text-ink-muted">Escolhidas ({{ chosenCategories.length }} de 10)</p>
+                <div class="flex flex-wrap gap-2">
+                    <button
+                        v-for="category in chosenCategories"
+                        :key="category.id"
+                        type="button"
+                        class="chip chip-active"
+                        :aria-label="`Retirar ${category.name}`"
+                        @click="toggleCategory(category.id)"
+                    >
+                        {{ category.name }} <AppIcon name="close" :size="14" />
+                    </button>
+                </div>
+            </div>
+            <p v-if="!Object.keys(categoriesByGroup).length" class="text-caption text-ink-muted">Nenhuma área encontrada para "{{ categorySearch }}". Tente outra palavra ou sugira a área abaixo.</p>
             <section v-for="(group, groupName) in categoriesByGroup" :key="groupName">
                 <h2 class="mb-2 text-caption font-semibold text-ink-muted">{{ groupName }}</h2>
                 <div class="flex flex-wrap gap-2">

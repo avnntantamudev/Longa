@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CategoryPicker from '@/components/CategoryPicker.vue';
 import LocationPicker from '@/components/LocationPicker.vue';
 import FormField from '@/components/FormField.vue';
 import { api, ApiError } from '@/lib/api';
@@ -65,14 +66,6 @@ const estimate = computed(() => {
     const sessions = selectedPackage.value?.sessions ?? 1;
     const discount = selectedPackage.value?.discount_percent ?? 0;
     return Math.round((form.max_hourly_rate * form.duration_minutes * sessions * (100 - discount)) / 6000);
-});
-
-const categoriesByGroup = computed(() => {
-    const groups: Record<string, Category[]> = {};
-    for (const c of props.categories) {
-        (groups[c.group ?? 'Outros'] ??= []).push(c);
-    }
-    return groups;
 });
 
 async function onCategory(): Promise<void> {
@@ -155,12 +148,7 @@ function fileError(key: string): string | undefined {
 
     <form class="mt-6 grid gap-4" novalidate @submit.prevent="submit">
         <FormField label="Que serviço precisa?" for="category" :error="errors.category_id">
-            <select id="category" v-model.number="form.category_id" class="input" @change="onCategory">
-                <option :value="null" disabled>Escolha o serviço</option>
-                <optgroup v-for="(group, groupName) in categoriesByGroup" :key="groupName" :label="groupName">
-                    <option v-for="c in group" :key="c.id" :value="c.id">{{ c.name }}</option>
-                </optgroup>
-            </select>
+            <CategoryPicker id="category" v-model="form.category_id" :categories="categories" @change="onCategory" />
         </FormField>
 
         <p v-if="loadingForm" class="text-caption text-ink-muted">A carregar o formulário…</p>

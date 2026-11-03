@@ -37,6 +37,7 @@ class CompanyServicesReport
             ->join('users as tu', 'tu.id', '=', 'tp.user_id')
             ->where('ce.company_id', $company->id)
             ->where('ce.consent_status', 'accepted')
+            ->where('ce.status', 'active') // desativados ficam fora, como nos totais
             ->whereNotNull('ce.user_id')
             ->where('s.state', 'paid')
             ->whereBetween('s.scheduled_at', [$from, $to]);

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CompanyTabs from '@/components/CompanyTabs.vue';
 import { api } from '@/lib/api';
 import { kwanza } from '@/lib/format';
 import { Head } from '@inertiajs/vue3';
@@ -38,6 +39,8 @@ onMounted(async () => {
 
 <template>
     <Head title="Serviços da equipa" />
+
+    <CompanyTabs />
 
     <h1 class="text-display">Serviços da equipa</h1>
     <p class="mt-1 text-caption text-ink-muted">Só aparecem colaboradores que autorizaram a empresa na app.</p>

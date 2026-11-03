@@ -9,6 +9,7 @@ use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Users\Enums\Role;
 use App\Modules\Users\Models\User;
 use Illuminate\Support\Facades\Notification;
+use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(fn () => Notification::fake());
 
@@ -88,4 +89,34 @@ it('só o próprio decide; mudar o telefone repõe o pedido; outras empresas nã
 
     apiLogin(User::factory()->withRole(Role::CompanyRh)->create());
     $this->getJson("/api/v1/companies/{$company->id}/reports/services")->assertForbidden();
+});
+
+it('um colaborador desativado sai do relatório, mesmo tendo autorizado', function () {
+    [$company, $rh, $session] = companyWithLesson();
+    $employeeId = addEmployee($company, $rh, $session->client->phone);
+
+    apiLogin($session->client);
+    $this->postJson("/api/v1/me/company-links/{$employeeId}", ['decision' => 'accepted'])->assertOk();
+
+    apiLogin($rh);
+    $from = now()->subWeek()->toDateString();
+    $this->getJson("/api/v1/companies/{$company->id}/reports/services?from={$from}")->assertJsonPath('data.totals.lessons', 1);
+
+    $this->patchJson("/api/v1/companies/{$company->id}/employees/{$employeeId}", ['status' => 'inactive'])->assertOk();
+    $data = $this->getJson("/api/v1/companies/{$company->id}/reports/services?from={$from}")->json('data');
+    expect($data['totals'])->toMatchArray(['lessons' => 0, 'employees' => 0])
+        ->and($data['lessons'])->toBe([])
+        ->and($data['by_employee'])->toBe([]);
+});
+
+it('a página da equipa abre para o RH (e /empresa leva lá); outros perfis não entram', function () {
+    $rh = loginWeb(User::factory()->withRole(Role::CompanyRh)->create());
+
+    $this->get('/empresa')->assertRedirect('/empresa/equipa');
+    $this->get('/empresa/equipa')->assertOk()->assertInertia(fn (Assert $page) => $page->component('Company/Team'));
+    $this->get('/empresa/relatorios')->assertOk()->assertInertia(fn (Assert $page) => $page->component('Company/Reports'));
+
+    app('auth')->forgetGuards();
+    loginWeb(User::factory()->withRole(Role::Client)->create());
+    $this->get('/empresa/equipa')->assertForbidden();
 });

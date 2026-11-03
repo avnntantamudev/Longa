@@ -24,7 +24,7 @@ export function navigationFor(roles: RoleName[] = []): NavItem[] {
         items.push({ label: 'Carteira', href: '/carteira', icon: 'wallet', available: true });
     }
     if (roles.includes('company_rh')) {
-        items.push({ label: 'Equipa', href: '/empresa/relatorios', icon: 'calendar', available: true });
+        items.push({ label: 'Equipa', href: '/empresa', icon: 'calendar', available: true });
     }
     if (roles.length === 0) {
         items.push({ label: 'Explorar', href: '/explorar', icon: 'search', available: false });

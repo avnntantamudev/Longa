@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Requests\Http\Controllers\AddendumController;
 use App\Modules\Requests\Http\Controllers\OfferController;
+use App\Modules\Requests\Http\Controllers\PackageController;
 use App\Modules\Requests\Http\Controllers\QuoteController;
 use App\Modules\Requests\Http\Controllers\RequestMediaController;
 use App\Modules\Requests\Http\Controllers\ServiceRequestController;
@@ -49,6 +50,15 @@ Route::middleware(['auth:sanctum', 'auth.session', 'onboarded'])->group(function
     Route::post('addenda/{addendum}/approve', [AddendumController::class, 'approve'])->middleware('idempotent')->name('api.addenda.approve');
     Route::post('addenda/{addendum}/reject', [AddendumController::class, 'reject'])->middleware('idempotent')->name('api.addenda.reject');
     Route::post('addenda/{addendum}/pay', [AddendumController::class, 'pay'])->middleware(['idempotent', 'throttle:10,1,requests-addenda-addendum-pay-api'])->name('api.addenda.pay');
+});
+
+// Pacotes de várias aulas: desistir, procurar outro técnico e remarcar aulas (cliente ou técnico do pacote)
+Route::middleware(['auth:sanctum', 'auth.session', 'onboarded'])->group(function () {
+    Route::post('packages/{session}/cancel', [PackageController::class, 'cancel'])->middleware(['idempotent', 'throttle:10,1,requests-packages-session-cancel-api'])->name('api.packages.cancel');
+    Route::post('packages/{session}/replace', [PackageController::class, 'replace'])->middleware(['idempotent', 'throttle:10,1,requests-packages-session-replace-api'])->name('api.packages.replace');
+    Route::post('sessions/{session}/reschedule', [PackageController::class, 'proposeReschedule'])->middleware('throttle:10,1,requests-sessions-session-reschedule-api')->name('api.sessions.reschedule');
+    Route::post('sessions/{session}/reschedule/accept', [PackageController::class, 'acceptReschedule'])->middleware('throttle:10,1,requests-sessions-session-reschedule-accept-api')->name('api.sessions.reschedule.accept');
+    Route::post('sessions/{session}/reschedule/reject', [PackageController::class, 'rejectReschedule'])->middleware('throttle:10,1,requests-sessions-session-reschedule-reject-api')->name('api.sessions.reschedule.reject');
 });
 
 // Fotos e vídeos do formulário do pedido (cliente, técnicos com oferta, técnico atribuído e equipa)

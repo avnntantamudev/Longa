@@ -22,7 +22,11 @@ class ExecuteRefund implements ShouldQueue
     /** @var list<int> */
     public array $backoff = [30, 120, 600, 1800];
 
-    public function __construct(public readonly int $holdId)
+    /**
+     * @param  int|null  $amount  devolução parcial (aulas de um pacote); null = o reembolso da liquidação
+     * @param  string|null  $key  chave de idempotência do pagamento dessa devolução
+     */
+    public function __construct(public readonly int $holdId, public readonly ?int $amount = null, public readonly ?string $key = null)
     {
         $this->onQueue('payments');
         $this->afterCommit();
@@ -32,8 +36,8 @@ class ExecuteRefund implements ShouldQueue
     {
         $hold = EscrowHold::query()->find($this->holdId);
 
-        if ($hold !== null && $hold->refunded_amount > 0) {
-            $escrow->payRefund($hold);
+        if ($hold !== null && ($this->amount ?? $hold->refunded_amount) > 0) {
+            $escrow->payRefund($hold, $this->amount, $this->key);
         }
     }
 }

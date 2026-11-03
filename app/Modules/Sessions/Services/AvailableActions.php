@@ -9,6 +9,7 @@ use App\Modules\Payments\Services\PhasedPayments;
 use App\Modules\Ratings\Services\RatingService;
 use App\Modules\Requests\Enums\RequestState;
 use App\Modules\Requests\Models\ServiceRequest;
+use App\Modules\Requests\Services\LessonReschedules;
 use App\Modules\Users\Enums\PricingMode;
 use App\Modules\Users\Models\User;
 
@@ -43,9 +44,14 @@ class AvailableActions
             $beforeStart = [...$beforeStart, 'start' => false, 'diagnosis' => $isProvider];
         }
 
-        // Aula de um pacote: desistências e faltas seguem as regras do pacote (não se cancela uma aula sozinha)
+        // Aula de um pacote: não se cancela uma aula sozinha (desiste-se do pacote); pode remarcar-se (com acordo)
         if ($session->isPackageLesson()) {
-            $beforeStart = [...$beforeStart, 'cancel' => false, 'no_show' => false];
+            $beforeStart = [
+                ...$beforeStart,
+                'cancel' => false,
+                'reschedule' => app(LessonReschedules::class)->canPropose($session, $isProvider),
+                'answer_reschedule' => app(LessonReschedules::class)->canAnswer($session, $isProvider),
+            ];
         }
 
         // Pedido-contrato de um pacote: só o pagamento; o resto faz-se em cada aula

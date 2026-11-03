@@ -4156,6 +4156,331 @@
                 }
             }
         },
+        "/packages/{session}/cancel": {
+            "post": {
+                "operationId": "packages.cancel",
+                "description": "As aulas que ainda n\u00e3o come\u00e7aram s\u00e3o canceladas. T\u00e9cnico: todas devolvidas ao cliente (conta como\ncancelamento grave). Cliente: devolvidas, menos a pr\u00f3xima se faltar pouco tempo (conta como dada).",
+                "summary": "Desistir do pacote (cliente ou t\u00e9cnico)",
+                "tags": [
+                    "Pacotes",
+                    "Package"
+                ],
+                "parameters": [
+                    {
+                        "name": "session",
+                        "in": "path",
+                        "required": true,
+                        "description": "The session ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "description": "Chave \u00fanica por a\u00e7\u00e3o (8\u2013100 caracteres: letras, n\u00fameros, \"-\" e \"_\"). Repetir o mesmo pedido com a mesma chave devolve a resposta guardada (24 h, cabe\u00e7alho `Idempotent-Replayed: true`); a mesma chave com outro corpo d\u00e1 422 `idempotency_key_reused`; um pedido ainda em curso d\u00e1 409 `request_in_progress`.",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z0-9_-]{8,100}$"
+                        },
+                        "example": "3f1c9a2e-7b4d-4e8a-9c1f-2a6b8d0e4f13"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reason": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 255
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`SessionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/SessionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/packages/{session}/replace": {
+            "post": {
+                "operationId": "packages.replace",
+                "description": "Cria um novo pedido com as datas que ainda d\u00e3o tempo, os mesmos dados e o mesmo pre\u00e7o m\u00e1ximo.",
+                "summary": "Procurar outro t\u00e9cnico para as aulas que faltam (depois de o t\u00e9cnico desistir)",
+                "tags": [
+                    "Pacotes",
+                    "Package"
+                ],
+                "parameters": [
+                    {
+                        "name": "session",
+                        "in": "path",
+                        "required": true,
+                        "description": "The session ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "description": "Chave \u00fanica por a\u00e7\u00e3o (8\u2013100 caracteres: letras, n\u00fameros, \"-\" e \"_\"). Repetir o mesmo pedido com a mesma chave devolve a resposta guardada (24 h, cabe\u00e7alho `Idempotent-Replayed: true`); a mesma chave com outro corpo d\u00e1 422 `idempotency_key_reused`; um pedido ainda em curso d\u00e1 409 `request_in_progress`.",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z0-9_-]{8,100}$"
+                        },
+                        "example": "3f1c9a2e-7b4d-4e8a-9c1f-2a6b8d0e4f13"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_id": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "request_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/sessions/{session}/reschedule": {
+            "post": {
+                "operationId": "sessions.reschedule",
+                "summary": "Propor outra hora para uma aula do pacote",
+                "tags": [
+                    "Pacotes",
+                    "Package"
+                ],
+                "parameters": [
+                    {
+                        "name": "session",
+                        "in": "path",
+                        "required": true,
+                        "description": "The session ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "scheduled_at": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    }
+                                },
+                                "required": [
+                                    "scheduled_at"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`SessionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/SessionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/sessions/{session}/reschedule/accept": {
+            "post": {
+                "operationId": "sessions.reschedule.accept",
+                "summary": "Aceitar a nova hora proposta pela outra parte",
+                "tags": [
+                    "Pacotes",
+                    "Package"
+                ],
+                "parameters": [
+                    {
+                        "name": "session",
+                        "in": "path",
+                        "required": true,
+                        "description": "The session ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`SessionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/SessionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/sessions/{session}/reschedule/reject": {
+            "post": {
+                "operationId": "sessions.reschedule.reject",
+                "summary": "Recusar a nova hora proposta pela outra parte (a aula mant\u00e9m a hora)",
+                "tags": [
+                    "Pacotes",
+                    "Package"
+                ],
+                "parameters": [
+                    {
+                        "name": "session",
+                        "in": "path",
+                        "required": true,
+                        "description": "The session ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`SessionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/SessionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/sessions/{session}/pay": {
             "post": {
                 "operationId": "sessions.pay",
@@ -10303,6 +10628,83 @@
                             "interest_sent"
                         ]
                     },
+                    "lesson": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "description": "Aula de um pacote: n\u00ba da aula, total, remarca\u00e7\u00e3o proposta e remarca\u00e7\u00f5es que sobram.",
+                        "properties": {
+                            "package_id": {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ]
+                            },
+                            "sequence": {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ]
+                            },
+                            "total": {
+                                "type": "integer"
+                            },
+                            "reschedule_to": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "reschedule_by_me": {
+                                "type": "string"
+                            },
+                            "reschedules_left": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "package_id",
+                            "sequence",
+                            "total",
+                            "reschedule_to",
+                            "reschedule_by_me",
+                            "reschedules_left"
+                        ]
+                    },
+                    "package": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "description": "Pedido-contrato de um pacote: as aulas e se pode procurar outro t\u00e9cnico (o t\u00e9cnico desistiu).",
+                        "properties": {
+                            "lessons": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "can_cancel": {
+                                "type": "boolean"
+                            },
+                            "replaceable": {
+                                "type": "string"
+                            },
+                            "closed_reason": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "lessons",
+                            "can_cancel",
+                            "replaceable",
+                            "closed_reason"
+                        ]
+                    },
                     "created_at": {
                         "type": "string"
                     }
@@ -10341,6 +10743,8 @@
                     "role",
                     "conversation_id",
                     "rebook",
+                    "lesson",
+                    "package",
                     "created_at"
                 ],
                 "title": "SessionResource"

@@ -209,13 +209,16 @@ class SessionTimeoutRules
             function (ServiceRequest $s) {
                 $providerFault = $s->closed_reason !== 'no_show_client';
                 $providerGross = match ($s->closed_reason) {
-                    'no_show_client' => $this->policy->clientNoShow($s),
+                    // Aula de um pacote: a falta do cliente conta como aula dada
+                    'no_show_client' => $s->isPackageLesson() ? $s->amount : $this->policy->clientNoShow($s),
                     'no_show_provider' => $this->policy->providerFault($s),
                     default => 0,
                 };
 
                 $this->lifecycle->record($s, 'no_show_settled', null, ['rule' => $s->closed_reason === 'not_started' ? 'R1' : 'R4', 'provider_share' => $providerGross]);
-                if (! $s->isCash() && EscrowHold::query()->where('service_request_id', $s->id)->whereIn('state', EscrowHold::ACTIVE)->exists()) {
+                // Aulas de um pacote: o dinheiro está retido no pacote
+                $holdOwner = $s->package_id ?? $s->id;
+                if (! $s->isCash() && EscrowHold::query()->where('service_request_id', $holdOwner)->whereIn('state', EscrowHold::ACTIVE)->exists()) {
                     $this->settlement->split($s, $providerGross, null, (string) $s->closed_reason);
                 }
                 if ($providerFault) {

@@ -90,6 +90,9 @@ use Illuminate\Support\Facades\Auth;
  * @property int|null $direct_provider_id
  * @property list<string>|null $lesson_schedule
  * @property \Illuminate\Support\Carbon|null $vip_only_until
+ * @property \Illuminate\Support\Carbon|null $reschedule_to
+ * @property int|null $reschedule_by
+ * @property int $reschedules_used
  * @property \Illuminate\Support\Carbon $created_at
  * @property-read User $client
  * @property-read Category $category
@@ -101,7 +104,7 @@ use Illuminate\Support\Facades\Auth;
 #[Fillable([
     'client_id', 'category_id', 'pricing_mode', 'title', 'description', 'answers', 'max_hourly_rate', 'category_package_id', 'amount', 'commission', 'provider_net', 'commission_percent',
     'scheduled_at', 'duration_minutes', 'ends_at', 'payment_method', 'payment_status', 'payment_due_at', 'escrow_reference', 'modality',
-    'province', 'municipality', 'neighborhood', 'latitude', 'longitude', 'republished_from_id', 'package_id', 'package_sequence', 'direct_provider_id', 'lesson_schedule',
+    'province', 'municipality', 'neighborhood', 'latitude', 'longitude', 'republished_from_id', 'package_id', 'package_sequence', 'direct_provider_id', 'lesson_schedule', 'reschedule_to', 'reschedule_by',
 ])]
 #[Hidden(['location'])]
 #[UseFactory(ServiceRequestFactory::class)]
@@ -178,6 +181,9 @@ class ServiceRequest extends Model
             'package_sequence' => 'integer',
             'lesson_schedule' => 'array',
             'vip_only_until' => 'datetime',
+            'reschedule_to' => 'datetime',
+            'reschedule_by' => 'integer',
+            'reschedules_used' => 'integer',
         ];
     }
 

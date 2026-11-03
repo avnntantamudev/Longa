@@ -9,6 +9,8 @@ use App\Modules\Ratings\Services\RatingService;
 use App\Modules\Requests\Enums\RequestState;
 use App\Modules\Requests\Models\ProviderRebookInterest;
 use App\Modules\Requests\Models\ServiceRequest;
+use App\Modules\Requests\Services\LessonReschedules;
+use App\Modules\Requests\Services\PackageCancellation;
 use App\Modules\Sessions\Services\AvailableActions;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -87,6 +89,26 @@ class SessionResource extends JsonResource
              * "interest" = técnico sem VIP, só regista o interesse. null = não disponível.
              */
             'rebook' => $this->rebook($isProvider),
+            /** Aula de um pacote: nº da aula, total, remarcação proposta e remarcações que sobram. */
+            'lesson' => $this->isPackageLesson() ? [
+                'package_id' => $this->package_id,
+                'sequence' => $this->package_sequence,
+                'total' => (int) ServiceRequest::query()->whereKey($this->package_id)->value('sessions'),
+                'reschedule_to' => $this->reschedule_to?->toIso8601String(),
+                'reschedule_by_me' => $this->reschedule_to !== null && $this->reschedule_by === $viewerId,
+                'reschedules_left' => app(LessonReschedules::class)->remaining($this->resource),
+            ] : null,
+            /** Pedido-contrato de um pacote: as aulas e se pode procurar outro técnico (o técnico desistiu). */
+            'package' => $this->isPackage() ? [
+                'lessons' => $this->lessons()->get()->map(fn (ServiceRequest $l) => [
+                    'id' => $l->id, 'sequence' => $l->package_sequence, 'scheduled_at' => $l->scheduled_at->toIso8601String(),
+                    'state' => $l->state->value, 'state_label' => $l->state->label(), 'closed_reason' => $l->closed_reason,
+                ])->all(),
+                'can_cancel' => $this->state === RequestState::Accepted,
+                'replaceable' => ! $isProvider && app(PackageCancellation::class)->replaceableDates($this->resource) !== []
+                    && ! ServiceRequest::query()->where('republished_from_id', $this->id)->exists(),
+                'closed_reason' => $this->closed_reason,
+            ] : null,
             'created_at' => $this->created_at->toIso8601String(),
         ];
     }

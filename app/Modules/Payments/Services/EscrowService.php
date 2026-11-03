@@ -142,6 +142,70 @@ class EscrowService
     }
 
     /**
+     * Devolve ao cliente parte da retenção (ex.: aula de um pacote que não se deu). A retenção continua ativa com o
+     * resto. Idempotente pela chave; o pagamento ao cliente segue pela fila (uma devolução por chave).
+     */
+    public function refundPart(ServiceRequest $session, int $amount, string $key, ?User $actor = null): EscrowHold
+    {
+        $hold = DB::transaction(function () use ($session, $amount, $key, $actor) {
+            /** @var EscrowHold $hold */
+            $hold = EscrowHold::query()->where('service_request_id', $session->id)->lockForUpdate()->firstOrFail();
+            if (LedgerTransaction::query()->where('idempotency_key', "escrow:refund:{$key}")->exists()) {
+                return null;
+            }
+            if (! $hold->isActive() || $amount <= 0 || $amount > $hold->amount) {
+                throw new LedgerException("Devolução parcial inválida: {$amount} Kz de {$hold->amount} Kz.");
+            }
+
+            $this->ledger->post('refund_partial', "escrow:refund:{$key}", [
+                Accounts::ESCROW => -$amount,
+                Accounts::REFUNDS_PAYABLE => $amount,
+            ], $session, ['partial' => $key], $actor?->id);
+
+            $rest = $hold->amount - $amount;
+            $restSplit = Commission::split($rest, $hold->commission_percent);
+            $hold->forceFill([
+                'amount' => $rest, 'commission' => $restSplit['commission'], 'provider_net' => $restSplit['provider_net'],
+                'refunded_amount' => $hold->refunded_amount + $amount,
+            ])->save();
+            $this->audit->record('escrow.partially_refunded', $hold, ['amount' => $amount, 'rest' => $rest, 'key' => $key], $actor?->id);
+
+            return $hold;
+        });
+
+        if ($hold === null) {
+            return EscrowHold::query()->where('service_request_id', $session->id)->firstOrFail();
+        }
+
+        ExecuteRefund::dispatch($hold->id, $amount, "refund:paid:{$key}");
+
+        return $hold;
+    }
+
+    /**
+     * Fecha uma retenção que já ficou a 0 (tudo libertado ou devolvido por partes), sem movimentos no ledger.
+     *
+     * @param  EscrowHold::RELEASED|EscrowHold::REFUNDED|EscrowHold::PARTIALLY_REFUNDED  $outcome
+     */
+    public function closeEmpty(ServiceRequest $session, string $outcome): EscrowHold
+    {
+        return DB::transaction(function () use ($session, $outcome) {
+            /** @var EscrowHold $hold */
+            $hold = EscrowHold::query()->where('service_request_id', $session->id)->lockForUpdate()->firstOrFail();
+            if (! $hold->isActive()) {
+                return $hold;
+            }
+            if ($hold->amount !== 0) {
+                throw new LedgerException("A retenção do serviço {$session->id} ainda tem {$hold->amount} Kz.");
+            }
+            $hold->forceFill(['state' => $outcome, 'settled_at' => now()])->save();
+            $this->audit->record("escrow.{$outcome}", $hold, ['closed_empty' => true]);
+
+            return $hold;
+        });
+    }
+
+    /**
      * Liquidação: o técnico fica com $providerGross (antes da comissão) e o resto volta ao cliente.
      *  - libertar tudo: $providerGross = valor total
      *  - reembolso total: 0
@@ -194,9 +258,11 @@ class EscrowService
             $hold->forceFill([
                 'state' => $outcome,
                 'settlement_transaction_id' => $transaction->id,
-                'refunded_amount' => $refund,
+                // Soma às devoluções parciais anteriores (aulas de um pacote); só esta liquidação se paga agora
+                'refunded_amount' => $hold->refunded_amount + $refund,
                 'settled_at' => now(),
             ])->save();
+            $hold->setAttribute('settlement_refund', $refund);
 
             $this->audit->record("escrow.{$outcome}", $hold, [
                 'provider_net' => $split['provider_net'], 'commission' => $split['commission'], 'refund' => $refund, 'reason' => $reason,
@@ -206,8 +272,9 @@ class EscrowService
         });
 
         // Reembolso no gateway: depois do commit e fora de transações (chamada de rede), via fila
-        if ($hold->refunded_amount > 0 && $hold->wasChanged('state')) {
-            ExecuteRefund::dispatch($hold->id);
+        $refundNow = (int) $hold->getAttribute('settlement_refund');
+        if ($refundNow > 0 && $hold->wasChanged('state')) {
+            ExecuteRefund::dispatch($hold->id, $refundNow, "refund:paid:hold:{$hold->id}");
         }
 
         return $hold;
@@ -222,9 +289,10 @@ class EscrowService
      * Executa o reembolso no gateway e move refunds_payable → funds_in. Se o gateway falhar, o valor
      * fica em refunds_payable (visível na reconciliação) e pode ser repetido com segurança.
      */
-    public function payRefund(EscrowHold $hold): void
+    public function payRefund(EscrowHold $hold, ?int $amount = null, ?string $key = null): void
     {
-        $key = "refund:paid:hold:{$hold->id}";
+        $key ??= "refund:paid:hold:{$hold->id}";
+        $amount ??= $hold->refunded_amount;
 
         if (LedgerTransaction::query()->where('idempotency_key', $key)->exists()) {
             return;
@@ -237,7 +305,7 @@ class EscrowService
             return;
         }
 
-        $result = $this->gateway->refund((string) $charge->external_reference, $hold->refunded_amount, $key);
+        $result = $this->gateway->refund((string) $charge->external_reference, $amount, $key);
 
         PaymentCharge::query()->updateOrCreate(['idempotency_key' => $key], [
             'service_request_id' => $hold->service_request_id,
@@ -245,7 +313,7 @@ class EscrowService
             'gateway' => $this->gateway->name(),
             'method' => $charge->method,
             'kind' => 'refund',
-            'amount' => $hold->refunded_amount,
+            'amount' => $amount,
             'status' => $result->status,
             'external_reference' => $result->reference,
             'failure_reason' => $result->failureReason,
@@ -259,8 +327,8 @@ class EscrowService
         }
 
         $this->ledger->post('refund_paid', $key, [
-            Accounts::REFUNDS_PAYABLE => -$hold->refunded_amount,
-            Accounts::FUNDS_IN => $hold->refunded_amount,
+            Accounts::REFUNDS_PAYABLE => -$amount,
+            Accounts::FUNDS_IN => $amount,
         ], $hold->session, ['refund_reference' => $result->reference]);
     }
 }

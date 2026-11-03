@@ -20,6 +20,18 @@ it('o cliente abre o formulário e o ecrã de procura dos seus pedidos', functio
     $this->get("/pedidos/{$request->id}")->assertOk()->assertInertia(fn (Assert $page) => $page->component('Requests/Show')->where('requestId', $request->id));
 });
 
+it('o formulário só mostra serviços com técnicos qualificados', function () {
+    [$comTecnico, $semTecnico, $soNaoVerificado] = Category::query()->whereDoesntHave('children')->where('active', true)->limit(3)->get()->all();
+    ProviderProfile::factory()->verified()->withCategories($comTecnico)->create();
+    ProviderProfile::factory()->withCategories($soNaoVerificado)->create();   // por verificar: não conta
+    loginWeb(User::factory()->withRole(Role::Client)->create());
+
+    $this->get('/pedidos/novo')->assertOk()->assertInertia(function (Assert $page) use ($comTecnico, $semTecnico, $soNaoVerificado) {
+        $ids = collect($page->toArray()['props']['categories'])->pluck('id');
+        expect($ids)->toContain($comTecnico->id)->not->toContain($semTecnico->id)->not->toContain($soNaoVerificado->id);
+    });
+});
+
 it('um cliente não abre o pedido de outro', function () {
     $request = ServiceRequest::factory()->create();
     loginWeb(User::factory()->withRole(Role::Client)->create());

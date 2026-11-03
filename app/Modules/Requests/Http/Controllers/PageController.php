@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Modules\Requests\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Matching\Services\ProviderMatcher;
 use App\Modules\Requests\Models\RequestOffer;
 use App\Modules\Requests\Models\ServiceRequest;
 use App\Modules\Users\Http\Resources\CategoryResource;
+use App\Modules\Users\Models\Category;
 use App\Modules\Users\Services\CategoryTree;
 use App\Support\Settings\PlatformSettings;
 use Illuminate\Support\Facades\Gate;
@@ -19,10 +21,15 @@ use Inertia\Response;
  */
 class PageController extends Controller
 {
-    public function createRequest(): Response
+    public function createRequest(ProviderMatcher $matcher): Response
     {
+        // Só os serviços com pelo menos um técnico qualificado: um pedido sem técnicos expirava sem resposta.
+        // (O onboarding do técnico continua a mostrar todos, para os serviços novos poderem ter o primeiro.)
+        $withProviders = array_flip($matcher->categoryIdsWithProviders());
+        $categories = app(CategoryTree::class)->leaves()->filter(fn (Category $c) => isset($withProviders[$c->id]))->values();
+
         return Inertia::render('Requests/Create', [
-            'categories' => CategoryResource::collection(app(CategoryTree::class)->leaves())->resolve(),
+            'categories' => CategoryResource::collection($categories)->resolve(),
             'zones' => config('locations.zones'),
             'provinces' => config('locations.provinces'),
             'minAmount' => (int) config('longa.requests.min_amount'),

@@ -42,7 +42,7 @@ async function change(): Promise<void> {
 </script>
 
 <template>
-    <div v-if="selected" class="card flex items-center justify-between gap-3" data-testid="category-selected">
+    <div v-if="selected" class="card flex min-w-0 items-center justify-between gap-3" data-testid="category-selected">
         <div class="min-w-0">
             <p class="truncate font-semibold">{{ selected.name }}</p>
             <p v-if="selected.group" class="truncate text-caption text-ink-muted">{{ selected.group }}</p>
@@ -80,7 +80,8 @@ async function change(): Promise<void> {
                     {{ c.name }}
                 </button>
             </section>
-            <p v-if="!hasResults" class="px-3 py-4 text-caption text-ink-muted">Nenhum serviço encontrado para "{{ query }}". Tente outra palavra.</p>
+            <p v-if="categories.length === 0" class="px-3 py-4 text-caption text-ink-muted">Ainda não há serviços com técnicos disponíveis. Volte a tentar mais tarde.</p>
+            <p v-else-if="!hasResults" class="px-3 py-4 text-caption text-ink-muted">Nenhum serviço encontrado para "{{ query }}". Tente outra palavra.</p>
         </div>
     </div>
 </template>

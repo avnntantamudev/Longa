@@ -50,6 +50,38 @@ class ProviderMatcher
     }
 
     /**
+     * Técnicos qualificados (tp = provider_profiles, u = users): conta ativa e não apagada, perfil verificado,
+     * onboarding concluído, foto (quando obrigatória) e local definido. São as condições que não dependem do
+     * pedido nem do momento; o resto (disponível agora, categoria, distância, saldo, horário) fica em candidates().
+     */
+    public function qualified(): Builder
+    {
+        return DB::table('provider_profiles as tp')
+            ->join('users as u', 'u.id', '=', 'tp.user_id')
+            ->where('u.status', UserStatus::Active->value)
+            ->whereNull('u.deleted_at')
+            ->where('tp.verification_status', VerificationStatus::Verified->value)
+            ->whereNotNull('tp.onboarding_completed_at')
+            ->when(now()->gte(Carbon::parse((string) config('longa.providers.photo_required_from'))), fn ($q) => $q->whereNotNull('u.photo'))
+            ->whereNotNull('tp.latitude');
+    }
+
+    /**
+     * Ids das categorias com pelo menos um técnico qualificado (ver qualified()).
+     *
+     * @return list<int>
+     */
+    public function categoryIdsWithProviders(): array
+    {
+        return $this->qualified()
+            ->join('category_provider_profile as stp', 'stp.provider_profile_id', '=', 'tp.id')
+            ->distinct()
+            ->pluck('stp.category_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+    }
+
+    /**
      * @param  list<int>  $excludeProviderIds
      * @return list<MatchCandidate>
      */
@@ -70,21 +102,14 @@ class ProviderMatcher
         $point = 'ST_SRID(POINT(?, ?), 4326)';
         $pointBindings = [$request->longitude, $request->latitude];
 
-        $query = DB::table('provider_profiles as tp')
-            ->join('users as u', 'u.id', '=', 'tp.user_id')
+        $query = $this->qualified()
             ->join('category_provider_profile as stp', function ($join) use ($request) {
                 $join->on('stp.provider_profile_id', '=', 'tp.id')->where('stp.category_id', '=', $request->category_id);
             })
             ->select(['tp.id', 'tp.user_id', 'tp.score'])
             ->selectRaw("ROUND(ST_Distance_Sphere(tp.location, {$point})) as distance_m", $pointBindings)
-            ->where('u.status', UserStatus::Active->value)
-            ->whereNull('u.deleted_at')
             ->where('tp.user_id', '!=', $request->client_id)
-            ->where('tp.verification_status', VerificationStatus::Verified->value)
             ->where('tp.is_available', true)
-            ->whereNotNull('tp.onboarding_completed_at')
-            ->when(now()->gte(Carbon::parse((string) config('longa.providers.photo_required_from'))), fn ($q) => $q->whereNotNull('u.photo'))
-            ->whereNotNull('tp.latitude')
             ->whereRaw('JSON_CONTAINS(tp.modalities, ?)', [json_encode($online ? 'online' : 'in_person')])
             ->when($excludeProviderIds !== [], fn ($q) => $q->whereNotIn('tp.id', $excludeProviderIds))
             // Hora/pacote: preço por hora do técnico definido e dentro do máximo do cliente

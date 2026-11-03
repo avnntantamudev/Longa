@@ -94,6 +94,15 @@
     :focus-visible {
         @apply outline-3 outline-offset-2 outline-orange-500;
     }
+
+    /*
+     * Grelha sem colunas definidas = uma coluna que nunca passa da largura disponível. Sem isto a
+     * coluna "auto" estica até ao conteúdo que não quebra (ex.: o nome do serviço com truncate) e,
+     * no telemóvel, o formulário inteiro sai do ecrã. As classes grid-cols-* (utilities) sobrepõem-se.
+     */
+    .grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
 }
 
 @layer components {
@@ -120,7 +129,7 @@
 
     /* Campos de formulário */
     .input {
-        @apply min-h-12 w-full rounded-control border border-border bg-surface-muted px-4 text-body text-ink placeholder:text-ink-subtle focus:border-orange-500 focus:bg-surface focus:outline-none;
+        @apply min-h-12 w-full min-w-0 rounded-control border border-border bg-surface-muted px-4 text-body text-ink placeholder:text-ink-subtle focus:border-orange-500 focus:bg-surface focus:outline-none;
     }
 
     .search-pill {

@@ -25,6 +25,10 @@ interface Offer {
     commission: number;
     provider_net: number;
     scheduled_at: string;
+    /** Pacote de várias aulas: aceitar = dar todas, pela ordem */
+    lesson_schedule?: string[] | null;
+    sessions?: number;
+    duration_minutes?: number;
     modality: string;
     municipality: string;
     neighborhood: string;
@@ -143,7 +147,18 @@ onMounted(() => {
                     <p class="mt-3 text-2xl font-bold text-orange-400">{{ kwanza(offer.amount) }}</p>
                     <p class="text-caption text-navy-200">Recebe {{ kwanza(offer.provider_net) }} (comissão do BISCA {{ kwanza(offer.commission) }})</p>
                 </template>
-                <p class="mt-3 flex items-center gap-2 text-caption">
+                <div v-if="offer.lesson_schedule?.length" class="mt-3 rounded-control bg-white/10 p-3" data-testid="offer-lessons">
+                    <p class="text-caption font-semibold">
+                        Pacote de {{ offer.lesson_schedule.length }} aulas de {{ offer.duration_minutes }} min · {{ offer.modality === 'online' ? 'Online' : offer.neighborhood }}
+                    </p>
+                    <p class="text-caption text-navy-200">Ao aceitar, fica com todas as aulas. Recebe cada aula depois de o cliente a confirmar.</p>
+                    <ol class="mt-2 grid gap-1 text-caption">
+                        <li v-for="(lesson, i) in offer.lesson_schedule" :key="lesson" class="flex items-center gap-2">
+                            <span class="w-6 text-navy-300">{{ i + 1 }}.</span> <AppIcon name="calendar" :size="14" /> {{ when(lesson) }}
+                        </li>
+                    </ol>
+                </div>
+                <p v-else class="mt-3 flex items-center gap-2 text-caption">
                     <AppIcon name="calendar" :size="16" /> {{ when(offer.scheduled_at) }} · {{ offer.modality === 'online' ? 'Online' : offer.neighborhood }}
                 </p>
                 <p v-if="offer.description" class="mt-2 text-caption text-navy-100">{{ offer.description }}</p>

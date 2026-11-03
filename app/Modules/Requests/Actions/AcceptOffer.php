@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Requests\Actions;
 
+use App\Modules\Matching\Services\ProviderMatcher;
 use App\Modules\Requests\Enums\OfferState;
 use App\Modules\Requests\Enums\RequestState;
 use App\Modules\Requests\Events\RequestMatched;
@@ -39,7 +40,7 @@ class AcceptOffer
 
     private const LOCK_WAIT_SECONDS = 5;
 
-    public function __construct(private readonly SessionLifecycle $lifecycle, private readonly AuditLogger $audit) {}
+    public function __construct(private readonly SessionLifecycle $lifecycle, private readonly AuditLogger $audit, private readonly ProviderMatcher $matcher) {}
 
     public function handle(RequestOffer $offer): ServiceRequest
     {
@@ -152,6 +153,11 @@ class AcceptOffer
 
         if (! in_array($offer->state, OfferState::open(), true) || $offer->expires_at->lte(now())) {
             throw new ApiException('offer_expired', 'O prazo para aceitar terminou.', 410);
+        }
+
+        // Pacote: entretanto pode ter ficado com outro serviço à hora de alguma aula
+        if ($request->isPackage() && $this->matcher->hasConflict($offer->provider_profile_id, $request)) {
+            throw new ApiException('schedule_conflict', 'Já tem outro serviço à hora de alguma destas aulas.', 409);
         }
     }
 }

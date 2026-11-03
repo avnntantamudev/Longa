@@ -40,6 +40,10 @@ class ProviderOfferResource extends JsonResource
             'commission_percent' => $split['percent'],
             'provider_net' => $split['provider_net'],
             'scheduled_at' => $serviceRequest->scheduled_at->toIso8601String(),
+            'duration_minutes' => $serviceRequest->duration_minutes,
+            /** Pacote de várias aulas: data e hora de cada aula (aceitar = dar todas). null = um só serviço. */
+            'lesson_schedule' => $serviceRequest->lesson_schedule,
+            'sessions' => $serviceRequest->sessions,
             'modality' => $serviceRequest->modality,
             'province' => $serviceRequest->province,
             'municipality' => $serviceRequest->municipality,

@@ -9428,6 +9428,22 @@
                     "scheduled_at": {
                         "type": "string"
                     },
+                    "duration_minutes": {
+                        "type": "integer"
+                    },
+                    "lesson_schedule": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "description": "Pacote de v\u00e1rias aulas: data e hora de cada aula (aceitar = dar todas). null = um s\u00f3 servi\u00e7o.",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "sessions": {
+                        "type": "integer"
+                    },
                     "modality": {
                         "type": "string"
                     },
@@ -9473,6 +9489,9 @@
                     "commission_percent",
                     "provider_net",
                     "scheduled_at",
+                    "duration_minutes",
+                    "lesson_schedule",
+                    "sessions",
                     "modality",
                     "province",
                     "municipality",

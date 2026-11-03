@@ -51,12 +51,16 @@ class MatchingCoordinator
             return $this->startDirect($request);
         }
 
+        $expiresAt = $request->scheduled || $request->isPackage()
+            ? $request->scheduled_at->copy()->subHours($this->settings->int('scheduled_request_close_hours'))
+            : now()->addMinutes($this->settings->int('dispatch_search_minutes'));
         $request->transitionTo(RequestState::Searching, [
-            'expires_at' => $request->scheduled
-                ? $request->scheduled_at->copy()->subHours($this->settings->int('scheduled_request_close_hours'))
-                : now()->addMinutes($this->settings->int('dispatch_search_minutes')),
+            'expires_at' => $expiresAt,
             'wave' => 0,
             'next_wave_at' => null,
+            // Pacote: primeiro só técnicos VIP (durante a janela; com "só VIP", até ao fecho)
+            'vip_only_until' => ! $request->isPackage() ? null
+                : ($this->settings->int('packages_vip_only') === 1 ? $expiresAt : now()->addMinutes($this->settings->int('packages_vip_window_minutes'))->min($expiresAt)),
         ]);
 
         return $this->sendNextWave($request);
@@ -74,7 +78,7 @@ class MatchingCoordinator
             return 0;
         }
 
-        if ($request->scheduled || $request->modality === 'online') {
+        if ($request->scheduled || $request->modality === 'online' || $request->isPackage()) {
             return $this->sendScheduledOffers($request);
         }
 
@@ -287,9 +291,15 @@ class MatchingCoordinator
             }
 
             $already = $locked->offers()->pluck('provider_profile_id')->all();
-            $candidates = $this->matcher->candidates($locked, 500, $already, scheduled: true);
+            $vipUntil = $locked->vip_only_until;
+            $vipOnly = $vipUntil !== null && $vipUntil->isFuture();
+            $candidates = $this->matcher->candidates($locked, 500, $already, scheduled: true, vipOnly: $vipOnly);
             $now = now();
             $nextSweep = $now->copy()->addMinutes(10)->min($locked->expires_at);
+            // Fim da janela VIP: a varredura seguinte abre o pacote a todos
+            if ($vipUntil !== null && $vipOnly) {
+                $nextSweep = $nextSweep->min($vipUntil->copy()->addSecond());
+            }
 
             if ($candidates !== []) {
                 RequestOffer::query()->insert(array_map(fn ($c, int $i) => [

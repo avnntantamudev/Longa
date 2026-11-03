@@ -88,6 +88,7 @@ use Illuminate\Support\Facades\Auth;
  * @property int|null $package_sequence
  * @property int|null $direct_provider_id
  * @property list<string>|null $lesson_schedule
+ * @property \Illuminate\Support\Carbon|null $vip_only_until
  * @property \Illuminate\Support\Carbon $created_at
  * @property-read User $client
  * @property-read Category $category
@@ -175,6 +176,7 @@ class ServiceRequest extends Model
             'provider_net' => 'integer',
             'package_sequence' => 'integer',
             'lesson_schedule' => 'array',
+            'vip_only_until' => 'datetime',
         ];
     }
 

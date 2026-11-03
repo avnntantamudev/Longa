@@ -79,7 +79,7 @@ class StoreServiceRequestRequest extends FormRequest
             'latitude' => ['required', 'numeric', new InAngola],
             'longitude' => ['required', 'numeric'],
             /** Pedir ao mesmo técnico: id do técnico VIP que já fez um serviço pago para si. Sem valor: envio normal. */
-            'direct_provider_id' => ['nullable', 'integer', Rule::exists('provider_profiles', 'id')],
+            'direct_provider_id' => $isPackage ? ['prohibited'] : ['nullable', 'integer', Rule::exists('provider_profiles', 'id')],
         ];
     }
 
@@ -126,7 +126,13 @@ class StoreServiceRequestRequest extends FormRequest
                 return;
             }
             $dates = $this->lessonDates();
-            $weeks = app(PlatformSettings::class)->int('packages_max_weeks');
+            $settings = app(PlatformSettings::class);
+            $weeks = $settings->int('packages_max_weeks');
+            // Tempo para a janela VIP e para os técnicos responderem antes do fecho (X horas antes da 1.ª aula)
+            $leadMinutes = $settings->int('scheduled_request_close_hours') * 60 + $settings->int('packages_vip_window_minutes') + 60;
+            if ($dates[0]->lt(now()->addMinutes($leadMinutes))) {
+                $validator->errors()->add('lesson_dates', 'A primeira aula tem de ser pelo menos '.(int) ceil($leadMinutes / 60).' horas depois de agora.');
+            }
             if ($dates[0]->copy()->addWeeks($weeks)->lt(end($dates))) {
                 $validator->errors()->add('lesson_dates', "As aulas têm de caber em {$weeks} semanas.");
             }

@@ -78,7 +78,7 @@ class CreateServiceRequest
                 'republished_from_id' => $republishedFrom?->id,
             ]);
             $request->client_id = $client->id;
-            $request->scheduled = $this->isScheduled($scheduledAt);
+            $request->scheduled = $lessonDates !== null || $this->isScheduled($scheduledAt);
             // Modo de preço da categoria no envio: decide se o pedido passa por diagnóstico e orçamento
             $request->pricing_mode = $category->pricing_mode;
             $request->sessions = $sessions;

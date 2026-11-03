@@ -89,10 +89,10 @@ class ProviderMatcher
     public function eligibleFor(ServiceRequest $request): Builder
     {
         $minBalance = $this->settings->int('dispatch_min_balance');
-        $buffer = (int) config('longa.matching.conflict_buffer_minutes');
-        $start = $request->scheduled_at->copy()->subMinutes($buffer);
-        $end = $request->scheduled_at->copy()->addMinutes($request->duration_minutes + $buffer);
         $online = $request->modality === 'online';
+        $windows = $this->windowsFor($request);
+        $minRating = $this->settings->int('packages_min_rating_tenths') / 10;
+        $minRatingCount = $this->settings->int('packages_min_rating_count');
 
         return $this->qualified()
             ->join('category_provider_profile as stp', function ($join) use ($request) {
@@ -110,14 +110,55 @@ class ProviderMatcher
                 fn ($q) => $q->whereNotIn('tp.id', $this->netBalances()->havingRaw('SUM(b.balance) < ?', [$minBalance])),
                 fn ($q) => $q->whereIn('tp.id', $this->netBalances()->havingRaw('SUM(b.balance) >= ?', [$minBalance])),
             )
-            // Conflito: serviço ativo do técnico que se sobrepõe ao horário pedido (com folga)
-            ->whereNotExists(function ($q) use ($start, $end) {
-                $q->selectRaw('1')
-                    ->from('service_requests as s')
-                    ->whereColumn('s.provider_profile_id', 'tp.id')
-                    ->whereIn('s.state', array_map(fn (RequestState $st) => $st->value, RequestState::occupying()))
-                    ->where('s.scheduled_at', '<', $end)
-                    ->where('s.ends_at', '>', $start);
+            // Pacote: avaliação mínima para quem já tem avaliações suficientes (os novos ainda não têm histórico)
+            ->when($request->isPackage(), fn ($q) => $q->where(fn ($r) => $r
+                ->where('tp.rating_count', '<', $minRatingCount)->orWhere('tp.rating_average', '>=', $minRating)))
+            // Conflito: serviço ativo do técnico que se sobrepõe a alguma das horas pedidas (com folga)
+            ->whereNotExists(fn ($q) => $this->conflicts($q->selectRaw('1')->from('service_requests as s')->whereColumn('s.provider_profile_id', 'tp.id'), $windows));
+    }
+
+    /**
+     * Horas ocupadas pelo pedido, com a folga entre serviços: uma por aula num pacote, uma nos outros.
+     *
+     * @return list<array{0: Carbon, 1: Carbon}>
+     */
+    public function windowsFor(ServiceRequest $request): array
+    {
+        $buffer = (int) config('longa.matching.conflict_buffer_minutes');
+        $starts = $request->isPackage()
+            ? array_map(fn (string $d) => Carbon::parse($d), $request->lesson_schedule ?? [])
+            : [$request->scheduled_at];
+
+        return array_map(fn (Carbon $s) => [
+            $s->copy()->subMinutes($buffer),
+            $s->copy()->addMinutes($request->duration_minutes + $buffer),
+        ], $starts);
+    }
+
+    /**
+     * O técnico já tem um serviço ativo à hora de alguma das aulas deste pedido (ignora o próprio pedido).
+     */
+    public function hasConflict(int $providerProfileId, ServiceRequest $request): bool
+    {
+        $query = DB::table('service_requests as s')->where('s.provider_profile_id', $providerProfileId)->where('s.id', '!=', $request->id)
+            ->where(fn ($q) => $q->whereNull('s.package_id')->orWhere('s.package_id', '!=', $request->id));
+
+        return $this->conflicts($query, $this->windowsFor($request))->exists();
+    }
+
+    /**
+     * Serviços que ocupam o técnico e se sobrepõem a alguma das janelas.
+     *
+     * @param  list<array{0: Carbon, 1: Carbon}>  $windows
+     */
+    private function conflicts(Builder $query, array $windows): Builder
+    {
+        return $query
+            ->whereIn('s.state', array_map(fn (RequestState $st) => $st->value, RequestState::occupying()))
+            ->where(function ($any) use ($windows) {
+                foreach ($windows as [$start, $end]) {
+                    $any->orWhere(fn ($w) => $w->where('s.scheduled_at', '<', $end)->where('s.ends_at', '>', $start));
+                }
             });
     }
 
@@ -149,7 +190,7 @@ class ProviderMatcher
      * @param  list<int>  $excludeProviderIds
      * @return list<MatchCandidate>
      */
-    public function candidates(ServiceRequest $request, int $limit, array $excludeProviderIds = [], bool $scheduled = false, ?int $radiusM = null): array
+    public function candidates(ServiceRequest $request, int $limit, array $excludeProviderIds = [], bool $scheduled = false, ?int $radiusM = null, bool $vipOnly = false): array
     {
         $config = config('longa.matching');
         $radius = $radiusM ?? (int) $config['radius_m'];
@@ -165,7 +206,11 @@ class ProviderMatcher
         $query = $this->eligibleFor($request)
             ->select(['tp.id', 'tp.user_id', 'tp.score'])
             ->selectRaw("ROUND(ST_Distance_Sphere(tp.location, {$point})) as distance_m", $pointBindings)
-            ->when($excludeProviderIds !== [], fn ($q) => $q->whereNotIn('tp.id', $excludeProviderIds));
+            ->when($excludeProviderIds !== [], fn ($q) => $q->whereNotIn('tp.id', $excludeProviderIds))
+            // Pacotes na janela VIP: só técnicos VIP
+            ->when($vipOnly, fn ($q) => $q->whereExists(fn ($s) => $s->selectRaw('1')->from('provider_subscriptions as vo')
+                ->whereColumn('vo.provider_profile_id', 'tp.id')->where('vo.status', 'active')
+                ->where('vo.starts_at', '<=', now())->where('vo.ends_at', '>', now())));
 
         // VIP primeiro (dentro do raio), depois a ordenação normal
         $query->selectRaw(

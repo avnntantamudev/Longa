@@ -29,7 +29,7 @@ beforeEach(function () {
     // Inserção em massa (as factories seriam lentas para 500 + ruído)
     $users = array_map(fn (int $i) => [
         'phone' => sprintf('+2449%08d', 50_000_000 + $i), 'name' => "Técnico {$i}", 'phone_verified_at' => $now,
-        'onboarded_at' => $now, 'status' => 'active', 'locale' => 'pt', 'created_at' => $now, 'updated_at' => $now,
+        'onboarded_at' => $now, 'status' => 'active', 'locale' => 'pt', 'photo' => 'avatars/teste.jpg', 'created_at' => $now, 'updated_at' => $now,
     ], range(1, ELIGIBLE + 200));
     foreach (array_chunk($users, 250) as $chunk) {
         DB::table('users')->insert($chunk);
